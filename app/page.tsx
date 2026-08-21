@@ -11,15 +11,6 @@ export default function Home() {
         <p className="mt-5 max-w-md text-lg leading-relaxed text-muted text-pretty">
           A simple public page. More can go here later.
         </p>
-        <div className="mt-8 h-px w-16 bg-line" aria-hidden="true" />
-        <p className="mt-8">
-          <a
-            href="http://spiralbound.net"
-            className="text-accent underline decoration-line underline-offset-4 transition-colors hover:decoration-accent"
-          >
-            spiralbound.net
-          </a>
-        </p>
       </main>
     </div>
   );
