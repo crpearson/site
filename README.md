@@ -1,6 +1,6 @@
-# Cliff Pearson
+# site
 
-Public starter site for [Cliff Pearson](https://github.com/crpearson). It is a small [Next.js](https://nextjs.org) App Router landing page, meant to go live on [Vercel](https://vercel.com) later.
+Public starter site for [Cliff Pearson](https://github.com/crpearson). This is the [crpearson/site](https://github.com/crpearson/site) repository: a small [Next.js](https://nextjs.org) App Router landing page, meant to go live on [Vercel](https://vercel.com) later.
 
 This repository is not a collection of UCSC systems scripts.
 
