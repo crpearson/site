@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f4ef;
-  --foreground: #1c1b18;
-  --muted: #5c5a54;
-  --line: #d8d3c8;
-  --accent: #2f4f4f;
+  --background: #f3efe6;
+  --foreground: #1a1915;
+  --muted: #5f5b53;
+  --line: #d6d0c4;
+  --accent: #314f48;
 }
 
 @theme inline {
@@ -14,22 +14,43 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-newsreader), ui-serif, Georgia, "Times New Roman",
+    serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #121311;
-    --foreground: #f3f0e8;
-    --muted: #b4b0a6;
-    --line: #2d2e29;
+    --background: #121410;
+    --foreground: #f2eee4;
+    --muted: #b3aea4;
+    --line: #2e302b;
     --accent: #8fbcb0;
   }
 }
 
-body {
+html {
   background: var(--background);
+}
+
+body {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      ellipse 90% 55% at 8% -8%,
+      color-mix(in srgb, var(--accent) 11%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      ellipse 70% 45% at 100% 110%,
+      color-mix(in srgb, var(--accent) 8%, transparent),
+      transparent 55%
+    );
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 28%, transparent);
+  color: var(--foreground);
 }
