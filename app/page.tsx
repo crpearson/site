@@ -1,3 +1,5 @@
+const aiDevelopers = ["Bill", "Ted", "Dave", "Andy"] as const;
+
 export default function Home() {
   return (
     <div className="flex min-h-full flex-col">
@@ -11,6 +13,15 @@ export default function Home() {
         <p className="mt-5 max-w-md text-lg leading-relaxed text-muted text-pretty">
           A simple public page. More can go here later.
         </p>
+        <div className="mt-10 h-px w-16 bg-line" aria-hidden="true" />
+        <h2 className="mt-10 text-sm tracking-[0.18em] text-muted uppercase">
+          AI developers
+        </h2>
+        <ul className="mt-4 space-y-2 text-lg leading-relaxed">
+          {aiDevelopers.map((name) => (
+            <li key={name}>{name}</li>
+          ))}
+        </ul>
       </main>
     </div>
   );
