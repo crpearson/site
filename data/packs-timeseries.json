@@ -1,0 +1,2522 @@
+{
+ "C1-P1": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    588,
+    573,
+    555,
+    562,
+    584,
+    573
+   ],
+   "avg_ir_mohm": 572.5,
+   "spread_mohm": 33,
+   "start_floor_mV": 3474,
+   "start_imbalance_mV": 217,
+   "rest_V": 21.697
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    560,
+    544,
+    526,
+    535,
+    558,
+    543
+   ],
+   "avg_ir_mohm": 544.3,
+   "spread_mohm": 34,
+   "start_floor_mV": 3563,
+   "start_imbalance_mV": 134,
+   "rest_V": 21.954
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    484,
+    465,
+    450,
+    462,
+    473,
+    473
+   ],
+   "avg_ir_mohm": 467.8,
+   "spread_mohm": 34,
+   "start_floor_mV": 3698,
+   "start_imbalance_mV": 20,
+   "rest_V": 22.249
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    555,
+    540,
+    520,
+    526,
+    552,
+    538
+   ],
+   "avg_ir_mohm": 538.5,
+   "spread_mohm": 35,
+   "start_floor_mV": 3576,
+   "start_imbalance_mV": 127,
+   "rest_V": 22.019
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    542,
+    525,
+    511,
+    516,
+    535,
+    529
+   ],
+   "avg_ir_mohm": 526.3,
+   "spread_mohm": 31,
+   "start_floor_mV": 3591,
+   "start_imbalance_mV": 113,
+   "rest_V": 22.052
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    540,
+    524,
+    504,
+    518,
+    531,
+    526
+   ],
+   "avg_ir_mohm": 523.8,
+   "spread_mohm": 36,
+   "start_floor_mV": 3605,
+   "start_imbalance_mV": 99,
+   "rest_V": 22.079
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    549,
+    522,
+    507,
+    517,
+    539,
+    529
+   ],
+   "avg_ir_mohm": 527.2,
+   "spread_mohm": 42,
+   "start_floor_mV": 3569,
+   "start_imbalance_mV": 134,
+   "rest_V": 21.989
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    546,
+    523,
+    504,
+    518,
+    532,
+    522
+   ],
+   "avg_ir_mohm": 524.2,
+   "spread_mohm": 42,
+   "start_floor_mV": 3608,
+   "start_imbalance_mV": 99,
+   "rest_V": 22.083
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    564,
+    541,
+    528,
+    538,
+    556,
+    549
+   ],
+   "avg_ir_mohm": 546.0,
+   "spread_mohm": 36,
+   "start_floor_mV": 3508,
+   "start_imbalance_mV": 192,
+   "rest_V": 21.842
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    569,
+    543,
+    524,
+    538,
+    552,
+    545
+   ],
+   "avg_ir_mohm": 545.2,
+   "spread_mohm": 45,
+   "start_floor_mV": 3507,
+   "start_imbalance_mV": 190,
+   "rest_V": 21.795
+  },
+  {
+   "session": "2026-09-26",
+   "cells_ir_mohm": [
+    562,
+    548,
+    533,
+    533,
+    559,
+    547
+   ],
+   "avg_ir_mohm": 547.0,
+   "spread_mohm": 29,
+   "start_floor_mV": 3509,
+   "start_imbalance_mV": 184,
+   "rest_V": 21.755
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    561,
+    546,
+    528,
+    536,
+    557,
+    545
+   ],
+   "avg_ir_mohm": 545.5,
+   "spread_mohm": 33,
+   "start_floor_mV": 3543,
+   "start_imbalance_mV": 155,
+   "rest_V": 21.882
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    569,
+    549,
+    527,
+    542,
+    562,
+    551
+   ],
+   "avg_ir_mohm": 550.0,
+   "spread_mohm": 42,
+   "start_floor_mV": 3509,
+   "start_imbalance_mV": 191,
+   "rest_V": 21.826
+  }
+ ],
+ "C1-P2": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    626,
+    612,
+    601,
+    613,
+    606,
+    592
+   ],
+   "avg_ir_mohm": 608.3,
+   "spread_mohm": 34,
+   "start_floor_mV": 3604,
+   "start_imbalance_mV": 25,
+   "rest_V": 21.7
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    570,
+    560,
+    541,
+    559,
+    551,
+    541
+   ],
+   "avg_ir_mohm": 553.7,
+   "spread_mohm": 29,
+   "start_floor_mV": 3668,
+   "start_imbalance_mV": 24,
+   "rest_V": 22.094
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    594,
+    586,
+    575,
+    583,
+    577,
+    576
+   ],
+   "avg_ir_mohm": 581.8,
+   "spread_mohm": 19,
+   "start_floor_mV": 3651,
+   "start_imbalance_mV": 26,
+   "rest_V": 21.993
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    556,
+    534,
+    519,
+    530,
+    535,
+    522
+   ],
+   "avg_ir_mohm": 532.7,
+   "spread_mohm": 37,
+   "start_floor_mV": 3698,
+   "start_imbalance_mV": 7,
+   "rest_V": 22.213
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    588,
+    578,
+    565,
+    575,
+    567,
+    565
+   ],
+   "avg_ir_mohm": 573.0,
+   "spread_mohm": 23,
+   "start_floor_mV": 3650,
+   "start_imbalance_mV": 28,
+   "rest_V": 21.988
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    574,
+    566,
+    551,
+    562,
+    563,
+    550
+   ],
+   "avg_ir_mohm": 561.0,
+   "spread_mohm": 24,
+   "start_floor_mV": 3666,
+   "start_imbalance_mV": 23,
+   "rest_V": 22.048
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    586,
+    578,
+    564,
+    572,
+    573,
+    562
+   ],
+   "avg_ir_mohm": 572.5,
+   "spread_mohm": 24,
+   "start_floor_mV": 3651,
+   "start_imbalance_mV": 28,
+   "rest_V": 22.002
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    561,
+    547,
+    534,
+    546,
+    548,
+    531
+   ],
+   "avg_ir_mohm": 544.5,
+   "spread_mohm": 30,
+   "start_floor_mV": 3694,
+   "start_imbalance_mV": 11,
+   "rest_V": 22.181
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    574,
+    565,
+    548,
+    562,
+    558,
+    550
+   ],
+   "avg_ir_mohm": 559.5,
+   "spread_mohm": 26,
+   "start_floor_mV": 3667,
+   "start_imbalance_mV": 27,
+   "rest_V": 22.083
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    541,
+    530,
+    519,
+    524,
+    531,
+    520
+   ],
+   "avg_ir_mohm": 527.5,
+   "spread_mohm": 22,
+   "start_floor_mV": 3699,
+   "start_imbalance_mV": 7,
+   "rest_V": 22.218
+  },
+  {
+   "session": "2026-09-26",
+   "cells_ir_mohm": [
+    582,
+    570,
+    556,
+    563,
+    570,
+    562
+   ],
+   "avg_ir_mohm": 567.2,
+   "spread_mohm": 26,
+   "start_floor_mV": 3648,
+   "start_imbalance_mV": 32,
+   "rest_V": 21.988
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    581,
+    571,
+    558,
+    561,
+    566,
+    562
+   ],
+   "avg_ir_mohm": 566.5,
+   "spread_mohm": 23,
+   "start_floor_mV": 3647,
+   "start_imbalance_mV": 33,
+   "rest_V": 21.986
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    580,
+    569,
+    554,
+    568,
+    560,
+    554
+   ],
+   "avg_ir_mohm": 564.2,
+   "spread_mohm": 26,
+   "start_floor_mV": 3634,
+   "start_imbalance_mV": 42,
+   "rest_V": 21.944
+  }
+ ],
+ "C1-P3": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    567,
+    555,
+    533,
+    542,
+    545,
+    541
+   ],
+   "avg_ir_mohm": 547.2,
+   "spread_mohm": 34,
+   "start_floor_mV": 3607,
+   "start_imbalance_mV": 78,
+   "rest_V": 21.813
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    537,
+    522,
+    500,
+    512,
+    517,
+    500
+   ],
+   "avg_ir_mohm": 514.7,
+   "spread_mohm": 37,
+   "start_floor_mV": 3642,
+   "start_imbalance_mV": 61,
+   "rest_V": 22.044
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    594,
+    584,
+    560,
+    574,
+    574,
+    563
+   ],
+   "avg_ir_mohm": 574.8,
+   "spread_mohm": 34,
+   "start_floor_mV": 3478,
+   "start_imbalance_mV": 139,
+   "rest_V": 21.263
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    591,
+    577,
+    566,
+    571,
+    573,
+    564
+   ],
+   "avg_ir_mohm": 573.7,
+   "spread_mohm": 27,
+   "start_floor_mV": 3474,
+   "start_imbalance_mV": 155,
+   "rest_V": 21.279
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    509,
+    505,
+    485,
+    504,
+    493,
+    484
+   ],
+   "avg_ir_mohm": 496.7,
+   "spread_mohm": 25,
+   "start_floor_mV": 3673,
+   "start_imbalance_mV": 32,
+   "rest_V": 22.183
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    547,
+    538,
+    520,
+    531,
+    525,
+    519
+   ],
+   "avg_ir_mohm": 530.0,
+   "spread_mohm": 28,
+   "start_floor_mV": 3596,
+   "start_imbalance_mV": 101,
+   "rest_V": 21.892
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    525,
+    517,
+    498,
+    512,
+    506,
+    495
+   ],
+   "avg_ir_mohm": 508.8,
+   "spread_mohm": 30,
+   "start_floor_mV": 3624,
+   "start_imbalance_mV": 79,
+   "rest_V": 22.038
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    526,
+    513,
+    501,
+    507,
+    511,
+    496
+   ],
+   "avg_ir_mohm": 509.0,
+   "spread_mohm": 30,
+   "start_floor_mV": 3634,
+   "start_imbalance_mV": 70,
+   "rest_V": 22.054
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    531,
+    521,
+    496,
+    511,
+    513,
+    501
+   ],
+   "avg_ir_mohm": 512.2,
+   "spread_mohm": 35,
+   "start_floor_mV": 3613,
+   "start_imbalance_mV": 89,
+   "rest_V": 21.984
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    533,
+    525,
+    518,
+    516,
+    516,
+    502
+   ],
+   "avg_ir_mohm": 518.3,
+   "spread_mohm": 31,
+   "start_floor_mV": 3622,
+   "start_imbalance_mV": 81,
+   "rest_V": 21.969
+  },
+  {
+   "session": "2026-09-26",
+   "cells_ir_mohm": [
+    521,
+    519,
+    500,
+    514,
+    504,
+    489
+   ],
+   "avg_ir_mohm": 507.8,
+   "spread_mohm": 32,
+   "start_floor_mV": 3622,
+   "start_imbalance_mV": 78,
+   "rest_V": 22.044
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    522,
+    514,
+    491,
+    512,
+    500,
+    485
+   ],
+   "avg_ir_mohm": 504.0,
+   "spread_mohm": 37,
+   "start_floor_mV": 3632,
+   "start_imbalance_mV": 71,
+   "rest_V": 22.09
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    528,
+    523,
+    502,
+    518,
+    514,
+    488
+   ],
+   "avg_ir_mohm": 512.2,
+   "spread_mohm": 40,
+   "start_floor_mV": 3578,
+   "start_imbalance_mV": 122,
+   "rest_V": 21.915
+  }
+ ],
+ "C1-P4": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    532,
+    502,
+    477,
+    493,
+    493,
+    487
+   ],
+   "avg_ir_mohm": 497.3,
+   "spread_mohm": 55,
+   "start_floor_mV": 3693,
+   "start_imbalance_mV": 15,
+   "rest_V": 22.219
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    563,
+    543,
+    526,
+    533,
+    539,
+    527
+   ],
+   "avg_ir_mohm": 538.5,
+   "spread_mohm": 37,
+   "start_floor_mV": 3604,
+   "start_imbalance_mV": 98,
+   "rest_V": 22.021
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    566,
+    548,
+    532,
+    542,
+    541,
+    530
+   ],
+   "avg_ir_mohm": 543.2,
+   "spread_mohm": 36,
+   "start_floor_mV": 3628,
+   "start_imbalance_mV": 74,
+   "rest_V": 22.076
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    400,
+    371,
+    356,
+    366,
+    368,
+    360
+   ],
+   "avg_ir_mohm": 370.2,
+   "spread_mohm": 44,
+   "start_floor_mV": 3740,
+   "start_imbalance_mV": 19,
+   "rest_V": 22.515
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    513,
+    487,
+    466,
+    478,
+    485,
+    469
+   ],
+   "avg_ir_mohm": 483.0,
+   "spread_mohm": 47,
+   "start_floor_mV": 3699,
+   "start_imbalance_mV": 9,
+   "rest_V": 22.233
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    553,
+    521,
+    502,
+    517,
+    516,
+    499
+   ],
+   "avg_ir_mohm": 518.0,
+   "spread_mohm": 54,
+   "start_floor_mV": 3630,
+   "start_imbalance_mV": 75,
+   "rest_V": 22.111
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    581,
+    550,
+    537,
+    547,
+    548,
+    541
+   ],
+   "avg_ir_mohm": 550.7,
+   "spread_mohm": 44,
+   "start_floor_mV": 3549,
+   "start_imbalance_mV": 142,
+   "rest_V": 21.867
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    545,
+    522,
+    502,
+    514,
+    518,
+    509
+   ],
+   "avg_ir_mohm": 518.3,
+   "spread_mohm": 43,
+   "start_floor_mV": 3657,
+   "start_imbalance_mV": 49,
+   "rest_V": 22.146
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    566,
+    534,
+    517,
+    529,
+    535,
+    524
+   ],
+   "avg_ir_mohm": 534.2,
+   "spread_mohm": 49,
+   "start_floor_mV": 3599,
+   "start_imbalance_mV": 104,
+   "rest_V": 22.039
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    548,
+    524,
+    507,
+    512,
+    522,
+    506
+   ],
+   "avg_ir_mohm": 519.8,
+   "spread_mohm": 42,
+   "start_floor_mV": 3640,
+   "start_imbalance_mV": 65,
+   "rest_V": 22.125
+  },
+  {
+   "session": "2026-09-26",
+   "cells_ir_mohm": [
+    592,
+    556,
+    547,
+    558,
+    561,
+    546
+   ],
+   "avg_ir_mohm": 560.0,
+   "spread_mohm": 46,
+   "start_floor_mV": 3479,
+   "start_imbalance_mV": 191,
+   "rest_V": 21.642
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    550,
+    530,
+    514,
+    526,
+    521,
+    518
+   ],
+   "avg_ir_mohm": 526.5,
+   "spread_mohm": 36,
+   "start_floor_mV": 3654,
+   "start_imbalance_mV": 50,
+   "rest_V": 22.125
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    561,
+    540,
+    516,
+    529,
+    536,
+    521
+   ],
+   "avg_ir_mohm": 533.8,
+   "spread_mohm": 45,
+   "start_floor_mV": 3603,
+   "start_imbalance_mV": 98,
+   "rest_V": 22.025
+  }
+ ],
+ "C1-P5": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    565,
+    544,
+    541,
+    549,
+    546,
+    531
+   ],
+   "avg_ir_mohm": 546.0,
+   "spread_mohm": 34,
+   "start_floor_mV": 3648,
+   "start_imbalance_mV": 39,
+   "rest_V": 22.047
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    564,
+    546,
+    534,
+    547,
+    546,
+    536
+   ],
+   "avg_ir_mohm": 545.5,
+   "spread_mohm": 30,
+   "start_floor_mV": 3637,
+   "start_imbalance_mV": 39,
+   "rest_V": 21.975
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    583,
+    570,
+    562,
+    570,
+    568,
+    557
+   ],
+   "avg_ir_mohm": 568.3,
+   "spread_mohm": 26,
+   "start_floor_mV": 3592,
+   "start_imbalance_mV": 48,
+   "rest_V": 21.724
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    500,
+    488,
+    481,
+    489,
+    488,
+    474
+   ],
+   "avg_ir_mohm": 486.7,
+   "spread_mohm": 26,
+   "start_floor_mV": 3702,
+   "start_imbalance_mV": 6,
+   "rest_V": 22.235
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    538,
+    519,
+    513,
+    523,
+    523,
+    509
+   ],
+   "avg_ir_mohm": 520.8,
+   "spread_mohm": 29,
+   "start_floor_mV": 3686,
+   "start_imbalance_mV": 17,
+   "rest_V": 22.19
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    544,
+    540,
+    524,
+    535,
+    534,
+    524
+   ],
+   "avg_ir_mohm": 533.5,
+   "spread_mohm": 20,
+   "start_floor_mV": 3665,
+   "start_imbalance_mV": 31,
+   "rest_V": 22.117
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    534,
+    521,
+    509,
+    524,
+    520,
+    499
+   ],
+   "avg_ir_mohm": 517.8,
+   "spread_mohm": 35,
+   "start_floor_mV": 3681,
+   "start_imbalance_mV": 23,
+   "rest_V": 22.189
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    571,
+    553,
+    543,
+    553,
+    553,
+    540
+   ],
+   "avg_ir_mohm": 552.2,
+   "spread_mohm": 31,
+   "start_floor_mV": 3598,
+   "start_imbalance_mV": 47,
+   "rest_V": 21.767
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    555,
+    539,
+    531,
+    543,
+    543,
+    520
+   ],
+   "avg_ir_mohm": 538.5,
+   "spread_mohm": 35,
+   "start_floor_mV": 3646,
+   "start_imbalance_mV": 40,
+   "rest_V": 22.047
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    549,
+    533,
+    525,
+    530,
+    537,
+    511
+   ],
+   "avg_ir_mohm": 530.8,
+   "spread_mohm": 38,
+   "start_floor_mV": 3658,
+   "start_imbalance_mV": 33,
+   "rest_V": 22.077
+  },
+  {
+   "session": "2026-09-26",
+   "cells_ir_mohm": [
+    553,
+    536,
+    531,
+    541,
+    539,
+    525
+   ],
+   "avg_ir_mohm": 537.5,
+   "spread_mohm": 28,
+   "start_floor_mV": 3648,
+   "start_imbalance_mV": 41,
+   "rest_V": 22.047
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    546,
+    534,
+    525,
+    538,
+    532,
+    524
+   ],
+   "avg_ir_mohm": 533.2,
+   "spread_mohm": 22,
+   "start_floor_mV": 3663,
+   "start_imbalance_mV": 34,
+   "rest_V": 22.113
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    587,
+    570,
+    563,
+    573,
+    570,
+    554
+   ],
+   "avg_ir_mohm": 569.5,
+   "spread_mohm": 33,
+   "start_floor_mV": 3539,
+   "start_imbalance_mV": 71,
+   "rest_V": 21.523
+  }
+ ],
+ "C1-P6": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    518,
+    514,
+    505,
+    504,
+    523,
+    504
+   ],
+   "avg_ir_mohm": 511.3,
+   "spread_mohm": 19,
+   "start_floor_mV": 3702,
+   "start_imbalance_mV": 6,
+   "rest_V": 22.235
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    557,
+    550,
+    541,
+    545,
+    555,
+    542
+   ],
+   "avg_ir_mohm": 548.3,
+   "spread_mohm": 16,
+   "start_floor_mV": 3670,
+   "start_imbalance_mV": 32,
+   "rest_V": 22.147
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    609,
+    613,
+    606,
+    613,
+    613,
+    600
+   ],
+   "avg_ir_mohm": 609.0,
+   "spread_mohm": 13,
+   "start_floor_mV": 3533,
+   "start_imbalance_mV": 62,
+   "rest_V": 21.392
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    578,
+    572,
+    566,
+    569,
+    580,
+    559
+   ],
+   "avg_ir_mohm": 570.7,
+   "spread_mohm": 21,
+   "start_floor_mV": 3631,
+   "start_imbalance_mV": 51,
+   "rest_V": 21.959
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    559,
+    555,
+    544,
+    549,
+    556,
+    541
+   ],
+   "avg_ir_mohm": 550.7,
+   "spread_mohm": 18,
+   "start_floor_mV": 3638,
+   "start_imbalance_mV": 50,
+   "rest_V": 22.012
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    583,
+    580,
+    568,
+    573,
+    583,
+    563
+   ],
+   "avg_ir_mohm": 575.0,
+   "spread_mohm": 20,
+   "start_floor_mV": 3585,
+   "start_imbalance_mV": 64,
+   "rest_V": 21.751
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    560,
+    559,
+    548,
+    552,
+    564,
+    540
+   ],
+   "avg_ir_mohm": 553.8,
+   "spread_mohm": 24,
+   "start_floor_mV": 3633,
+   "start_imbalance_mV": 53,
+   "rest_V": 22.002
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    555,
+    553,
+    546,
+    552,
+    555,
+    541
+   ],
+   "avg_ir_mohm": 550.3,
+   "spread_mohm": 14,
+   "start_floor_mV": 3660,
+   "start_imbalance_mV": 35,
+   "rest_V": 22.105
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    562,
+    559,
+    553,
+    557,
+    564,
+    545
+   ],
+   "avg_ir_mohm": 556.7,
+   "spread_mohm": 19,
+   "start_floor_mV": 3620,
+   "start_imbalance_mV": 52,
+   "rest_V": 21.931
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    578,
+    582,
+    567,
+    568,
+    582,
+    565
+   ],
+   "avg_ir_mohm": 573.7,
+   "spread_mohm": 17,
+   "start_floor_mV": 3577,
+   "start_imbalance_mV": 64,
+   "rest_V": 21.692
+  },
+  {
+   "session": "2026-09-26",
+   "cells_ir_mohm": [
+    575,
+    583,
+    576,
+    571,
+    584,
+    560
+   ],
+   "avg_ir_mohm": 574.8,
+   "spread_mohm": 24,
+   "start_floor_mV": 3594,
+   "start_imbalance_mV": 67,
+   "rest_V": 21.815
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    554,
+    551,
+    535,
+    547,
+    553,
+    534
+   ],
+   "avg_ir_mohm": 545.7,
+   "spread_mohm": 20,
+   "start_floor_mV": 3658,
+   "start_imbalance_mV": 40,
+   "rest_V": 22.115
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    558,
+    554,
+    547,
+    544,
+    560,
+    547
+   ],
+   "avg_ir_mohm": 551.7,
+   "spread_mohm": 16,
+   "start_floor_mV": 3644,
+   "start_imbalance_mV": 50,
+   "rest_V": 22.045
+  }
+ ],
+ "C2-P1": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    594,
+    579,
+    590,
+    590,
+    589,
+    556
+   ],
+   "avg_ir_mohm": 583.0,
+   "spread_mohm": 38,
+   "start_floor_mV": 3606,
+   "start_imbalance_mV": 71,
+   "rest_V": 21.832
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    597,
+    594,
+    585,
+    596,
+    590,
+    568
+   ],
+   "avg_ir_mohm": 588.3,
+   "spread_mohm": 29,
+   "start_floor_mV": 3582,
+   "start_imbalance_mV": 65,
+   "rest_V": 21.699
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    599,
+    592,
+    586,
+    595,
+    586,
+    572
+   ],
+   "avg_ir_mohm": 588.3,
+   "spread_mohm": 27,
+   "start_floor_mV": 3589,
+   "start_imbalance_mV": 45,
+   "rest_V": 21.691
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    503,
+    494,
+    489,
+    499,
+    496,
+    478
+   ],
+   "avg_ir_mohm": 493.2,
+   "spread_mohm": 25,
+   "start_floor_mV": 3702,
+   "start_imbalance_mV": 9,
+   "rest_V": 22.227
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    523,
+    525,
+    519,
+    528,
+    519,
+    498
+   ],
+   "avg_ir_mohm": 518.7,
+   "spread_mohm": 30,
+   "start_floor_mV": 3701,
+   "start_imbalance_mV": 6,
+   "rest_V": 22.214
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    516,
+    512,
+    508,
+    514,
+    498,
+    492
+   ],
+   "avg_ir_mohm": 506.7,
+   "spread_mohm": 24,
+   "start_floor_mV": 3700,
+   "start_imbalance_mV": 7,
+   "rest_V": 22.21
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    549,
+    542,
+    542,
+    545,
+    542,
+    520
+   ],
+   "avg_ir_mohm": 540.0,
+   "spread_mohm": 29,
+   "start_floor_mV": 3685,
+   "start_imbalance_mV": 20,
+   "rest_V": 22.176
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    539,
+    536,
+    529,
+    535,
+    528,
+    521
+   ],
+   "avg_ir_mohm": 531.3,
+   "spread_mohm": 18,
+   "start_floor_mV": 3695,
+   "start_imbalance_mV": 9,
+   "rest_V": 22.205
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    573,
+    565,
+    552,
+    569,
+    557,
+    550
+   ],
+   "avg_ir_mohm": 561.0,
+   "spread_mohm": 23,
+   "start_floor_mV": 3629,
+   "start_imbalance_mV": 46,
+   "rest_V": 21.939
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    556,
+    552,
+    539,
+    560,
+    557,
+    535
+   ],
+   "avg_ir_mohm": 549.8,
+   "spread_mohm": 25,
+   "start_floor_mV": 3645,
+   "start_imbalance_mV": 48,
+   "rest_V": 22.018
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    574,
+    572,
+    568,
+    566,
+    566,
+    551
+   ],
+   "avg_ir_mohm": 566.2,
+   "spread_mohm": 23,
+   "start_floor_mV": 3612,
+   "start_imbalance_mV": 40,
+   "rest_V": 21.82
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    531,
+    523,
+    521,
+    531,
+    522,
+    499
+   ],
+   "avg_ir_mohm": 521.2,
+   "spread_mohm": 32,
+   "start_floor_mV": 3694,
+   "start_imbalance_mV": 13,
+   "rest_V": 22.213
+  },
+  {
+   "session": "2026-09-30",
+   "cells_ir_mohm": [
+    494,
+    503,
+    492,
+    509,
+    501,
+    493
+   ],
+   "avg_ir_mohm": 498.7,
+   "spread_mohm": 17,
+   "start_floor_mV": 3698,
+   "start_imbalance_mV": 7,
+   "rest_V": 22.203
+  }
+ ],
+ "C2-P2": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    550,
+    569,
+    538,
+    543,
+    558,
+    564
+   ],
+   "avg_ir_mohm": 553.7,
+   "spread_mohm": 31,
+   "start_floor_mV": 3547,
+   "start_imbalance_mV": 144,
+   "rest_V": 21.895
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    546,
+    558,
+    525,
+    536,
+    549,
+    552
+   ],
+   "avg_ir_mohm": 544.3,
+   "spread_mohm": 33,
+   "start_floor_mV": 3557,
+   "start_imbalance_mV": 134,
+   "rest_V": 21.924
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    537,
+    540,
+    517,
+    525,
+    532,
+    546
+   ],
+   "avg_ir_mohm": 532.8,
+   "spread_mohm": 29,
+   "start_floor_mV": 3606,
+   "start_imbalance_mV": 92,
+   "rest_V": 22.066
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    451,
+    475,
+    425,
+    442,
+    449,
+    468
+   ],
+   "avg_ir_mohm": 451.7,
+   "spread_mohm": 50,
+   "start_floor_mV": 3703,
+   "start_imbalance_mV": 27,
+   "rest_V": 22.308
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    530,
+    548,
+    507,
+    523,
+    534,
+    538
+   ],
+   "avg_ir_mohm": 530.0,
+   "spread_mohm": 41,
+   "start_floor_mV": 3606,
+   "start_imbalance_mV": 94,
+   "rest_V": 22.059
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    528,
+    528,
+    503,
+    514,
+    515,
+    518
+   ],
+   "avg_ir_mohm": 517.7,
+   "spread_mohm": 25,
+   "start_floor_mV": 3651,
+   "start_imbalance_mV": 48,
+   "rest_V": 22.137
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    524,
+    536,
+    496,
+    511,
+    522,
+    535
+   ],
+   "avg_ir_mohm": 520.7,
+   "spread_mohm": 40,
+   "start_floor_mV": 3621,
+   "start_imbalance_mV": 81,
+   "rest_V": 22.102
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    486,
+    499,
+    461,
+    478,
+    485,
+    498
+   ],
+   "avg_ir_mohm": 484.5,
+   "spread_mohm": 38,
+   "start_floor_mV": 3695,
+   "start_imbalance_mV": 11,
+   "rest_V": 22.21
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    545,
+    559,
+    511,
+    528,
+    539,
+    556
+   ],
+   "avg_ir_mohm": 539.7,
+   "spread_mohm": 48,
+   "start_floor_mV": 3545,
+   "start_imbalance_mV": 152,
+   "rest_V": 21.944
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    513,
+    520,
+    492,
+    501,
+    511,
+    519
+   ],
+   "avg_ir_mohm": 509.3,
+   "spread_mohm": 28,
+   "start_floor_mV": 3655,
+   "start_imbalance_mV": 48,
+   "rest_V": 22.157
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    536,
+    545,
+    517,
+    525,
+    539,
+    539
+   ],
+   "avg_ir_mohm": 533.5,
+   "spread_mohm": 28,
+   "start_floor_mV": 3596,
+   "start_imbalance_mV": 101,
+   "rest_V": 22.019
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    487,
+    493,
+    451,
+    472,
+    478,
+    495
+   ],
+   "avg_ir_mohm": 479.3,
+   "spread_mohm": 44,
+   "start_floor_mV": 3684,
+   "start_imbalance_mV": 22,
+   "rest_V": 22.201
+  },
+  {
+   "session": "2026-09-30",
+   "cells_ir_mohm": [
+    528,
+    537,
+    514,
+    518,
+    532,
+    540
+   ],
+   "avg_ir_mohm": 528.2,
+   "spread_mohm": 26,
+   "start_floor_mV": 3597,
+   "start_imbalance_mV": 103,
+   "rest_V": 22.055
+  }
+ ],
+ "C2-P3": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    579,
+    580,
+    570,
+    579,
+    575,
+    585
+   ],
+   "avg_ir_mohm": 578.0,
+   "spread_mohm": 15,
+   "start_floor_mV": 3667,
+   "start_imbalance_mV": 23,
+   "rest_V": 22.047
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    581,
+    579,
+    560,
+    572,
+    573,
+    578
+   ],
+   "avg_ir_mohm": 573.8,
+   "spread_mohm": 21,
+   "start_floor_mV": 3672,
+   "start_imbalance_mV": 24,
+   "rest_V": 22.078
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    562,
+    554,
+    550,
+    559,
+    557,
+    555
+   ],
+   "avg_ir_mohm": 556.2,
+   "spread_mohm": 12,
+   "start_floor_mV": 3690,
+   "start_imbalance_mV": 9,
+   "rest_V": 22.174
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    588,
+    586,
+    566,
+    581,
+    581,
+    585
+   ],
+   "avg_ir_mohm": 581.2,
+   "spread_mohm": 22,
+   "start_floor_mV": 3640,
+   "start_imbalance_mV": 36,
+   "rest_V": 21.918
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    569,
+    574,
+    554,
+    561,
+    568,
+    572
+   ],
+   "avg_ir_mohm": 566.3,
+   "spread_mohm": 20,
+   "start_floor_mV": 3669,
+   "start_imbalance_mV": 26,
+   "rest_V": 22.077
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    562,
+    568,
+    557,
+    569,
+    568,
+    560
+   ],
+   "avg_ir_mohm": 564.0,
+   "spread_mohm": 12,
+   "start_floor_mV": 3671,
+   "start_imbalance_mV": 26,
+   "rest_V": 22.09
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    568,
+    564,
+    551,
+    566,
+    563,
+    571
+   ],
+   "avg_ir_mohm": 563.8,
+   "spread_mohm": 20,
+   "start_floor_mV": 3680,
+   "start_imbalance_mV": 17,
+   "rest_V": 22.124
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    548,
+    551,
+    533,
+    543,
+    545,
+    551
+   ],
+   "avg_ir_mohm": 545.2,
+   "spread_mohm": 18,
+   "start_floor_mV": 3697,
+   "start_imbalance_mV": 5,
+   "rest_V": 22.201
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    584,
+    583,
+    558,
+    576,
+    582,
+    588
+   ],
+   "avg_ir_mohm": 578.5,
+   "spread_mohm": 30,
+   "start_floor_mV": 3625,
+   "start_imbalance_mV": 50,
+   "rest_V": 21.873
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    591,
+    595,
+    569,
+    586,
+    586,
+    591
+   ],
+   "avg_ir_mohm": 586.3,
+   "spread_mohm": 26,
+   "start_floor_mV": 3614,
+   "start_imbalance_mV": 51,
+   "rest_V": 21.803
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    579,
+    579,
+    553,
+    568,
+    573,
+    578
+   ],
+   "avg_ir_mohm": 571.7,
+   "spread_mohm": 26,
+   "start_floor_mV": 3643,
+   "start_imbalance_mV": 43,
+   "rest_V": 21.95
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    534,
+    535,
+    517,
+    529,
+    524,
+    532
+   ],
+   "avg_ir_mohm": 528.5,
+   "spread_mohm": 18,
+   "start_floor_mV": 3701,
+   "start_imbalance_mV": 3,
+   "rest_V": 22.213
+  },
+  {
+   "session": "2026-09-30",
+   "cells_ir_mohm": [
+    568,
+    570,
+    545,
+    564,
+    563,
+    571
+   ],
+   "avg_ir_mohm": 563.5,
+   "spread_mohm": 26,
+   "start_floor_mV": 3661,
+   "start_imbalance_mV": 35,
+   "rest_V": 22.062
+  }
+ ],
+ "C2-P4": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    578,
+    585,
+    580,
+    585,
+    564,
+    575
+   ],
+   "avg_ir_mohm": 577.8,
+   "spread_mohm": 21,
+   "start_floor_mV": 3633,
+   "start_imbalance_mV": 58,
+   "rest_V": 21.946
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    576,
+    578,
+    571,
+    575,
+    567,
+    570
+   ],
+   "avg_ir_mohm": 572.8,
+   "spread_mohm": 11,
+   "start_floor_mV": 3604,
+   "start_imbalance_mV": 62,
+   "rest_V": 21.772
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    593,
+    596,
+    584,
+    594,
+    583,
+    583
+   ],
+   "avg_ir_mohm": 588.8,
+   "spread_mohm": 13,
+   "start_floor_mV": 3604,
+   "start_imbalance_mV": 56,
+   "rest_V": 21.732
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    481,
+    488,
+    480,
+    486,
+    474,
+    472
+   ],
+   "avg_ir_mohm": 480.2,
+   "spread_mohm": 16,
+   "start_floor_mV": 3703,
+   "start_imbalance_mV": 12,
+   "rest_V": 22.24
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    566,
+    573,
+    558,
+    563,
+    557,
+    564
+   ],
+   "avg_ir_mohm": 563.5,
+   "spread_mohm": 16,
+   "start_floor_mV": 3628,
+   "start_imbalance_mV": 58,
+   "rest_V": 21.908
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    557,
+    559,
+    545,
+    555,
+    546,
+    549
+   ],
+   "avg_ir_mohm": 551.8,
+   "spread_mohm": 14,
+   "start_floor_mV": 3665,
+   "start_imbalance_mV": 33,
+   "rest_V": 22.077
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    579,
+    585,
+    576,
+    584,
+    572,
+    577
+   ],
+   "avg_ir_mohm": 578.8,
+   "spread_mohm": 13,
+   "start_floor_mV": 3601,
+   "start_imbalance_mV": 69,
+   "rest_V": 21.787
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    539,
+    541,
+    530,
+    537,
+    529,
+    532
+   ],
+   "avg_ir_mohm": 534.7,
+   "spread_mohm": 12,
+   "start_floor_mV": 3686,
+   "start_imbalance_mV": 14,
+   "rest_V": 22.16
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    538,
+    542,
+    522,
+    543,
+    527,
+    528
+   ],
+   "avg_ir_mohm": 533.3,
+   "spread_mohm": 21,
+   "start_floor_mV": 3679,
+   "start_imbalance_mV": 20,
+   "rest_V": 22.137
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    557,
+    564,
+    553,
+    558,
+    553,
+    552
+   ],
+   "avg_ir_mohm": 556.2,
+   "spread_mohm": 12,
+   "start_floor_mV": 3645,
+   "start_imbalance_mV": 48,
+   "rest_V": 22.013
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    560,
+    566,
+    550,
+    564,
+    550,
+    553
+   ],
+   "avg_ir_mohm": 557.2,
+   "spread_mohm": 16,
+   "start_floor_mV": 3646,
+   "start_imbalance_mV": 47,
+   "rest_V": 21.996
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    530,
+    535,
+    526,
+    531,
+    524,
+    524
+   ],
+   "avg_ir_mohm": 528.3,
+   "spread_mohm": 11,
+   "start_floor_mV": 3691,
+   "start_imbalance_mV": 10,
+   "rest_V": 22.182
+  },
+  {
+   "session": "2026-09-30",
+   "cells_ir_mohm": [
+    538,
+    548,
+    531,
+    542,
+    532,
+    544
+   ],
+   "avg_ir_mohm": 539.2,
+   "spread_mohm": 17,
+   "start_floor_mV": 3686,
+   "start_imbalance_mV": 15,
+   "rest_V": 22.161
+  }
+ ],
+ "C2-P5": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    580,
+    584,
+    580,
+    582,
+    562,
+    571
+   ],
+   "avg_ir_mohm": 576.5,
+   "spread_mohm": 22,
+   "start_floor_mV": 3612,
+   "start_imbalance_mV": 54,
+   "rest_V": 21.79
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    571,
+    572,
+    558,
+    569,
+    552,
+    561
+   ],
+   "avg_ir_mohm": 563.8,
+   "spread_mohm": 20,
+   "start_floor_mV": 3647,
+   "start_imbalance_mV": 44,
+   "rest_V": 21.978
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    522,
+    516,
+    503,
+    513,
+    503,
+    501
+   ],
+   "avg_ir_mohm": 509.7,
+   "spread_mohm": 21,
+   "start_floor_mV": 3698,
+   "start_imbalance_mV": 2,
+   "rest_V": 22.196
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    510,
+    511,
+    494,
+    507,
+    490,
+    498
+   ],
+   "avg_ir_mohm": 501.7,
+   "spread_mohm": 21,
+   "start_floor_mV": 3701,
+   "start_imbalance_mV": 3,
+   "rest_V": 22.214
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    507,
+    508,
+    498,
+    509,
+    493,
+    493
+   ],
+   "avg_ir_mohm": 501.3,
+   "spread_mohm": 16,
+   "start_floor_mV": 3700,
+   "start_imbalance_mV": 4,
+   "rest_V": 22.21
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    572,
+    572,
+    560,
+    567,
+    554,
+    554
+   ],
+   "avg_ir_mohm": 563.2,
+   "spread_mohm": 18,
+   "start_floor_mV": 3636,
+   "start_imbalance_mV": 52,
+   "rest_V": 21.926
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    572,
+    573,
+    561,
+    575,
+    553,
+    556
+   ],
+   "avg_ir_mohm": 565.0,
+   "spread_mohm": 22,
+   "start_floor_mV": 3626,
+   "start_imbalance_mV": 58,
+   "rest_V": 21.87
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    553,
+    555,
+    546,
+    549,
+    539,
+    535
+   ],
+   "avg_ir_mohm": 546.2,
+   "spread_mohm": 20,
+   "start_floor_mV": 3678,
+   "start_imbalance_mV": 25,
+   "rest_V": 22.14
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    552,
+    553,
+    535,
+    548,
+    533,
+    540
+   ],
+   "avg_ir_mohm": 543.5,
+   "spread_mohm": 20,
+   "start_floor_mV": 3663,
+   "start_imbalance_mV": 36,
+   "rest_V": 22.07
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    547,
+    544,
+    533,
+    537,
+    532,
+    531
+   ],
+   "avg_ir_mohm": 537.3,
+   "spread_mohm": 16,
+   "start_floor_mV": 3683,
+   "start_imbalance_mV": 19,
+   "rest_V": 22.158
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    550,
+    547,
+    537,
+    541,
+    536,
+    537
+   ],
+   "avg_ir_mohm": 541.3,
+   "spread_mohm": 14,
+   "start_floor_mV": 3663,
+   "start_imbalance_mV": 36,
+   "rest_V": 22.061
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    569,
+    567,
+    557,
+    563,
+    547,
+    550
+   ],
+   "avg_ir_mohm": 558.8,
+   "spread_mohm": 22,
+   "start_floor_mV": 3631,
+   "start_imbalance_mV": 63,
+   "rest_V": 21.914
+  },
+  {
+   "session": "2026-09-30",
+   "cells_ir_mohm": [
+    545,
+    544,
+    526,
+    545,
+    526,
+    530
+   ],
+   "avg_ir_mohm": 536.0,
+   "spread_mohm": 19,
+   "start_floor_mV": 3681,
+   "start_imbalance_mV": 20,
+   "rest_V": 22.147
+  }
+ ],
+ "C2-P6": [
+  {
+   "session": "S263",
+   "cells_ir_mohm": [
+    555,
+    549,
+    544,
+    554,
+    559,
+    567
+   ],
+   "avg_ir_mohm": 554.7,
+   "spread_mohm": 23,
+   "start_floor_mV": 3613,
+   "start_imbalance_mV": 45,
+   "rest_V": 21.855
+  },
+  {
+   "session": "S287",
+   "cells_ir_mohm": [
+    535,
+    533,
+    524,
+    529,
+    538,
+    541
+   ],
+   "avg_ir_mohm": 533.3,
+   "spread_mohm": 17,
+   "start_floor_mV": 3682,
+   "start_imbalance_mV": 18,
+   "rest_V": 22.163
+  },
+  {
+   "session": "S308",
+   "cells_ir_mohm": [
+    592,
+    594,
+    583,
+    594,
+    601,
+    592
+   ],
+   "avg_ir_mohm": 592.7,
+   "spread_mohm": 18,
+   "start_floor_mV": 3499,
+   "start_imbalance_mV": 96,
+   "rest_V": 21.41
+  },
+  {
+   "session": "S329",
+   "cells_ir_mohm": [
+    506,
+    510,
+    490,
+    516,
+    511,
+    506
+   ],
+   "avg_ir_mohm": 506.5,
+   "spread_mohm": 26,
+   "start_floor_mV": 3699,
+   "start_imbalance_mV": 7,
+   "rest_V": 22.206
+  },
+  {
+   "session": "S344",
+   "cells_ir_mohm": [
+    538,
+    536,
+    526,
+    533,
+    536,
+    541
+   ],
+   "avg_ir_mohm": 535.0,
+   "spread_mohm": 15,
+   "start_floor_mV": 3657,
+   "start_imbalance_mV": 44,
+   "rest_V": 22.127
+  },
+  {
+   "session": "S358",
+   "cells_ir_mohm": [
+    508,
+    511,
+    492,
+    518,
+    504,
+    506
+   ],
+   "avg_ir_mohm": 506.5,
+   "spread_mohm": 26,
+   "start_floor_mV": 3696,
+   "start_imbalance_mV": 10,
+   "rest_V": 22.207
+  },
+  {
+   "session": "S372",
+   "cells_ir_mohm": [
+    514,
+    523,
+    511,
+    517,
+    525,
+    523
+   ],
+   "avg_ir_mohm": 518.8,
+   "spread_mohm": 14,
+   "start_floor_mV": 3681,
+   "start_imbalance_mV": 21,
+   "rest_V": 22.18
+  },
+  {
+   "session": "S386",
+   "cells_ir_mohm": [
+    492,
+    492,
+    485,
+    499,
+    495,
+    493
+   ],
+   "avg_ir_mohm": 492.7,
+   "spread_mohm": 14,
+   "start_floor_mV": 3701,
+   "start_imbalance_mV": 5,
+   "rest_V": 22.218
+  },
+  {
+   "session": "S400",
+   "cells_ir_mohm": [
+    520,
+    527,
+    510,
+    525,
+    528,
+    523
+   ],
+   "avg_ir_mohm": 522.2,
+   "spread_mohm": 18,
+   "start_floor_mV": 3651,
+   "start_imbalance_mV": 51,
+   "rest_V": 22.129
+  },
+  {
+   "session": "S413",
+   "cells_ir_mohm": [
+    505,
+    514,
+    494,
+    517,
+    507,
+    505
+   ],
+   "avg_ir_mohm": 507.0,
+   "spread_mohm": 23,
+   "start_floor_mV": 3679,
+   "start_imbalance_mV": 26,
+   "rest_V": 22.188
+  },
+  {
+   "session": "2026-09-26-eve",
+   "cells_ir_mohm": [
+    525,
+    521,
+    515,
+    529,
+    530,
+    525
+   ],
+   "avg_ir_mohm": 524.2,
+   "spread_mohm": 15,
+   "start_floor_mV": 3649,
+   "start_imbalance_mV": 51,
+   "rest_V": 22.132
+  },
+  {
+   "session": "2026-09-27",
+   "cells_ir_mohm": [
+    433,
+    436,
+    422,
+    447,
+    439,
+    432
+   ],
+   "avg_ir_mohm": 434.8,
+   "spread_mohm": 25,
+   "start_floor_mV": 3712,
+   "start_imbalance_mV": 18,
+   "rest_V": 22.329
+  },
+  {
+   "session": "2026-09-30",
+   "cells_ir_mohm": [
+    493,
+    497,
+    483,
+    501,
+    497,
+    501
+   ],
+   "avg_ir_mohm": 495.3,
+   "spread_mohm": 18,
+   "start_floor_mV": 3694,
+   "start_imbalance_mV": 12,
+   "rest_V": 22.209
+  }
+ ]
+}
