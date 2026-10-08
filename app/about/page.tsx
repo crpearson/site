@@ -152,7 +152,8 @@ export default function AboutPage() {
           <p>
             Only LiPo Storage logs named <span className="font-mono text-[var(--ink)]">LiPo[Storage_NNN_CHx].txt</span>{" "}
             (or <span className="font-mono text-[var(--ink)]">.txt.gz</span>) are auto-mapped. NNN
-            belongs to one charger serial. Streams are not merged across serials.
+            belongs to one charger alias. Streams are not merged across chargers. Ingest maps the
+            header serial to DX8-A or DX8-B with a private map that is not stored in this repo.
           </p>
           <p>
             Channel, then NNN. CH1 is fleet C1 and CH2 is fleet C2. Within a night and channel,
@@ -176,9 +177,7 @@ export default function AboutPage() {
           {units.map((charger) => (
             <li key={charger.id} className="rounded-xl border border-[var(--line)] p-3 text-sm">
               <p className="font-mono text-[var(--ink)]">
-                {charger.id} · {charger.fleet} · SN {charger.sn ?? "none yet"} · lock{" "}
-                {charger.fleetLock ? "on" : "off"}
-                {charger.fw ? ` · ${charger.fw}` : ""}
+                {charger.id} · {charger.fleet} · lock {charger.fleetLock ? "on" : "off"}
               </p>
               {charger.note ? <p className="note mt-1">{charger.note}</p> : null}
             </li>

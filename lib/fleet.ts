@@ -525,7 +525,6 @@ export function brandCards(): BrandCard[] {
 
 export type ChargerInfo = {
   id: string;
-  sn: string | null;
   fleet: string;
   model: string;
   fw?: string;
@@ -538,7 +537,6 @@ export function chargers(): ChargerInfo[] {
   const table = registryDoc.chargers as Record<
     string,
     {
-      sn: string | null;
       fleet: string;
       model: string;
       fw?: string;
@@ -549,7 +547,6 @@ export function chargers(): ChargerInfo[] {
   >;
   return Object.entries(table).map(([id, charger]) => ({
     id,
-    sn: charger.sn,
     fleet: charger.fleet,
     model: charger.model,
     fw: charger.fw,
