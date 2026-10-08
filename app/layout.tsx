@@ -68,6 +68,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             {siteMeta.source}. Logged through {siteMeta.lastIngest}. {siteMeta.rowCount}{" "}
             measurements across {siteMeta.sessionCount} nights. A partial night is left incomplete.
           </p>
+          <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
+            Data processing and site production by Grok Bot and{" "}
+            <a
+              href="https://cursor.com"
+              rel="noopener"
+              className="underline decoration-[var(--faint)] underline-offset-2 hover:text-[var(--ink)]"
+            >
+              Cursor
+            </a>
+            .
+          </p>
         </footer>
       </body>
     </html>

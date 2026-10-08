@@ -47,6 +47,17 @@ export default function AboutPage() {
             How packs are charged, logged and judged
           </Link>
         </p>
+        <p className="note mt-4">
+          Data processing and website production are done with Grok Bot and{" "}
+          <a
+            href="https://cursor.com"
+            rel="noopener"
+            className="underline decoration-[var(--faint)] underline-offset-2 hover:text-[var(--ink)]"
+          >
+            Cursor
+          </a>
+          .
+        </p>
       </header>
 
       <div className="flex flex-wrap gap-1.5" aria-label="Nights">
