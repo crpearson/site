@@ -21,6 +21,21 @@ import {
   thresholds,
 } from "@/lib/fleet";
 
+function historyNote(event: { event: string; to: string; date: string; reason: string }) {
+  if (event.event !== "commission") return event.reason;
+  const replacement = /replacement/i.test(event.reason);
+  const base = `Commissioned into ${event.to} at ${event.date}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
+  return replacement
+    ? `${base} This pack replaced an earlier one in the same slot, which is not in this record.`
+    : base;
+}
+
+function historyVerb(event: string) {
+  if (event === "commission") return "Commissioned";
+  if (event === "move") return "Moved";
+  return event;
+}
+
 export const dynamicParams = false;
 
 export function generateStaticParams() {
@@ -109,13 +124,13 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <Lamp status={pack.call.status} />
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
-        <p className="font-mono text-sm text-[var(--muted)]">{pack.uid}</p>
+        <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
         <p className="note">
           Status call {pack.call.session}
-          {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} · charge{" "}
-          {pack.chargeMode}
+          {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
+          {pack.chargeMode === "individual" ? "charged on its own" : "charged in parallel"}
         </p>
         <p className="note">
           Purchase {pack.purchaseDate} · price {pack.priceUsd} · vendor {pack.vendor}
@@ -153,30 +168,30 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </article>
         <article className="stat" data-tone="ruleb">
           <p className="eyebrow">Rule B · rest</p>
-          <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Parallel"}</p>
+          <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
           <p className="stat-sub">
-            SD watch {thresholds.self_discharge_imbalance_mv} mV
-            {pack.row.imbalance != null ? ` · imb ${pack.row.imbalance} mV` : ""}
+            Self-discharge watch {thresholds.self_discharge_imbalance_mv} mV
+            {pack.row.imbalance != null ? ` · imbalance ${pack.row.imbalance} mV` : ""}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
           </p>
         </article>
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel accent="muted" eyebrow="pack_events" title="Label history">
+        <Panel accent="muted" eyebrow="History" title="Label history">
           <ol className="space-y-3">
             {pack.events.map((event) => (
               <li key={`${event.date}-${event.event}`} className="text-sm">
                 <p className="font-mono text-[var(--ink)]">
-                  {event.date} · {event.event}
+                  {event.date} · {historyVerb(event.event)}
                   {event.from ? ` · ${event.from}` : ""} → {event.to}
                 </p>
-                <p className="note mt-1">{event.reason}</p>
+                <p className="note mt-1">{historyNote(event)}</p>
               </li>
             ))}
           </ol>
         </Panel>
-        <Panel accent="signal" eyebrow="status_calls" title="Status timeline">
+        <Panel accent="signal" eyebrow="Calls" title="Status timeline">
           <ol className="space-y-3">
             {pack.calls.map((call, index) => (
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
@@ -202,10 +217,10 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         />
       </Panel>
 
-      <Panel accent="signal" eyebrow="Every row for this pack" title="Cell IR over sessions">
+      <Panel accent="signal" eyebrow="Every night for this pack" title="Cell IR across nights">
         <p className="note mb-3">
-          The line follows {pack.uid} under whatever label it had that night. A missing session is
-          a gap.
+          The line follows this pack under whatever label it had that night. A missing night is a
+          gap.
         </p>
         <LineChart
           categories={pack.categories}
@@ -245,12 +260,12 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </Panel>
       </div>
 
-      <Panel accent="muted" eyebrow="All measured nights" title="Session × cell IR">
+      <Panel accent="muted" eyebrow="All measured nights" title="Night by cell IR">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...historyValues)}
           max={Math.max(...historyValues)}
-          caption="Every session is a row. An em dash is a night this pack was not logged."
+          caption="Each night is one line. A dash is a night this pack was not logged."
           rows={pack.categories.map((category, index) => ({
             key: category.id,
             label: (
@@ -265,12 +280,12 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       </Panel>
 
       <details className="panel" data-accent="muted">
-        <summary className="cursor-pointer font-medium">Session table</summary>
+        <summary className="cursor-pointer font-medium">Night table</summary>
         <div className="table-wrap mt-3">
           <table className="status-table">
             <thead>
               <tr>
-                <th scope="col">Session</th>
+                <th scope="col">Night</th>
                 <th scope="col">Label</th>
                 <th scope="col">Cell 1</th>
                 <th scope="col">Cell 2</th>

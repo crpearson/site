@@ -8,12 +8,12 @@
       "fw": "V1.17",
       "hw": "V1.00",
       "fleet_lock": false,
-      "note": "Default new-night split: CH1 is C1-P1 through C1-P3, CH2 is C1-P4 through C1-P6. The session manifest slots column wins when a slot is empty or a pack is charged on its own."
+      "note": "On a new night, channel 1 is C1-P1 through C1-P3 and channel 2 is C1-P4 through C1-P6, unless that night's slot list says otherwise."
     },
     "DX8-2": {
       "fleet": "C2",
       "model": "iCharger DX8",
-      "note": "Default new-night split: CH1 is C2-P1 through C2-P3, CH2 is C2-P4 through C2-P6. The session manifest slots column wins.",
+      "note": "On a new night, channel 1 is C2-P1 through C2-P3 and channel 2 is C2-P4 through C2-P6, unless that night's slot list says otherwise.",
       "fleet_lock": false
     }
   },

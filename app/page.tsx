@@ -40,9 +40,9 @@ export default function Home() {
           <p className="eyebrow">{blocks.map((block) => block.id).join(" · ")} · CNHL Black Series V2</p>
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
-            Packs come from the registry. Each series has its own as-of date. Calls below are the
-            latest status text. Charts use every measured row for a pack, including nights under an
-            earlier label. Partial nights stay as gaps.
+            Each series has its own as-of date. The calls below are the latest status. Charts follow
+            a pack through every measured night, including nights under an earlier label. Nights
+            that were not measured stay as gaps.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -90,7 +90,7 @@ export default function Home() {
           format="ir"
           unit="mΩ"
           height={200}
-          ariaLabel="Mean pack IR by series across sessions"
+          ariaLabel="Mean pack IR by series across nights"
         />
       </Panel>
 
@@ -165,7 +165,7 @@ export default function Home() {
                         <span className="metric-value block">{slot.avg?.toFixed(0) ?? "—"}</span>
                       </span>
                       <span>
-                        <span className="metric-label">Spr</span>
+                        <span className="metric-label">Spread</span>
                         <span className="metric-value block">{slot.spread ?? "—"}</span>
                       </span>
                       <span>
@@ -187,8 +187,8 @@ export default function Home() {
             Status calls
           </h2>
           <p className="note mt-1">
-            Latest call per pack, verbatim. Morning and evening stay separate when the source names
-            the session. Lamp colour follows the wording.
+            Latest call per pack, in the analyst&apos;s own words. Morning and evening of the same day
+            stay separate. Lamp colour follows the wording.
           </p>
         </div>
         <div className="panel" data-accent="off">
@@ -250,7 +250,7 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 <p className="note mt-2 font-mono">
-                  Call {row.session} · IR {row.avg.toFixed(1)} · spr {row.spread} · floor {row.floor ?? "—"}
+                  Call {row.session} · IR {row.avg.toFixed(1)} · spread {row.spread} · floor {row.floor ?? "—"}
                 </p>
               </article>
             ))}
@@ -282,7 +282,7 @@ export default function Home() {
             Trends
           </h2>
           <p className="note mt-1">
-            Starred sessions are partial. Lines break there. Nothing is interpolated. A pack that
+            Starred nights are partial. Lines break there. Nothing is filled in. A pack that
             changed labels stays on the series it was measured in.
           </p>
         </div>
@@ -365,7 +365,7 @@ export default function Home() {
             }
           >
             <p className="note mb-3">
-              Per series and session, only packs that charged in parallel, and only when at least
+              Per series and night, only packs that charged in parallel, and only when at least
               two of them did. Otherwise the night is N/A, charged individually.
             </p>
             <LineChart
@@ -398,7 +398,7 @@ export default function Home() {
           <Panel accent="muted" eyebrow="Reserved" title="Capacity in / out">
             <div className="empty-slot">
               <div>
-                <p className="font-mono text-sm text-[var(--ink)]">not in DX8 Storage data yet</p>
+                <p className="font-mono text-sm text-[var(--ink)]">not in the storage-charge logs yet</p>
                 <p className="note mt-2">
                   Storage logs are IR and voltage only. No capacity in, capacity out, or cost per
                   cycle.

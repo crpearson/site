@@ -116,12 +116,12 @@
     }
   },
   "gaps": [
-    "C1 last measured 2026-09-27; C2 last measured 2026-09-30 \u2014 label dates on UI",
-    "Partial nights: never interpolate missing fleet",
-    "No capacity in/out series \u2014 DX8 Storage logs are IR/voltage only",
-    "DX8 absolute IR (~400\u2013600 m\u03a9/cell) does NOT map to Oscar/CNHL absolute retire bins \u2014 relative rules only",
-    "Soft FP advisory can FAIL without remapping",
-    "No C3/C4; second brand not owned yet (bake-off cards use BUY-summary prices only)",
-    "Dual-DX8 HOLD until replacement DX8-2 is seen"
+    "C1 was last measured on 2026-09-27. C2 was last measured on 2026-09-30.",
+    "A night that did not include every pack stays incomplete. Missing packs are not filled in.",
+    "Storage charges have internal resistance and voltage only. Capacity in and capacity out are not in this record.",
+    "DX8 internal resistance, roughly 400\u2013600 m\u03a9 per cell here, is not a manufacturer rating and is not an Oscar or CNHL retire limit. The rules on this site are relative to this fleet.",
+    "A soft identity check can miss without moving a pack to another slot.",
+    "C3 and C4 are not in service. Bake-off prices are shop prices, not purchase prices.",
+    "The second charger is not in service yet."
   ]
 }

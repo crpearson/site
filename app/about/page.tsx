@@ -6,7 +6,7 @@ import { chargers, metricLabels, siteMeta, thresholds } from "@/lib/fleet";
 export const metadata: Metadata = {
   title: "About the data",
   description:
-    "How the LiPo fleet store is measured: DX8 storage charges, Rule A, Rule B, and what the logs do not contain.",
+    "How this LiPo fleet is measured: DX8 storage charges, Rule A, Rule B, and what the logs do not contain.",
 };
 
 const sessions = [
@@ -37,10 +37,10 @@ export default function AboutPage() {
         <p className="eyebrow">Source and rules</p>
         <h1 className="h1 mt-2">About the data</h1>
         <p className="page-intro mt-4">
-          {siteMeta.source}. Last ingest {siteMeta.lastIngest}. The canonical file is the
-          append-only IR store: {siteMeta.rowCount} rows across {siteMeta.sessionCount} sessions.
-          Pages read the v2 registry CSVs and join rest voltage from the store. Session order
-          and the Rule A / Rule B thresholds still come from the JSON.
+          {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
+          {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
+          comes from the start of each storage charge. Rule A and Rule B use the limits shown
+          below.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">
@@ -49,7 +49,7 @@ export default function AboutPage() {
         </p>
       </header>
 
-      <div className="flex flex-wrap gap-1.5" aria-label="Sessions">
+      <div className="flex flex-wrap gap-1.5" aria-label="Nights">
         {sessions.map((session) => (
           <span
             key={session.id}
@@ -82,7 +82,7 @@ export default function AboutPage() {
         </Panel>
         <Panel accent="ruleb" eyebrow="Glossary" title="Rest-Δ">
           <p className="note">
-            Inter-pack rest delta, in volts: within one series and one session, the highest rest
+            Inter-pack rest delta, in volts: within one series and one night, the highest rest
             voltage minus the lowest, and only among packs that charged in parallel. A series or
             a night with fewer than two parallel packs is N/A, charged individually. Rest voltage
             is the sum of the six start-cell voltages. Rule A, the floor watch, and self-discharge
@@ -92,9 +92,9 @@ export default function AboutPage() {
         <Panel accent="off" eyebrow="Glossary" title="Self-discharge">
           <p className="note">
             Arrival imbalance is the gap between the highest and lowest cell voltage at the start
-            of the charge, in millivolts. The status file treats about{" "}
-            {thresholds.self_discharge_imbalance_mv} mV or more as a self-discharge flag. A smaller
-            imbalance is noted and is not called self-discharge.
+            of the charge, in millivolts. About {thresholds.self_discharge_imbalance_mv} mV or more
+            is treated as self-discharge. A smaller imbalance is noted and is not called
+            self-discharge.
           </p>
         </Panel>
         <Panel accent="muted" eyebrow="Glossary" title="What is not here">
@@ -143,11 +143,11 @@ export default function AboutPage() {
         <p className="note">
           DX8 absolute IR, roughly 400–600 mΩ per cell in this fleet, does not map to manufacturer
           IR ratings or to Oscar/CNHL absolute retire bins. The rules above are relative to this
-          store.
+          fleet.
         </p>
       </Panel>
 
-      <Panel accent="muted" eyebrow="From the status file" title="Gaps">
+      <Panel accent="muted" eyebrow="Still open" title="Gaps">
         <ul className="list-disc space-y-2 pl-4 text-sm leading-relaxed">
           {siteMeta.gaps.map((gap) => (
             <li key={gap}>{gap}</li>
@@ -155,41 +155,40 @@ export default function AboutPage() {
         </ul>
       </Panel>
 
-      <Panel accent="signal" eyebrow="Repeatable ingest" title="How a night gets a pack id">
+      <Panel accent="signal" eyebrow="Charging nights" title="How a night is matched to packs">
         <div className="space-y-3 text-sm leading-relaxed text-[var(--muted)]">
           <p>
-            Only LiPo Storage logs named <span className="font-mono text-[var(--ink)]">LiPo[Storage_NNN_CHx].txt</span>{" "}
-            (or <span className="font-mono text-[var(--ink)]">.txt.gz</span>) are auto-mapped. NNN
-            belongs to one charger alias. Streams are not merged across chargers. Ingest maps the
-            header serial to DX8-1 or DX8-2 with a private map that is not stored in this repo.
-            A session manifest names the slots for that charger and channel. Its slots list wins
-            over the default 3+3 split.
+            Only storage charges are recorded. Each log belongs to one charger, and the two
+            chargers are not mixed into one sequence. The charger&apos;s serial stays off this site;
+            the pages show DX8-1 and DX8-2.
           </p>
           <p>
-            Files on a charger channel sort by NNN. Parallel and individual nights both map that
-            order onto the manifest slot list. The file count has to equal the slot count, or the
-            night is refused. With no manifest row, a new night defaults to DX8-1 CH1 = C1-P1..P3,
-            DX8-1 CH2 = C1-P4..P6, DX8-2 CH1 = C2-P1..P3, DX8-2 CH2 = C2-P4..P6.
+            On a night, the logs on a channel are taken in order and matched to that night&apos;s
+            slot list. If the number of logs does not match the number of slots, the night is
+            refused and nothing is quietly reassigned. When a night has no slot list, DX8-1 channel
+            1 is C1-P1 through C1-P3, DX8-1 channel 2 is C1-P4 through C1-P6, DX8-2 channel 1 is
+            C2-P1 through C2-P3, and DX8-2 channel 2 is C2-P4 through C2-P6. The slot list wins
+            when a slot is empty or a pack is charged on its own.
           </p>
           <p>
-            Hard fingerprints must pass or that fleet-night stays unassigned for review: C1-P4 cell
-            1 is the pack-max IR, and C2-P2 cell 3 is the pack-min IR. Soft fingerprints are
-            advisory and can fail without remapping: C2-P6 lowest C2 average, C2-P4 tightest
-            spread.
+            Two identity checks must pass, or that series stays unmatched for review: C1-P4 cell 1
+            is that pack&apos;s highest internal resistance, and C2-P2 cell 3 is that pack&apos;s
+            lowest. Two softer checks can fail without moving a pack: C2-P6 has the lowest C2
+            average, and C2-P4 has the tightest C2 spread.
           </p>
           <p>
-            <span className="font-mono text-[var(--ink)]">fleet_lock</span> is enforced only when a
-            charger in the registry has it set. DX8-1 and DX8-2 are unlocked. The store is
-            append-only. An existing session and pack is not overwritten. Partial nights are kept
-            as measured. Rule B uses only packs that charged in parallel that night, and only when
-            there are at least two of them.
+            A charger is limited to one series only when that limit is turned on. DX8-1 and DX8-2
+            are not limited. An existing night and pack is never overwritten. A partial night is
+            kept as measured. The rest-voltage comparison uses only packs that charged in parallel
+            that night, and only when at least two of them did.
           </p>
         </div>
         <ul className="mt-4 space-y-3">
           {units.map((charger) => (
             <li key={charger.id} className="rounded-xl border border-[var(--line)] p-3 text-sm">
               <p className="font-mono text-[var(--ink)]">
-                {charger.id} · {charger.fleet} · lock {charger.fleetLock ? "on" : "off"}
+                {charger.id} · {charger.fleet} ·{" "}
+                {charger.fleetLock ? `limited to ${charger.fleet}` : "not limited to one series"}
               </p>
               {charger.note ? <p className="note mt-1">{charger.note}</p> : null}
             </li>
@@ -198,10 +197,10 @@ export default function AboutPage() {
         <p className="note mt-4">{siteMeta.unassignedNote}</p>
       </Panel>
 
-      <Panel accent="muted" eyebrow="In the repo" title="Recorded and missing">
+      <Panel accent="muted" eyebrow="Record" title="What the logs contain">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="eyebrow">In the store</p>
+            <p className="eyebrow">Recorded</p>
             <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-[var(--muted)]">
               {siteMeta.metricsAvailable.map((key) => (
                 <li key={key}>{metricLabels[key] ?? key}</li>
@@ -209,10 +208,10 @@ export default function AboutPage() {
             </ul>
           </div>
           <div>
-            <p className="eyebrow">Not invented</p>
+            <p className="eyebrow">Not in the logs</p>
             <p className="note mt-2">
-              {siteMeta.ingestNote} Capacity in and out stay empty on the dashboard, labeled not in
-              DX8 Storage data yet.
+              Capacity in and capacity out stay empty on the fleet page. Storage charges do not
+              include them, and they are not filled in.
             </p>
           </div>
         </div>

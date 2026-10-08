@@ -51,7 +51,7 @@ export function CellExplorer({
         format="ir"
         unit="mΩ"
         height={240}
-        ariaLabel={`Per-cell internal resistance for ${pack.id} across storage sessions`}
+        ariaLabel={`Per-cell internal resistance for ${pack.id} across measured nights`}
       />
     </div>
   );

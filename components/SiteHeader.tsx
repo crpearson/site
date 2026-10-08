@@ -64,7 +64,7 @@ export function SiteHeader({
         })}
       </nav>
       <p className="header-meta">
-        {rowCount} rows · {sessionCount} nights · ingest {lastIngest}
+        {rowCount} measurements · {sessionCount} nights · through {lastIngest}
       </p>
     </header>
   );

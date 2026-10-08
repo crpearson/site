@@ -59,10 +59,10 @@ export default function BakeoffPage() {
         <p className="eyebrow">Catalog comparison · prices checked {checked}</p>
         <h1 className="h1 mt-2">Brand bake-off</h1>
         <p className="page-intro mt-4">
-          Owned series come from the pack registry. Catalog prices are the shop prices already
-          recorded, not a pack's purchase price. Purchase, price, and vendor on each pack are blank
-          until supplied. C3 and C4 are not commissioned, so this page does not invent rows for
-          them. Bars share one scale. Cost per cycle is omitted: there is no real cycle data.
+          Owned series are the ones in service. Catalog prices are shop prices, not what was paid
+          for a pack. Purchase date, price, and vendor are blank until they are supplied. C3 and C4
+          are not commissioned, so they are not listed as packs. Bars share one scale. Cost per
+          cycle is omitted: there is no cycle count yet.
         </p>
       </header>
 
@@ -156,7 +156,7 @@ export default function BakeoffPage() {
         <p className="eyebrow">Future fleet</p>
         <h2 className="mt-2 font-mono text-3xl tracking-tight">C3</h2>
         <p className="mt-3 max-w-xl text-lg">Empty slot for when Ovonic is added as C3.</p>
-        <p className="note mt-2">No packs and no sessions yet. The Ovonic cards above stay candidates.</p>
+        <p className="note mt-2">No packs and no nights yet. The Ovonic cards above stay candidates.</p>
       </article>
     </div>
   );

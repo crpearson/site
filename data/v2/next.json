@@ -1,6 +1,6 @@
 {
   "as_of": "2026-10-08",
-  "note": "Not a column in status_calls.csv. Parallel packs on this date, from packs.csv charge_mode.",
+  "note": "Packs cleared for the series parallel board; D pool and individually charged packs are excluded.",
   "series": [
     {
       "series": "C1",
