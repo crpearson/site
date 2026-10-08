@@ -29,9 +29,10 @@ A pack is only ever parallel-charged with its own series. Series are never mixed
 
 ## The routine
 
-1. **Fly, then parallel-charge by series** at about 1.5C. A series with a Caution pack on its board charges at reduced current. Packs in the D pool, and any pack marked *individual*, are never parallel-charged.
-2. **Storage-charge each pack individually** on its assigned DX8 channel, in label order, in **Storage mode, 3.85 V/cell**. Charging one pack at a time is what exposes a weak cell that a parallel board would hide.
-3. **Upload the DX8 Storage logs** with their original file names, plus a short note of which packs ran on which charger and channel that night. Every raw log is kept permanently. Nothing is ever deleted, and new data is only ever added.
+1. **Before a flying session, parallel-charge by series** at about 1.5C. A series with a Caution pack on its board charges at reduced current. Packs in the D pool, and any pack marked *individual*, are never parallel-charged.
+2. **Fly.**
+3. **After flying, storage-charge each pack individually** on its assigned DX8 channel, in label order, in **Storage mode, 3.85 V/cell**. Charging one pack at a time is what exposes a weak cell that a parallel board would hide.
+4. **Upload the DX8 Storage logs** with their original file names, plus a short note of which packs ran on which charger and channel that night. Every raw log is kept permanently. Nothing is ever deleted, and new data is only ever added.
 
 ### What gets logged
 From each DX8 Storage log:
