@@ -3,7 +3,6 @@
   "source": "Lipo Lary SOURCE_OF_TRUTH.md + BUY-summary.txt",
   "chargers": {
     "DX8-A": {
-      "sn": "2603022837",
       "fleet": "C1",
       "model": "iCharger DX8",
       "fw": "V1.17",
@@ -12,10 +11,9 @@
       "note": "Dual-DX8 HOLD: single DX8-A has logged both CH1 (C1) and CH2 (C2) so far. Set fleet_lock true once DX8-B is live."
     },
     "DX8-B": {
-      "sn": null,
       "fleet": "C2",
       "model": "iCharger DX8",
-      "note": "Replacement expected; no SN locked as of 2026-10-08. 2026-09-30 C2 ran on SN 2603022837.",
+      "note": "Replacement expected; no serial locked as of 2026-10-08. 2026-09-30 C2 ran on DX8-A.",
       "fleet_lock": false
     }
   },

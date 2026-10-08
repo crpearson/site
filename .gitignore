@@ -31,3 +31,7 @@ yarn-error.log*
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+
+# Private charger serial → alias map. Never commit the real map.
+*charger-alias*.json
+private/

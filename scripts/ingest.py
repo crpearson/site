@@ -5,22 +5,29 @@ LiPo hub ingest — iCharger DX8 Storage logs -> normalized store + site JSON.
 Stdlib only (Python 3.9+). Usage:
 
   # parse a new upload (folder, .tgz/.tar.gz, .zip, single .txt or .txt.gz), dry run
-  python3 scripts/ingest.py path/to/upload --dry-run
+  python3 scripts/ingest.py path/to/upload --charger-map path/to/map.json --dry-run
 
   # append it to data/store.csv using a PT calendar-date night id, then rebuild JSON
-  python3 scripts/ingest.py path/to/upload --session 2026-10-12
+  python3 scripts/ingest.py path/to/upload --charger-map path/to/map.json --session 2026-10-12
 
   # only rebuild data/*.json from data/store.csv
   python3 scripts/ingest.py --rebuild
 
+The raw DX8 header still carries SN:<serial>. Pass --charger-map PATH, or set
+LIPO_CHARGER_MAP, to a JSON object of serial -> alias (DX8-A, DX8-B). Keys that
+start with "_" are ignored. The real map stays off this repo. Ingest maps each
+header serial to its alias immediately after parsing and uses only the alias
+after that. A missing map, or a serial that is not in the map, exits without
+printing the serial.
+
 Mapping (Lipo Lary's locked rules, see data/README or site "About the data"):
   * Only LiPo Storage logs named LiPo[Storage_NNN_CHx].txt(.gz) are auto-mapped.
-  * NNN is per charger SN (header "SN:"); never merge NNN streams across SNs.
+  * NNN is per charger alias; never merge NNN streams across chargers.
   * CH1 -> fleet C1, CH2 -> fleet C2. Within a night and channel, sort by NNN
     ascending: lowest = P1 ... sixth = P6.  A channel is mapped only if it has
     exactly 6 valid files in the night; otherwise those files stay UNASSIGNED.
   * Charger/fleet lock (only when registry charger has "fleet_lock": true, i.e.
-    after dual-DX8 goes live): files from that SN for the other fleet stay
+    after dual-DX8 goes live): files from that alias for the other fleet stay
     unassigned. Currently OFF (dual-DX8 HOLD; DX8-A logged both channels).
   * HARD fingerprints must pass or the whole fleet-night is left unassigned
     ("needs_review"): C1-P4 Cell1 = pack-max IR; C2-P2 Cell3 = pack-min IR.
@@ -28,7 +35,7 @@ Mapping (Lipo Lary's locked rules, see data/README or site "About the data"):
   * Discard from the numeric store (raw kept): 0-byte, no ;130; IR line,
     duration < 60 s, not 6S, negative or implausible IR (> 1000 mOhm), non-Storage,
     LiHV chemistry.
-  * Dedupe by sha256 of decompressed content, and by (SN, NNN, CH).
+  * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
   * Files without NNN in the name (renamed/hashed) need --manifest CSV with
     columns filename,pack (and optional session); otherwise UNASSIGNED.
@@ -39,14 +46,14 @@ import argparse
 import csv
 import gzip
 import hashlib
-import io
 import json
+import os
 import re
 import statistics
 import sys
 import tarfile
 import zipfile
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Iterable, Optional
 
@@ -61,7 +68,7 @@ MAX_PLAUSIBLE_IR = 1000
 STORE_COLS = [
     "session", "pack", "c1", "c2", "c3", "c4", "c5", "c6", "avg", "spread",
     "start_floor_mV", "start_imbalance_mV", "rest_V", "end_avg_mV", "duration_s",
-    "charger_sn", "channel", "file_nnn", "source_sha256", "note",
+    "charger", "channel", "file_nnn", "source_sha256", "note",
 ]
 
 
@@ -73,7 +80,7 @@ class Log:
     program: Optional[str] = None
     nnn: Optional[int] = None
     channel: Optional[str] = None
-    sn: Optional[str] = None
+    charger: Optional[str] = None  # alias after the map is applied; never a serial
     model_ok: bool = False
     start_cells: Optional[list] = None
     end_cells: Optional[list] = None
@@ -142,7 +149,8 @@ def _expand(base: str, raw: bytes) -> Iterable[tuple[str, bytes]]:
 
 
 # ----------------------------------------------------------------- parsing
-def parse(name: str, raw: bytes) -> Log:
+def parse(name: str, raw: bytes) -> tuple[Log, Optional[str]]:
+    """Parse one log. The header serial is returned separately and is not stored on Log."""
     text = raw.decode("utf-8", errors="replace")
     log = Log(name=name, sha256=hashlib.sha256(raw).hexdigest())
     m = NAME_RE.search(name)
@@ -151,12 +159,12 @@ def parse(name: str, raw: bytes) -> Log:
         log.nnn = int(nnn)
     if not raw:
         log.discard = "0-byte"
-        return log
+        return log, None
     lines = text.splitlines()
     hdr = next((l for l in lines if l.startswith("@")), "")
     log.model_ok = "Model:DX8" in hdr
     sm = re.search(r"SN:(\d+)", hdr)
-    log.sn = sm.group(1) if sm else None
+    header_serial = sm.group(1) if sm else None
 
     samples = []
     ir_line = None
@@ -183,16 +191,16 @@ def parse(name: str, raw: bytes) -> Log:
         log.discard = f"non-Storage program ({log.program})"
     if ir_line is None:
         log.discard = log.discard or "no ;130; IR line"
-        return log
+        return log, header_serial
     try:
         log.duration_ms = int(ir_line[2])
         log.ir = [int(ir_line[i]) for i in range(3, 9)]
     except (ValueError, IndexError):
         log.discard = log.discard or "unparseable IR line"
         log.ir = None
-        return log
+        return log, header_serial
     if log.discard:
-        return log
+        return log, header_serial
     if not log.model_ok:
         log.discard = "header is not DX8"
     elif log.duration_ms < MIN_DURATION_MS:
@@ -203,7 +211,52 @@ def parse(name: str, raw: bytes) -> Log:
         log.discard = "negative IR"
     elif any(v > MAX_PLAUSIBLE_IR for v in log.ir):
         log.discard = f"implausible IR (>{MAX_PLAUSIBLE_IR} mOhm)"
-    return log
+    return log, header_serial
+
+
+def redact_serial(serial: str) -> str:
+    tail = serial[-2:] if len(serial) >= 2 else serial
+    return f"...{tail}"
+
+
+def load_charger_map(path: Optional[Path]) -> Optional[dict]:
+    """JSON object of serial -> alias. Keys starting with '_' are comments."""
+    if path is None:
+        env = os.environ.get("LIPO_CHARGER_MAP")
+        if not env:
+            return None
+        path = Path(env)
+    if not path.is_file():
+        print(f"charger map not found: {path}", file=sys.stderr)
+        raise SystemExit(1)
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError:
+        print(f"charger map is not valid JSON: {path}", file=sys.stderr)
+        raise SystemExit(1)
+    if not isinstance(data, dict):
+        print("charger map must be a JSON object of serial to alias", file=sys.stderr)
+        raise SystemExit(1)
+    mapping = {}
+    for key, value in data.items():
+        if str(key).startswith("_"):
+            continue
+        if not isinstance(value, str) or not value:
+            print("charger map values must be alias strings", file=sys.stderr)
+            raise SystemExit(1)
+        mapping[str(key)] = value
+    return mapping
+
+
+def apply_charger_alias(log: Log, header_serial: Optional[str], mapping: Optional[dict]) -> None:
+    """Map a header serial to its alias. The raw serial is not kept on the log."""
+    if not header_serial:
+        return
+    alias = mapping.get(header_serial) if mapping else None
+    if not alias:
+        print(f"unknown charger serial {redact_serial(header_serial)}", file=sys.stderr)
+        raise SystemExit(1)
+    log.charger = alias
 
 
 # ----------------------------------------------------------------- mapping
@@ -213,11 +266,15 @@ def load_registry():
     return {"chargers": {}}
 
 
-def sn_fleet_lock(registry) -> dict:
+def charger_fleet_lock(registry) -> dict:
     # Only enforced once dual-DX8 is live (registry "fleet_lock": true). During the
     # single-DX8 era / dual-DX8 HOLD, DX8-A logged both CH1 (C1) and CH2 (C2).
-    return {c["sn"]: c["fleet"] for c in registry.get("chargers", {}).values()
-            if c.get("sn") and c.get("fleet") and c.get("fleet_lock")}
+    # Keys are charger aliases (DX8-A, DX8-B), never serials.
+    return {
+        alias: c["fleet"]
+        for alias, c in registry.get("chargers", {}).items()
+        if isinstance(c, dict) and c.get("fleet") and c.get("fleet_lock")
+    }
 
 
 def hard_fp(fleet: str, packs: dict) -> tuple[bool, list]:
@@ -244,7 +301,7 @@ def hard_fp(fleet: str, packs: dict) -> tuple[bool, list]:
 
 
 def group_nights(logs: list[Log], max_gap: int = 4) -> list[list[Log]]:
-    """Split valid named Storage logs (per SN) into nights.
+    """Split valid named Storage logs (per charger alias) into nights.
 
     Lary's rule: a night is a 12-file set (6 CH1 + 6 CH2) taken in NNN order.
     Walk files by NNN; close a set when it reaches 6+6, when the NNN gap exceeds
@@ -252,11 +309,11 @@ def group_nights(logs: list[Log], max_gap: int = 4) -> list[list[Log]]:
     their own group (a 6-file single-channel set = partial night, e.g. C2-only).
     """
     nights = []
-    by_sn: dict = {}
+    by_charger: dict = {}
     for l in logs:
         if l.valid and l.nnn is not None:
-            by_sn.setdefault(l.sn, []).append(l)
-    for sn, items in by_sn.items():
+            by_charger.setdefault(l.charger, []).append(l)
+    for _charger, items in by_charger.items():
         items.sort(key=lambda x: x.nnn)
         cur: list = []
         for l in items:
@@ -274,7 +331,7 @@ def group_nights(logs: list[Log], max_gap: int = 4) -> list[list[Log]]:
 
 
 def assign(logs: list[Log], session: Optional[str], registry, manifest: dict) -> list[Log]:
-    lock = sn_fleet_lock(registry)
+    lock = charger_fleet_lock(registry)
     # manifest-driven files (no NNN in name)
     for l in logs:
         if l.nnn is None and l.name in manifest:
@@ -293,10 +350,10 @@ def assign(logs: list[Log], session: Optional[str], registry, manifest: dict) ->
             chlogs = sorted([l for l in night if l.channel == ch], key=lambda x: x.nnn)
             if not chlogs:
                 continue
-            sn = chlogs[0].sn
-            if sn in lock and lock[sn] != fleet:
+            charger = chlogs[0].charger
+            if charger in lock and lock[charger] != fleet:
                 for l in chlogs:
-                    l.assign_note = f"UNASSIGNED: SN {sn} is locked to {lock[sn]}"
+                    l.assign_note = f"UNASSIGNED: charger {charger} is locked to {lock[charger]}"
                 continue
             if len(chlogs) != 6:
                 for l in chlogs:
@@ -332,7 +389,7 @@ def to_row(l: Log) -> dict:
         "rest_V": f"{sum(sc)/1000:.3f}" if sc else "",
         "end_avg_mV": round(statistics.mean(l.end_cells)) if l.end_cells else "",
         "duration_s": l.duration_ms // 1000 if l.duration_ms else "",
-        "charger_sn": l.sn or "", "channel": l.channel or "",
+        "charger": l.charger or "", "channel": l.channel or "",
         "file_nnn": l.nnn if l.nnn is not None else "",
         "source_sha256": l.sha256[:16], "note": l.assign_note or "",
     }
@@ -370,6 +427,7 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
         for r in sorted(sessions[sid], key=lambda r: r["pack"]):
             p = {
                 "pack": r["pack"],
+                "charger": r.get("charger") or "",
                 "cells_ir_mohm": [num(r[f"c{i}"], int) for i in range(1, 7)],
                 "avg_ir_mohm": num(r["avg"]),
                 "spread_mohm": num(r["spread"], int),
@@ -379,7 +437,10 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
                 "note": r.get("note", ""),
             }
             packs.append(p)
-            series.setdefault(r["pack"], []).append({"session": sid, **{k: v for k, v in p.items() if k not in ("pack", "note")}})
+            series.setdefault(r["pack"], []).append({
+                "session": sid,
+                **{k: v for k, v in p.items() if k not in ("pack", "note", "charger")},
+            })
         fleets = sorted({p["pack"].split("-")[0] for p in packs})
         rest = {}
         for fl in fleets:
@@ -409,13 +470,14 @@ def load_manifest(p: Optional[Path]) -> dict:
         return {r["filename"]: (r["pack"], r.get("session") or None) for r in csv.DictReader(f)}
 
 
-def ingest(paths: list[Path], session: Optional[str], manifest: dict, dry: bool, report: Optional[Path]):
+def ingest(paths: list[Path], session: Optional[str], manifest: dict, dry: bool, report: Optional[Path], charger_map: Optional[dict]):
     registry = load_registry()
     seen_hash, seen_key, logs, dupes = set(), set(), [], 0
     for path in paths:
         for name, raw in iter_inputs(path):
-            l = parse(name, raw)
-            key = (l.sn, l.nnn, l.channel) if l.nnn is not None else None
+            l, header_serial = parse(name, raw)
+            apply_charger_alias(l, header_serial, charger_map)
+            key = (l.charger, l.nnn, l.channel) if l.nnn is not None else None
             if l.sha256 in seen_hash or (key and key in seen_key):
                 dupes += 1
                 continue
@@ -464,6 +526,7 @@ def main():
     ap.add_argument("inputs", nargs="*", type=Path)
     ap.add_argument("--session", help="night id, PT calendar date e.g. 2026-10-12 (default S<minNNN>)")
     ap.add_argument("--manifest", type=Path, help="CSV filename,pack[,session] for logs without NNN in name")
+    ap.add_argument("--charger-map", type=Path, help="JSON serial-to-alias map (fallback: env LIPO_CHARGER_MAP). Keys starting with _ are ignored.")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--rebuild", action="store_true", help="regenerate data/*.json from data/store.csv")
     ap.add_argument("--report", type=Path, help="write per-file JSON report here")
@@ -474,7 +537,8 @@ def main():
         return
     if not a.inputs:
         ap.error("give an upload path or --rebuild")
-    ingest(a.inputs, a.session, load_manifest(a.manifest), a.dry_run, a.report)
+    charger_map = load_charger_map(a.charger_map)
+    ingest(a.inputs, a.session, load_manifest(a.manifest), a.dry_run, a.report, charger_map)
 
 
 if __name__ == "__main__":

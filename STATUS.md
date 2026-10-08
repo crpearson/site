@@ -29,4 +29,4 @@
 - DX8 absolute IR (~400–600 mΩ/cell) does NOT map to Oscar/CNHL absolute retire bins — relative rules only
 - Soft FP advisory can FAIL without remapping
 - No C3/C4; second brand not owned yet (bake-off cards use BUY-summary prices only)
-- Dual-DX8 HOLD until replacement DX8-B SN is seen
+- Dual-DX8 HOLD until replacement DX8-B is seen

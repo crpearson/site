@@ -39,13 +39,13 @@ npx --yes serve out
 Dry-run a new upload:
 
 ```bash
-python3 scripts/ingest.py path/to/new.tgz --session YYYY-MM-DD --dry-run
+python3 scripts/ingest.py path/to/new.tgz --charger-map path/to/map.json --session YYYY-MM-DD --dry-run
 ```
 
 Append it to `data/store.csv` and rebuild the JSON (`sessions.json`, `packs-timeseries.json`, `meta.json`):
 
 ```bash
-python3 scripts/ingest.py path/to/new.tgz --session YYYY-MM-DD
+python3 scripts/ingest.py path/to/new.tgz --charger-map path/to/map.json --session YYYY-MM-DD
 npm run build
 ```
 
@@ -67,23 +67,35 @@ python3 scripts/ingest.py path/to/renamed.txt --manifest path/to/manifest.csv --
 
 ### Mapping rules
 
-- Only LiPo Storage logs named `LiPo[Storage_NNN_CHx].txt` or `.txt.gz` are auto-mapped. NNN is per charger serial (`SN:` in the header). Do not merge NNN streams across serials.
+- Only LiPo Storage logs named `LiPo[Storage_NNN_CHx].txt` or `.txt.gz` are auto-mapped. NNN is per charger alias. Do not merge NNN streams across chargers.
 - Channel, then NNN. CH1 maps to fleet C1, CH2 to fleet C2. Within a night and a channel, sort by NNN ascending: lowest is P1, sixth is P6.
 - A channel is mapped only when that night has exactly 6 valid files on it. Otherwise those files stay unassigned.
 - Hard fingerprints must pass or the whole fleet-night is left unassigned (`needs_review`): C1-P4 cell 1 is the pack-max IR, and C2-P2 cell 3 is the pack-min IR.
 - Soft fingerprints are advisory and can fail without remapping: C2-P6 is the lowest C2 average, and C2-P4 has the tightest C2 spread.
-- Dual-DX8 hold / `fleet_lock`. A charger serial is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-A (SN 2603022837) and DX8-B (no serial yet) are unlocked. DX8-A has logged CH1 (C1) and CH2 (C2). Set `fleet_lock` once the replacement DX8-B serial is in service. Until then, files from the other fleet are not rejected for serial.
+- Dual-DX8 hold / `fleet_lock`. A charger alias is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-A and DX8-B are unlocked. DX8-A has logged CH1 (C1) and CH2 (C2). Set `fleet_lock` once DX8-B is in service. Until then, files from the other fleet are not rejected for charger.
 - Discarded from the numeric store: 0-byte files, logs with no `;130;` IR line, duration under 60 s, not 6S, negative or implausible IR (over 1000 mΩ), non-Storage programs, and LiHV chemistry.
-- Dedupe is by sha256 of the decompressed log, and by `(SN, NNN, channel)`.
+- Dedupe is by sha256 of the decompressed log, and by `(charger alias, NNN, channel)`.
+
+### Charger alias map
+
+DX8 log headers still carry `SN:<serial>`. Public data stores only the alias (`DX8-A` or `DX8-B`). Pass a private JSON object that maps each serial to an alias:
+
+```bash
+python3 scripts/ingest.py path/to/new.tgz --charger-map path/to/map.json --session YYYY-MM-DD
+```
+
+If `--charger-map` is omitted, ingest reads `LIPO_CHARGER_MAP`. Keys that start with `_` are ignored, so a map may carry a comment field. Ingest applies the map immediately after parsing and uses only the alias after that: night grouping, the `fleet_lock` check, dedupe keys, output rows, and log or error messages. If a log has a header serial and the map is missing, or the serial is not in the map, ingest exits and prints `unknown charger serial ...` plus the last two digits only.
+
+The real map stays off this repo. Do not commit it. `.gitignore` ignores `*charger-alias*.json` and `private/`. Fixtures use the placeholder serial `0000000000` and `fixtures/charger-map.test.json`, which maps that placeholder to `DX8-A`. The site build does not need the map or any environment variable.
 
 ### Smoke test
 
 Fixtures under `fixtures/` are trimmed DX8 samples. Dry-run does not modify the store.
 
 ```bash
-python3 scripts/ingest.py fixtures/night-S386 --dry-run
-python3 scripts/ingest.py fixtures/c2-only-20260930/C2-storage-20260930.tgz --session 2026-09-30 --dry-run
-python3 scripts/ingest.py fixtures/edge-cases --dry-run
+python3 scripts/ingest.py fixtures/night-S386 --charger-map fixtures/charger-map.test.json --dry-run
+python3 scripts/ingest.py fixtures/c2-only-20260930/C2-storage-20260930.tgz --charger-map fixtures/charger-map.test.json --session 2026-09-30 --dry-run
+python3 scripts/ingest.py fixtures/edge-cases --charger-map fixtures/charger-map.test.json --dry-run
 ```
 
 `fixtures/night-S386` is a full 12-file night and assigns all 12 packs to S386. Those rows are already in the store, so a dry run reports them as append-only skips. `fixtures/c2-only-20260930` assigns C2-P1 through C2-P6 to session `2026-09-30`. `fixtures/edge-cases` discards LiHV, Charge, Discharge, a short log, a non-6S log, and an implausible IR, and leaves the renamed file with no NNN unassigned.
