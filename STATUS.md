@@ -21,7 +21,7 @@ C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08 and is charged individu
 
 ## Gaps
 - C1 last measured 2026-09-27; C2 last measured 2026-09-30 — label dates on UI
-- Partial nights: never interpolate missing fleet
+- Partial nights stay incomplete in the store and are never filled in. On a pack chart, a not-charged night between two measured nights in the same service span is a faint dotted join with no invented value. A miss at the start or end stays open. A move starts a new span, so the line is not joined across it. A star (partial night) is a different mark.
 - No capacity in/out series — DX8 Storage logs are IR/voltage only
 - DX8 absolute IR (~400–600 mΩ/cell) does NOT map to Oscar/CNHL absolute retire bins — relative rules only
 - Soft FP advisory can FAIL without remapping

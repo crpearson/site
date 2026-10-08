@@ -139,6 +139,18 @@ export default function AboutPage() {
         </article>
       </div>
 
+      <Panel accent="signal" eyebrow="Charts" title="A night not charged">
+        <p className="note">
+          On a pack chart, a night the pack was in service but was not charged is never given a
+          made-up value. When measured nights sit on both sides, a faint dotted line in that
+          line&apos;s color joins those real points, and the skipped night has no marker. If the
+          missed night is before the first measurement or after the last, the line stays open. A
+          move to another slot breaks the line, so nights before the move are not joined to nights
+          after it. A star is a different mark: a partial night, one that did not include every
+          pack. A pack that was charged on a partial night still has a solid point.
+        </p>
+      </Panel>
+
       <Panel accent="off" eyebrow="Do not mix scales" title="DX8 IR is not a manufacturer rating">
         <p className="note">
           DX8 absolute IR, roughly 400–600 mΩ per cell in this fleet, does not map to manufacturer
@@ -179,7 +191,9 @@ export default function AboutPage() {
           <p>
             A charger is limited to one series only when that limit is turned on. DX8-1 and DX8-2
             are not limited. An existing night and pack is never overwritten. A partial night is
-            kept as measured. The rest-voltage comparison uses only packs that charged in parallel
+            kept as measured. On the charts that partial night stays starred, which is separate
+            from the dotted line for a pack that was not charged. The rest-voltage comparison uses
+            only packs that charged in parallel
             that night, and only when at least two of them did.
           </p>
         </div>

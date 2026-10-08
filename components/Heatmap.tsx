@@ -57,7 +57,7 @@ export function Heatmap({
                     <div
                       key={`${row.key}-${columnLabels[index]}`}
                       className="grid h-11 place-items-center rounded-md border border-dashed border-[var(--line)] font-mono text-[10px] text-[var(--faint)]"
-                      title={`${columnLabels[index]} not measured`}
+                      title={`${columnLabels[index]} not charged`}
                     >
                       —
                     </div>

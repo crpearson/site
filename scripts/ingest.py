@@ -45,6 +45,10 @@ Mapping (see data/README or the site "About the data" page):
     not 6S, negative or implausible IR (> 1000 mOhm), non-Storage, LiHV.
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
+  * Do not invent a row for a pack that did not run. The site treats that night as
+    not charged: a dotted join between real points in the same service span, with
+    no value on the skipped night. A move starts a new span, so the join does not
+    cross it. Open ends stay open. Ingest must not fill those nights in.
   * Files without NNN need a filename,pack manifest; otherwise UNASSIGNED.
 """
 from __future__ import annotations
