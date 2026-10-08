@@ -264,21 +264,23 @@ export function LineChart({
             ) : null}
           </div>
           <div className="x-axis">
-            {categories.map((category, index) => (
+            {categories.map((category, index) => {
+              const last = n - 1;
+              const hideOnSmall =
+                index !== last &&
+                (index % 2 === 1 || (index === last - 1 && last % 2 === 1));
+              return (
               <span
                 key={category.id}
-                className={
-                  category.id.startsWith("S") && index % 2 === 1
-                    ? "x-label x-label-alt"
-                    : "x-label"
-                }
+                className={hideOnSmall ? "x-label x-label-alt" : "x-label"}
                 style={{ left: `${((index + 0.5) / n) * 100}%` }}
                 title={category.partial ? `${category.id} partial night` : category.id}
               >
                 {category.label}
                 {category.partial ? "*" : ""}
               </span>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
