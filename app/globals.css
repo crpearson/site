@@ -682,6 +682,133 @@ body {
   }
 }
 
+.methodology .h1,
+.methodology .panel-title,
+.methodology h3 {
+  scroll-margin-top: 5.5rem;
+}
+
+.methodology .panel-title {
+  font-size: 1.28rem;
+  letter-spacing: -0.03em;
+}
+
+.methodology .page-intro p {
+  margin: 0;
+}
+
+.methodology .md-body {
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.methodology .md-body p {
+  white-space: pre-line;
+}
+
+.methodology .md-body p,
+.methodology .md-body ul,
+.methodology .md-body ol,
+.methodology .md-body .table-wrap,
+.methodology .md-body h3 {
+  margin-top: 0.85rem;
+}
+
+.methodology .md-body > :first-child {
+  margin-top: 0;
+}
+
+.methodology .md-body h3 {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.methodology .md-body ul,
+.methodology .md-body ol {
+  padding-left: 1.25rem;
+}
+
+.methodology .md-body ul {
+  list-style: disc;
+}
+
+.methodology .md-body ol {
+  list-style: decimal;
+}
+
+.methodology .md-body li {
+  margin-top: 0.4rem;
+}
+
+.methodology .md-body li > ul,
+.methodology .md-body li > ol {
+  margin-top: 0.35rem;
+}
+
+.methodology .md-body strong {
+  font-weight: 600;
+}
+
+.methodology .md-body em {
+  font-style: italic;
+}
+
+.methodology .md-code {
+  border-radius: 4px;
+  background: rgba(46, 230, 199, 0.1);
+  padding: 0.08em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--signal);
+  overflow-wrap: anywhere;
+}
+
+.methodology .table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.methodology table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.methodology th,
+.methodology td {
+  border-top: 1px solid var(--line);
+  padding: 0.65rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.methodology thead th {
+  border-top: 0;
+  padding-bottom: 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.methodology tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.methodology hr {
+  margin: 1.15rem 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
 ::-webkit-scrollbar {
   height: 10px;
   width: 10px;
