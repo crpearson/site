@@ -5,19 +5,18 @@ import { Lamp } from "@/components/Lamp";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { Sparkline } from "@/components/Sparkline";
-import { volts } from "@/lib/format";
 import {
   fleetModel,
   floorBands,
   floorGuide,
   headline,
-  nextBoards,
+  nextParallel,
   ruleABands,
   ruleAGuides,
   ruleBBands,
   ruleBGuides,
+  seriesBlocks,
   seriesOf,
-  siteMeta,
   statusRows,
   thresholds,
 } from "@/lib/fleet";
@@ -25,56 +24,50 @@ import {
 export default function Home() {
   const stats = headline();
   const rows = statusRows();
+  const blocks = seriesBlocks();
   const model = fleetModel();
-  const boards = nextBoards();
-  const heatValues = rows.flatMap((row) => row.cells);
+  const next = nextParallel();
+  const heatRows = rows.filter((row) => row.cells.length > 0);
+  const heatValues = heatRows.flatMap((row) => row.cells);
   const heatMin = Math.min(...heatValues);
   const heatMax = Math.max(...heatValues);
+  const measured = model.fleets.filter((fleet) => fleet.packs.length > 0);
 
   return (
     <div className="space-y-10">
       <header className="space-y-5">
         <div>
-          <p className="eyebrow">C1 and C2 · CNHL Black Series V2</p>
+          <p className="eyebrow">{blocks.map((block) => block.id).join(" · ")} · CNHL Black Series V2</p>
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
-            Twelve packs, read from iCharger DX8 storage charges. Calls below are the live
-            status table. Charts use the IR store and leave partial nights as gaps.
+            Each series has its own as-of date. The calls below are the latest status. Charts follow
+            a pack through every measured night, including nights under an earlier label. Nights
+            that were not measured stay as gaps.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <article className="stat" data-tone="ok">
             <p className="eyebrow">OK</p>
             <p className="stat-value">{stats.ok.length}</p>
-            <p className="stat-sub">{stats.ok.map((row) => row.id).join(" · ")}</p>
+            <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="caution">
-            <p className="eyebrow">Caution</p>
+            <p className="eyebrow">Caution / watch</p>
             <p className="stat-value">{stats.caution.length}</p>
-            <p className="stat-sub">{stats.caution.map((row) => row.id).join(" · ")}</p>
+            <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="off">
-            <p className="eyebrow">OFF</p>
+            <p className="eyebrow">Off / pull</p>
             <p className="stat-value">{stats.off.length}</p>
-            <p className="stat-sub">{stats.off.map((row) => row.id).join(" · ")}</p>
+            <p className="stat-sub">{stats.off.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="signal">
-            <p className="eyebrow">Last C1 night</p>
-            <p className="stat-value text-[1.15rem] sm:text-[1.28rem]">{stats.lastC1}</p>
-            <p className="stat-sub">Call date {siteMeta.callDateC1}</p>
-          </article>
-          <article className="stat" data-tone="ruleb">
-            <p className="eyebrow">Last C2 night</p>
-            <p className="stat-value text-[1.15rem] sm:text-[1.28rem]">{stats.lastC2}</p>
-            <p className="stat-sub">Call date {siteMeta.callDateC2}</p>
-          </article>
-          <article className="stat" data-tone="floor">
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
               {stats.mean.toFixed(1)}
               <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
             </p>
-            <p className="stat-sub">Mean of the 12 latest pack averages</p>
+            <p className="stat-sub">Latest averages of {stats.counted} packs still in a slot</p>
           </article>
         </div>
       </header>
@@ -82,7 +75,7 @@ export default function Home() {
       <Panel
         accent="signal"
         eyebrow="Measured packs only"
-        title="Fleet mean IR"
+        title="Series mean IR"
         action={<span className="note">mΩ · gaps are unmeasured nights</span>}
       >
         <LineChart
@@ -97,7 +90,7 @@ export default function Home() {
           format="ir"
           unit="mΩ"
           height={200}
-          ariaLabel="Mean pack IR for C1 and C2 across sessions"
+          ariaLabel="Mean pack IR by series across nights"
         />
       </Panel>
 
@@ -107,94 +100,82 @@ export default function Home() {
             Next parallel
           </h2>
           <p className="note mt-1">
-            Board call from the status file. Rest-Δ here can drop packs marked OFF. The Rule B
-            chart further down is the full measured set.
+            As of {next.as_of}. {next.note}
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
-          {(["C1", "C2"] as const).map((fleet) => {
-            const board = boards[fleet];
-            return (
-              <article key={fleet} className="panel" data-accent={fleet === "C1" ? "signal" : "ruleb"}>
-                <p className="eyebrow">
-                  {fleet} · as of {board.as_of}
-                </p>
-                <h3 className="panel-title mt-1">{fleet === "C1" ? "C1 board" : "C2 board"}</h3>
-                <p className="mt-3 flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-2xl">{volts(board.rest_delta_v)} V</span>
-                  <span className={board.rest_delta_band === "GO" ? "lamp lamp-ok" : "lamp lamp-caution"}>
-                    <span className="lamp-dot" aria-hidden="true" />
-                    {board.rest_delta_band}
-                  </span>
-                  <span className="note">{board.amps === "reduced" ? "Reduced amps" : "Normal amps"}</span>
-                </p>
-                <div className="mt-4 space-y-2">
-                  <p className="metric-label">On</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {board.packs_on.map((id) => (
-                      <Link key={id} href={`/pack/${id}`} className="chip-btn">
-                        {id}
-                      </Link>
-                    ))}
-                  </div>
-                  <p className="metric-label">Off</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {board.packs_off.length === 0 ? (
-                      <span className="note">None</span>
-                    ) : (
-                      board.packs_off.map((id) => (
-                        <Link key={id} href={`/pack/${id}`} className="chip-btn">
-                          {id}
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </div>
-                {"note" in board && board.note ? <p className="note mt-3">{board.note}</p> : null}
-              </article>
-            );
-          })}
+          {next.series.map((board) => (
+            <article key={board.series} className="panel" data-accent="signal">
+              <p className="eyebrow">{board.series}</p>
+              <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {board.labels.map((label) => (
+                  <Link key={label} href={`/slot/${label}`} className="chip-btn">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
-      <section className="space-y-3" aria-labelledby="packs-heading">
+      <section className="space-y-4" aria-labelledby="packs-heading">
         <h2 id="packs-heading" className="section-title">
           Packs
         </h2>
-        {(["C1", "C2"] as const).map((fleet) => (
-          <div key={fleet}>
-            <p className="eyebrow mb-2">{fleet}</p>
+        {blocks.map((block) => (
+          <div key={block.id}>
+            <p className="eyebrow mb-2">
+              {block.id}
+              {block.individual ? " · individual, not parallel" : ""}
+              {" · status as of "}
+              {block.asOf}
+              {" · last measured "}
+              {block.lastMeasured}
+            </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {rows
-                .filter((row) => row.fleet === fleet)
-                .map((row) => (
+              {block.slots.map((slot) =>
+                slot.empty || !slot.uid ? (
                   <Link
-                    key={row.id}
-                    href={`/pack/${row.id}`}
-                    className="tile"
-                    data-status={row.status}
+                    key={slot.label}
+                    href={`/slot/${slot.label}`}
+                    className="tile is-empty"
+                    data-tone="pool"
+                  >
+                    <span className="font-mono text-sm">{slot.label}</span>
+                    <span className="note">empty</span>
+                  </Link>
+                ) : (
+                  <Link
+                    key={slot.label}
+                    href={`/pack/${slot.uid}`}
+                    className={slot.excluded ? "tile is-retired" : "tile"}
+                    data-tone={slot.tone ?? "pool"}
                   >
                     <span className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-sm">{row.id}</span>
-                      <Lamp status={row.status} />
+                      <span className="font-mono text-sm">{slot.label}</span>
+                      {slot.status ? <Lamp status={slot.status} /> : null}
                     </span>
-                    <Sparkline values={row.avgSeries} color={row.color} />
+                    {slot.badge ? <span className="badge">{slot.badge}</span> : null}
+                    <Sparkline values={slot.avgSeries} color={slot.color} />
                     <span className="grid grid-cols-3 gap-1">
                       <span>
                         <span className="metric-label">IR</span>
-                        <span className="metric-value block">{row.avg.toFixed(0)}</span>
+                        <span className="metric-value block">{slot.avg?.toFixed(0) ?? "—"}</span>
                       </span>
                       <span>
-                        <span className="metric-label">Spr</span>
-                        <span className="metric-value block">{row.spread}</span>
+                        <span className="metric-label">Spread</span>
+                        <span className="metric-value block">{slot.spread ?? "—"}</span>
                       </span>
                       <span>
                         <span className="metric-label">Floor</span>
-                        <span className="metric-value block">{row.floor}</span>
+                        <span className="metric-value block">{slot.floor ?? "—"}</span>
                       </span>
                     </span>
                   </Link>
-                ))}
+                ),
+              )}
             </div>
           </div>
         ))}
@@ -206,9 +187,8 @@ export default function Home() {
             Status calls
           </h2>
           <p className="note mt-1">
-            Verbatim from the status file. C1 as of {siteMeta.callDateC1}. C2 as of{" "}
-            {siteMeta.callDateC2}. Latest IR, spread, and floor are each pack&apos;s last measured
-            night, shown beside the call.
+            Latest call per pack, in the analyst&apos;s own words. Morning and evening of the same day
+            stay separate. Lamp colour follows the wording.
           </p>
         </div>
         <div className="panel" data-accent="off">
@@ -219,7 +199,7 @@ export default function Home() {
                   <th scope="col">Pack</th>
                   <th scope="col">Status</th>
                   <th scope="col">Reason</th>
-                  <th scope="col">Call date</th>
+                  <th scope="col">Call</th>
                   <th scope="col">Latest IR</th>
                   <th scope="col">Spread</th>
                   <th scope="col">Floor</th>
@@ -227,28 +207,31 @@ export default function Home() {
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.uid} className={row.excluded ? "opacity-70" : undefined}>
                     <th scope="row">
-                      <Link href={`/pack/${row.id}`} className="pack-link">
-                        {row.id}
+                      <Link href={`/pack/${row.uid}`} className="pack-link">
+                        {row.label}
                       </Link>
+                      <span className="mt-1 block font-mono text-[10px] font-normal text-[var(--faint)]">
+                        {row.uid}
+                      </span>
                     </th>
                     <td>
                       <Lamp status={row.status} />
                     </td>
                     <td>
                       <p className="reason">{row.reason}</p>
-                      {row.detail ? <p className="note mt-1">{row.detail}</p> : null}
+                      {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
-                    <td className="font-mono text-sm whitespace-nowrap">{row.callDate}</td>
+                    <td className="font-mono text-sm whitespace-nowrap">
+                      {row.session === row.callDate ? row.callDate : `${row.callDate} · ${row.session}`}
+                    </td>
                     <td className="font-mono text-sm whitespace-nowrap">
                       {row.avg.toFixed(1)}
-                      <span className="mt-1 block text-[10px] text-[var(--faint)]">
-                        {row.latestSession}
-                      </span>
+                      <span className="mt-1 block text-[10px] text-[var(--faint)]">{row.latestSession}</span>
                     </td>
                     <td className="font-mono text-sm">{row.spread}</td>
-                    <td className="font-mono text-sm">{row.floor}</td>
+                    <td className="font-mono text-sm">{row.floor ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -256,17 +239,18 @@ export default function Home() {
           </div>
           <div className="cards md:hidden">
             {rows.map((row) => (
-              <article key={row.id} className="rounded-xl border border-[var(--line)] p-3">
+              <article key={row.uid} className="rounded-xl border border-[var(--line)] p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <Link href={`/pack/${row.id}`} className="pack-link">
-                    {row.id}
+                  <Link href={`/pack/${row.uid}`} className="pack-link">
+                    {row.label}
                   </Link>
                   <Lamp status={row.status} />
                 </div>
+                <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
                 <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
-                {row.detail ? <p className="note mt-1">{row.detail}</p> : null}
+                {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 <p className="note mt-2 font-mono">
-                  Call {row.callDate} · IR {row.avg.toFixed(1)} · spr {row.spread} · floor {row.floor}
+                  Call {row.session} · IR {row.avg.toFixed(1)} · spread {row.spread} · floor {row.floor ?? "—"}
                 </p>
               </article>
             ))}
@@ -274,21 +258,17 @@ export default function Home() {
         </div>
       </section>
 
-      <Panel
-        accent="signal"
-        eyebrow="Latest night per pack"
-        title="Cell IR heatmap"
-      >
+      <Panel accent="signal" eyebrow="Latest night per pack" title="Cell IR heatmap">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={heatMin}
           max={heatMax}
-          caption="Color is this fleet's latest-cell range, cooler for lower IR. C1 rows are 2026-09-27. C2 rows are 2026-09-30. DX8 absolute IR is not a manufacturer rating."
-          rows={rows.map((row) => ({
-            key: row.id,
+          caption="Color is the latest-cell range on this page. A pack that moved keeps the measurement from its last storage charge. DX8 absolute IR is not a manufacturer rating."
+          rows={heatRows.map((row) => ({
+            key: row.uid,
             label: (
-              <Link href={`/pack/${row.id}`} className="pack-link">
-                {row.id}
+              <Link href={`/pack/${row.uid}`} className="pack-link">
+                {row.label}
               </Link>
             ),
             values: row.cells,
@@ -302,12 +282,12 @@ export default function Home() {
             Trends
           </h2>
           <p className="note mt-1">
-            Starred sessions are partial: 2026-09-26 is C1 only, 2026-09-30 is C2 only. Lines break
-            there. Nothing is interpolated. IR scale is shared so C1 and C2 can be compared.
+            Starred nights are partial. Lines break there. Nothing is filled in. A pack that
+            changed labels stays on the series it was measured in.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
-          {model.fleets.map((fleet) => (
+          {measured.map((fleet) => (
             <Panel key={fleet.id} heading="h3" accent="signal" eyebrow={fleet.id} title="Pack average IR">
               <LineChart
                 categories={model.categories}
@@ -319,7 +299,7 @@ export default function Home() {
               />
             </Panel>
           ))}
-          {model.fleets.map((fleet) => (
+          {measured.map((fleet) => (
             <Panel
               key={`${fleet.id}-spread`}
               heading="h3"
@@ -335,7 +315,7 @@ export default function Home() {
                 </span>
               }
             >
-              <p className="note mb-3">Inside one pack. Max cell IR minus min cell IR.</p>
+              <p className="note mb-3">Inside one pack. Max cell IR minus min cell IR. Applies to every pack.</p>
               <LineChart
                 categories={model.categories}
                 series={seriesOf(fleet.packs, "spread")}
@@ -348,7 +328,7 @@ export default function Home() {
               />
             </Panel>
           ))}
-          {model.fleets.map((fleet) => (
+          {measured.map((fleet) => (
             <Panel
               key={`${fleet.id}-floor`}
               heading="h3"
@@ -385,29 +365,40 @@ export default function Home() {
             }
           >
             <p className="note mb-3">
-              Across packs on a fleet: highest rest voltage minus lowest, for every pack measured
-              that night. Separate from the next-parallel board delta above.
+              Per series and night, only packs that charged in parallel, and only when at least
+              two of them did. Otherwise the night is N/A, charged individually.
             </p>
             <LineChart
               categories={model.categories}
-              series={model.fleets.map((fleet) => ({
-                id: fleet.id,
-                label: fleet.id,
-                color: fleet.id === "C1" ? "#2ee6c7" : "#c4a1ff",
-                values: fleet.rest,
-              }))}
+              series={model.fleets
+                .filter((fleet) => fleet.rest.some((value) => value != null))
+                .map((fleet) => ({
+                  id: fleet.id,
+                  label: fleet.id,
+                  color: fleet.id === "C2" ? "#c4a1ff" : "#2ee6c7",
+                  values: fleet.rest,
+                }))}
               guides={ruleBGuides}
               bands={ruleBBands}
               yDomain={model.restDomain}
               format="volt"
               unit="V"
-              ariaLabel="Inter-pack rest voltage delta for C1 and C2 with Rule B guides"
+              ariaLabel="Inter-pack rest voltage delta by series with Rule B guides"
             />
+            <ul className="note mt-3 space-y-1">
+              {model.fleets
+                .filter((fleet) => fleet.individual || fleet.rest.every((value) => value == null))
+                .map((fleet) => (
+                  <li key={fleet.id}>
+                    {fleet.id}: N/A, charged individually
+                  </li>
+                ))}
+            </ul>
           </Panel>
           <Panel accent="muted" eyebrow="Reserved" title="Capacity in / out">
             <div className="empty-slot">
               <div>
-                <p className="font-mono text-sm text-[var(--ink)]">not in DX8 Storage data yet</p>
+                <p className="font-mono text-sm text-[var(--ink)]">not in the storage-charge logs yet</p>
                 <p className="note mt-2">
                   Storage logs are IR and voltage only. No capacity in, capacity out, or cost per
                   cycle.
@@ -420,10 +411,10 @@ export default function Home() {
           <CellExplorer
             categories={model.categories}
             domain={model.irDomain}
-            packs={model.fleets.flatMap((fleet) =>
+            packs={measured.flatMap((fleet) =>
               fleet.packs.map((pack) => ({
                 id: pack.id,
-                status: pack.status,
+                tone: pack.tone,
                 cells: pack.cells,
               })),
             )}

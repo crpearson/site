@@ -115,7 +115,7 @@ export function LineChart({
         })}
       </div>
       <p id={descId} className="sr-only">
-        {ariaLabel} Arrow keys move between sessions. Gaps are nights that pack or fleet was not measured.
+        {ariaLabel} Arrow keys move between nights. Gaps are nights that pack or fleet was not measured.
       </p>
       <div className="sr-only" aria-live="polite">
         {live}

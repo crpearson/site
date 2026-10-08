@@ -1,67 +1,110 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AliasStub } from "@/components/AliasStub";
 import { Heatmap } from "@/components/Heatmap";
 import { Lamp } from "@/components/Lamp";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
+import { SlotDetail } from "@/components/SlotDetail";
 import { volts } from "@/lib/format";
 import {
-  PACK_IDS,
   floorBands,
   floorGuide,
   getPack,
+  packRouteIds,
+  packUids,
+  resolvePackRoute,
   ruleABand,
   ruleABands,
   ruleAGuides,
-  siteMeta,
   thresholds,
 } from "@/lib/fleet";
+
+function historyNote(event: { event: string; to: string; date: string; reason: string }) {
+  if (event.event !== "commission") return event.reason;
+  const replacement = /replacement/i.test(event.reason);
+  const base = `Commissioned into ${event.to} at ${event.date}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
+  return replacement
+    ? `${base} This pack replaced an earlier one in the same slot, which is not in this record.`
+    : base;
+}
+
+function historyVerb(event: string) {
+  if (event === "commission") return "Commissioned";
+  if (event === "move") return "Moved";
+  return event;
+}
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return PACK_IDS.map((id) => ({ id }));
+  return packRouteIds().map((id) => ({ id }));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/pack/[id]">): Promise<Metadata> {
   const { id } = await params;
+  const route = resolvePackRoute(id);
+  if (!route) return { title: id };
+  if (route.type === "pack") {
+    const pack = getPack(route.uid);
+    const canonical = `/pack/${route.uid}/`;
+    return {
+      title: pack ? `${pack.label} · ${pack.uid}` : route.uid,
+      description: `Cell IR, spread, start floor, and status calls for ${route.uid}.`,
+      alternates: { canonical },
+      ...(route.alias ? { other: { refresh: `0; url=${canonical}` } } : {}),
+    };
+  }
+  const canonical = `/pack/${route.label}/`;
   return {
-    title: id,
-    description: `Cell IR, spread, start floor, and status call for pack ${id}.`,
+    title: route.label,
+    description: `Current and past occupants of ${route.label}.`,
+    alternates: { canonical },
+    ...(route.alias ? { other: { refresh: `0; url=${canonical}` } } : {}),
   };
 }
 
 export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
   const { id } = await params;
-  const pack = getPack(id);
+  const route = resolvePackRoute(id);
+  if (!route) notFound();
+  if (route.alias) {
+    const href = route.type === "pack" ? `/pack/${route.uid}/` : `/pack/${route.label}/`;
+    const title = route.type === "pack" ? route.uid : route.label;
+    return <AliasStub href={href} title={title} />;
+  }
+  if (route.type === "slot") {
+    return <SlotDetail label={route.label} />;
+  }
+  const pack = getPack(route.uid);
   if (!pack) notFound();
 
   const latestCells = pack.row.cells;
-  const latestMin = Math.min(...latestCells);
-  const latestMax = Math.max(...latestCells);
   const historyValues = pack.cellSeries.flatMap((series) =>
     series.values.filter((value): value is number => value != null),
   );
-  const historyMin = Math.min(...historyValues);
-  const historyMax = Math.max(...historyValues);
   const band = ruleABand(pack.row.spread);
+  const peers = packUids();
 
   return (
     <div className="space-y-8">
       <nav className="chip-row" aria-label="Packs">
-        {PACK_IDS.map((packId) => (
-          <Link
-            key={packId}
-            href={`/pack/${packId}`}
-            className={packId === pack.id ? "switch-link is-on" : "switch-link"}
-            aria-current={packId === pack.id ? "page" : undefined}
-          >
-            {packId}
-          </Link>
-        ))}
+        {peers.map((uid) => {
+          const peer = getPack(uid);
+          return (
+            <Link
+              key={uid}
+              href={`/pack/${uid}`}
+              className={uid === pack.uid ? "switch-link is-on" : "switch-link"}
+              aria-current={uid === pack.uid ? "page" : undefined}
+            >
+              {peer?.label ?? uid}
+            </Link>
+          );
+        })}
       </nav>
 
       <header className="space-y-3">
@@ -70,21 +113,28 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             Fleet
           </Link>
           {" · "}
-          {pack.brand} {pack.seriesName} · {pack.capacityMah} mAh · {pack.connector}
+          <Link href={`/slot/${pack.label}`} className="pack-link">
+            {pack.label}
+          </Link>
+          {" · "}
+          {pack.brand} {pack.model} · {pack.capacityMah} mAh · {pack.series}
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="h1">{pack.id}</h1>
-          <Lamp status={pack.row.status} />
+          <h1 className="h1">{pack.label}</h1>
+          <Lamp status={pack.call.status} />
+          {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
-        <p className="max-w-3xl text-lg leading-relaxed">{pack.row.reason}</p>
+        <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
+        {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
+        <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
         <p className="note">
-          Status call {pack.row.callDate}
-          {pack.fleet === "C1"
-            ? ` · C1 calls as of ${siteMeta.callDateC1}`
-            : ` · C2 calls as of ${siteMeta.callDateC2}`}
-          {pack.row.detail ? ` · ${pack.row.detail}` : ""}
+          Status call {pack.call.session}
+          {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
+          {pack.chargeMode === "individual" ? "charged on its own" : "charged in parallel"}
         </p>
-        {pack.note ? <p className="note">Registry note: {pack.note}</p> : null}
+        <p className="note">
+          Purchase {pack.purchaseDate} · price {pack.priceUsd} · vendor {pack.vendor}
+        </p>
       </header>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -102,53 +152,75 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {pack.row.spread}
             <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
           </p>
-          <p className="stat-sub">{band} on this spread. Status call is separate.</p>
+          <p className="stat-sub">{band} on this spread. The status call is separate.</p>
         </article>
         <article className="stat" data-tone="floor">
           <p className="eyebrow">Start floor</p>
           <p className="stat-value">
-            {pack.row.floor}
+            {pack.row.floor ?? "—"}
             <span className="ml-1 text-sm text-[var(--muted)]">mV</span>
           </p>
           <p className="stat-sub">
-            {pack.row.floor < thresholds.floor_eye_mv
+            {pack.row.floor != null && pack.row.floor < thresholds.floor_eye_mv
               ? `Below the ${thresholds.floor_eye_mv} mV watch`
-              : `At or above the ${thresholds.floor_eye_mv} mV watch`}
+              : `Floor watch ${thresholds.floor_eye_mv} mV`}
           </p>
         </article>
         <article className="stat" data-tone="ruleb">
-          <p className="eyebrow">Imbalance · rest</p>
-          <p className="stat-value text-[1.35rem]">
-            {pack.row.imbalance ?? "—"}
-            <span className="ml-1 text-sm text-[var(--muted)]">mV</span>
-          </p>
+          <p className="eyebrow">Rule B · rest</p>
+          <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
           <p className="stat-sub">
-            SD watch {thresholds.self_discharge_imbalance_mv} mV
+            Self-discharge watch {thresholds.self_discharge_imbalance_mv} mV
+            {pack.row.imbalance != null ? ` · imbalance ${pack.row.imbalance} mV` : ""}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
           </p>
         </article>
       </div>
 
+      <div className="grid gap-3 lg:grid-cols-2">
+        <Panel accent="muted" eyebrow="History" title="Label history">
+          <ol className="space-y-3">
+            {pack.events.map((event) => (
+              <li key={`${event.date}-${event.event}`} className="text-sm">
+                <p className="font-mono text-[var(--ink)]">
+                  {event.date} · {historyVerb(event.event)}
+                  {event.from ? ` · ${event.from}` : ""} → {event.to}
+                </p>
+                <p className="note mt-1">{historyNote(event)}</p>
+              </li>
+            ))}
+          </ol>
+        </Panel>
+        <Panel accent="signal" eyebrow="Calls" title="Status timeline">
+          <ol className="space-y-3">
+            {pack.calls.map((call, index) => (
+              <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
+                <p className="flex flex-wrap items-center gap-2">
+                  <span className="font-mono">{call.session}</span>
+                  <Lamp status={call.status} />
+                  <span className="note">{call.label}</span>
+                </p>
+                <p className="mt-1 leading-relaxed">{call.reason}</p>
+              </li>
+            ))}
+          </ol>
+        </Panel>
+      </div>
+
       <Panel accent="signal" eyebrow={pack.row.latestSession} title="Latest IR cell heatmap">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
-          min={latestMin}
-          max={latestMax}
-          caption="Color scale is this snapshot only, so the hottest cell in the latest charge stands out."
-          rows={[
-            {
-              key: pack.id,
-              label: pack.id,
-              values: latestCells,
-            },
-          ]}
+          min={Math.min(...latestCells)}
+          max={Math.max(...latestCells)}
+          caption="Color scale is this snapshot only."
+          rows={[{ key: pack.uid, label: pack.label, values: latestCells }]}
         />
       </Panel>
 
-      <Panel accent="signal" eyebrow="This pack" title="Cell IR over sessions">
+      <Panel accent="signal" eyebrow="Every night for this pack" title="Cell IR across nights">
         <p className="note mb-3">
-          Scale is this pack. A missing session is a gap, including the night the other fleet was
-          logged alone.
+          The line follows this pack under whatever label it had that night. A missing night is a
+          gap.
         </p>
         <LineChart
           categories={pack.categories}
@@ -157,17 +229,12 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           format="ir"
           unit="mΩ"
           height={260}
-          ariaLabel={`${pack.id} per-cell internal resistance`}
+          ariaLabel={`${pack.uid} per-cell internal resistance`}
         />
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel
-          heading="h3"
-          accent="rulea"
-          eyebrow="Rule A"
-          title="Intra-pack spread"
-        >
+        <Panel heading="h3" accent="rulea" eyebrow="Rule A" title="Intra-pack spread">
           <LineChart
             categories={pack.categories}
             series={pack.spreadSeries}
@@ -176,7 +243,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             yDomain={pack.spreadDomain}
             format="int"
             unit="mΩ"
-            ariaLabel={`${pack.id} intra-pack spread with Rule A guides`}
+            ariaLabel={`${pack.uid} intra-pack spread with Rule A guides`}
           />
         </Panel>
         <Panel heading="h3" accent="floor" eyebrow="Watch line" title="Start floor">
@@ -188,17 +255,17 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             yDomain={pack.floorDomain}
             format="int"
             unit="mV"
-            ariaLabel={`${pack.id} start floor with a 3600 millivolt watch line`}
+            ariaLabel={`${pack.uid} start floor with a 3600 millivolt watch line`}
           />
         </Panel>
       </div>
 
-      <Panel accent="muted" eyebrow="All measured nights" title="Session × cell IR">
+      <Panel accent="muted" eyebrow="All measured nights" title="Night by cell IR">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
-          min={historyMin}
-          max={historyMax}
-          caption="Every session is a row. An em dash is a night this pack was not logged. Those nights are not filled in. Color uses this pack's own IR range."
+          min={Math.min(...historyValues)}
+          max={Math.max(...historyValues)}
+          caption="Each night is one line. A dash is a night this pack was not logged."
           rows={pack.categories.map((category, index) => ({
             key: category.id,
             label: (
@@ -213,12 +280,13 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       </Panel>
 
       <details className="panel" data-accent="muted">
-        <summary className="cursor-pointer font-medium">Session table</summary>
+        <summary className="cursor-pointer font-medium">Night table</summary>
         <div className="table-wrap mt-3">
           <table className="status-table">
             <thead>
               <tr>
-                <th scope="col">Session</th>
+                <th scope="col">Night</th>
+                <th scope="col">Label</th>
                 <th scope="col">Cell 1</th>
                 <th scope="col">Cell 2</th>
                 <th scope="col">Cell 3</th>
@@ -236,6 +304,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   <th scope="row" className="font-mono text-sm font-normal">
                     {point.session}
                   </th>
+                  <td className="font-mono text-sm">{point.label}</td>
                   {point.cells.map((cell, index) => (
                     <td key={`${point.session}-${index}`} className="font-mono text-sm">
                       {cell}
@@ -243,7 +312,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   ))}
                   <td className="font-mono text-sm">{point.avg.toFixed(1)}</td>
                   <td className="font-mono text-sm">{point.spread}</td>
-                  <td className="font-mono text-sm">{point.floor}</td>
+                  <td className="font-mono text-sm">{point.floor ?? "—"}</td>
                 </tr>
               ))}
             </tbody>

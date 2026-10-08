@@ -7,10 +7,17 @@ export const CELL_COLORS = [
   "#ff6b6b",
 ] as const;
 
-export const FLEET_COLOR = {
+export const FLEET_COLOR: Record<string, string> = {
   C1: "#2ee6c7",
   C2: "#c4a1ff",
-} as const;
+  D: "#9aafc0",
+  C3: "#5eb1ff",
+  C4: "#ffb020",
+};
+
+export function seriesColor(series: string): string {
+  return FLEET_COLOR[series] ?? "#9aafc0";
+}
 
 const PACK_COLORS = ["", ...CELL_COLORS];
 

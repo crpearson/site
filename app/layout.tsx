@@ -65,8 +65,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </main>
         <footer className="mx-auto w-full max-w-[1180px] px-4 pb-10 sm:px-6">
           <p className="text-xs leading-relaxed text-[var(--muted)]">
-            {siteMeta.source}. Last ingest {siteMeta.lastIngest}. {siteMeta.rowCount} store
-            rows across {siteMeta.sessionCount} sessions. Partial nights are never interpolated.
+            {siteMeta.source}. Logged through {siteMeta.lastIngest}. {siteMeta.rowCount}{" "}
+            measurements across {siteMeta.sessionCount} nights. A partial night is left incomplete.
           </p>
         </footer>
       </body>

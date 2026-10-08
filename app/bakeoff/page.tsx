@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { usd } from "@/lib/format";
-import { brandCards, headline, siteMeta } from "@/lib/fleet";
+import { brandCards, fleetModel, headline, seriesBlocks } from "@/lib/fleet";
 
 export const metadata: Metadata = {
   title: "Brand bake-off",
@@ -46,7 +47,11 @@ export default function BakeoffPage() {
   const maxPack = Math.max(...brands.map((brand) => brand.pricePack));
   const maxAh = Math.max(...brands.map((brand) => brand.priceAh));
   const counts = headline();
+  const blocks = seriesBlocks();
+  const model = fleetModel();
   const checked = brands[0]?.priceChecked ?? "2026-09-23";
+  const countFor = (series: string, tone: "ok" | "caution" | "off") =>
+    counts[tone].filter((row) => row.series === series).length;
 
   return (
     <div className="space-y-8">
@@ -54,9 +59,10 @@ export default function BakeoffPage() {
         <p className="eyebrow">Catalog comparison · prices checked {checked}</p>
         <h1 className="h1 mt-2">Brand bake-off</h1>
         <p className="page-intro mt-4">
-          C1 and C2 are owned CNHL Black Series V2 packs. The other cards are buy-summary prices
-          for packs that are not in the fleet. Bars share one scale. Cost per cycle is omitted:
-          there is no real cycle data.
+          Owned series are the ones in service. Catalog prices are shop prices, not what was paid
+          for a pack. Purchase date, price, and vendor are blank until they are supplied. C3 and C4
+          are not commissioned, so they are not listed as packs. Bars share one scale. Cost per
+          cycle is omitted: there is no cycle count yet.
         </p>
       </header>
 
@@ -77,25 +83,34 @@ export default function BakeoffPage() {
               Price source
             </a>
           </p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <article className="rounded-xl border border-[var(--line)] p-3">
-              <p className="eyebrow">C1 health</p>
-              <p className="mt-2 font-mono text-sm">
-                {counts.ok.filter((row) => row.fleet === "C1").length} OK ·{" "}
-                {counts.caution.filter((row) => row.fleet === "C1").length} Caution ·{" "}
-                {counts.off.filter((row) => row.fleet === "C1").length} OFF
-              </p>
-              <p className="stat-sub">Call {siteMeta.callDateC1}</p>
-            </article>
-            <article className="rounded-xl border border-[var(--line)] p-3">
-              <p className="eyebrow">C2 health</p>
-              <p className="mt-2 font-mono text-sm">
-                {counts.ok.filter((row) => row.fleet === "C2").length} OK ·{" "}
-                {counts.caution.filter((row) => row.fleet === "C2").length} Caution ·{" "}
-                {counts.off.filter((row) => row.fleet === "C2").length} OFF
-              </p>
-              <p className="stat-sub">Call {siteMeta.callDateC2}</p>
-            </article>
+          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+            {blocks.map((block) => (
+              <article key={block.id} className="rounded-xl border border-[var(--line)] p-3">
+                <p className="eyebrow">{block.id}</p>
+                <p className="mt-2 font-mono text-sm">
+                  {countFor(block.id, "ok")} OK · {countFor(block.id, "caution")} Caution ·{" "}
+                  {countFor(block.id, "off")} OFF
+                </p>
+                <p className="stat-sub">
+                  Status as of {block.asOf}
+                  {block.individual ? " · individual, not parallel" : ""}
+                </p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-4">
+            <p className="eyebrow">Measured IR by series</p>
+            <div className="mt-2">
+              <LineChart
+                categories={model.categories}
+                series={model.mean.map((series) => ({ ...series, label: series.id }))}
+                yDomain={model.meanDomain}
+                format="ir"
+                unit="mΩ"
+                height={180}
+                ariaLabel="Mean internal resistance by series"
+              />
+            </div>
           </div>
         </Panel>
       ))}
@@ -141,7 +156,7 @@ export default function BakeoffPage() {
         <p className="eyebrow">Future fleet</p>
         <h2 className="mt-2 font-mono text-3xl tracking-tight">C3</h2>
         <p className="mt-3 max-w-xl text-lg">Empty slot for when Ovonic is added as C3.</p>
-        <p className="note mt-2">No packs and no sessions yet. The Ovonic cards above stay candidates.</p>
+        <p className="note mt-2">No packs and no nights yet. The Ovonic cards above stay candidates.</p>
       </article>
     </div>
   );
