@@ -1,4 +1,4 @@
-# Cliff Pearson · LiPo fleet health
+# LostPennyFPV · LiPo fleet health
 
 Static dashboard for a 12-pack LiPo fleet. Internal resistance, intra-pack spread, start-floor voltage, and inter-pack rest delta come from iCharger DX8 Storage charges.
 

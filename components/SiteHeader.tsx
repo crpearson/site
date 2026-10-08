@@ -40,7 +40,7 @@ export function SiteHeader({
           </svg>
         </span>
         <span>
-          <span className="brand-name">Cliff Pearson</span>
+          <span className="brand-name">LostPennyFPV</span>
           <span className="brand-sub">LiPo fleet health</span>
         </span>
       </Link>

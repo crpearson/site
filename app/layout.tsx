@@ -18,13 +18,29 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const description =
+  "Health over time for 12 LiPo packs: internal resistance, intra-pack spread, start floor, and inter-pack rest delta from iCharger DX8 storage charges.";
+
+const title = {
+  default: "LostPennyFPV · LiPo fleet health",
+  template: "%s · LiPo fleet health",
+} as const;
+
 export const metadata: Metadata = {
-  title: {
-    default: "Cliff Pearson · LiPo fleet health",
-    template: "%s · LiPo fleet health",
+  title,
+  applicationName: "LostPennyFPV",
+  description,
+  openGraph: {
+    title,
+    description,
+    siteName: "LostPennyFPV",
+    type: "website",
   },
-  description:
-    "Health over time for 12 LiPo packs: internal resistance, intra-pack spread, start floor, and inter-pack rest delta from iCharger DX8 storage charges.",
+  twitter: {
+    card: "summary",
+    title,
+    description,
+  },
 };
 
 export const viewport: Viewport = {
