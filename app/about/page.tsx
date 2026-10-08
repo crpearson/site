@@ -39,7 +39,8 @@ export default function AboutPage() {
         <p className="page-intro mt-4">
           {siteMeta.source}. Last ingest {siteMeta.lastIngest}. The canonical file is the
           append-only IR store: {siteMeta.rowCount} rows across {siteMeta.sessionCount} sessions.
-          The pages read the JSON built from that store.
+          Pages read the v2 registry CSVs and join rest voltage from the store. Session order
+          and the Rule A / Rule B thresholds still come from the JSON.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">
@@ -81,10 +82,11 @@ export default function AboutPage() {
         </Panel>
         <Panel accent="ruleb" eyebrow="Glossary" title="Rest-Δ">
           <p className="note">
-            Inter-pack rest delta, in volts: on a night, the highest pack rest voltage minus the
-            lowest in that fleet. Rest voltage is the sum of the six start-cell voltages. Rule B
-            reads the full measured set. The next-parallel board delta is a separate call and can
-            leave OFF packs out.
+            Inter-pack rest delta, in volts: within one series and one session, the highest rest
+            voltage minus the lowest, and only among packs that charged in parallel. A series or
+            a night with fewer than two parallel packs is N/A, charged individually. Rest voltage
+            is the sum of the six start-cell voltages. Rule A, the floor watch, and self-discharge
+            still apply to every pack.
           </p>
         </Panel>
         <Panel accent="off" eyebrow="Glossary" title="Self-discharge">
@@ -159,12 +161,15 @@ export default function AboutPage() {
             Only LiPo Storage logs named <span className="font-mono text-[var(--ink)]">LiPo[Storage_NNN_CHx].txt</span>{" "}
             (or <span className="font-mono text-[var(--ink)]">.txt.gz</span>) are auto-mapped. NNN
             belongs to one charger alias. Streams are not merged across chargers. Ingest maps the
-            header serial to DX8-A or DX8-B with a private map that is not stored in this repo.
+            header serial to DX8-1 or DX8-2 with a private map that is not stored in this repo.
+            A session manifest names the slots for that charger and channel. Its slots list wins
+            over the default 3+3 split.
           </p>
           <p>
-            Channel, then NNN. CH1 is fleet C1 and CH2 is fleet C2. Within a night and channel,
-            files sort by NNN ascending: lowest is P1, sixth is P6. A channel is mapped only when
-            that night has exactly six valid files on it. Otherwise those files stay unassigned.
+            Files on a charger channel sort by NNN. Parallel and individual nights both map that
+            order onto the manifest slot list. The file count has to equal the slot count, or the
+            night is refused. With no manifest row, a new night defaults to DX8-1 CH1 = C1-P1..P3,
+            DX8-1 CH2 = C1-P4..P6, DX8-2 CH1 = C2-P1..P3, DX8-2 CH2 = C2-P4..P6.
           </p>
           <p>
             Hard fingerprints must pass or that fleet-night stays unassigned for review: C1-P4 cell
@@ -173,10 +178,11 @@ export default function AboutPage() {
             spread.
           </p>
           <p>
-            Dual-DX8 hold: <span className="font-mono text-[var(--ink)]">fleet_lock</span> is
-            enforced only when a charger in the registry has it set. Both are unlocked, so DX8-A
-            can log both channels. The store is append-only. An existing session and pack is not
-            overwritten. Partial nights are kept as measured.
+            <span className="font-mono text-[var(--ink)]">fleet_lock</span> is enforced only when a
+            charger in the registry has it set. DX8-1 and DX8-2 are unlocked. The store is
+            append-only. An existing session and pack is not overwritten. Partial nights are kept
+            as measured. Rule B uses only packs that charged in parallel that night, and only when
+            there are at least two of them.
           </p>
         </div>
         <ul className="mt-4 space-y-3">

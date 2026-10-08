@@ -1,8 +1,9 @@
-import type { PackStatus } from "@/lib/types";
+import { lampTone } from "@/lib/lamp";
 
-export function Lamp({ status }: { status: PackStatus }) {
+export function Lamp({ status }: { status: string }) {
+  const tone = lampTone(status);
   return (
-    <span className={`lamp lamp-${status.toLowerCase()}`}>
+    <span className={`lamp lamp-${tone}`}>
       <span className="lamp-dot" aria-hidden="true" />
       {status}
     </span>

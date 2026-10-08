@@ -14,31 +14,38 @@ Stdlib only (Python 3.9+). Usage:
   python3 scripts/ingest.py --rebuild
 
 The raw DX8 header still carries SN:<serial>. Pass --charger-map PATH, or set
-LIPO_CHARGER_MAP, to a JSON object of serial -> alias (DX8-A, DX8-B). Keys that
+LIPO_CHARGER_MAP, to a JSON object of serial -> alias (DX8-1, DX8-2). Keys that
 start with "_" are ignored. The real map stays off this repo. Ingest maps each
 header serial to its alias immediately after parsing and uses only the alias
 after that. A missing map, or a serial that is not in the map, exits without
 printing the serial.
 
-Mapping (Lipo Lary's locked rules, see data/README or site "About the data"):
+Mapping (see data/README or the site "About the data" page):
   * Only LiPo Storage logs named LiPo[Storage_NNN_CHx].txt(.gz) are auto-mapped.
   * NNN is per charger alias; never merge NNN streams across chargers.
-  * CH1 -> fleet C1, CH2 -> fleet C2. Within a night and channel, sort by NNN
-    ascending: lowest = P1 ... sixth = P6.  A channel is mapped only if it has
-    exactly 6 valid files in the night; otherwise those files stay UNASSIGNED.
-  * Charger/fleet lock (only when registry charger has "fleet_lock": true, i.e.
-    after dual-DX8 goes live): files from that alias for the other fleet stay
-    unassigned. Currently OFF (dual-DX8 HOLD; DX8-A logged both channels).
-  * HARD fingerprints must pass or the whole fleet-night is left unassigned
-    ("needs_review"): C1-P4 Cell1 = pack-max IR; C2-P2 Cell3 = pack-min IR.
-    Soft fingerprints (C2-P6 lowest C2 avg, C2-P4 tightest spread) are advisory.
-  * Discard from the numeric store (raw kept): 0-byte, no ;130; IR line,
-    duration < 60 s, not 6S, negative or implausible IR (> 1000 mOhm), non-Storage,
-    LiHV chemistry.
+  * --manifest PATH is a session manifest when it has a slots column, or the
+    legacy filename,pack CSV when it has a filename column. Private columns in
+    a session manifest are ignored. The slots list always wins.
+  * For each manifest row (session, charger_alias, channel, mode), sort that
+    charger and channel's files by NNN ascending and map them onto `slots` in
+    order. Parallel and individual use the same order. File count must equal
+    slot count; otherwise ingest exits non-zero and does not assign.
+  * With no session manifest, a new night uses the default split: DX8-1 CH1 =
+    C1-P1..P3, DX8-1 CH2 = C1-P4..P6, DX8-2 CH1 = C2-P1..P3, DX8-2 CH2 =
+    C2-P4..P6. The same count check applies. Blank-NNN manifest rows apply
+    only when --session matches that row.
+  * Each label resolves to a pack_uid from data/v2/packs.csv and pack_events.csv
+    as of the session date. Rows carry pack_uid, label_at_time, series_at_time,
+    charger alias, channel, file_nnn, charge_mode_at_time, and session_type.
+  * Charger/fleet lock applies only when that alias has "fleet_lock": true.
+  * HARD fingerprints must pass or ingest exits non-zero: C1-P4 Cell1 =
+    pack-max IR; C2-P2 Cell3 = pack-min IR. Soft fingerprints (C2-P6 lowest
+    C2 avg, C2-P4 tightest spread) are advisory and do not remap.
+  * Discard from the numeric store: 0-byte, no ;130; IR line, duration < 60 s,
+    not 6S, negative or implausible IR (> 1000 mOhm), non-Storage, LiHV.
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
-  * Files without NNN in the name (renamed/hashed) need --manifest CSV with
-    columns filename,pack (and optional session); otherwise UNASSIGNED.
+  * Files without NNN need a filename,pack manifest; otherwise UNASSIGNED.
 """
 from __future__ import annotations
 
@@ -69,7 +76,17 @@ STORE_COLS = [
     "session", "pack", "c1", "c2", "c3", "c4", "c5", "c6", "avg", "spread",
     "start_floor_mV", "start_imbalance_mV", "rest_V", "end_avg_mV", "duration_s",
     "charger", "channel", "file_nnn", "source_sha256", "note",
+    "pack_uid", "label_at_time", "series_at_time", "charge_mode_at_time", "session_type",
 ]
+
+DEFAULT_SLOTS = {
+    ("DX8-1", "CH1"): ["C1-P1", "C1-P2", "C1-P3"],
+    ("DX8-1", "CH2"): ["C1-P4", "C1-P5", "C1-P6"],
+    ("DX8-2", "CH1"): ["C2-P1", "C2-P2", "C2-P3"],
+    ("DX8-2", "CH2"): ["C2-P4", "C2-P5", "C2-P6"],
+}
+PACKS_CSV = DATA / "v2" / "packs.csv"
+EVENTS_CSV = DATA / "v2" / "pack_events.csv"
 
 
 @dataclass
@@ -90,6 +107,11 @@ class Log:
     pack: Optional[str] = None
     session: Optional[str] = None
     assign_note: Optional[str] = None
+    pack_uid: Optional[str] = None
+    label_at_time: Optional[str] = None
+    series_at_time: Optional[str] = None
+    charge_mode: Optional[str] = None
+    session_type: Optional[str] = None
 
     @property
     def valid(self) -> bool:
@@ -268,8 +290,8 @@ def load_registry():
 
 def charger_fleet_lock(registry) -> dict:
     # Only enforced once dual-DX8 is live (registry "fleet_lock": true). During the
-    # single-DX8 era / dual-DX8 HOLD, DX8-A logged both CH1 (C1) and CH2 (C2).
-    # Keys are charger aliases (DX8-A, DX8-B), never serials.
+    # single-DX8 era / dual-DX8 HOLD, DX8-1 logged both CH1 (C1) and CH2 (C2).
+    # Keys are charger aliases (DX8-1, DX8-2), never serials.
     return {
         alias: c["fleet"]
         for alias, c in registry.get("chargers", {}).items()
@@ -300,73 +322,175 @@ def hard_fp(fleet: str, packs: dict) -> tuple[bool, list]:
     return ok, notes
 
 
-def group_nights(logs: list[Log], max_gap: int = 4) -> list[list[Log]]:
-    """Split valid named Storage logs (per charger alias) into nights.
-
-    Lary's rule: a night is a 12-file set (6 CH1 + 6 CH2) taken in NNN order.
-    Walk files by NNN; close a set when it reaches 6+6, when the NNN gap exceeds
-    max_gap, or when a channel would get a 7th file. Incomplete sets are kept as
-    their own group (a 6-file single-channel set = partial night, e.g. C2-only).
-    """
-    nights = []
-    by_charger: dict = {}
-    for l in logs:
-        if l.valid and l.nnn is not None:
-            by_charger.setdefault(l.charger, []).append(l)
-    for _charger, items in by_charger.items():
-        items.sort(key=lambda x: x.nnn)
-        cur: list = []
-        for l in items:
-            n_ch = sum(1 for x in cur if x.channel == l.channel)
-            if cur and (l.nnn - cur[-1].nnn > max_gap or n_ch == 6):
-                nights.append(cur)
-                cur = []
-            cur.append(l)
-            if sum(1 for x in cur if x.channel == "CH1") == 6 and sum(1 for x in cur if x.channel == "CH2") == 6:
-                nights.append(cur)
-                cur = []
-        if cur:
-            nights.append(cur)
-    return nights
+def time_key(token: str):
+    eve = token.endswith("-eve")
+    day = token[:-4] if eve else token
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", day or ""):
+        return (1, day, 1 if eve else 0)
+    match = re.fullmatch(r"S(\d+)", token or "")
+    if match:
+        return (0, int(match.group(1)), 0)
+    return (2, 0, token or "")
 
 
-def assign(logs: list[Log], session: Optional[str], registry, manifest: dict) -> list[Log]:
+def load_identity():
+    packs = list(csv.DictReader(PACKS_CSV.open())) if PACKS_CSV.exists() else []
+    events = list(csv.DictReader(EVENTS_CSV.open())) if EVENTS_CSV.exists() else []
+    return packs, events
+
+
+def label_as_of(uid: str, session: str, events: list) -> Optional[str]:
+    label = None
+    owned = sorted((e for e in events if e.get("pack_uid") == uid), key=lambda e: time_key(e.get("date") or ""))
+    for event in owned:
+        if time_key(event.get("date") or "") <= time_key(session):
+            if event.get("to_label"):
+                label = event["to_label"]
+        else:
+            break
+    return label
+
+
+def resolve_label(label: str, session: str, packs: list, events: list):
+    hits = [pack for pack in packs if label_as_of(pack["pack_uid"], session, events) == label]
+    if len(hits) != 1:
+        return None
+    return hits[0]
+
+
+def refuse(message: str):
+    print(message, file=sys.stderr)
+    raise SystemExit(1)
+
+
+def bind_slots(logs: list[Log], slots: list[str], session: str, mode: str, registry, packs: list, events: list, manifest_series: Optional[str], how: str):
+    ordered = sorted(logs, key=lambda item: item.nnn or 0)
+    charger = ordered[0].charger or ""
+    channel = ordered[0].channel or ""
+    if len(ordered) != len(slots):
+        refuse(f"refusing to assign {session} {charger} {channel}: {len(ordered)} files for {len(slots)} slots")
     lock = charger_fleet_lock(registry)
-    # manifest-driven files (no NNN in name)
-    for l in logs:
-        if l.nnn is None and l.name in manifest:
-            pack, sess = manifest[l.name]
-            if l.valid:
-                l.pack, l.session = pack, sess or session
-                l.assign_note = "manifest"
-        elif l.nnn is None and l.valid:
-            l.assign_note = "UNASSIGNED: no NNN in filename and not in manifest"
+    for log, label in zip(ordered, slots):
+        series = label.split("-")[0]
+        if manifest_series and manifest_series != series:
+            refuse(f"refusing to assign {session} {charger} {channel}: slot {label} is not series {manifest_series}")
+        if charger in lock and lock[charger] != series:
+            log.assign_note = f"UNASSIGNED: charger {charger} is locked to {lock[charger]}"
+            continue
+        pack = resolve_label(label, session, packs, events)
+        if not pack:
+            refuse(f"refusing to assign {session} {charger} {channel}: {label} has no pack on that date")
+        log.pack = label
+        log.session = session
+        log.pack_uid = pack["pack_uid"]
+        log.label_at_time = label
+        log.series_at_time = pack.get("series") if pack.get("series") == series else series
+        log.charge_mode = mode
+        log.assign_note = how
 
-    nights = group_nights(logs)
-    multi = len(nights) > 1
-    for night in nights:
-        sid = session if (session and not multi) else f"S{min(l.nnn for l in night):03d}"
-        for ch, fleet in (("CH1", "C1"), ("CH2", "C2")):
-            chlogs = sorted([l for l in night if l.channel == ch], key=lambda x: x.nnn)
-            if not chlogs:
-                continue
-            charger = chlogs[0].charger
-            if charger in lock and lock[charger] != fleet:
-                for l in chlogs:
-                    l.assign_note = f"UNASSIGNED: charger {charger} is locked to {lock[charger]}"
-                continue
-            if len(chlogs) != 6:
-                for l in chlogs:
-                    l.assign_note = f"UNASSIGNED: night {sid} has {len(chlogs)} valid {ch} files (need 6)"
-                continue
-            packs = {f"{fleet}-P{i+1}": l for i, l in enumerate(chlogs)}
-            ok, notes = hard_fp(fleet, packs)
-            for pack, l in packs.items():
-                if ok:
-                    l.pack, l.session = pack, sid
-                    l.assign_note = "; ".join(notes) if notes else "mapped channel-then-NNN"
-                else:
-                    l.assign_note = "UNASSIGNED (needs_review): " + "; ".join(notes)
+
+def check_fingerprints(logs: list[Log]):
+    groups: dict = {}
+    for log in logs:
+        if log.pack and log.series_at_time and log.session:
+            groups.setdefault((log.session, log.series_at_time), []).append(log)
+    for (sid, series), items in groups.items():
+        packs = {log.pack: log for log in items}
+        ok, notes = hard_fp(series, packs)
+        if not ok:
+            for log in items:
+                log.pack = None
+                log.assign_note = "UNASSIGNED (needs_review): " + "; ".join(notes)
+            refuse(f"refusing to assign {sid} {series}: " + "; ".join(notes))
+        if notes:
+            for log in items:
+                log.assign_note = "; ".join(notes)
+
+
+def stamp_session_type(logs: list[Log]):
+    present: dict = {}
+    for log in logs:
+        if log.session and log.pack:
+            present.setdefault(log.session, set()).add(log.series_at_time)
+    for log in logs:
+        if not log.pack:
+            continue
+        if log.charge_mode == "individual":
+            log.session_type = "individual"
+        elif len(present.get(log.session, ())) <= 1:
+            log.session_type = "single-series"
+        else:
+            log.session_type = "parallel-night"
+
+
+def assign(logs: list[Log], session: Optional[str], registry, file_manifest: dict, session_rows: list) -> list[Log]:
+    packs, events = load_identity()
+    for log in logs:
+        if log.nnn is None and log.name in file_manifest:
+            pack, sess = file_manifest[log.name]
+            if log.valid:
+                log.pack, log.session = pack, sess or session
+                log.label_at_time = pack
+                log.assign_note = "file manifest"
+                resolved = resolve_label(pack, log.session or "", packs, events) if log.session else None
+                if resolved:
+                    log.pack_uid = resolved["pack_uid"]
+                    log.series_at_time = resolved.get("series") or pack.split("-")[0]
+        elif log.nnn is None and log.valid:
+            log.assign_note = "UNASSIGNED: no NNN in filename and not in manifest"
+
+    if session_rows:
+        rows = [row for row in session_rows if not session or row.get("session") == session]
+        ranged = [row for row in rows if row.get("nnn_first") and row.get("nnn_last")]
+        blank = [row for row in rows if not (row.get("nnn_first") and row.get("nnn_last"))]
+        claimed: set = set()
+
+        def take(row, candidates):
+            slots = [slot for slot in (row.get("slots") or "").split("|") if slot]
+            if not candidates or not slots:
+                return
+            bind_slots(
+                candidates, slots, row["session"], row.get("mode") or "parallel",
+                registry, packs, events, row.get("series") or None, "mapped manifest slots",
+            )
+            for log in candidates:
+                if log.pack:
+                    claimed.add(id(log))
+
+        for row in ranged:
+            lo, hi = int(row["nnn_first"]), int(row["nnn_last"])
+            candidates = [
+                log for log in logs
+                if log.valid and log.nnn is not None and id(log) not in claimed
+                and log.charger == row.get("charger_alias") and log.channel == row.get("channel")
+                and lo <= log.nnn <= hi
+            ]
+            take(row, candidates)
+        if session:
+            for row in blank:
+                candidates = [
+                    log for log in logs
+                    if log.valid and log.nnn is not None and id(log) not in claimed
+                    and log.charger == row.get("charger_alias") and log.channel == row.get("channel")
+                ]
+                take(row, candidates)
+    else:
+        groups: dict = {}
+        for log in logs:
+            if log.valid and log.nnn is not None and not log.pack:
+                groups.setdefault((log.charger, log.channel), []).append(log)
+        if groups:
+            sid = session or f"S{min(log.nnn for items in groups.values() for log in items):03d}"
+            for key, items in groups.items():
+                slots = DEFAULT_SLOTS.get(key)
+                if not slots:
+                    for log in items:
+                        log.assign_note = f"UNASSIGNED: no default slots for {key[0]} {key[1]}"
+                    continue
+                bind_slots(items, slots, sid, "parallel", registry, packs, events, None, "mapped default split")
+
+    check_fingerprints(logs)
+    stamp_session_type(logs)
     return logs
 
 
@@ -392,6 +516,11 @@ def to_row(l: Log) -> dict:
         "charger": l.charger or "", "channel": l.channel or "",
         "file_nnn": l.nnn if l.nnn is not None else "",
         "source_sha256": l.sha256[:16], "note": l.assign_note or "",
+        "pack_uid": l.pack_uid or "",
+        "label_at_time": l.label_at_time or "",
+        "series_at_time": l.series_at_time or "",
+        "charge_mode_at_time": l.charge_mode or "",
+        "session_type": l.session_type or "",
     }
 
 
@@ -427,6 +556,9 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
         for r in sorted(sessions[sid], key=lambda r: r["pack"]):
             p = {
                 "pack": r["pack"],
+                "pack_uid": r.get("pack_uid") or "",
+                "label_at_time": r.get("label_at_time") or r.get("pack") or "",
+                "series_at_time": r.get("series_at_time") or "",
                 "charger": r.get("charger") or "",
                 "cells_ir_mohm": [num(r[f"c{i}"], int) for i in range(1, 7)],
                 "avg_ir_mohm": num(r["avg"]),
@@ -439,7 +571,7 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
             packs.append(p)
             series.setdefault(r["pack"], []).append({
                 "session": sid,
-                **{k: v for k, v in p.items() if k not in ("pack", "note", "charger")},
+                **{k: v for k, v in p.items() if k not in ("pack", "note", "charger", "pack_uid", "label_at_time", "series_at_time")},
             })
         fleets = sorted({p["pack"].split("-")[0] for p in packs})
         rest = {}
@@ -463,14 +595,23 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
 
 
 # ----------------------------------------------------------------- main
-def load_manifest(p: Optional[Path]) -> dict:
+def load_manifest(p: Optional[Path]):
+    """Session manifest (slots column) or legacy file manifest (filename column)."""
     if not p:
-        return {}
-    with p.open() as f:
-        return {r["filename"]: (r["pack"], r.get("session") or None) for r in csv.DictReader(f)}
+        return {}, []
+    with p.open() as handle:
+        reader = csv.DictReader(handle)
+        rows = list(reader)
+        fields = reader.fieldnames or []
+    if "slots" in fields:
+        return {}, rows
+    if "filename" in fields:
+        return {row["filename"]: (row["pack"], row.get("session") or None) for row in rows}, []
+    print("manifest needs a slots column or a filename column", file=sys.stderr)
+    raise SystemExit(1)
 
 
-def ingest(paths: list[Path], session: Optional[str], manifest: dict, dry: bool, report: Optional[Path], charger_map: Optional[dict]):
+def ingest(paths: list[Path], session: Optional[str], file_manifest: dict, session_rows: list, dry: bool, report: Optional[Path], charger_map: Optional[dict]):
     registry = load_registry()
     seen_hash, seen_key, logs, dupes = set(), set(), [], 0
     for path in paths:
@@ -485,7 +626,7 @@ def ingest(paths: list[Path], session: Optional[str], manifest: dict, dry: bool,
             if key:
                 seen_key.add(key)
             logs.append(l)
-    assign(logs, session, registry, manifest)
+    assign(logs, session, registry, file_manifest, session_rows)
 
     rows = read_store()
     existing = {(r["session"], r["pack"]) for r in rows}
@@ -525,7 +666,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("inputs", nargs="*", type=Path)
     ap.add_argument("--session", help="night id, PT calendar date e.g. 2026-10-12 (default S<minNNN>)")
-    ap.add_argument("--manifest", type=Path, help="CSV filename,pack[,session] for logs without NNN in name")
+    ap.add_argument("--manifest", type=Path, help="session manifest (slots column) or legacy filename,pack CSV")
     ap.add_argument("--charger-map", type=Path, help="JSON serial-to-alias map (fallback: env LIPO_CHARGER_MAP). Keys starting with _ are ignored.")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--rebuild", action="store_true", help="regenerate data/*.json from data/store.csv")
@@ -538,7 +679,8 @@ def main():
     if not a.inputs:
         ap.error("give an upload path or --rebuild")
     charger_map = load_charger_map(a.charger_map)
-    ingest(a.inputs, a.session, load_manifest(a.manifest), a.dry_run, a.report, charger_map)
+    file_manifest, session_rows = load_manifest(a.manifest)
+    ingest(a.inputs, a.session, file_manifest, session_rows, a.dry_run, a.report, charger_map)
 
 
 if __name__ == "__main__":

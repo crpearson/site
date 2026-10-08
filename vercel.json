@@ -1,0 +1,574 @@
+{
+  "redirects": [
+    {
+      "source": "/pack/CNHL-2026-001",
+      "destination": "/pack/CNHL-2026-001/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-001",
+      "destination": "/pack/CNHL-2026-001/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-001/",
+      "destination": "/pack/CNHL-2026-001/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-002",
+      "destination": "/pack/CNHL-2026-002/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-002",
+      "destination": "/pack/CNHL-2026-002/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-002/",
+      "destination": "/pack/CNHL-2026-002/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-003",
+      "destination": "/pack/CNHL-2026-003/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-003",
+      "destination": "/pack/CNHL-2026-003/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-003/",
+      "destination": "/pack/CNHL-2026-003/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-004",
+      "destination": "/pack/CNHL-2026-004/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-004",
+      "destination": "/pack/CNHL-2026-004/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-004/",
+      "destination": "/pack/CNHL-2026-004/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-005",
+      "destination": "/pack/CNHL-2026-005/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-005",
+      "destination": "/pack/CNHL-2026-005/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-005/",
+      "destination": "/pack/CNHL-2026-005/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-006",
+      "destination": "/pack/CNHL-2026-006/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-006",
+      "destination": "/pack/CNHL-2026-006/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-006/",
+      "destination": "/pack/CNHL-2026-006/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-007",
+      "destination": "/pack/CNHL-2026-007/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-007",
+      "destination": "/pack/CNHL-2026-007/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-007/",
+      "destination": "/pack/CNHL-2026-007/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-008",
+      "destination": "/pack/CNHL-2026-008/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-008",
+      "destination": "/pack/CNHL-2026-008/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-008/",
+      "destination": "/pack/CNHL-2026-008/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-009",
+      "destination": "/pack/CNHL-2026-009/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-009",
+      "destination": "/pack/CNHL-2026-009/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-009/",
+      "destination": "/pack/CNHL-2026-009/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-010",
+      "destination": "/pack/CNHL-2026-010/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-010",
+      "destination": "/pack/CNHL-2026-010/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-010/",
+      "destination": "/pack/CNHL-2026-010/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-011",
+      "destination": "/pack/CNHL-2026-011/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-011",
+      "destination": "/pack/CNHL-2026-011/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-011/",
+      "destination": "/pack/CNHL-2026-011/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/CNHL-2026-012",
+      "destination": "/pack/CNHL-2026-012/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-012",
+      "destination": "/pack/CNHL-2026-012/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/cnhl-2026-012/",
+      "destination": "/pack/CNHL-2026-012/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/D-1",
+      "destination": "/pack/D-1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/D-1",
+      "destination": "/slot/D-1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/d-1",
+      "destination": "/pack/D-1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/d-1/",
+      "destination": "/pack/D-1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/d-1",
+      "destination": "/slot/D-1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/d-1/",
+      "destination": "/slot/D-1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C1-P2",
+      "destination": "/pack/C1-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C1-P2",
+      "destination": "/slot/C1-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p2",
+      "destination": "/pack/C1-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p2/",
+      "destination": "/pack/C1-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p2",
+      "destination": "/slot/C1-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p2/",
+      "destination": "/slot/C1-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C1-P3",
+      "destination": "/pack/C1-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C1-P3",
+      "destination": "/slot/C1-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p3",
+      "destination": "/pack/C1-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p3/",
+      "destination": "/pack/C1-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p3",
+      "destination": "/slot/C1-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p3/",
+      "destination": "/slot/C1-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C1-P4",
+      "destination": "/pack/C1-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C1-P4",
+      "destination": "/slot/C1-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p4",
+      "destination": "/pack/C1-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p4/",
+      "destination": "/pack/C1-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p4",
+      "destination": "/slot/C1-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p4/",
+      "destination": "/slot/C1-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C1-P5",
+      "destination": "/pack/C1-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C1-P5",
+      "destination": "/slot/C1-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p5",
+      "destination": "/pack/C1-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p5/",
+      "destination": "/pack/C1-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p5",
+      "destination": "/slot/C1-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p5/",
+      "destination": "/slot/C1-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C1-P6",
+      "destination": "/pack/C1-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C1-P6",
+      "destination": "/slot/C1-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p6",
+      "destination": "/pack/C1-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p6/",
+      "destination": "/pack/C1-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p6",
+      "destination": "/slot/C1-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p6/",
+      "destination": "/slot/C1-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C2-P1",
+      "destination": "/pack/C2-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C2-P1",
+      "destination": "/slot/C2-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p1",
+      "destination": "/pack/C2-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p1/",
+      "destination": "/pack/C2-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p1",
+      "destination": "/slot/C2-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p1/",
+      "destination": "/slot/C2-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C2-P2",
+      "destination": "/pack/C2-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C2-P2",
+      "destination": "/slot/C2-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p2",
+      "destination": "/pack/C2-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p2/",
+      "destination": "/pack/C2-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p2",
+      "destination": "/slot/C2-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p2/",
+      "destination": "/slot/C2-P2/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C2-P3",
+      "destination": "/pack/C2-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C2-P3",
+      "destination": "/slot/C2-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p3",
+      "destination": "/pack/C2-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p3/",
+      "destination": "/pack/C2-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p3",
+      "destination": "/slot/C2-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p3/",
+      "destination": "/slot/C2-P3/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C2-P4",
+      "destination": "/pack/C2-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C2-P4",
+      "destination": "/slot/C2-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p4",
+      "destination": "/pack/C2-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p4/",
+      "destination": "/pack/C2-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p4",
+      "destination": "/slot/C2-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p4/",
+      "destination": "/slot/C2-P4/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C2-P5",
+      "destination": "/pack/C2-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C2-P5",
+      "destination": "/slot/C2-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p5",
+      "destination": "/pack/C2-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p5/",
+      "destination": "/pack/C2-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p5",
+      "destination": "/slot/C2-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p5/",
+      "destination": "/slot/C2-P5/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C2-P6",
+      "destination": "/pack/C2-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C2-P6",
+      "destination": "/slot/C2-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p6",
+      "destination": "/pack/C2-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c2-p6/",
+      "destination": "/pack/C2-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p6",
+      "destination": "/slot/C2-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c2-p6/",
+      "destination": "/slot/C2-P6/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/C1-P1",
+      "destination": "/pack/C1-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/C1-P1",
+      "destination": "/slot/C1-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p1",
+      "destination": "/pack/C1-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/pack/c1-p1/",
+      "destination": "/pack/C1-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p1",
+      "destination": "/slot/C1-P1/",
+      "permanent": true
+    },
+    {
+      "source": "/slot/c1-p1/",
+      "destination": "/slot/C1-P1/",
+      "permanent": true
+    }
+  ]
+}

@@ -75,7 +75,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       588,
       573,
@@ -93,7 +93,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       626,
       612,
@@ -111,7 +111,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       567,
       555,
@@ -129,7 +129,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       532,
       502,
@@ -147,7 +147,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       565,
       544,
@@ -165,7 +165,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       518,
       514,
@@ -183,7 +183,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       594,
       579,
@@ -201,7 +201,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       550,
       569,
@@ -219,7 +219,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       579,
       580,
@@ -237,7 +237,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       578,
       585,
@@ -255,7 +255,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       580,
       584,
@@ -273,7 +273,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       555,
       549,
@@ -312,7 +312,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       560,
       544,
@@ -330,7 +330,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       570,
       560,
@@ -348,7 +348,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       537,
       522,
@@ -366,7 +366,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       563,
       543,
@@ -384,7 +384,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       564,
       546,
@@ -402,7 +402,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       557,
       550,
@@ -420,7 +420,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       597,
       594,
@@ -438,7 +438,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       546,
       558,
@@ -456,7 +456,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       581,
       579,
@@ -474,7 +474,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       576,
       578,
@@ -492,7 +492,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       571,
       572,
@@ -510,7 +510,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       535,
       533,
@@ -549,7 +549,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       484,
       465,
@@ -567,7 +567,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       594,
       586,
@@ -585,7 +585,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       594,
       584,
@@ -603,7 +603,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       566,
       548,
@@ -621,7 +621,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       583,
       570,
@@ -639,7 +639,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       609,
       613,
@@ -657,7 +657,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       599,
       592,
@@ -675,7 +675,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       537,
       540,
@@ -693,7 +693,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       562,
       554,
@@ -711,7 +711,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       593,
       596,
@@ -729,7 +729,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       522,
       516,
@@ -747,7 +747,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       592,
       594,
@@ -786,7 +786,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       555,
       540,
@@ -804,7 +804,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       556,
       534,
@@ -822,7 +822,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       591,
       577,
@@ -840,7 +840,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       400,
       371,
@@ -858,7 +858,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       500,
       488,
@@ -876,7 +876,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       578,
       572,
@@ -894,7 +894,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       503,
       494,
@@ -912,7 +912,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       451,
       475,
@@ -930,7 +930,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       588,
       586,
@@ -948,7 +948,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       481,
       488,
@@ -966,7 +966,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       510,
       511,
@@ -984,7 +984,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       506,
       510,
@@ -1023,7 +1023,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       542,
       525,
@@ -1041,7 +1041,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       588,
       578,
@@ -1059,7 +1059,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       509,
       505,
@@ -1077,7 +1077,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       513,
       487,
@@ -1095,7 +1095,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       538,
       519,
@@ -1113,7 +1113,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       559,
       555,
@@ -1131,7 +1131,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       523,
       525,
@@ -1149,7 +1149,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       530,
       548,
@@ -1167,7 +1167,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       569,
       574,
@@ -1185,7 +1185,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       566,
       573,
@@ -1203,7 +1203,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       507,
       508,
@@ -1221,7 +1221,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       538,
       536,
@@ -1260,7 +1260,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       540,
       524,
@@ -1278,7 +1278,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       574,
       566,
@@ -1296,7 +1296,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       547,
       538,
@@ -1314,7 +1314,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       553,
       521,
@@ -1332,7 +1332,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       544,
       540,
@@ -1350,7 +1350,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       583,
       580,
@@ -1368,7 +1368,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       516,
       512,
@@ -1386,7 +1386,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       528,
       528,
@@ -1404,7 +1404,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       562,
       568,
@@ -1422,7 +1422,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       557,
       559,
@@ -1440,7 +1440,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       572,
       572,
@@ -1458,7 +1458,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       508,
       511,
@@ -1497,7 +1497,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       549,
       522,
@@ -1515,7 +1515,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       586,
       578,
@@ -1533,7 +1533,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       525,
       517,
@@ -1551,7 +1551,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       581,
       550,
@@ -1569,7 +1569,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       534,
       521,
@@ -1587,7 +1587,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       560,
       559,
@@ -1605,7 +1605,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       549,
       542,
@@ -1623,7 +1623,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       524,
       536,
@@ -1641,7 +1641,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       568,
       564,
@@ -1659,7 +1659,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       579,
       585,
@@ -1677,7 +1677,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       572,
       573,
@@ -1695,7 +1695,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       514,
       523,
@@ -1734,7 +1734,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       546,
       523,
@@ -1752,7 +1752,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       561,
       547,
@@ -1770,7 +1770,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       526,
       513,
@@ -1788,7 +1788,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       545,
       522,
@@ -1806,7 +1806,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       571,
       553,
@@ -1824,7 +1824,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       555,
       553,
@@ -1842,7 +1842,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       539,
       536,
@@ -1860,7 +1860,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       486,
       499,
@@ -1878,7 +1878,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       548,
       551,
@@ -1896,7 +1896,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       539,
       541,
@@ -1914,7 +1914,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       553,
       555,
@@ -1932,7 +1932,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       492,
       492,
@@ -1971,7 +1971,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       564,
       541,
@@ -1989,7 +1989,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       574,
       565,
@@ -2007,7 +2007,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       531,
       521,
@@ -2025,7 +2025,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       566,
       534,
@@ -2043,7 +2043,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       555,
       539,
@@ -2061,7 +2061,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       562,
       559,
@@ -2079,7 +2079,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       573,
       565,
@@ -2097,7 +2097,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       545,
       559,
@@ -2115,7 +2115,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       584,
       583,
@@ -2133,7 +2133,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       538,
       542,
@@ -2151,7 +2151,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       552,
       553,
@@ -2169,7 +2169,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       520,
       527,
@@ -2208,7 +2208,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       569,
       543,
@@ -2226,7 +2226,7 @@
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       541,
       530,
@@ -2244,7 +2244,7 @@
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       533,
       525,
@@ -2262,7 +2262,7 @@
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       548,
       524,
@@ -2280,7 +2280,7 @@
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       549,
       533,
@@ -2298,7 +2298,7 @@
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       578,
       582,
@@ -2316,7 +2316,7 @@
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       556,
       552,
@@ -2334,7 +2334,7 @@
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       513,
       520,
@@ -2352,7 +2352,7 @@
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       591,
       595,
@@ -2370,7 +2370,7 @@
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       557,
       564,
@@ -2388,7 +2388,7 @@
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       547,
       544,
@@ -2406,7 +2406,7 @@
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       505,
       514,
@@ -2440,7 +2440,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       562,
       548,
@@ -2454,11 +2454,11 @@
      "start_floor_mV": 3509,
      "start_imbalance_mV": 184,
      "rest_V": 21.755,
-     "note": "DX8-A; C1-only; SD Cell6 floor 3509 imb184; vsS413 floor+2 spread45\u219229; file C1-ch1-0554773ec89b"
+     "note": "DX8-1; C1-only; SD Cell6 floor 3509 imb184; vsS413 floor+2 spread45\u219229; file C1-ch1-0554773ec89b"
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       582,
       570,
@@ -2472,11 +2472,11 @@
      "start_floor_mV": 3648,
      "start_imbalance_mV": 32,
      "rest_V": 21.988,
-     "note": "DX8-A; C1-only; GO spread26; vsS413 avg+39.7; file C1-ch2-785a4eb9792f"
+     "note": "DX8-1; C1-only; GO spread26; vsS413 avg+39.7; file C1-ch2-785a4eb9792f"
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       521,
       519,
@@ -2490,11 +2490,11 @@
      "start_floor_mV": 3622,
      "start_imbalance_mV": 78,
      "rest_V": 22.044,
-     "note": "DX8-A; C1-only; GO spread32; vsS413 avg-10.5 floor same 3622; file C1-ch3-cbf4ec1bc29a"
+     "note": "DX8-1; C1-only; GO spread32; vsS413 avg-10.5 floor same 3622; file C1-ch3-cbf4ec1bc29a"
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       592,
       556,
@@ -2508,11 +2508,11 @@
      "start_floor_mV": 3479,
      "start_imbalance_mV": 191,
      "rest_V": 21.642,
-     "note": "DX8-A; C1-only; NEW SD Cell1 floor3479 imb191 + spread46 Caution + Cell1 IR592 pack-max; escalate OFF vs S413 Caution-onboard (floor3640); file C1-ch4-eba7a92ad632"
+     "note": "DX8-1; C1-only; NEW SD Cell1 floor3479 imb191 + spread46 Caution + Cell1 IR592 pack-max; escalate OFF vs S413 Caution-onboard (floor3640); file C1-ch4-eba7a92ad632"
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       553,
       536,
@@ -2526,11 +2526,11 @@
      "start_floor_mV": 3648,
      "start_imbalance_mV": 41,
      "rest_V": 22.047,
-     "note": "DX8-A; C1-only; GO spread28; vsS413 spread38\u219228; file C1-ch5-cf455800a43c"
+     "note": "DX8-1; C1-only; GO spread28; vsS413 spread38\u219228; file C1-ch5-cf455800a43c"
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       575,
       583,
@@ -2544,7 +2544,7 @@
      "start_floor_mV": 3594,
      "start_imbalance_mV": 67,
      "rest_V": 21.815,
-     "note": "DX8-A; C1-only; CAUTION watch floor3594 (<3600 EYE) spread24 Go; vsS413 floor3577\u21923594; file C1-ch6-d38acf4201b6"
+     "note": "DX8-1; C1-only; CAUTION watch floor3594 (<3600 EYE) spread24 Go; vsS413 floor3577\u21923594; file C1-ch6-d38acf4201b6"
     }
    ]
   },
@@ -2569,7 +2569,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       561,
       546,
@@ -2583,11 +2583,11 @@
      "start_floor_mV": 3543,
      "start_imbalance_mV": 155,
      "rest_V": 21.882,
-     "note": "DX8-A; eve full night; OFF SD Cell6 floor3543 imb155; vs morning floor3509\u21923543 imb184\u2192155 still OFF; file CH1-slot1-16146371668d"
+     "note": "DX8-1; eve full night; OFF SD Cell6 floor3543 imb155; vs morning floor3509\u21923543 imb184\u2192155 still OFF; file CH1-slot1-16146371668d"
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       581,
       571,
@@ -2601,11 +2601,11 @@
      "start_floor_mV": 3647,
      "start_imbalance_mV": 33,
      "rest_V": 21.986,
-     "note": "DX8-A; eve full night; GO spread23; vs morning spr26\u219223 avg567.2\u2192566.5; file CH1-slot2-8b7ed83fd1ce"
+     "note": "DX8-1; eve full night; GO spread23; vs morning spr26\u219223 avg567.2\u2192566.5; file CH1-slot2-8b7ed83fd1ce"
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       522,
       514,
@@ -2619,11 +2619,11 @@
      "start_floor_mV": 3632,
      "start_imbalance_mV": 71,
      "rest_V": 22.09,
-     "note": "DX8-A; eve full night; GO spread37 imb71 not SD; vs morning spr32\u219237 avg507.8\u2192504.0; file CH1-slot3-b19b24c36e81"
+     "note": "DX8-1; eve full night; GO spread37 imb71 not SD; vs morning spr32\u219237 avg507.8\u2192504.0; file CH1-slot3-b19b24c36e81"
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       550,
       530,
@@ -2637,11 +2637,11 @@
      "start_floor_mV": 3654,
      "start_imbalance_mV": 50,
      "rest_V": 22.125,
-     "note": "DX8-A; eve full night; SD CLEARED floor3654 imb50 (was morning OFF floor3479 imb191); spread36 Go; Cell1 still pack-max IR550 \u2192 CAUTION onboard reduced C1 A; file CH1-slot4-2c3c93f740bc"
+     "note": "DX8-1; eve full night; SD CLEARED floor3654 imb50 (was morning OFF floor3479 imb191); spread36 Go; Cell1 still pack-max IR550 \u2192 CAUTION onboard reduced C1 A; file CH1-slot4-2c3c93f740bc"
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       546,
       534,
@@ -2655,11 +2655,11 @@
      "start_floor_mV": 3663,
      "start_imbalance_mV": 34,
      "rest_V": 22.113,
-     "note": "DX8-A; eve full night; GO spread22; vs morning spr28\u219222; file CH1-slot5-d2719e731d29"
+     "note": "DX8-1; eve full night; GO spread22; vs morning spr28\u219222; file CH1-slot5-d2719e731d29"
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       554,
       551,
@@ -2673,11 +2673,11 @@
      "start_floor_mV": 3658,
      "start_imbalance_mV": 40,
      "rest_V": 22.115,
-     "note": "DX8-A; eve full night; GO spread20 floor3658 improved vs morning 3594 EYE; file CH1-slot6-c74bf3a70ffa"
+     "note": "DX8-1; eve full night; GO spread20 floor3658 improved vs morning 3594 EYE; file CH1-slot6-c74bf3a70ffa"
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       574,
       572,
@@ -2691,11 +2691,11 @@
      "start_floor_mV": 3612,
      "start_imbalance_mV": 40,
      "rest_V": 21.82,
-     "note": "DX8-A; eve full night; GO spread23; lowest C2 rest V 21.820; file CH2-slot1-0074bf933b46"
+     "note": "DX8-1; eve full night; GO spread23; lowest C2 rest V 21.820; file CH2-slot1-0074bf933b46"
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       536,
       545,
@@ -2709,11 +2709,11 @@
      "start_floor_mV": 3596,
      "start_imbalance_mV": 101,
      "rest_V": 22.019,
-     "note": "DX8-A; eve full night; GO spread28; Cell3 pack-min IR517 FP PASS; floor3596 EYE imb101 (not SD\u2265150) CAUTION watch floor ON; file CH2-slot2-8c0270933573"
+     "note": "DX8-1; eve full night; GO spread28; Cell3 pack-min IR517 FP PASS; floor3596 EYE imb101 (not SD\u2265150) CAUTION watch floor ON; file CH2-slot2-8c0270933573"
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       579,
       579,
@@ -2727,11 +2727,11 @@
      "start_floor_mV": 3643,
      "start_imbalance_mV": 43,
      "rest_V": 21.95,
-     "note": "DX8-A; eve full night; GO spread26; vsS413 avg586.3\u2192571.7; file CH2-slot3-14fd11404b34"
+     "note": "DX8-1; eve full night; GO spread26; vsS413 avg586.3\u2192571.7; file CH2-slot3-14fd11404b34"
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       560,
       566,
@@ -2745,11 +2745,11 @@
      "start_floor_mV": 3646,
      "start_imbalance_mV": 47,
      "rest_V": 21.996,
-     "note": "DX8-A; eve full night; GO spread16; soft FP advisory FAIL (P5 spr14 tighter) \u2014 do NOT remap; file CH2-slot4-9a99936086ab"
+     "note": "DX8-1; eve full night; GO spread16; soft FP advisory FAIL (P5 spr14 tighter) \u2014 do NOT remap; file CH2-slot4-9a99936086ab"
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       550,
       547,
@@ -2763,11 +2763,11 @@
      "start_floor_mV": 3663,
      "start_imbalance_mV": 36,
      "rest_V": 22.061,
-     "note": "DX8-A; eve full night; GO spread14 (tightest C2 tonight); file CH2-slot5-6f1bb527f7ca"
+     "note": "DX8-1; eve full night; GO spread14 (tightest C2 tonight); file CH2-slot5-6f1bb527f7ca"
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       525,
       521,
@@ -2781,7 +2781,7 @@
      "start_floor_mV": 3649,
      "start_imbalance_mV": 51,
      "rest_V": 22.132,
-     "note": "DX8-A; eve full night; GO spread15; lowest C2 pack avg524.2 FP PASS; floor3649 OK; file CH2-slot6-04662ac86f27"
+     "note": "DX8-1; eve full night; GO spread15; lowest C2 pack avg524.2 FP PASS; floor3649 OK; file CH2-slot6-04662ac86f27"
     }
    ]
   },
@@ -2806,7 +2806,7 @@
    "packs": [
     {
      "pack": "C1-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       569,
       549,
@@ -2820,11 +2820,11 @@
      "start_floor_mV": 3509,
      "start_imbalance_mV": 191,
      "rest_V": 21.826,
-     "note": "DX8-A; C1+C2 night; file_nnn=455; OFF SD Cell6 floor3509 imb191; vs eve floor3543\u21923509 imb155\u2192191 still OFF; spr42 Caution band \u2014 off is SD"
+     "note": "DX8-1; C1+C2 night; file_nnn=455; OFF SD Cell6 floor3509 imb191; vs eve floor3543\u21923509 imb155\u2192191 still OFF; spr42 Caution band \u2014 off is SD"
     },
     {
      "pack": "C1-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       580,
       569,
@@ -2838,11 +2838,11 @@
      "start_floor_mV": 3634,
      "start_imbalance_mV": 42,
      "rest_V": 21.944,
-     "note": "DX8-A; C1+C2 night; file_nnn=457; GO spread26; vs eve spr23\u219226 avg566.5\u2192564.2"
+     "note": "DX8-1; C1+C2 night; file_nnn=457; GO spread26; vs eve spr23\u219226 avg566.5\u2192564.2"
     },
     {
      "pack": "C1-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       528,
       523,
@@ -2856,11 +2856,11 @@
      "start_floor_mV": 3578,
      "start_imbalance_mV": 122,
      "rest_V": 21.915,
-     "note": "DX8-A; C1+C2 night; file_nnn=459; CAUTION spread40 + floor3578 EYE (<3600); imb122 not SD\u2265150; vs eve spr37\u219240 floor3632\u21923578"
+     "note": "DX8-1; C1+C2 night; file_nnn=459; CAUTION spread40 + floor3578 EYE (<3600); imb122 not SD\u2265150; vs eve spr37\u219240 floor3632\u21923578"
     },
     {
      "pack": "C1-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       561,
       540,
@@ -2874,11 +2874,11 @@
      "start_floor_mV": 3603,
      "start_imbalance_mV": 98,
      "rest_V": 22.025,
-     "note": "DX8-A; C1+C2 night; file_nnn=461; CAUTION onboard Cell1 pack-max IR561 spr45; floor3603 imb98 (not SD); vs eve floor3654\u21923603 spr36\u219245 Cell1 550\u2192561; reduced C1 A"
+     "note": "DX8-1; C1+C2 night; file_nnn=461; CAUTION onboard Cell1 pack-max IR561 spr45; floor3603 imb98 (not SD); vs eve floor3654\u21923603 spr36\u219245 Cell1 550\u2192561; reduced C1 A"
     },
     {
      "pack": "C1-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       587,
       570,
@@ -2892,11 +2892,11 @@
      "start_floor_mV": 3539,
      "start_imbalance_mV": 71,
      "rest_V": 21.523,
-     "note": "DX8-A; C1+C2 night; file_nnn=463; GO spr33 but floor3539 EYE + low rest 21.523V; imb71 not SD; vs eve floor3663\u21923539"
+     "note": "DX8-1; C1+C2 night; file_nnn=463; GO spr33 but floor3539 EYE + low rest 21.523V; imb71 not SD; vs eve floor3663\u21923539"
     },
     {
      "pack": "C1-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       558,
       554,
@@ -2910,11 +2910,11 @@
      "start_floor_mV": 3644,
      "start_imbalance_mV": 50,
      "rest_V": 22.045,
-     "note": "DX8-A; C1+C2 night; file_nnn=465; GO spread16 floor3644; vs eve spr20\u219216"
+     "note": "DX8-1; C1+C2 night; file_nnn=465; GO spread16 floor3644; vs eve spr20\u219216"
     },
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       531,
       523,
@@ -2928,11 +2928,11 @@
      "start_floor_mV": 3694,
      "start_imbalance_mV": 13,
      "rest_V": 22.213,
-     "note": "DX8-A; C1+C2 night; file_nnn=456; GO spread32; vs eve spr23\u219232 avg566.2\u2192521.2"
+     "note": "DX8-1; C1+C2 night; file_nnn=456; GO spread32; vs eve spr23\u219232 avg566.2\u2192521.2"
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       487,
       493,
@@ -2946,11 +2946,11 @@
      "start_floor_mV": 3684,
      "start_imbalance_mV": 22,
      "rest_V": 22.201,
-     "note": "DX8-A; C1+C2 night; file_nnn=458; CAUTION spread44; Cell3 pack-min IR451 FP PASS; floor3684 OK (eve EYE 3596 cleared); vs eve spr28\u219244 avg533.5\u2192479.3"
+     "note": "DX8-1; C1+C2 night; file_nnn=458; CAUTION spread44; Cell3 pack-min IR451 FP PASS; floor3684 OK (eve EYE 3596 cleared); vs eve spr28\u219244 avg533.5\u2192479.3"
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       534,
       535,
@@ -2964,11 +2964,11 @@
      "start_floor_mV": 3701,
      "start_imbalance_mV": 3,
      "rest_V": 22.213,
-     "note": "DX8-A; C1+C2 night; file_nnn=460; GO spread18; vs eve spr26\u219218 avg571.7\u2192528.5"
+     "note": "DX8-1; C1+C2 night; file_nnn=460; GO spread18; vs eve spr26\u219218 avg571.7\u2192528.5"
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       530,
       535,
@@ -2982,11 +2982,11 @@
      "start_floor_mV": 3691,
      "start_imbalance_mV": 10,
      "rest_V": 22.182,
-     "note": "DX8-A; C1+C2 night; file_nnn=462; GO spread11 tightest C2 FP PASS; vs eve spr16\u219211"
+     "note": "DX8-1; C1+C2 night; file_nnn=462; GO spread11 tightest C2 FP PASS; vs eve spr16\u219211"
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       569,
       567,
@@ -3000,11 +3000,11 @@
      "start_floor_mV": 3631,
      "start_imbalance_mV": 63,
      "rest_V": 21.914,
-     "note": "DX8-A; C1+C2 night; file_nnn=464; GO spread22; lowest C2 rest 21.914V; vs eve spr14\u219222"
+     "note": "DX8-1; C1+C2 night; file_nnn=464; GO spread22; lowest C2 rest 21.914V; vs eve spr14\u219222"
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       433,
       436,
@@ -3018,7 +3018,7 @@
      "start_floor_mV": 3712,
      "start_imbalance_mV": 18,
      "rest_V": 22.329,
-     "note": "DX8-A; C1+C2 night; file_nnn=466; GO spread25; lowest C2 pack avg434.8 FP PASS; vs eve avg524.2\u2192434.8"
+     "note": "DX8-1; C1+C2 night; file_nnn=466; GO spread25; lowest C2 pack avg434.8 FP PASS; vs eve avg524.2\u2192434.8"
     }
    ]
   },
@@ -3038,7 +3038,7 @@
    "packs": [
     {
      "pack": "C2-P1",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       494,
       503,
@@ -3052,11 +3052,11 @@
      "start_floor_mV": 3698,
      "start_imbalance_mV": 7,
      "rest_V": 22.203,
-     "note": "DX8-A; C2-only night; file_nnn=474; GO spread17; vs 2026-09-27 spr32\u219217 avg521.2\u2192498.7"
+     "note": "DX8-1; C2-only night; file_nnn=474; GO spread17; vs 2026-09-27 spr32\u219217 avg521.2\u2192498.7"
     },
     {
      "pack": "C2-P2",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       528,
       537,
@@ -3070,11 +3070,11 @@
      "start_floor_mV": 3597,
      "start_imbalance_mV": 103,
      "rest_V": 22.055,
-     "note": "DX8-A; C2-only night; file_nnn=475; CAUTION floor3597 EYE; Cell3 pack-min IR514 FP PASS; spr26 Go (was44); vs 2026-09-27 fl3684\u21923597 spr44\u219226 avg479.3\u2192528.2"
+     "note": "DX8-1; C2-only night; file_nnn=475; CAUTION floor3597 EYE; Cell3 pack-min IR514 FP PASS; spr26 Go (was44); vs 2026-09-27 fl3684\u21923597 spr44\u219226 avg479.3\u2192528.2"
     },
     {
      "pack": "C2-P3",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       568,
       570,
@@ -3088,11 +3088,11 @@
      "start_floor_mV": 3661,
      "start_imbalance_mV": 35,
      "rest_V": 22.062,
-     "note": "DX8-A; C2-only night; file_nnn=476; GO spread26; vs 2026-09-27 spr18\u219226 avg528.5\u2192563.5"
+     "note": "DX8-1; C2-only night; file_nnn=476; GO spread26; vs 2026-09-27 spr18\u219226 avg528.5\u2192563.5"
     },
     {
      "pack": "C2-P4",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       538,
       548,
@@ -3106,11 +3106,11 @@
      "start_floor_mV": 3686,
      "start_imbalance_mV": 15,
      "rest_V": 22.161,
-     "note": "DX8-A; C2-only night; file_nnn=477; GO spread17 tied-tightest w/P1 (soft FP advisory uniqueness FAIL; no remap); vs 2026-09-27 spr11\u219217"
+     "note": "DX8-1; C2-only night; file_nnn=477; GO spread17 tied-tightest w/P1 (soft FP advisory uniqueness FAIL; no remap); vs 2026-09-27 spr11\u219217"
     },
     {
      "pack": "C2-P5",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       545,
       544,
@@ -3124,11 +3124,11 @@
      "start_floor_mV": 3681,
      "start_imbalance_mV": 20,
      "rest_V": 22.147,
-     "note": "DX8-A; C2-only night; file_nnn=478; GO spread19; vs 2026-09-27 spr22\u219219 avg558.8\u2192536.0"
+     "note": "DX8-1; C2-only night; file_nnn=478; GO spread19; vs 2026-09-27 spr22\u219219 avg558.8\u2192536.0"
     },
     {
      "pack": "C2-P6",
-     "charger": "DX8-A",
+     "charger": "DX8-1",
      "cells_ir_mohm": [
       493,
       497,
@@ -3142,7 +3142,7 @@
      "start_floor_mV": 3694,
      "start_imbalance_mV": 12,
      "rest_V": 22.209,
-     "note": "DX8-A; C2-only night; file_nnn=479; GO spread18; lowest C2 pack avg495.3 FP PASS; vs 2026-09-27 avg434.8\u2192495.3"
+     "note": "DX8-1; C2-only night; file_nnn=479; GO spread18; lowest C2 pack avg495.3 FP PASS; vs 2026-09-27 avg434.8\u2192495.3"
     }
    ]
   }

@@ -1,127 +1,267 @@
+import fs from "node:fs";
+import path from "node:path";
 import metaDoc from "@/data/meta.json";
+import nextDoc from "@/data/v2/next.json";
 import registryDoc from "@/data/pack-registry.json";
-import seriesDoc from "@/data/packs-timeseries.json";
 import sessionsDoc from "@/data/sessions.json";
 import statusDoc from "@/data/status.json";
-import { FLEET_COLOR, packColor } from "@/lib/color";
+import { packColor, seriesColor } from "@/lib/color";
+import { parseCsv } from "@/lib/csv";
 import { shortSession } from "@/lib/format";
-import type { Band, Category, ChartSeries, Guide, PackStatus } from "@/lib/types";
+import { lampTone, type LampTone } from "@/lib/lamp";
+import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
-export const PACK_IDS = [
-  "C1-P1",
-  "C1-P2",
-  "C1-P3",
-  "C1-P4",
-  "C1-P5",
-  "C1-P6",
-  "C2-P1",
-  "C2-P2",
-  "C2-P3",
-  "C2-P4",
-  "C2-P5",
-  "C2-P6",
-] as const;
-
-export type PackId = (typeof PACK_IDS)[number];
-
-type SeriesPoint = {
+type Measurement = {
   session: string;
+  label: string;
+  uid: string;
+  series: string;
   cells: number[];
   avg: number;
   spread: number;
-  floor: number;
+  floor: number | null;
   imbalance: number | null;
   rest: number | null;
+  chargeMode: string;
+  note: string;
 };
 
-type StatusEntry = {
-  status: PackStatus;
+type PackRec = {
+  uid: string;
+  label: string;
+  series: string;
+  brand: string;
+  model: string;
+  cells: number;
+  capacityMah: number;
+  chargeMode: string;
+  retired: string;
+  purchaseDate: string;
+  priceUsd: string;
+  vendor: string;
+  notes: string;
+};
+
+type PackEvent = {
+  date: string;
+  uid: string;
+  event: string;
+  from: string;
+  to: string;
   reason: string;
-  call_date: string;
-  detail?: string;
 };
 
-type SessionRow = {
-  id: string;
-  fleets: string[];
-  pack_count: number;
-  partial: boolean;
-  rest_delta: Record<string, { full_set_delta_V: number; n: number }>;
+type StatusCall = {
+  date: string;
+  uid: string;
+  label: string;
+  status: string;
+  reason: string;
+  source: string;
+  session: string;
 };
 
-const statusPacks = statusDoc.packs as Record<string, StatusEntry>;
-const seriesFile = seriesDoc as Record<
-  string,
-  {
-    session: string;
-    cells_ir_mohm: number[];
-    avg_ir_mohm: number;
-    spread_mohm: number;
-    start_floor_mV: number;
-    start_imbalance_mV: number | null;
-    rest_V: number | null;
-  }[]
->;
+const dataDir = path.join(process.cwd(), "data");
 
-const sessions = sessionsDoc.sessions as SessionRow[];
-
-const EXPECTED: Record<PackId, { status: PackStatus; call: string }> = {
-  "C1-P1": { status: "OFF", call: "2026-09-27" },
-  "C1-P2": { status: "OK", call: "2026-09-27" },
-  "C1-P3": { status: "Caution", call: "2026-09-27" },
-  "C1-P4": { status: "Caution", call: "2026-09-27" },
-  "C1-P5": { status: "OFF", call: "2026-09-27" },
-  "C1-P6": { status: "OK", call: "2026-09-27" },
-  "C2-P1": { status: "OK", call: "2026-09-30" },
-  "C2-P2": { status: "Caution", call: "2026-09-30" },
-  "C2-P3": { status: "OK", call: "2026-09-30" },
-  "C2-P4": { status: "OK", call: "2026-09-30" },
-  "C2-P5": { status: "OK", call: "2026-09-30" },
-  "C2-P6": { status: "OK", call: "2026-09-30" },
-};
-
-function pointsFor(id: PackId): SeriesPoint[] {
-  const rows = seriesFile[id];
-  if (!rows) throw new Error(`Missing series for ${id}`);
-  return rows.map((row) => ({
-    session: row.session,
-    cells: row.cells_ir_mohm,
-    avg: row.avg_ir_mohm,
-    spread: row.spread_mohm,
-    floor: row.start_floor_mV,
-    imbalance: row.start_imbalance_mV,
-    rest: row.rest_V,
-  }));
+function readCsv(relative: string): Record<string, string>[] {
+  return parseCsv(fs.readFileSync(path.join(dataDir, relative), "utf8"));
 }
 
+function num(value: string): number | null {
+  if (value == null || value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function timeKey(token: string): [number, string, number] {
+  const eve = token.endsWith("-eve");
+  const day = eve ? token.slice(0, -4) : token;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
+  const session = token.match(/^S(\d+)$/);
+  if (session) return [0, session[1].padStart(6, "0"), 0];
+  return [2, token, 0];
+}
+
+function compareTime(a: string, b: string): number {
+  const left = timeKey(a);
+  const right = timeKey(b);
+  if (left[0] !== right[0]) return left[0] - right[0];
+  if (left[1] !== right[1]) return left[1] < right[1] ? -1 : 1;
+  return left[2] - right[2];
+}
+
+const packs: PackRec[] = readCsv("v2/packs.csv").map((row) => ({
+  uid: row.pack_uid,
+  label: row.label,
+  series: row.series,
+  brand: row.brand,
+  model: row.model,
+  cells: Number(row.cells),
+  capacityMah: Number(row.capacity_mAh),
+  chargeMode: row.charge_mode,
+  retired: row.retired.trim(),
+  purchaseDate: row.purchase_date.trim(),
+  priceUsd: row.price_usd.trim(),
+  vendor: row.vendor.trim(),
+  notes: row.notes,
+}));
+
+const events: PackEvent[] = readCsv("v2/pack_events.csv").map((row) => ({
+  date: row.date,
+  uid: row.pack_uid,
+  event: row.event,
+  from: row.from_label,
+  to: row.to_label,
+  reason: row.reason,
+}));
+
+function sessionFromSource(source: string, date: string): string {
+  const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
+  const iso = raw.match(/^(\d{4}-\d{2}-\d{2}(?:-eve)?)\b/);
+  if (iso) return iso[1];
+  const sid = raw.match(/^(S\d+)\b/);
+  if (sid) return sid[1];
+  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(date) || /^S\d+$/.test(date)) return date;
+  return raw || date;
+}
+
+const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row) => ({
+  date: row.date,
+  uid: row.pack_uid,
+  label: row.label_at_time,
+  status: row.status,
+  reason: row.reason,
+  source: row.source,
+  session: sessionFromSource(row.source, row.date),
+}));
+
+const storeRows = readCsv("store.csv");
+const v2Rows = readCsv("v2/ir_store_v2.public.csv");
+const storeByKey = new Map(storeRows.map((row) => [`${row.session}\t${row.pack}`, row]));
+
+const measurements: Measurement[] = v2Rows.map((row) => {
+  const store = storeByKey.get(`${row.session}\t${row.pack}`);
+  return {
+    session: row.session,
+    label: row.label_at_time,
+    uid: row.pack_uid,
+    series: row.series_at_time,
+    cells: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}`])),
+    avg: Number(row.avg),
+    spread: Number(row.spread),
+    floor: num(store?.start_floor_mV || row.start_floor_mV),
+    imbalance: num(store?.start_imbalance_mV ?? ""),
+    rest: num(store?.rest_V ?? ""),
+    chargeMode: row.charge_mode_at_time,
+    note: row.note,
+  };
+});
+
+const sessionMeta = sessionsDoc.sessions as {
+  id: string;
+  partial: boolean;
+}[];
+
+const sessionOrder = metaDoc.sessions as string[];
+
+function packByUid(uid: string): PackRec | undefined {
+  return packs.find((pack) => pack.uid === uid);
+}
+
+function eventsFor(uid: string): PackEvent[] {
+  return events.filter((event) => event.uid === uid).sort((a, b) => compareTime(a.date, b.date));
+}
+
+function labelAsOf(uid: string, session: string): string | null {
+  let label: string | null = null;
+  for (const event of eventsFor(uid)) {
+    if (compareTime(event.date, session) > 0) break;
+    if (event.to) label = event.to;
+  }
+  return label;
+}
+
+export function blank(value: string): string {
+  return value.trim() ? value : "—";
+}
+
+export function movedEvent(uid: string): PackEvent | undefined {
+  return eventsFor(uid).find((event) => event.event === "move");
+}
+
+export function isExcludedFromHeadline(uid: string): boolean {
+  const pack = packByUid(uid);
+  return Boolean(pack?.retired) || Boolean(movedEvent(uid));
+}
+
+export function badgeFor(uid: string): string | null {
+  const pack = packByUid(uid);
+  if (!pack) return null;
+  if (pack.retired) return `Retired ${pack.retired}`;
+  const move = movedEvent(uid);
+  if (move) return `Moved to ${move.to} ${move.date}`;
+  return null;
+}
+
+export function callsFor(uid: string): StatusCall[] {
+  return calls
+    .filter((call) => call.uid === uid)
+    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date));
+}
+
+export function latestCall(uid: string): StatusCall | undefined {
+  const list = callsFor(uid);
+  return list[list.length - 1];
+}
+
+function pointsFor(uid: string): Measurement[] {
+  const order = new Map(sessionOrder.map((id, index) => [id, index]));
+  return measurements
+    .filter((row) => row.uid === uid)
+    .sort((a, b) => (order.get(a.session) ?? 999) - (order.get(b.session) ?? 999));
+}
+
+const EXPECTED_LATEST: Record<string, string> = {
+  "CNHL-2026-001": "D pool / no parallel",
+  "CNHL-2026-002": "GO",
+  "CNHL-2026-003": "CAUTION",
+  "CNHL-2026-004": "CAUTION onboard",
+  "CNHL-2026-005": "Watch",
+  "CNHL-2026-006": "GO",
+  "CNHL-2026-007": "GO",
+  "CNHL-2026-008": "CAUTION floor EYE",
+  "CNHL-2026-009": "GO",
+  "CNHL-2026-010": "GO",
+  "CNHL-2026-011": "GO",
+  "CNHL-2026-012": "GO",
+};
+
 function assertStore() {
-  if (metaDoc.row_count !== 156 || metaDoc.session_count !== 14) {
-    throw new Error(
-      `Expected 156 rows and 14 sessions, got ${metaDoc.row_count}/${metaDoc.session_count}`,
-    );
+  if (measurements.length !== 156 || storeRows.length !== 156) {
+    throw new Error(`Expected 156 measurements, got v2=${measurements.length} store=${storeRows.length}`);
   }
-  const measured = PACK_IDS.reduce((sum, id) => sum + pointsFor(id).length, 0);
-  if (measured !== 156) {
-    throw new Error(`Expected 156 series points, got ${measured}`);
-  }
-  const s413 = pointsFor("C1-P1").find((row) => row.session === "S413");
+  const s413 = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "S413");
   if (!s413 || s413.cells.join(",") !== "569,543,524,538,552,545") {
-    throw new Error("C1-P1 S413 IR spot check failed");
+    throw new Error("CNHL-2026-001 S413 IR spot check failed");
   }
-  const c2 = pointsFor("C2-P2").find((row) => row.session === "2026-09-30");
+  const c2 = measurements.find((row) => row.label === "C2-P2" && row.session === "2026-09-30");
   if (!c2 || c2.cells[2] !== 514) {
     throw new Error("C2-P2 2026-09-30 Cell3 spot check failed");
   }
-  for (const id of PACK_IDS) {
-    const entry = statusPacks[id];
-    const expected = EXPECTED[id];
-    if (!entry || entry.status !== expected.status || entry.call_date !== expected.call) {
-      throw new Error(`Status call mismatch for ${id}`);
+  for (const [uid, status] of Object.entries(EXPECTED_LATEST)) {
+    const call = latestCall(uid);
+    if (!call || call.status !== status) {
+      throw new Error(`Latest status for ${uid} is ${call?.status ?? "missing"}`);
     }
-    if (entry.reason.length === 0) throw new Error(`Empty reason for ${id}`);
   }
-  if (statusDoc.call_date_c1 !== "2026-09-27" || statusDoc.call_date_c2 !== "2026-09-30") {
-    throw new Error("Fleet call dates drifted from the status file");
+  if (packs.some((pack) => pack.label === "C1-P1")) {
+    throw new Error("C1-P1 should be an empty slot");
+  }
+  if (labelAsOf("CNHL-2026-001", "2026-09-30") !== "C1-P1") {
+    throw new Error("CNHL-2026-001 should still be C1-P1 on 2026-09-30");
+  }
+  if (labelAsOf("CNHL-2026-001", "2026-10-08") !== "D-1") {
+    throw new Error("CNHL-2026-001 should be D-1 on 2026-10-08");
   }
 }
 
@@ -133,141 +273,154 @@ export const siteMeta = {
   sessionCount: metaDoc.session_count,
   source: metaDoc.data_source,
   ingestNote: metaDoc.ingest_note,
-  sessions: metaDoc.sessions,
-  gaps: statusDoc.gaps,
+  sessions: metaDoc.sessions as string[],
+  gaps: statusDoc.gaps as string[],
   metricsAvailable: metaDoc.metrics_available,
   metricsMissing: metaDoc.metrics_not_available,
-  callDateC1: statusDoc.call_date_c1,
-  callDateC2: statusDoc.call_date_c2,
   unassignedNote: metaDoc.unassigned_note,
 };
 
 export const thresholds = statusDoc.thresholds;
-
 const spreadRule = thresholds.intra_pack_spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
   { y: spreadRule.go_lt, label: `Go < ${spreadRule.go_lt}`, color: "#3ddc97" },
-  {
-    y: spreadRule.pull_gte,
-    label: `Pull ≥ ${spreadRule.pull_gte}`,
-    color: "#ff5c7a",
-  },
+  { y: spreadRule.pull_gte, label: `Pull ≥ ${spreadRule.pull_gte}`, color: "#ff5c7a" },
 ];
 
 export const ruleABands: Band[] = [
-  {
-    from: spreadRule.caution_lo,
-    to: spreadRule.caution_hi,
-    color: "rgba(245, 185, 66, 0.18)",
-  },
-  {
-    from: spreadRule.pull_gte,
-    to: 1000,
-    color: "rgba(255, 92, 122, 0.12)",
-  },
+  { from: spreadRule.caution_lo, to: spreadRule.caution_hi, color: "rgba(245, 185, 66, 0.18)" },
+  { from: spreadRule.pull_gte, to: 1000, color: "rgba(255, 92, 122, 0.12)" },
 ];
 
 export const ruleBGuides: Guide[] = [
-  {
-    y: restRule.go_lte,
-    label: `Go ≤ ${restRule.go_lte.toFixed(2)}`,
-    color: "#3ddc97",
-  },
-  {
-    y: restRule.hard_stop_gt,
-    label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)}`,
-    color: "#ff5c7a",
-  },
+  { y: restRule.go_lte, label: `Go ≤ ${restRule.go_lte.toFixed(2)}`, color: "#3ddc97" },
+  { y: restRule.hard_stop_gt, label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)}`, color: "#ff5c7a" },
 ];
 
 export const ruleBBands: Band[] = [
-  {
-    from: restRule.caution_lo,
-    to: restRule.caution_hi,
-    color: "rgba(196, 161, 255, 0.2)",
-  },
-  {
-    from: restRule.hard_stop_gt,
-    to: 100,
-    color: "rgba(255, 92, 122, 0.12)",
-  },
+  { from: restRule.caution_lo, to: restRule.caution_hi, color: "rgba(196, 161, 255, 0.2)" },
+  { from: restRule.hard_stop_gt, to: 100, color: "rgba(255, 92, 122, 0.12)" },
 ];
 
 export const floorGuide: Guide[] = [
-  {
-    y: thresholds.floor_eye_mv,
-    label: `${thresholds.floor_eye_mv} mV watch`,
-    color: "#79b8ff",
-  },
+  { y: thresholds.floor_eye_mv, label: `${thresholds.floor_eye_mv} mV watch`, color: "#79b8ff" },
 ];
 
 export const floorBands: Band[] = [
-  {
-    from: 0,
-    to: thresholds.floor_eye_mv,
-    color: "rgba(121, 184, 255, 0.1)",
-  },
+  { from: 0, to: thresholds.floor_eye_mv, color: "rgba(121, 184, 255, 0.1)" },
 ];
 
-export const categories: Category[] = sessions.map((session) => ({
+export const categories: Category[] = sessionMeta.map((session) => ({
   id: session.id,
   label: shortSession(session.id),
   partial: session.partial,
 }));
 
-function bySession(id: PackId): Map<string, SeriesPoint> {
-  return new Map(pointsFor(id).map((point) => [point.session, point]));
-}
-
-function align(
-  id: PackId,
-  pick: (point: SeriesPoint) => number | null,
-): (number | null)[] {
-  const map = bySession(id);
+function alignUid(uid: string, pick: (row: Measurement) => number | null): (number | null)[] {
+  const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
-    const point = map.get(category.id);
-    return point ? pick(point) : null;
+    const row = map.get(category.id);
+    return row ? pick(row) : null;
   });
 }
 
 function padded(values: number[], ratio = 0.08): [number, number] {
+  if (values.length === 0) return [0, 1];
   const min = Math.min(...values);
   const max = Math.max(...values);
   const span = max - min || 1;
   return [min - span * ratio, max + span * ratio];
 }
 
+function nums(values: (number | null)[]): number[] {
+  return values.filter((value): value is number => value != null);
+}
+
+const SERIES_ORDER = ["C1", "C2", "D", "C3", "C4"];
+
+export function seriesIds(): string[] {
+  const present = new Set(packs.map((pack) => pack.series));
+  return [...present].sort((a, b) => {
+    const ai = SERIES_ORDER.indexOf(a);
+    const bi = SERIES_ORDER.indexOf(b);
+    if (ai === -1 && bi === -1) return a.localeCompare(b);
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
+  });
+}
+
+function labelNumber(label: string): number {
+  const match = label.match(/(\d+)$/);
+  return match ? Number(match[1]) : 0;
+}
+
+export function slotLabels(): string[] {
+  const labels = new Set<string>();
+  for (const pack of packs) labels.add(pack.label);
+  for (const event of events) {
+    if (event.from) labels.add(event.from);
+    if (event.to) labels.add(event.to);
+  }
+  for (const row of measurements) labels.add(row.label);
+  return [...labels].sort((a, b) => a.localeCompare(b) || labelNumber(a) - labelNumber(b));
+}
+
+export function packUids(): string[] {
+  return packs.map((pack) => pack.uid);
+}
+
+export function slotsForSeries(series: string): string[] {
+  return slotLabels()
+    .filter((label) => label === series || label.startsWith(`${series}-`))
+    .sort((a, b) => labelNumber(a) - labelNumber(b) || a.localeCompare(b));
+}
+
 export type StatusRow = {
-  id: PackId;
-  fleet: "C1" | "C2";
-  status: PackStatus;
+  uid: string;
+  label: string;
+  series: string;
+  status: string;
+  tone: LampTone;
   reason: string;
   callDate: string;
-  detail?: string;
+  session: string;
   latestSession: string;
   avg: number;
   spread: number;
-  floor: number;
+  floor: number | null;
   imbalance: number | null;
   rest: number | null;
   cells: number[];
   color: string;
   avgSeries: (number | null)[];
+  excluded: boolean;
+  badge: string | null;
+  chargeMode: string;
 };
 
 export function statusRows(): StatusRow[] {
-  return PACK_IDS.map((id) => {
-    const entry = statusPacks[id];
-    const latest = pointsFor(id)[pointsFor(id).length - 1];
+  const ordered = [...packs].sort((a, b) => {
+    const series = seriesIds().indexOf(a.series) - seriesIds().indexOf(b.series);
+    if (series !== 0) return series;
+    return labelNumber(a.label) - labelNumber(b.label);
+  });
+  return ordered.map((pack) => {
+    const call = latestCall(pack.uid);
+    const points = pointsFor(pack.uid);
+    const latest = points[points.length - 1];
+    if (!call || !latest) throw new Error(`Missing call or measurement for ${pack.uid}`);
     return {
-      id,
-      fleet: id.startsWith("C2") ? "C2" : "C1",
-      status: entry.status,
-      reason: entry.reason,
-      callDate: entry.call_date,
-      detail: entry.detail,
+      uid: pack.uid,
+      label: pack.label,
+      series: pack.series,
+      status: call.status,
+      tone: lampTone(call.status),
+      reason: call.reason,
+      callDate: call.date,
+      session: call.session,
       latestSession: latest.session,
       avg: latest.avg,
       spread: latest.spread,
@@ -275,32 +428,117 @@ export function statusRows(): StatusRow[] {
       imbalance: latest.imbalance,
       rest: latest.rest,
       cells: latest.cells,
-      color: packColor(id),
-      avgSeries: align(id, (point) => point.avg),
+      color: packColor(pack.label),
+      avgSeries: alignUid(pack.uid, (row) => row.avg),
+      excluded: isExcludedFromHeadline(pack.uid),
+      badge: badgeFor(pack.uid),
+      chargeMode: pack.chargeMode,
     };
   });
 }
 
 export function headline() {
-  const rows = statusRows();
+  const rows = statusRows().filter((row) => !row.excluded);
   const mean = rows.reduce((sum, row) => sum + row.avg, 0) / rows.length;
-  const last = (fleet: "C1" | "C2") =>
-    [...sessions].reverse().find((session) => session.fleets.includes(fleet))?.id ??
-    "—";
   return {
-    ok: rows.filter((row) => row.status === "OK"),
-    caution: rows.filter((row) => row.status === "Caution"),
-    off: rows.filter((row) => row.status === "OFF"),
+    ok: rows.filter((row) => row.tone === "ok"),
+    caution: rows.filter((row) => row.tone === "caution"),
+    off: rows.filter((row) => row.tone === "off"),
+    pool: statusRows().filter((row) => row.tone === "pool"),
     mean,
-    lastC1: last("C1"),
-    lastC2: last("C2"),
+    counted: rows.length,
   };
 }
 
-export type PackSeries = {
-  id: PackId;
+export type SlotTile = {
+  label: string;
+  empty: boolean;
+  uid: string | null;
+  status: string | null;
+  tone: LampTone | null;
+  avg: number | null;
+  spread: number | null;
+  floor: number | null;
+  avgSeries: (number | null)[];
   color: string;
-  status: PackStatus;
+  badge: string | null;
+  excluded: boolean;
+};
+
+export type SeriesBlock = {
+  id: string;
+  asOf: string;
+  lastMeasured: string;
+  individual: boolean;
+  slots: SlotTile[];
+};
+
+function lastMeasured(series: string): string {
+  const rows = measurements.filter((row) => row.series === series);
+  if (rows.length === 0) return "no storage rows in this series yet";
+  return rows.reduce((latest, row) => (compareTime(row.session, latest) > 0 ? row.session : latest), rows[0].session);
+}
+
+function asOf(series: string): string {
+  const members = packs.filter((pack) => pack.series === series);
+  const dates = members
+    .map((pack) => latestCall(pack.uid)?.session)
+    .filter((value): value is string => Boolean(value));
+  if (dates.length === 0) return "—";
+  return dates.reduce((latest, value) => (compareTime(value, latest) > 0 ? value : latest));
+}
+
+export function seriesBlocks(): SeriesBlock[] {
+  const rows = statusRows();
+  return seriesIds().map((series) => {
+    const members = packs.filter((pack) => pack.series === series);
+    const individual = members.length > 0 && members.every((pack) => pack.chargeMode === "individual");
+    const slots = slotsForSeries(series).map((label) => {
+      const pack = packs.find((item) => item.label === label);
+      const row = pack ? rows.find((item) => item.uid === pack.uid) : undefined;
+      return {
+        label,
+        empty: !pack,
+        uid: pack?.uid ?? null,
+        status: row?.status ?? null,
+        tone: row?.tone ?? null,
+        avg: row?.avg ?? null,
+        spread: row?.spread ?? null,
+        floor: row?.floor ?? null,
+        avgSeries: pack ? alignUid(pack.uid, (point) => point.avg) : [],
+        color: packColor(label),
+        badge: pack ? badgeFor(pack.uid) : null,
+        excluded: pack ? isExcludedFromHeadline(pack.uid) : false,
+      };
+    });
+    return {
+      id: series,
+      asOf: asOf(series),
+      lastMeasured: lastMeasured(series),
+      individual: individual || series === "D",
+      slots,
+    };
+  });
+}
+
+export function restDelta(session: string, series: string): number | null {
+  const rows = measurements.filter(
+    (row) =>
+      row.session === session &&
+      row.series === series &&
+      row.chargeMode === "parallel" &&
+      row.rest != null,
+  );
+  if (rows.length < 2) return null;
+  const rests = rows.map((row) => row.rest as number);
+  return Math.round((Math.max(...rests) - Math.min(...rests)) * 1000) / 1000;
+}
+
+export type PackSeries = {
+  id: string;
+  uid: string;
+  color: string;
+  tone: LampTone;
   avg: (number | null)[];
   spread: (number | null)[];
   floor: (number | null)[];
@@ -314,17 +552,38 @@ export type FleetModel = {
   spreadDomain: [number, number];
   floorDomain: [number, number];
   restDomain: [number, number];
-  mean: { id: "C1" | "C2"; color: string; values: (number | null)[] }[];
+  mean: { id: string; color: string; values: (number | null)[] }[];
   fleets: {
-    id: "C1" | "C2";
+    id: string;
     packs: PackSeries[];
     rest: (number | null)[];
+    individual: boolean;
   }[];
 };
 
-function fleetMean(packs: PackSeries[]): (number | null)[] {
+function seriesPacks(series: string): PackSeries[] {
+  const uids = [...new Set(measurements.filter((row) => row.series === series).map((row) => row.uid))];
+  return uids.map((uid) => {
+    const pack = packByUid(uid);
+    const call = latestCall(uid);
+    const label =
+      pack && pack.series !== series ? `${pack.label} (was ${series})` : (pack?.label ?? uid);
+    return {
+      id: label,
+      uid,
+      color: packColor(pack?.label ?? uid),
+      tone: call ? lampTone(call.status) : "pool",
+      avg: alignUid(uid, (row) => row.avg),
+      spread: alignUid(uid, (row) => row.spread),
+      floor: alignUid(uid, (row) => row.floor),
+      cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null)),
+    };
+  });
+}
+
+function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
   return categories.map((_, index) => {
-    const values = packs
+    const values = packsInSeries
       .map((pack) => pack.avg[index])
       .filter((value): value is number => value != null);
     if (values.length === 0) return null;
@@ -333,80 +592,97 @@ function fleetMean(packs: PackSeries[]): (number | null)[] {
 }
 
 export function fleetModel(): FleetModel {
-  const fleets = (["C1", "C2"] as const).map((fleet) => {
-    const packs: PackSeries[] = PACK_IDS.filter((id) => id.startsWith(fleet)).map(
-      (id) => ({
-        id,
-        color: packColor(id),
-        status: statusPacks[id].status,
-        avg: align(id, (point) => point.avg),
-        spread: align(id, (point) => point.spread),
-        floor: align(id, (point) => point.floor),
-        cells: [0, 1, 2, 3, 4, 5].map((cell) =>
-          align(id, (point) => point.cells[cell] ?? null),
-        ),
-      }),
-    );
-    const rest = categories.map((category) => {
-      const session = sessions.find((row) => row.id === category.id);
-      return session?.rest_delta[fleet]?.full_set_delta_V ?? null;
-    });
-    return { id: fleet, packs, rest };
+  const fleets = seriesIds().map((series) => {
+    const members = packs.filter((pack) => pack.series === series);
+    return {
+      id: series,
+      packs: seriesPacks(series),
+      rest: categories.map((category) => restDelta(category.id, series)),
+      individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
+    };
   });
-
-  const allIr = fleets.flatMap((fleet) =>
-    fleet.packs.flatMap((pack) => [...pack.avg, ...pack.cells.flat()]),
-  );
-  const allSpread = fleets.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.spread));
-  const allFloor = fleets.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.floor));
-  const allRest = fleets.flatMap((fleet) => fleet.rest);
-  const nums = (values: (number | null)[]) =>
-    values.filter((value): value is number => value != null);
-
-  const irNums = nums(allIr);
-  const floorNums = nums(allFloor);
+  const measured = fleets.filter((fleet) => fleet.packs.length > 0);
+  const allIr = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => [...pack.avg, ...pack.cells.flat()]));
+  const allSpread = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.spread));
+  const allFloor = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.floor));
+  const allRest = measured.flatMap((fleet) => fleet.rest);
+  const meanValues = measured.flatMap((fleet) => fleetMean(fleet.packs));
   const restNums = nums(allRest);
-  const meanValues = fleets.flatMap((fleet) => fleetMean(fleet.packs));
-  const spreadMax = Math.max(64, ...nums(allSpread));
-
   return {
     categories,
-    irDomain: padded(irNums, 0.06),
+    irDomain: padded(nums(allIr), 0.06),
     meanDomain: padded(nums(meanValues), 0.14),
-    spreadDomain: [0, spreadMax],
-    floorDomain: padded([...floorNums, thresholds.floor_eye_mv], 0.12),
-    restDomain: [0, Math.max(0.8, Math.max(...restNums) * 1.12)],
-    mean: fleets.map((fleet) => ({
+    spreadDomain: [0, Math.max(64, ...nums(allSpread))],
+    floorDomain: padded([...nums(allFloor), thresholds.floor_eye_mv], 0.12),
+    restDomain: [0, Math.max(0.8, ...(restNums.length ? restNums : [0.6]) * 1.12)],
+    mean: measured.map((fleet) => ({
       id: fleet.id,
-      color: FLEET_COLOR[fleet.id],
+      color: seriesColor(fleet.id),
       values: fleetMean(fleet.packs),
     })),
     fleets,
   };
 }
 
-export function seriesOf(
-  packs: PackSeries[],
-  pick: "avg" | "spread" | "floor",
-): ChartSeries[] {
-  return packs.map((pack) => ({
-    id: pack.id,
-    label: pack.id,
-    color: pack.color,
-    values: pack[pick],
+export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): ChartSeries[] {
+  return rows.map((row) => ({
+    id: row.uid,
+    label: row.id,
+    color: row.color,
+    values: row[pick],
   }));
 }
 
+export type Occupancy = {
+  uid: string;
+  start: string;
+  end: string | null;
+};
+
+export function occupancy(label: string): Occupancy[] {
+  const ranges: Occupancy[] = [];
+  for (const pack of packs) {
+    let current: string | null = null;
+    let since: string | null = null;
+    for (const event of eventsFor(pack.uid)) {
+      if (current === label && event.to && event.to !== label) {
+        ranges.push({ uid: pack.uid, start: since ?? event.date, end: event.date });
+      }
+      if (event.to === label && current !== label) since = event.date;
+      if (event.to) current = event.to;
+    }
+    if (current === label && since) ranges.push({ uid: pack.uid, start: since, end: null });
+  }
+  return ranges.sort((a, b) => compareTime(a.start, b.start));
+}
+
+export function lineage(uid: string): string | null {
+  const move = movedEvent(uid);
+  if (!move?.from) return null;
+  return `was ${move.from} until ${move.date}`;
+}
+
 export type PackView = {
-  id: PackId;
-  fleet: "C1" | "C2";
-  row: StatusRow;
+  uid: string;
+  label: string;
+  series: string;
+  chargeMode: string;
   brand: string;
-  seriesName: string;
+  model: string;
   capacityMah: number;
-  connector: string;
-  note: string | null;
-  points: SeriesPoint[];
+  purchaseDate: string;
+  priceUsd: string;
+  vendor: string;
+  notes: string;
+  badge: string | null;
+  lineage: string | null;
+  excluded: boolean;
+  ruleB: string | null;
+  call: StatusCall;
+  calls: StatusCall[];
+  events: PackEvent[];
+  row: StatusRow;
+  points: Measurement[];
   categories: Category[];
   cellSeries: ChartSeries[];
   spreadSeries: ChartSeries[];
@@ -414,79 +690,117 @@ export type PackView = {
   irDomain: [number, number];
   spreadDomain: [number, number];
   floorDomain: [number, number];
-  history: { session: string; label: string; values: number[] }[];
 };
 
-type RegistryPack = {
-  id: string;
-  fleet: string;
-  brand_id: string;
-  notes: string | null;
-};
-
-type RegistryBrand = {
-  id: string;
-  brand: string;
-  series: string;
-  capacity_mah: number;
-  connector: string;
-};
-
-export function getPack(id: string): PackView | null {
-  if (!PACK_IDS.includes(id as PackId)) return null;
-  const packId = id as PackId;
-  const registry = (registryDoc.packs as RegistryPack[]).find((pack) => pack.id === packId);
-  const brand = (registryDoc.brands as RegistryBrand[]).find(
-    (item) => item.id === registry?.brand_id,
-  );
-  const points = pointsFor(packId);
-  const row = statusRows().find((item) => item.id === packId);
-  if (!row || !brand) return null;
+export function getPack(uid: string): PackView | null {
+  const pack = packByUid(uid);
+  const call = latestCall(uid);
+  const row = statusRows().find((item) => item.uid === uid);
+  if (!pack || !call || !row) return null;
+  const points = pointsFor(uid);
   const cells = points.flatMap((point) => point.cells);
   const spreads = points.map((point) => point.spread);
-  const floors = points.map((point) => point.floor);
+  const floors = points.map((point) => point.floor).filter((value): value is number => value != null);
+  const individual = pack.chargeMode !== "parallel";
   return {
-    id: packId,
-    fleet: row.fleet,
+    uid,
+    label: pack.label,
+    series: pack.series,
+    chargeMode: pack.chargeMode,
+    brand: pack.brand,
+    model: pack.model,
+    capacityMah: pack.capacityMah,
+    purchaseDate: blank(pack.purchaseDate),
+    priceUsd: blank(pack.priceUsd),
+    vendor: blank(pack.vendor),
+    notes: pack.notes,
+    badge: badgeFor(uid),
+    lineage: lineage(uid),
+    excluded: isExcludedFromHeadline(uid),
+    ruleB: individual ? "N/A, charged individually" : null,
+    call,
+    calls: callsFor(uid),
+    events: eventsFor(uid),
     row,
-    brand: brand.brand,
-    seriesName: brand.series,
-    capacityMah: brand.capacity_mah,
-    connector: brand.connector,
-    note: registry?.notes ?? null,
     points,
     categories,
     cellSeries: [0, 1, 2, 3, 4, 5].map((index) => ({
       id: `c${index + 1}`,
       label: `Cell ${index + 1}`,
       color: packColor(`P${index + 1}`),
-      values: align(packId, (point) => point.cells[index] ?? null),
+      values: alignUid(uid, (point) => point.cells[index] ?? null),
     })),
     spreadSeries: [
-      {
-        id: packId,
-        label: packId,
-        color: packColor(packId),
-        values: align(packId, (point) => point.spread),
-      },
+      { id: uid, label: pack.label, color: packColor(pack.label), values: alignUid(uid, (point) => point.spread) },
     ],
     floorSeries: [
-      {
-        id: packId,
-        label: "Start floor",
-        color: "#79b8ff",
-        values: align(packId, (point) => point.floor),
-      },
+      { id: "floor", label: "Start floor", color: "#79b8ff", values: alignUid(uid, (point) => point.floor) },
     ],
     irDomain: padded(cells, 0.1),
     spreadDomain: [0, Math.max(64, ...spreads)],
     floorDomain: padded([...floors, thresholds.floor_eye_mv], 0.15),
-    history: points.map((point) => ({
-      session: point.session,
-      label: shortSession(point.session),
-      values: point.cells,
-    })),
   };
+}
+
+export type Vacation = {
+  date: string;
+  to: string;
+  uid: string;
+};
+
+export function vacationFrom(label: string): Vacation | null {
+  const move = events.find((event) => event.event === "move" && event.from === label && event.to);
+  if (!move?.to) return null;
+  return { date: move.date, to: move.to, uid: move.uid };
+}
+
+export type SlotView = {
+  label: string;
+  series: string;
+  current: PackRec | null;
+  past: Occupancy[];
+  lineage: string | null;
+  vacated: Vacation | null;
+};
+
+export function getSlot(label: string): SlotView | null {
+  if (!slotLabels().includes(label)) return null;
+  const current = packs.find((pack) => pack.label === label) ?? null;
+  const past = occupancy(label).filter((range) => range.end || range.uid !== current?.uid);
+  const move = events.find((event) => event.to === label && event.event === "move");
+  return {
+    label,
+    series: label.split("-")[0],
+    current,
+    past,
+    lineage: move?.from ? `was ${move.from} until ${move.date}` : null,
+    vacated: current ? null : vacationFrom(label),
+  };
+}
+
+export type PackRoute =
+  | { type: "pack"; uid: string; alias: boolean }
+  | { type: "slot"; label: string; alias: boolean };
+
+export function resolvePackRoute(id: string): PackRoute | null {
+  const uid = packUids().find((item) => item.toLowerCase() === id.toLowerCase());
+  if (uid) return { type: "pack", uid, alias: uid !== id };
+  const label = slotLabels().find((item) => item.toLowerCase() === id.toLowerCase());
+  if (label) return { type: "slot", label, alias: label !== id };
+  return null;
+}
+
+export function packRouteIds(): string[] {
+  const ids = new Set<string>();
+  for (const uid of packUids()) {
+    ids.add(uid);
+    ids.add(uid.toLowerCase());
+  }
+  for (const label of slotLabels()) {
+    ids.add(label);
+    ids.add(label.toLowerCase());
+  }
+  return [...ids];
 }
 
 export type BrandCard = {
@@ -556,18 +870,14 @@ export function chargers(): ChargerInfo[] {
   }));
 }
 
-export function nextBoards() {
-  return statusDoc.next_parallel;
+export function nextParallel() {
+  return nextDoc;
 }
 
 export function ruleABand(spread: number): "Go" | "Caution" | "Pull" {
   if (spread >= spreadRule.pull_gte) return "Pull";
   if (spread >= spreadRule.caution_lo) return "Caution";
   return "Go";
-}
-
-export function isPackId(id: string): id is PackId {
-  return PACK_IDS.includes(id as PackId);
 }
 
 export const metricLabels: Record<string, string> = {
@@ -582,3 +892,9 @@ export const metricLabels: Record<string, string> = {
   cycle_count_from_dx8: "Cycle count from the DX8",
   cost_per_usable_cycle: "Cost per usable cycle",
 };
+
+export function ruleBNote(series: string): string | null {
+  const block = seriesBlocks().find((item) => item.id === series);
+  if (block?.individual) return "N/A, charged individually";
+  return null;
+}

@@ -2,7 +2,8 @@
 
 import { LineChart } from "@/components/LineChart";
 import { CELL_COLORS } from "@/lib/color";
-import type { Category, PackStatus } from "@/lib/types";
+import type { LampTone } from "@/lib/lamp";
+import type { Category } from "@/lib/types";
 import { useState } from "react";
 
 export function CellExplorer({
@@ -13,7 +14,7 @@ export function CellExplorer({
   categories: Category[];
   packs: {
     id: string;
-    status: PackStatus;
+    tone: LampTone;
     cells: (number | null)[][];
   }[];
   domain: [number, number];
@@ -33,7 +34,7 @@ export function CellExplorer({
             aria-pressed={item.id === pack.id}
             onClick={() => setSelected(item.id)}
           >
-            <span className={`mini-dot dot-${item.status.toLowerCase()}`} aria-hidden="true" />
+            <span className={`mini-dot dot-${item.tone}`} aria-hidden="true" />
             {item.id}
           </button>
         ))}
