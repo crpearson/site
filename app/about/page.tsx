@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Panel } from "@/components/Panel";
 import { chargers, metricLabels, siteMeta, thresholds } from "@/lib/fleet";
 
@@ -39,6 +40,11 @@ export default function AboutPage() {
           {siteMeta.source}. Last ingest {siteMeta.lastIngest}. The canonical file is the
           append-only IR store: {siteMeta.rowCount} rows across {siteMeta.sessionCount} sessions.
           The pages read the JSON built from that store.
+        </p>
+        <p className="mt-4">
+          <Link href="/methodology" className="pack-link">
+            How packs are charged, logged and judged
+          </Link>
         </p>
       </header>
 
