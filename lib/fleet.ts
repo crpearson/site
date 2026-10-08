@@ -608,13 +608,14 @@ export function fleetModel(): FleetModel {
   const allRest = measured.flatMap((fleet) => fleet.rest);
   const meanValues = measured.flatMap((fleet) => fleetMean(fleet.packs));
   const restNums = nums(allRest);
+  const restTop = restNums.length ? Math.max(...restNums) : 0.6;
   return {
     categories,
     irDomain: padded(nums(allIr), 0.06),
     meanDomain: padded(nums(meanValues), 0.14),
     spreadDomain: [0, Math.max(64, ...nums(allSpread))],
     floorDomain: padded([...nums(allFloor), thresholds.floor_eye_mv], 0.12),
-    restDomain: [0, Math.max(0.8, ...(restNums.length ? restNums : [0.6]) * 1.12)],
+    restDomain: [0, Math.max(0.8, restTop * 1.12)],
     mean: measured.map((fleet) => ({
       id: fleet.id,
       color: seriesColor(fleet.id),
