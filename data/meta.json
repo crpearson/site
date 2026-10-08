@@ -1,0 +1,54 @@
+{
+  "last_ingest": "2026-09-30",
+  "ingest_note": "Normalized from Lipo Lary ir_store.csv (canonical). Do not invent capacity series.",
+  "data_source": "iCharger DX8 Storage logs (individual pack storage charges)",
+  "metrics_available": [
+    "per_cell_ir_mohm",
+    "pack_avg_ir_mohm",
+    "intra_pack_spread_mohm",
+    "start_floor_mV",
+    "arrival_imbalance_mv",
+    "rest_voltage_for_inter_pack_delta"
+  ],
+  "metrics_not_available": [
+    "capacity_in_mah",
+    "capacity_out_mah",
+    "cycle_count_from_dx8",
+    "cost_per_usable_cycle"
+  ],
+  "row_count": 156,
+  "session_count": 14,
+  "assigned_sessions": [
+    "S263",
+    "S287",
+    "S308",
+    "S329",
+    "S344",
+    "S358",
+    "S372",
+    "S386",
+    "S400",
+    "S413",
+    "2026-09-26",
+    "2026-09-26-eve",
+    "2026-09-27",
+    "2026-09-30"
+  ],
+  "unassigned_note": "LiHV logs and non-Storage (Charge/Discharge/Balance) and short/orphan Storage_412 etc. are catalogued by Lary but not in IR store \u2014 keep unassigned if re-ingested without map confidence.",
+  "sessions": [
+    "S263",
+    "S287",
+    "S308",
+    "S329",
+    "S344",
+    "S358",
+    "S372",
+    "S386",
+    "S400",
+    "S413",
+    "2026-09-26",
+    "2026-09-26-eve",
+    "2026-09-27",
+    "2026-09-30"
+  ]
+}

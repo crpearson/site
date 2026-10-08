@@ -1,0 +1,239 @@
+{
+  "generated": "2026-10-08",
+  "source": "Lipo Lary SOURCE_OF_TRUTH.md + BUY-summary.txt",
+  "chargers": {
+    "DX8-A": {
+      "sn": "2603022837",
+      "fleet": "C1",
+      "model": "iCharger DX8",
+      "fw": "V1.17",
+      "hw": "V1.00",
+      "fleet_lock": false,
+      "note": "Dual-DX8 HOLD: single DX8-A has logged both CH1 (C1) and CH2 (C2) so far. Set fleet_lock true once DX8-B is live."
+    },
+    "DX8-B": {
+      "sn": null,
+      "fleet": "C2",
+      "model": "iCharger DX8",
+      "note": "Replacement expected; no SN locked as of 2026-10-08. 2026-09-30 C2 ran on SN 2603022837.",
+      "fleet_lock": false
+    }
+  },
+  "brands": [
+    {
+      "id": "cnhl-black-v2-6s-1300",
+      "brand": "CNHL",
+      "series": "Black Series V2",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "chemistry": "LiPo",
+      "connector": "XT60",
+      "price_usd_per_pack": 25.99,
+      "price_usd_per_ah": 19.99,
+      "price_checked": "2026-09-23",
+      "price_source": "https://chinahobbyline.com/products/2-packs-cnhl-black-series-v2-0-1300mah-22-2v-6s-130c-lipo-battery-with-xt60-plug",
+      "price_note": "2-pack $51.98 \u2192 $25.99/pack (CNHL own shop)",
+      "owned_fleets": [
+        "C1",
+        "C2"
+      ]
+    },
+    {
+      "id": "ovonic-130c-6s-1300",
+      "brand": "Ovonic",
+      "series": "130C",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "chemistry": "LiPo",
+      "connector": "XT60",
+      "price_usd_per_pack": 20.0,
+      "price_usd_per_ah": 15.38,
+      "price_checked": "2026-09-23",
+      "price_source": "https://us.ovonicshop.com/products/2x-ovonic-130c-6s-1300mah-lipo-battery-xt60",
+      "price_note": "2-pack $39.99 \u2192 ~$20.00/pack",
+      "owned_fleets": [],
+      "bakeoff_candidate": true
+    },
+    {
+      "id": "ovonic-rebel-2-0-6s-1300",
+      "brand": "Ovonic",
+      "series": "Rebel 2.0",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "chemistry": "LiPo",
+      "connector": "XT60",
+      "price_usd_per_pack": 17.5,
+      "price_usd_per_ah": 13.46,
+      "price_checked": "2026-09-23",
+      "price_source": "https://us.ovonicshop.com/products/2-ovonic-rebel-2-0-130c-6s-1300mah-lipo-battery-22-2v-pack-with-xt60-plug-for-fpv-racing",
+      "price_note": "2-pack $34.99 \u2192 $17.495/pack",
+      "owned_fleets": [],
+      "bakeoff_candidate": true
+    },
+    {
+      "id": "tattu-rline-v6-6s-1300",
+      "brand": "Tattu",
+      "series": "R-Line V6",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "chemistry": "LiPo",
+      "connector": "XT60",
+      "price_usd_per_pack": 37.99,
+      "price_usd_per_ah": 29.22,
+      "price_checked": "2026-09-23",
+      "price_source": "https://genstattu.com/tattu-r-line-v6-1300mah-6s-160c-22-2v-st-lipo-battery-with-xt60-plug/",
+      "owned_fleets": [],
+      "bakeoff_candidate": true
+    },
+    {
+      "id": "smc-hcl-rs-6s-1400",
+      "brand": "SMC",
+      "series": "HCL-RS",
+      "cells": 6,
+      "capacity_mah": 1400,
+      "chemistry": "LiPo",
+      "connector": "XT60",
+      "price_usd_per_pack": 39.95,
+      "price_usd_per_ah": 28.54,
+      "price_checked": "2026-09-23",
+      "price_source": "https://pyrodrone.com/products/smc-hcl-rs-22-2v-6s-1400mah-fpv-racing-lipo-battery-pack-xt60",
+      "price_note": "Capacity mismatch vs 1300 fleet",
+      "owned_fleets": [],
+      "bakeoff_candidate": true
+    }
+  ],
+  "packs": [
+    {
+      "id": "C1-P1",
+      "fleet": "C1",
+      "pack_num": 1,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C1-P2",
+      "fleet": "C1",
+      "pack_num": 2,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C1-P3",
+      "fleet": "C1",
+      "pack_num": 3,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C1-P4",
+      "fleet": "C1",
+      "pack_num": 4,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C1-P5",
+      "fleet": "C1",
+      "pack_num": 5,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C1-P6",
+      "fleet": "C1",
+      "pack_num": 6,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C2-P1",
+      "fleet": "C2",
+      "pack_num": 1,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C2-P2",
+      "fleet": "C2",
+      "pack_num": 2,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C2-P3",
+      "fleet": "C2",
+      "pack_num": 3,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C2-P4",
+      "fleet": "C2",
+      "pack_num": 4,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    },
+    {
+      "id": "C2-P5",
+      "fleet": "C2",
+      "pack_num": 5,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": "Replacement pack (original Cell1 collapsed; bagged). Same label."
+    },
+    {
+      "id": "C2-P6",
+      "fleet": "C2",
+      "pack_num": 6,
+      "brand_id": "cnhl-black-v2-6s-1300",
+      "cells": 6,
+      "capacity_mah": 1300,
+      "purchase_date": null,
+      "price_usd": 25.99,
+      "notes": null
+    }
+  ]
+}
