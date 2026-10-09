@@ -1,9 +1,13 @@
-import { next } from "@vercel/functions";
-import { MAINTENANCE, RETRY_AFTER_SECONDS } from "./maintenance";
-
-export const config = {
-  runtime: "nodejs",
-};
+/**
+ * Maintenance mode switch.
+ *
+ * true  — every page returns 503.
+ * false — the static site is served.
+ *
+ * Turn it off by changing MAINTENANCE to false, then redeploy.
+ */
+const MAINTENANCE = true;
+const RETRY_AFTER_SECONDS = "3600";
 
 const PAGE = `<!DOCTYPE html>
 <html lang="en">
@@ -147,7 +151,13 @@ const PAGE = `<!DOCTYPE html>
 </html>
 `;
 
-function isStaticAsset(pathname: string): boolean {
+function next() {
+  return new Response(null, {
+    headers: { "x-middleware-next": "1" },
+  });
+}
+
+function isStaticAsset(pathname) {
   if (pathname === "/favicon.ico" || pathname === "/icon.svg" || pathname === "/apple-icon.png") {
     return true;
   }
@@ -157,12 +167,9 @@ function isStaticAsset(pathname: string): boolean {
   return /^\/fonts\/[a-z0-9.-]+\.woff2$/i.test(pathname);
 }
 
-export default function middleware(request: Request): Response {
+function middleware(request) {
   const { pathname } = new URL(request.url);
-  if (!MAINTENANCE || isStaticAsset(pathname)) {
-    return next();
-  }
-
+  if (!MAINTENANCE || isStaticAsset(pathname)) return next();
   return new Response(PAGE, {
     status: 503,
     headers: {
@@ -172,3 +179,7 @@ export default function middleware(request: Request): Response {
     },
   });
 }
+
+module.exports = middleware;
+module.exports.default = middleware;
+module.exports.config = { runtime: "nodejs" };

@@ -5,7 +5,7 @@
   "outputDirectory": "out",
   "trailingSlash": true,
   "proxy": {
-    "entrypoint": "middleware.ts"
+    "entrypoint": "middleware.js"
   },
   "redirects": [
     {

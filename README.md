@@ -129,11 +129,11 @@ This is a static Next.js export. Publish `out/` or connect the repo to a host th
 
 ## Maintenance mode
 
-The live site is in maintenance mode when `MAINTENANCE` in `maintenance.ts` is `true` (the committed default). Vercel Routing Middleware (`middleware.ts`, wired by `proxy.entrypoint` in `vercel.json`) answers every route with HTTP 503, a `Retry-After: 3600` header, and a short LostPennyFPV page. Static assets that page needs (fonts, favicon) still load. Next.js middleware does not run on a static export, so this switch is the Vercel one.
+The live site is in maintenance mode when `MAINTENANCE` in `middleware.js` is `true` (the committed default). Vercel Routing Middleware (`middleware.js`, wired by `proxy.entrypoint` in `vercel.json`) answers every route with HTTP 503, a `Retry-After: 3600` header, and a short LostPennyFPV page. Static assets that page needs (fonts, favicon) still load. Next.js middleware does not run on a static export, so this switch is the Vercel one.
 
 To turn maintenance off:
 
-1. In `maintenance.ts`, change `export const MAINTENANCE = true;` to `export const MAINTENANCE = false;`.
+1. In `middleware.js`, change `const MAINTENANCE = true;` to `const MAINTENANCE = false;`.
 2. Redeploy. Push that one-line change to the branch Vercel deploys (production is `main`). No other file needs to change.
 
-To turn it back on, set `MAINTENANCE` to `true` and redeploy.
+To turn it back on, set `const MAINTENANCE = true` and redeploy.
