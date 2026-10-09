@@ -1,4 +1,4 @@
-import { missBridges } from "@/lib/bridges";
+import { missBridges, openEndIndices } from "@/lib/bridges";
 import type { ChartSeries } from "@/lib/types";
 
 export function Sparkline({
@@ -32,6 +32,7 @@ export function Sparkline({
     path += `${command}${xy(index, value)}`;
   });
   const series: ChartSeries = { id: "spark", label: "", color, values, service, logged };
+  const ends = openEndIndices(series);
   const dash = missBridges(series, values.map((_, index) => String(index)))
     .map((bridge) => {
       const from = values[bridge.from];
@@ -48,6 +49,18 @@ export function Sparkline({
       className="h-8 w-full"
       aria-hidden="true"
     >
+      {ends.map((index) => (
+        <circle
+          key={index}
+          cx={index * step}
+          cy={height - 3}
+          r={2.1}
+          fill="none"
+          stroke={color}
+          strokeOpacity={0.45}
+          strokeWidth={1.2}
+        />
+      ))}
       {dash ? (
         <path
           d={dash}

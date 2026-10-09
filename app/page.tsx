@@ -41,9 +41,10 @@ export default function Home() {
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
             Each series has its own as-of date. The calls below are the latest status. Charts follow
-            a pack through every measured night, including nights under an earlier label. A night a
-            pack was not charged, between two measured nights, is a faint dotted line with no value
-            on that night. An open end stays open. Nothing is filled in.
+            a pack through every measured night, including nights under an earlier label. A skipped
+            night between two readings is a faint dotted line, with no value. A skipped night before
+            the first reading or after the last is a small hollow ring on the bottom edge, also with
+            no value. Nothing is filled in.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -290,10 +291,12 @@ export default function Home() {
           <p className="note mt-1">
             A star marks a partial night: that night did not include every pack, and it is left
             incomplete. On a pack line, a faint dotted join means that pack was not charged between
-            two measured nights, with no value on the skipped night. A partial night the pack was
-            charged is still a normal point. The series average above stops when that series was not
-            measured. An open end stays open. A pack that changed labels stays on the series it was
-            measured in, and the line is not joined across a move.
+            two readings, with no value on the skipped night. A skipped night before the first
+            reading or after the last is a hollow ring on the bottom edge, with no value. A partial
+            night the pack was charged is still a normal point. The series average above stops when
+            that series was not measured. A pack that changed labels stays on the series it was
+            measured in. The line is not joined across a move, and nights after the move are not
+            marked.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">

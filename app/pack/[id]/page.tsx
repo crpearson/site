@@ -220,9 +220,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       <Panel accent="signal" eyebrow="Every night for this pack" title="Cell IR across nights">
         <p className="note mb-3">
           The line follows this pack under whatever label it had that night. A night it was not
-          charged, between two measured nights, is a faint dotted line with no point on that night.
-          If it was not charged before the first measurement or after the last, that end stays open.
-          A star is a partial night and is separate. A move to another slot is not joined across.
+          charged, between two readings, is a faint dotted line with no value on that night. A
+          skipped night before the first reading or after the last is a small hollow ring on the
+          bottom edge, also with no value. A star on the night label is a partial night and is
+          separate. Nights after a move to another slot are not marked, and the line is not joined
+          across that move.
         </p>
         <LineChart
           categories={pack.categories}
@@ -267,7 +269,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...historyValues)}
           max={Math.max(...historyValues)}
-          caption="Each night is one line. A dash is a night this pack was not charged. The line charts join measured nights on either side with a faint dotted line when both exist, and an open end stays open."
+          caption="Each night is one line. A dash is a night this pack was not charged. Between two readings the line chart uses a faint dotted join, with no value. Before the first reading or after the last, that night is a hollow ring on the bottom edge, also with no value."
           rows={pack.categories.map((category, index) => ({
             key: category.id,
             label: (
@@ -285,9 +287,10 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <summary className="cursor-pointer font-medium">Night table</summary>
         <p className="note mt-3">
           Not charged means this pack was in service and was not logged that night. On the charts, a
-          faint dotted line joins the measured nights on either side when both exist, and that night
-          has no value. A miss at the start or the end stays open. A star is a partial night, which
-          is different.
+          faint dotted line joins the readings on either side when both exist, and that night has no
+          value. A skipped night before the first reading or after the last is a hollow ring on the
+          bottom edge, also with no value. A star is a partial night, which is different. Nights
+          before this pack was commissioned, and nights after it moved slots, are not marked.
         </p>
         <div className="table-wrap mt-3">
           <table className="status-table">

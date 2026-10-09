@@ -80,3 +80,28 @@ export function allNotCharged(series: ChartSeries[], nightIds: string[]): string
 export function seriesNotCharged(series: ChartSeries, index: number): boolean {
   return Boolean(series.service && series.service[index] != null && !rowExists(series, index));
 }
+
+/**
+ * In-service misses before the first reading or after the last, still in the
+ * span from before any move. Nights before commission have no span. Nights
+ * after a move use a later span and are not marked.
+ */
+export function openEndIndices(series: ChartSeries): number[] {
+  if (!series.service) return [];
+  const nightIds = series.values.map((_, index) => String(index));
+  const interior = new Set<number>();
+  for (const bridge of missBridges(series, nightIds)) {
+    for (let cursor = bridge.from + 1; cursor < bridge.to; cursor += 1) interior.add(cursor);
+  }
+  const ends: number[] = [];
+  series.values.forEach((_, index) => {
+    if (series.service?.[index] !== "0") return;
+    if (!seriesNotCharged(series, index) || interior.has(index)) return;
+    ends.push(index);
+  });
+  return ends;
+}
+
+export function hasOpenEnd(series: ChartSeries[]): boolean {
+  return series.some((item) => openEndIndices(item).length > 0);
+}

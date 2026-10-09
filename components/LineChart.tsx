@@ -1,6 +1,14 @@
 "use client";
 
-import { allNotCharged, hasMissBridge, missBridges, notChargedPhrase, seriesNotCharged } from "@/lib/bridges";
+import {
+  allNotCharged,
+  hasMissBridge,
+  hasOpenEnd,
+  missBridges,
+  notChargedPhrase,
+  openEndIndices,
+  seriesNotCharged,
+} from "@/lib/bridges";
 import { formatAxis, formatValue } from "@/lib/format";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
 import { useId, useMemo, useState } from "react";
@@ -91,22 +99,30 @@ export function LineChart({
   const n = categories.length;
   const nightIds = categories.map((category) => category.id);
   const bridges = hasMissBridge(shown, nightIds);
+  const openEnds = hasOpenEnd(shown);
   const missed = allNotCharged(shown, nightIds);
   const phrase = hover == null ? "" : notChargedPhrase(shown, nightIds, hover);
+  const packMissed =
+    hover != null && shown.length > 0 && shown.every((item) => seriesNotCharged(item, hover));
+  const endMarks = shown.flatMap((item) =>
+    openEndIndices(item).map((index) => ({ id: item.id, color: item.color, index })),
+  );
 
   const live =
     hover == null
       ? ""
-      : `${categories[hover].label}${categories[hover].partial ? ", partial night" : ""}. ${
-          phrase ? `${phrase}. ` : ""
-        }${shown
-          .map((item) => {
-            const value = item.values[hover];
-            if (value != null) return `${item.label} ${formatValue(format, value)} ${unit}`;
-            if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
-            return `${item.label} no value`;
-          })
-          .join(". ")}`;
+      : packMissed
+        ? `${categories[hover].id}. ${phrase}.`
+        : `${categories[hover].label}${categories[hover].partial ? ", partial night" : ""}. ${
+            phrase ? `${phrase}. ` : ""
+          }${shown
+            .map((item) => {
+              const value = item.values[hover];
+              if (value != null) return `${item.label} ${formatValue(format, value)} ${unit}`;
+              if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
+              return `${item.label} no value`;
+            })
+            .join(". ")}`;
 
   return (
     <div className="chart">
@@ -132,19 +148,17 @@ export function LineChart({
             </button>
           );
         })}
-        {bridges ? (
-          <p className="legend-note">
-            <span className="dotted-sample" aria-hidden="true" />
-            dotted = not charged
-          </p>
+        {bridges || openEnds ? (
+          <p className="legend-note">dotted = not charged · ○ = not charged (start/end)</p>
         ) : null}
       </div>
       <p id={descId} className="sr-only">
         {ariaLabel} Arrow keys and the night labels move between nights. A faint dotted line joins
-        a line&apos;s measured points on either side of a night it was not charged. No value is
-        plotted on that night. If the missed night is before the first measurement or after the
-        last, the line stays open. A star marks a partial night, which is different: that night did
-        not include every pack, and a pack that was charged still has a point.
+        the real readings on either side of a skipped night. No value is plotted there. A skipped
+        night before the first reading or after the last is a small hollow ring on the bottom edge,
+        also with no value. Nights before the pack was commissioned, and nights after it moved
+        slots, are not marked. A star on the night label is a partial night and is separate: a pack
+        that was charged still has a point.
         {missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
       </p>
       <div className="sr-only" aria-live="polite">
@@ -258,6 +272,27 @@ export function LineChart({
                 </span>
               ),
             )}
+            {endMarks.length
+              ? categories.map((_, index) => {
+                  const marks = endMarks.filter((mark) => mark.index === index);
+                  if (marks.length === 0) return null;
+                  return marks.map((mark, slot) => {
+                    const span = marks.length === 1 ? 0 : Math.min(0.62, marks.length * 0.1);
+                    const start = 0.5 - span / 2;
+                    const t = marks.length === 1 ? 0.5 : start + (span * slot) / (marks.length - 1);
+                    return (
+                      <span
+                        key={`${mark.id}-${categories[index].id}`}
+                        className="miss-ring"
+                        style={{
+                          left: `${((index + t) / n) * 100}%`,
+                          borderColor: mark.color,
+                        }}
+                      />
+                    );
+                  });
+                })
+              : null}
             {hover != null ? (
               <span
                 className="crosshair"
@@ -292,28 +327,30 @@ export function LineChart({
               >
                 <p className="tip-title">
                   {categories[hover].id}
-                  {categories[hover].partial ? " · partial" : ""}
+                  {!packMissed && categories[hover].partial ? " · partial" : ""}
                 </p>
                 {phrase ? <p className="tip-miss">{phrase}</p> : null}
-                <ul>
-                  {shown.map((item) => {
-                    const value = item.values[hover];
-                    const missedNight = seriesNotCharged(item, hover);
-                    return (
-                      <li key={item.id}>
-                        <span className="swatch" style={{ background: item.color }} />
-                        <span>{item.label}</span>
-                        <span className="font-mono">
-                          {value != null
-                            ? `${formatValue(format, value)} ${unit}`
-                            : missedNight
-                              ? "not charged"
-                              : "—"}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {packMissed ? null : (
+                  <ul>
+                    {shown.map((item) => {
+                      const value = item.values[hover];
+                      const missedNight = seriesNotCharged(item, hover);
+                      return (
+                        <li key={item.id}>
+                          <span className="swatch" style={{ background: item.color }} />
+                          <span>{item.label}</span>
+                          <span className="font-mono">
+                            {value != null
+                              ? `${formatValue(format, value)} ${unit}`
+                              : missedNight
+                                ? "not charged"
+                                : "—"}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             ) : null}
           </div>
@@ -324,12 +361,13 @@ export function LineChart({
                 index !== last &&
                 (index % 2 === 1 || (index === last - 1 && last % 2 === 1));
               const columnPhrase = notChargedPhrase(shown, nightIds, index);
-              const title = [
-                category.partial ? `${category.id} partial night` : category.id,
-                columnPhrase,
-              ]
-                .filter(Boolean)
-                .join(". ");
+              const columnMissed =
+                shown.length > 0 && shown.every((item) => seriesNotCharged(item, index));
+              const title = columnMissed
+                ? columnPhrase
+                : [category.partial ? `${category.id} partial night` : category.id, columnPhrase]
+                    .filter(Boolean)
+                    .join(". ");
               return (
                 <button
                   key={category.id}

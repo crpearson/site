@@ -536,6 +536,20 @@ body {
   border-top: 2px dotted rgba(168, 196, 220, 0.8);
 }
 
+.miss-ring {
+  position: absolute;
+  z-index: 2;
+  bottom: 3px;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid;
+  border-radius: 999px;
+  background: transparent;
+  opacity: 0.45;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 .tip-miss {
   margin-bottom: 0.3rem;
   font-size: 12px;
