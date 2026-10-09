@@ -152,14 +152,17 @@ export default function AboutPage() {
 
       <Panel accent="signal" eyebrow="Charts" title="A night not charged">
         <p className="note">
-          On a pack chart, a night the pack was in service but was not charged is never given a
-          made-up value. When readings sit on both sides, a faint dotted line joins those real
-          readings, and the skipped night has no value. A skipped night before the first reading or
-          after the last is a small hollow ring on the bottom edge of the graph instead, also with
-          no value. Nights before the pack was commissioned, and nights after it moved slots, are
-          not marked. A star on the night label is a different mark: a partial night, one that did
-          not include every pack. A pack that was charged on a partial night still has a solid
-          point. The legend reads: dotted = not charged · ○ = not charged (start/end).
+          On every line chart, a night the pack or series was in service but was not charged is
+          never given a made-up value. When readings sit on both sides, a faint dotted line joins
+          those real readings, and the skipped night has no value. A skipped night before the first
+          reading or after the last is a small hollow ring on the bottom edge of the graph instead,
+          also with no value. Nights before the pack was commissioned, and nights after it moved
+          slots, are not marked, and the line is not joined across that move. A series line, such
+          as the series mean or Rule B rest-Δ, uses the same marks when that series has no value.
+          If the series did run and the metric does not apply, the tooltip says N/A for that night.
+          A star on the night label is a different mark: a partial night, one that did not include
+          every pack. A pack or series that was charged on a partial night still has a solid point.
+          The legend reads: dotted = not charged · ○ = not charged (start/end).
         </p>
       </Panel>
 

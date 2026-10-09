@@ -46,11 +46,11 @@ Mapping (see data/README or the site "About the data" page):
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
   * Do not invent a row for a pack that did not run. The site treats that night as
-    not charged. Between two real readings in the same service span it draws a
-    dotted join and plots no value. Before the first reading or after the last it
-    draws a hollow ring on the bottom edge, also with no value. Nights before
-    commission and nights after a move are not marked. Ingest must not fill those
-    nights in.
+    not charged on every line chart, including series mean and Rule B rest-delta.
+    Between two real readings in the same service span it draws a dotted join and
+    plots no value. Before the first reading or after the last it draws a hollow
+    ring on the bottom edge, also with no value. Nights before commission and
+    nights after a move are not marked. Ingest must not fill those nights in.
   * Files without NNN need a filename,pack manifest; otherwise UNASSIGNED.
 """
 from __future__ import annotations

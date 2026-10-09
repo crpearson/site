@@ -571,6 +571,18 @@ export function restDelta(session: string, series: string): number | null {
   return Math.round((Math.max(...rests) - Math.min(...rests)) * 1000) / 1000;
 }
 
+/**
+ * Rest-Δ for one series-night. No rows means the series did not run. Rows
+ * without two parallel rests means the series ran and Rule B is N/A.
+ */
+export function restNight(session: string, series: string): { value: number | null; na: boolean } {
+  const ran = measurements.some((row) => row.session === session && row.series === series);
+  const value = restDelta(session, series);
+  if (!ran) return { value: null, na: false };
+  if (value == null) return { value: null, na: true };
+  return { value, na: false };
+}
+
 export type PackSeries = {
   id: string;
   uid: string;
@@ -596,6 +608,7 @@ export type FleetModel = {
     id: string;
     packs: PackSeries[];
     rest: (number | null)[];
+    restNa: boolean[];
     individual: boolean;
   }[];
 };
@@ -636,10 +649,12 @@ function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
 export function fleetModel(): FleetModel {
   const fleets = seriesIds().map((series) => {
     const members = packs.filter((pack) => pack.series === series);
+    const nights = categories.map((category) => restNight(category.id, series));
     return {
       id: series,
       packs: seriesPacks(series),
-      rest: categories.map((category) => restDelta(category.id, series)),
+      rest: nights.map((night) => night.value),
+      restNa: nights.map((night) => night.na),
       individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
     };
   });

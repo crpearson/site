@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CellExplorer } from "@/components/CellExplorer";
+import { seriesColor } from "@/lib/color";
 import { Heatmap } from "@/components/Heatmap";
 import { Lamp } from "@/components/Lamp";
 import { LineChart } from "@/components/LineChart";
@@ -41,10 +42,10 @@ export default function Home() {
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
             Each series has its own as-of date. The calls below are the latest status. Charts follow
-            a pack through every measured night, including nights under an earlier label. A skipped
-            night between two readings is a faint dotted line, with no value. A skipped night before
-            the first reading or after the last is a small hollow ring on the bottom edge, also with
-            no value. Nothing is filled in.
+            a pack through every measured night, including nights under an earlier label. On every
+            line, a skipped night between two readings is a faint dotted line, with no value. A
+            skipped night before the first reading or after the last is a small hollow ring on the
+            bottom edge, also with no value. Nothing is filled in.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -78,7 +79,12 @@ export default function Home() {
         accent="signal"
         eyebrow="Measured packs only"
         title="Series mean IR"
-        action={<span className="note">mΩ · the series line stops when that series was not measured</span>}
+        action={
+          <span className="note">
+            mΩ · a night that series was not measured is a faint dotted join, or a hollow ring on
+            the bottom edge before the first reading or after the last
+          </span>
+        }
       >
         <LineChart
           categories={model.categories}
@@ -290,13 +296,12 @@ export default function Home() {
           </h2>
           <p className="note mt-1">
             A star marks a partial night: that night did not include every pack, and it is left
-            incomplete. On a pack line, a faint dotted join means that pack was not charged between
-            two readings, with no value on the skipped night. A skipped night before the first
-            reading or after the last is a hollow ring on the bottom edge, with no value. A partial
-            night the pack was charged is still a normal point. The series average above stops when
-            that series was not measured. A pack that changed labels stays on the series it was
-            measured in. The line is not joined across a move, and nights after the move are not
-            marked.
+            incomplete. On every line, a faint dotted join means that pack or series was not charged
+            between two readings, with no value on the skipped night. A skipped night before the
+            first reading or after the last is a hollow ring on the bottom edge, with no value. A
+            partial night the pack or series was charged is still a normal point. A pack that
+            changed labels stays on the series it was measured in. The line is not joined across a
+            move, and nights after the move are not marked.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
@@ -378,8 +383,11 @@ export default function Home() {
             }
           >
             <p className="note mb-3">
-              Per series and night, only packs that charged in parallel, and only when at least
-              two of them did. Otherwise the night is N/A, charged individually.
+              One line per series. A night that series did not run is a faint dotted join, or a
+              hollow ring on the bottom edge before the first reading or after the last, with no
+              value. Rule B needs two packs that charged in parallel. A night the series did run,
+              but fewer than two did, is N/A. Series D, pack D-1, is charged on its own, so Rule B
+              does not apply and it is not a line here.
             </p>
             <LineChart
               categories={model.categories}
@@ -388,8 +396,9 @@ export default function Home() {
                 .map((fleet) => ({
                   id: fleet.id,
                   label: fleet.id,
-                  color: fleet.id === "C2" ? "#c4a1ff" : "#2ee6c7",
+                  color: seriesColor(fleet.id),
                   values: fleet.rest,
+                  na: fleet.restNa,
                 }))}
               guides={ruleBGuides}
               bands={ruleBBands}
