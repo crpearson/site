@@ -47,6 +47,17 @@ export default function AboutPage() {
             How packs are charged, logged and judged
           </Link>
         </p>
+        <p className="note mt-4">
+          Data processing and website production are done with Grok Bot and{" "}
+          <a
+            href="https://cursor.com"
+            rel="noopener"
+            className="underline decoration-[var(--faint)] underline-offset-2 hover:text-[var(--ink)]"
+          >
+            Cursor
+          </a>
+          .
+        </p>
       </header>
 
       <div className="flex flex-wrap gap-1.5" aria-label="Nights">
@@ -139,6 +150,19 @@ export default function AboutPage() {
         </article>
       </div>
 
+      <Panel accent="signal" eyebrow="Charts" title="A night not charged">
+        <p className="note">
+          On a pack chart, a night the pack was in service but was not charged is never given a
+          made-up value. When readings sit on both sides, a faint dotted line joins those real
+          readings, and the skipped night has no value. A skipped night before the first reading or
+          after the last is a small hollow ring on the bottom edge of the graph instead, also with
+          no value. Nights before the pack was commissioned, and nights after it moved slots, are
+          not marked. A star on the night label is a different mark: a partial night, one that did
+          not include every pack. A pack that was charged on a partial night still has a solid
+          point. The legend reads: dotted = not charged · ○ = not charged (start/end).
+        </p>
+      </Panel>
+
       <Panel accent="off" eyebrow="Do not mix scales" title="DX8 IR is not a manufacturer rating">
         <p className="note">
           DX8 absolute IR, roughly 400–600 mΩ per cell in this fleet, does not map to manufacturer
@@ -179,7 +203,10 @@ export default function AboutPage() {
           <p>
             A charger is limited to one series only when that limit is turned on. DX8-1 and DX8-2
             are not limited. An existing night and pack is never overwritten. A partial night is
-            kept as measured. The rest-voltage comparison uses only packs that charged in parallel
+            kept as measured. On the charts that partial night stays starred on the night label,
+            which is separate from a dotted join or a hollow ring for a pack that was not charged.
+            The rest-voltage comparison uses
+            only packs that charged in parallel
             that night, and only when at least two of them did.
           </p>
         </div>

@@ -16,6 +16,8 @@ export function CellExplorer({
     id: string;
     tone: LampTone;
     cells: (number | null)[][];
+    service?: (string | null)[];
+    logged?: boolean[];
   }[];
   domain: [number, number];
 }) {
@@ -46,6 +48,8 @@ export function CellExplorer({
           label: `Cell ${index + 1}`,
           color: CELL_COLORS[index],
           values,
+          service: pack.service,
+          logged: pack.logged,
         }))}
         yDomain={domain}
         format="ir"

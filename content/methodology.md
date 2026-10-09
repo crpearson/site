@@ -45,7 +45,7 @@ From each DX8 Storage log:
 - The DX8 auto-names files `LiPo[Storage_NNN_CHx].txt` and counts NNN upward.
 - **NNN is per charger.** DX8-1's file 100 has nothing to do with DX8-2's file 100, so number streams are never merged across chargers.
 - A **session** is one Storage night, named by calendar date (Pacific), e.g. `2026-09-27`. Older nights used `S` + their lowest file number (e.g. `S413`) and keep those names.
-- If only some series ran that night, only those packs get rows. Anything that didn't run is left as a gap and never filled in.
+- If only some series ran that night, only those packs get rows. A pack that didn't run gets no value for that night, and nothing is ever filled in. On its graph, a faint dotted line joins the real readings on either side of the skipped night. A skipped night before a pack's first reading or after its last gets a small hollow marker on the bottom edge of the graph instead, with no value.
 
 ## Mapping logs to packs
 

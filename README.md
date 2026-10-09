@@ -4,7 +4,15 @@ Static dashboard for a 12-pack LiPo fleet. Internal resistance, intra-pack sprea
 
 The canonical store is `data/store.csv`: 156 rows across 14 sessions, joined to `data/v2/` for pack identity. The site reads those CSVs. Status calls live in `data/v2/status_calls.csv`. `data/status.json` still holds Rule A / Rule B thresholds and the gap list.
 
-C1 and C2 are owned CNHL Black Series V2 packs. Partial nights are stored as measured and are never interpolated. Capacity in/out and cost per cycle are not in this store.
+C1 and C2 are owned CNHL Black Series V2 packs. Partial nights are stored as measured and are never filled in. Capacity in/out and cost per cycle are not in this store.
+
+## Not charged on the charts
+
+A night is "not charged" for a pack when it is on the fleet night list and the pack has no measurement that night, while the pack was in service. In service means on or after the pack's commission night and before a retirement date. Each move starts a new service span. Nights before commission are not marked. Nights on or after a move are not given the hollow start/end marker.
+
+The store is never filled in. No value is invented. On a per-pack line (pack pages, the overview pack trends, the cell explorer, and the tile sparklines), a faint dotted segment at about 40% opacity joins the two real readings on either side of one or more not-charged nights in the same span. Those skipped nights have no marker and no number. A not-charged night before the first reading or after the last, still in the pre-move span, is a small hollow ring on the bottom edge of the graph, in the line color at low opacity, also with no value. A dotted join never crosses a move. Series-average lines and the Rule B line are not pack lines. They still stop where that series has no value, and they are not dotted across. The legend on an affected chart reads: dotted = not charged · ○ = not charged (start/end).
+
+A star on the night label is a partial night (the night did not include every pack). That mark stays separate. A pack that was charged on a partial night still has a solid point. When the pack itself was not charged, the tooltip is only the night and "Not charged: <night>", with no partial tag and no number. CNHL-2026-001 moved from C1-P1 to D-1 on 2026-10-08, which is after every night on the axis, so 2026-09-30 is still before the move. That night is after its last reading on 2026-09-27, so it gets a hollow ring, not a bridge into D-1. C1-P5 and the other C1 packs are the same shape on 2026-09-30. Each C2 pack was not charged on 2026-09-26, between S413 and 2026-09-26-eve, so those lines have one dotted join and no ring on that night. `fixtures/v2-gap` is a two-slot manifest for ingest, not this chart mark.
 
 ## Run locally
 

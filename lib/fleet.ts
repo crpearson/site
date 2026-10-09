@@ -5,6 +5,7 @@ import nextDoc from "@/data/v2/next.json";
 import registryDoc from "@/data/pack-registry.json";
 import sessionsDoc from "@/data/sessions.json";
 import statusDoc from "@/data/status.json";
+import { missBridges } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { shortSession } from "@/lib/format";
@@ -318,6 +319,37 @@ export const categories: Category[] = sessionMeta.map((session) => ({
   partial: session.partial,
 }));
 
+/**
+ * Span id while the pack is in service. Null before commission and from a
+ * retirement date onward. Each move starts the next span, so a dotted join
+ * stays inside one label and does not cross the move.
+ */
+function serviceSpans(uid: string): (string | null)[] {
+  const pack = packByUid(uid);
+  const list = eventsFor(uid);
+  const commission = list.find((event) => event.event === "commission");
+  const moves = list.filter((event) => event.event === "move");
+  const retired = pack?.retired.trim() ?? "";
+  return categories.map((category) => {
+    if (!commission || compareTime(category.id, commission.date) < 0) return null;
+    if (retired && compareTime(category.id, retired) >= 0) return null;
+    let span = 0;
+    for (const move of moves) {
+      if (compareTime(category.id, move.date) >= 0) span += 1;
+    }
+    return String(span);
+  });
+}
+
+function loggedNights(uid: string): boolean[] {
+  const have = new Set(pointsFor(uid).map((row) => row.session));
+  return categories.map((category) => have.has(category.id));
+}
+
+function lineMeta(uid: string): { service: (string | null)[]; logged: boolean[] } {
+  return { service: serviceSpans(uid), logged: loggedNights(uid) };
+}
+
 function alignUid(uid: string, pick: (row: Measurement) => number | null): (number | null)[] {
   const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
@@ -460,6 +492,8 @@ export type SlotTile = {
   spread: number | null;
   floor: number | null;
   avgSeries: (number | null)[];
+  service?: (string | null)[];
+  logged?: boolean[];
   color: string;
   badge: string | null;
   excluded: boolean;
@@ -496,6 +530,7 @@ export function seriesBlocks(): SeriesBlock[] {
     const slots = slotsForSeries(series).map((label) => {
       const pack = packs.find((item) => item.label === label);
       const row = pack ? rows.find((item) => item.uid === pack.uid) : undefined;
+      const meta = pack ? lineMeta(pack.uid) : null;
       return {
         label,
         empty: !pack,
@@ -506,6 +541,8 @@ export function seriesBlocks(): SeriesBlock[] {
         spread: row?.spread ?? null,
         floor: row?.floor ?? null,
         avgSeries: pack ? alignUid(pack.uid, (point) => point.avg) : [],
+        service: meta?.service,
+        logged: meta?.logged,
         color: packColor(label),
         badge: pack ? badgeFor(pack.uid) : null,
         excluded: pack ? isExcludedFromHeadline(pack.uid) : false,
@@ -543,6 +580,8 @@ export type PackSeries = {
   spread: (number | null)[];
   floor: (number | null)[];
   cells: (number | null)[][];
+  service: (string | null)[];
+  logged: boolean[];
 };
 
 export type FleetModel = {
@@ -566,6 +605,7 @@ function seriesPacks(series: string): PackSeries[] {
   return uids.map((uid) => {
     const pack = packByUid(uid);
     const call = latestCall(uid);
+    const meta = lineMeta(uid);
     const label =
       pack && pack.series !== series ? `${pack.label} (was ${series})` : (pack?.label ?? uid);
     return {
@@ -577,6 +617,8 @@ function seriesPacks(series: string): PackSeries[] {
       spread: alignUid(uid, (row) => row.spread),
       floor: alignUid(uid, (row) => row.floor),
       cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null)),
+      service: meta.service,
+      logged: meta.logged,
     };
   });
 }
@@ -631,6 +673,8 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     label: row.id,
     color: row.color,
     values: row[pick],
+    service: row.service,
+    logged: row.logged,
   }));
 }
 
@@ -663,6 +707,40 @@ export function lineage(uid: string): string | null {
   return `was ${move.from} until ${move.date}`;
 }
 
+export type PackNight =
+  | { session: string; partial: boolean; kind: "measured"; point: Measurement }
+  | { session: string; partial: boolean; kind: "not-charged"; label: string; bridged: boolean };
+
+function packNights(uid: string): PackNight[] {
+  const { service, logged } = lineMeta(uid);
+  const points = pointsFor(uid);
+  const bySession = new Map(points.map((point) => [point.session, point]));
+  const values = categories.map((category) => bySession.get(category.id)?.avg ?? null);
+  const nightIds = categories.map((category) => category.id);
+  const bridged = new Set(
+    missBridges({ id: uid, label: uid, color: "", values, service, logged }, nightIds).flatMap(
+      (bridge) => bridge.nights,
+    ),
+  );
+  const nights: PackNight[] = [];
+  categories.forEach((category, index) => {
+    const point = bySession.get(category.id);
+    if (point) {
+      nights.push({ session: category.id, partial: category.partial, kind: "measured", point });
+      return;
+    }
+    if (service[index] == null) return;
+    nights.push({
+      session: category.id,
+      partial: category.partial,
+      kind: "not-charged",
+      label: labelAsOf(uid, category.id) ?? "—",
+      bridged: bridged.has(category.id),
+    });
+  });
+  return nights;
+}
+
 export type PackView = {
   uid: string;
   label: string;
@@ -682,6 +760,7 @@ export type PackView = {
   call: StatusCall;
   calls: StatusCall[];
   events: PackEvent[];
+  nights: PackNight[];
   row: StatusRow;
   points: Measurement[];
   categories: Category[];
@@ -699,6 +778,7 @@ export function getPack(uid: string): PackView | null {
   const row = statusRows().find((item) => item.uid === uid);
   if (!pack || !call || !row) return null;
   const points = pointsFor(uid);
+  const meta = lineMeta(uid);
   const cells = points.flatMap((point) => point.cells);
   const spreads = points.map((point) => point.spread);
   const floors = points.map((point) => point.floor).filter((value): value is number => value != null);
@@ -722,6 +802,7 @@ export function getPack(uid: string): PackView | null {
     call,
     calls: callsFor(uid),
     events: eventsFor(uid),
+    nights: packNights(uid),
     row,
     points,
     categories,
@@ -730,12 +811,28 @@ export function getPack(uid: string): PackView | null {
       label: `Cell ${index + 1}`,
       color: packColor(`P${index + 1}`),
       values: alignUid(uid, (point) => point.cells[index] ?? null),
+      service: meta.service,
+      logged: meta.logged,
     })),
     spreadSeries: [
-      { id: uid, label: pack.label, color: packColor(pack.label), values: alignUid(uid, (point) => point.spread) },
+      {
+        id: uid,
+        label: pack.label,
+        color: packColor(pack.label),
+        values: alignUid(uid, (point) => point.spread),
+        service: meta.service,
+        logged: meta.logged,
+      },
     ],
     floorSeries: [
-      { id: "floor", label: "Start floor", color: "#79b8ff", values: alignUid(uid, (point) => point.floor) },
+      {
+        id: "floor",
+        label: "Start floor",
+        color: "#79b8ff",
+        values: alignUid(uid, (point) => point.floor),
+        service: meta.service,
+        logged: meta.logged,
+      },
     ],
     irDomain: padded(cells, 0.1),
     spreadDomain: [0, Math.max(64, ...spreads)],

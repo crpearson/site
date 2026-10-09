@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  allNotCharged,
+  hasMissBridge,
+  hasOpenEnd,
+  missBridges,
+  notChargedPhrase,
+  openEndIndices,
+  seriesNotCharged,
+} from "@/lib/bridges";
 import { formatAxis, formatValue } from "@/lib/format";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
 import { useId, useMemo, useState } from "react";
@@ -31,10 +40,7 @@ function yPos(value: number, domain: [number, number]): number {
   return ((domain[1] - value) / span) * 100;
 }
 
-function linePaths(
-  values: (number | null)[],
-  domain: [number, number],
-): string[] {
+function linePaths(values: (number | null)[], domain: [number, number]): string[] {
   const paths: string[] = [];
   let current = "";
   values.forEach((value, index) => {
@@ -49,6 +55,19 @@ function linePaths(
   });
   if (current) paths.push(current);
   return paths;
+}
+
+function bridgePath(series: ChartSeries, domain: [number, number], nightIds: string[]): string[] {
+  return missBridges(series, nightIds).map((bridge) => {
+    const from = series.values[bridge.from];
+    const to = series.values[bridge.to];
+    if (from == null || to == null) return "";
+    const x1 = (bridge.from + 0.5).toFixed(3);
+    const y1 = yPos(from, domain).toFixed(3);
+    const x2 = (bridge.to + 0.5).toFixed(3);
+    const y2 = yPos(to, domain).toFixed(3);
+    return `M${x1} ${y1} L${x2} ${y2}`;
+  });
 }
 
 export function LineChart({
@@ -78,16 +97,32 @@ export function LineChart({
   const shown = series.filter((item) => !hidden[item.id]);
   const ticks = useMemo(() => axisTicks(yDomain), [yDomain]);
   const n = categories.length;
+  const nightIds = categories.map((category) => category.id);
+  const bridges = hasMissBridge(shown, nightIds);
+  const openEnds = hasOpenEnd(shown);
+  const missed = allNotCharged(shown, nightIds);
+  const phrase = hover == null ? "" : notChargedPhrase(shown, nightIds, hover);
+  const packMissed =
+    hover != null && shown.length > 0 && shown.every((item) => seriesNotCharged(item, hover));
+  const endMarks = shown.flatMap((item) =>
+    openEndIndices(item).map((index) => ({ id: item.id, color: item.color, index })),
+  );
 
   const live =
     hover == null
       ? ""
-      : `${categories[hover].label}${categories[hover].partial ? ", partial night" : ""}. ${shown
-          .map((item) => {
-            const value = item.values[hover];
-            return `${item.label} ${value == null ? "not measured" : `${formatValue(format, value)} ${unit}`}`;
-          })
-          .join(". ")}`;
+      : packMissed
+        ? `${categories[hover].id}. ${phrase}.`
+        : `${categories[hover].label}${categories[hover].partial ? ", partial night" : ""}. ${
+            phrase ? `${phrase}. ` : ""
+          }${shown
+            .map((item) => {
+              const value = item.values[hover];
+              if (value != null) return `${item.label} ${formatValue(format, value)} ${unit}`;
+              if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
+              return `${item.label} no value`;
+            })
+            .join(". ")}`;
 
   return (
     <div className="chart">
@@ -113,9 +148,18 @@ export function LineChart({
             </button>
           );
         })}
+        {bridges || openEnds ? (
+          <p className="legend-note">dotted = not charged · ○ = not charged (start/end)</p>
+        ) : null}
       </div>
       <p id={descId} className="sr-only">
-        {ariaLabel} Arrow keys move between nights. Gaps are nights that pack or fleet was not measured.
+        {ariaLabel} Arrow keys and the night labels move between nights. A faint dotted line joins
+        the real readings on either side of a skipped night. No value is plotted there. A skipped
+        night before the first reading or after the last is a small hollow ring on the bottom edge,
+        also with no value. Nights before the pack was commissioned, and nights after it moved
+        slots, are not marked. A star on the night label is a partial night and is separate: a pack
+        that was charged still has a point.
+        {missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
       </p>
       <div className="sr-only" aria-live="polite">
         {live}
@@ -187,6 +231,23 @@ export function LineChart({
               aria-hidden="true"
             >
               {shown.map((item) =>
+                bridgePath(item, yDomain, nightIds).map((d, pathIndex) => (
+                  <path
+                    key={`${item.id}-bridge-${pathIndex}`}
+                    d={d}
+                    fill="none"
+                    stroke={item.color}
+                    strokeOpacity={0.4}
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                    strokeDasharray="1.2 3.2"
+                    pathLength="28"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                )),
+              )}
+              {shown.map((item) =>
                 linePaths(item.values, yDomain).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-${pathIndex}`}
@@ -211,6 +272,27 @@ export function LineChart({
                 </span>
               ),
             )}
+            {endMarks.length
+              ? categories.map((_, index) => {
+                  const marks = endMarks.filter((mark) => mark.index === index);
+                  if (marks.length === 0) return null;
+                  return marks.map((mark, slot) => {
+                    const span = marks.length === 1 ? 0 : Math.min(0.62, marks.length * 0.1);
+                    const start = 0.5 - span / 2;
+                    const t = marks.length === 1 ? 0.5 : start + (span * slot) / (marks.length - 1);
+                    return (
+                      <span
+                        key={`${mark.id}-${categories[index].id}`}
+                        className="miss-ring"
+                        style={{
+                          left: `${((index + t) / n) * 100}%`,
+                          borderColor: mark.color,
+                        }}
+                      />
+                    );
+                  });
+                })
+              : null}
             {hover != null ? (
               <span
                 className="crosshair"
@@ -236,6 +318,7 @@ export function LineChart({
             {hover != null ? (
               <div
                 className="tip"
+                role="tooltip"
                 style={{
                   left: `${((hover + 0.5) / n) * 100}%`,
                   transform:
@@ -244,22 +327,30 @@ export function LineChart({
               >
                 <p className="tip-title">
                   {categories[hover].id}
-                  {categories[hover].partial ? " · partial" : ""}
+                  {!packMissed && categories[hover].partial ? " · partial" : ""}
                 </p>
-                <ul>
-                  {shown.map((item) => {
-                    const value = item.values[hover];
-                    return (
-                      <li key={item.id}>
-                        <span className="swatch" style={{ background: item.color }} />
-                        <span>{item.label}</span>
-                        <span className="font-mono">
-                          {value == null ? "—" : `${formatValue(format, value)} ${unit}`}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                {phrase ? <p className="tip-miss">{phrase}</p> : null}
+                {packMissed ? null : (
+                  <ul>
+                    {shown.map((item) => {
+                      const value = item.values[hover];
+                      const missedNight = seriesNotCharged(item, hover);
+                      return (
+                        <li key={item.id}>
+                          <span className="swatch" style={{ background: item.color }} />
+                          <span>{item.label}</span>
+                          <span className="font-mono">
+                            {value != null
+                              ? `${formatValue(format, value)} ${unit}`
+                              : missedNight
+                                ? "not charged"
+                                : "—"}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </div>
             ) : null}
           </div>
@@ -269,16 +360,29 @@ export function LineChart({
               const hideOnSmall =
                 index !== last &&
                 (index % 2 === 1 || (index === last - 1 && last % 2 === 1));
+              const columnPhrase = notChargedPhrase(shown, nightIds, index);
+              const columnMissed =
+                shown.length > 0 && shown.every((item) => seriesNotCharged(item, index));
+              const title = columnMissed
+                ? columnPhrase
+                : [category.partial ? `${category.id} partial night` : category.id, columnPhrase]
+                    .filter(Boolean)
+                    .join(". ");
               return (
-              <span
-                key={category.id}
-                className={hideOnSmall ? "x-label x-label-alt" : "x-label"}
-                style={{ left: `${((index + 0.5) / n) * 100}%` }}
-                title={category.partial ? `${category.id} partial night` : category.id}
-              >
-                {category.label}
-                {category.partial ? "*" : ""}
-              </span>
+                <button
+                  key={category.id}
+                  type="button"
+                  className={hideOnSmall ? "x-label x-label-alt" : "x-label"}
+                  style={{ left: `${((index + 0.5) / n) * 100}%` }}
+                  title={title}
+                  aria-label={title}
+                  onFocus={() => setHover(index)}
+                  onClick={() => setHover(index)}
+                  onBlur={() => setHover((current) => (current === index ? null : current))}
+                >
+                  {category.label}
+                  {category.partial ? "*" : ""}
+                </button>
               );
             })}
           </div>
