@@ -7,7 +7,7 @@ import { Lamp } from "@/components/Lamp";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { SlotDetail } from "@/components/SlotDetail";
-import { volts } from "@/lib/format";
+import { IR_UNIT_SHORT, volts } from "@/lib/format";
 import {
   floorBands,
   floorGuide,
@@ -142,7 +142,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="eyebrow">Latest avg IR</p>
           <p className="stat-value">
             {pack.row.avg.toFixed(1)}
-            <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+            <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT_SHORT}</span>
           </p>
           <p className="stat-sub">{pack.row.latestSession}</p>
         </article>
@@ -150,7 +150,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="eyebrow">Spread · Rule A</p>
           <p className="stat-value">
             {pack.row.spread}
-            <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+            <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT_SHORT}</span>
           </p>
           <p className="stat-sub">{band} on this spread. The status call is separate.</p>
         </article>
@@ -231,7 +231,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           series={pack.cellSeries}
           yDomain={pack.irDomain}
           format="ir"
-          unit="mΩ"
+          unit={IR_UNIT_SHORT}
           height={260}
           ariaLabel={`${pack.uid} per-cell internal resistance`}
         />
@@ -246,7 +246,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             bands={ruleABands}
             yDomain={pack.spreadDomain}
             format="int"
-            unit="mΩ"
+            unit={IR_UNIT_SHORT}
             ariaLabel={`${pack.uid} intra-pack spread with Rule A guides`}
           />
         </Panel>
@@ -286,7 +286,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       <details className="panel" data-accent="muted">
         <summary className="cursor-pointer font-medium">Night table</summary>
         <p className="note mt-3">
-          Not charged means this pack was in service and was not logged that night. On the charts, a
+          Cell and average figures are {IR_UNIT_SHORT}. Not charged means this pack was in service and was not logged that night. On the charts, a
           faint dotted line joins the readings on either side when both exist, and that night has no
           value. A skipped night before the first reading or after the last is a hollow ring on the
           bottom edge, also with no value. A star is a partial night, which is different. Nights

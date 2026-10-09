@@ -11,7 +11,7 @@ import {
   seriesNa,
   seriesNotCharged,
 } from "@/lib/bridges";
-import { formatAxis, formatValue } from "@/lib/format";
+import { formatAxis, formatValue, IR_UNIT, IR_UNIT_SHORT, isIrUnit } from "@/lib/format";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
 import { useId, useMemo, useState } from "react";
 
@@ -149,6 +149,7 @@ export function LineChart({
               <span>{item.label}</span>
               <span className="font-mono text-[var(--muted)]">
                 {latest == null ? "—" : formatValue(format, latest)}
+                {isIrUnit(unit) ? ` ${IR_UNIT_SHORT}` : ""}
               </span>
             </button>
           );
@@ -168,6 +169,7 @@ export function LineChart({
       <div className="sr-only" aria-live="polite">
         {live}
       </div>
+      {isIrUnit(unit) ? <p className="note mb-2">{IR_UNIT}</p> : null}
       <div className="chart-body">
         <div className="y-axis" style={{ height }}>
           {ticks.map((tick) => (

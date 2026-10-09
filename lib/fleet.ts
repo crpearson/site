@@ -8,7 +8,7 @@ import statusDoc from "@/data/status.json";
 import { missBridges } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
-import { shortSession } from "@/lib/format";
+import { IR_UNIT, shortSession } from "@/lib/format";
 import { lampTone, type LampTone } from "@/lib/lamp";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
@@ -994,9 +994,9 @@ export function ruleABand(spread: number): "Go" | "Caution" | "Pull" {
 }
 
 export const metricLabels: Record<string, string> = {
-  per_cell_ir_mohm: "Per-cell IR (mΩ)",
-  pack_avg_ir_mohm: "Pack-average IR (mΩ)",
-  intra_pack_spread_mohm: "Intra-pack spread (mΩ)",
+  per_cell_ir_mohm: `Per-cell ${IR_UNIT}`,
+  pack_avg_ir_mohm: `Pack-average ${IR_UNIT}`,
+  intra_pack_spread_mohm: `Intra-pack spread, ${IR_UNIT}`,
   start_floor_mV: "Start floor (mV)",
   arrival_imbalance_mv: "Arrival imbalance (mV)",
   rest_voltage_for_inter_pack_delta: "Rest voltage for inter-pack delta",

@@ -1,4 +1,5 @@
 import { heatGradient, heatStyle } from "@/lib/color";
+import { IR_UNIT_SHORT } from "@/lib/format";
 import type { ReactNode } from "react";
 
 export function Heatmap({
@@ -21,13 +22,17 @@ export function Heatmap({
   return (
     <div>
       <div className="mb-3 flex items-center gap-3">
-        <span className="font-mono text-[11px] text-[var(--muted)]">{min} mΩ</span>
+        <span className="font-mono text-[11px] text-[var(--muted)]">
+          {min} {IR_UNIT_SHORT}
+        </span>
         <div
           className="h-2 flex-1 rounded-full"
           style={{ background: heatGradient() }}
           aria-hidden="true"
         />
-        <span className="font-mono text-[11px] text-[var(--muted)]">{max} mΩ</span>
+        <span className="font-mono text-[11px] text-[var(--muted)]">
+          {max} {IR_UNIT_SHORT}
+        </span>
       </div>
       {caption ? (
         <p className="mb-3 text-xs leading-relaxed text-[var(--muted)]">{caption}</p>
@@ -69,7 +74,7 @@ export function Heatmap({
                     key={`${row.key}-${columnLabels[index]}`}
                     className="grid h-11 place-items-center rounded-md font-mono text-[12px] font-medium"
                     style={style}
-                    title={`${columnLabels[index]} ${value} mΩ`}
+                    title={`${columnLabels[index]} ${value} ${IR_UNIT_SHORT}`}
                   >
                     {value}
                   </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
-import { usd } from "@/lib/format";
+import { IR_UNIT_SHORT, usd } from "@/lib/format";
 import { brandCards, fleetModel, headline, seriesBlocks } from "@/lib/fleet";
 
 export const metadata: Metadata = {
@@ -110,7 +110,7 @@ export default function BakeoffPage() {
                 series={model.mean.map((series) => ({ ...series, label: series.id }))}
                 yDomain={model.meanDomain}
                 format="ir"
-                unit="mΩ"
+                unit={IR_UNIT_SHORT}
                 height={180}
                 ariaLabel="Mean internal resistance by series"
               />

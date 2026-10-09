@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Panel } from "@/components/Panel";
+import { IR_UNIT, IR_UNIT_SHORT } from "@/lib/format";
 import { chargers, metricLabels, siteMeta, thresholds } from "@/lib/fleet";
 
 export const metadata: Metadata = {
@@ -75,14 +76,15 @@ export default function AboutPage() {
       <section className="grid gap-3 lg:grid-cols-2" aria-label="Glossary">
         <Panel accent="signal" eyebrow="Glossary" title="IR">
           <p className="note">
-            Internal resistance in milliohms, one number per cell, from the DX8 storage-charge IR
-            line. Pack average is the mean of the six cells.
+            {IR_UNIT}, one number per cell, from the DX8 storage-charge IR line. These are the
+            charger&apos;s raw integers. The scale is not confirmed, so they are not labeled as
+            milliohms. Pack average is the mean of the six cells.
           </p>
         </Panel>
         <Panel accent="rulea" eyebrow="Glossary" title="Spread">
           <p className="note">
-            Intra-pack spread: the highest cell IR minus the lowest cell IR in that pack, in
-            milliohms. Rule A reads this number.
+            Intra-pack spread: the highest cell IR minus the lowest cell IR in that pack, in{" "}
+            {IR_UNIT}. Rule A reads this number.
           </p>
         </Panel>
         <Panel accent="floor" eyebrow="Glossary" title="Floor">
@@ -122,11 +124,15 @@ export default function AboutPage() {
           <p className="eyebrow">Inside one pack</p>
           <h2 className="panel-title mt-1">Rule A · spread</h2>
           <ul className="mt-4 space-y-2 font-mono text-sm">
-            <li className="text-[var(--ok)]">Go &lt; {spread.go_lt} mΩ</li>
-            <li className="text-[var(--caution)]">
-              Caution {spread.caution_lo}–{spread.caution_hi} mΩ
+            <li className="text-[var(--ok)]">
+              Go &lt; {spread.go_lt} {IR_UNIT_SHORT}
             </li>
-            <li className="text-[var(--off)]">Pull ≥ {spread.pull_gte} mΩ</li>
+            <li className="text-[var(--caution)]">
+              Caution {spread.caution_lo}–{spread.caution_hi} {IR_UNIT_SHORT}
+            </li>
+            <li className="text-[var(--off)]">
+              Pull ≥ {spread.pull_gte} {IR_UNIT_SHORT}
+            </li>
           </ul>
           <p className="note mt-4">
             Amber panel, amber caution band. This rule does not retire a pack by itself. The status
@@ -168,9 +174,9 @@ export default function AboutPage() {
 
       <Panel accent="off" eyebrow="Do not mix scales" title="DX8 IR is not a manufacturer rating">
         <p className="note">
-          DX8 absolute IR, roughly 400–600 mΩ per cell in this fleet, does not map to manufacturer
-          IR ratings or to Oscar/CNHL absolute retire bins. The rules above are relative to this
-          fleet.
+          DX8 absolute IR, roughly 400–600 {IR_UNIT_SHORT} per cell in this fleet, does not map to
+          manufacturer IR ratings or to Oscar/CNHL absolute retire bins. The rules above are relative
+          to this fleet.
         </p>
       </Panel>
 

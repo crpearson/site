@@ -83,7 +83,7 @@ The public historical manifest is `data/v2/session_manifest.public.csv`. The sto
 - Hard fingerprints must pass or ingest exits non-zero: C1-P4 cell 1 is the pack-max IR, and C2-P2 cell 3 is the pack-min IR.
 - Soft fingerprints are advisory and can fail without remapping: C2-P6 is the lowest C2 average, and C2-P4 has the tightest C2 spread.
 - `fleet_lock`. A charger alias is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-1 and DX8-2 are unlocked.
-- Discarded from the numeric store: 0-byte files, logs with no `;130;` IR line, duration under 60 s, not 6S, negative or implausible IR (over 1000 mΩ), non-Storage programs, and LiHV chemistry.
+- Discarded from the numeric store: 0-byte files, logs with no `;130;` IR line, duration under 60 s, not 6S, negative or implausible IR (over 1000 charger units), non-Storage programs, and LiHV chemistry. Those IR integers are not confirmed milliohms.
 - Dedupe is by sha256 of the decompressed log, and by `(charger alias, NNN, channel)`.
 
 ### Charger alias map

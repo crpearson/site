@@ -42,7 +42,7 @@ Mapping (see data/README or the site "About the data" page):
     pack-max IR; C2-P2 Cell3 = pack-min IR. Soft fingerprints (C2-P6 lowest
     C2 avg, C2-P4 tightest spread) are advisory and do not remap.
   * Discard from the numeric store: 0-byte, no ;130; IR line, duration < 60 s,
-    not 6S, negative or implausible IR (> 1000 mOhm), non-Storage, LiHV.
+    not 6S, negative or implausible IR (> 1000 charger units), non-Storage, LiHV.
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
   * Do not invent a row for a pack that did not run. The site treats that night as
@@ -238,7 +238,7 @@ def parse(name: str, raw: bytes) -> tuple[Log, Optional[str]]:
     elif any(v < 0 for v in log.ir):
         log.discard = "negative IR"
     elif any(v > MAX_PLAUSIBLE_IR for v in log.ir):
-        log.discard = f"implausible IR (>{MAX_PLAUSIBLE_IR} mOhm)"
+        log.discard = f"implausible IR (>{MAX_PLAUSIBLE_IR} charger units)"
     return log, header_serial
 
 

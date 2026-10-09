@@ -1,5 +1,17 @@
 import type { ValueFormat } from "@/lib/types";
 
+/**
+ * Name for the DX8 raw IR integers. The physical unit is not confirmed, so this
+ * is not milliohms. Change these two strings when the scale is known.
+ * Numbers are not scaled here.
+ */
+export const IR_UNIT = "DX8 IR (charger units)";
+export const IR_UNIT_SHORT = "IR (charger units)";
+
+export function isIrUnit(unit: string): boolean {
+  return unit === IR_UNIT || unit === IR_UNIT_SHORT;
+}
+
 export function formatValue(kind: ValueFormat, n: number): string {
   if (kind === "volt") return n.toFixed(3);
   if (kind === "ir") return n.toFixed(1);

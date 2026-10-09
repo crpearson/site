@@ -2,6 +2,7 @@
 
 import { LineChart } from "@/components/LineChart";
 import { CELL_COLORS } from "@/lib/color";
+import { IR_UNIT_SHORT } from "@/lib/format";
 import type { LampTone } from "@/lib/lamp";
 import type { Category } from "@/lib/types";
 import { useState } from "react";
@@ -53,7 +54,7 @@ export function CellExplorer({
         }))}
         yDomain={domain}
         format="ir"
-        unit="mΩ"
+        unit={IR_UNIT_SHORT}
         height={240}
         ariaLabel={`Per-cell internal resistance for ${pack.id} across measured nights`}
       />
