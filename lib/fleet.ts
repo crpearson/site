@@ -3,7 +3,7 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { missBridges } from "@/lib/bridges";
+import { lonePointIndices, missBridges, openEndIndices } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
@@ -863,7 +863,7 @@ function seriesPacks(series: string): PackSeries[] {
       spread: alignUid(uid, (row) => row.spread, series),
       floor: alignUid(uid, (row) => row.floor, series),
       cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null, series)),
-      service: meta.service,
+      service: membershipSpans(uid, series),
       logged: meta.logged,
       rest: restFlags(uid),
     };
@@ -881,8 +881,31 @@ function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
   });
 }
 
-function seriesScope(): (string | null)[] {
-  return categories.map((category) => (restBaselineSessions.has(category.id) ? null : "0"));
+function seriesOfLabel(label: string | null): string | null {
+  if (!label) return null;
+  return seriesIds().find((id) => label === id || label.startsWith(`${id}-`)) ?? null;
+}
+
+/** Nights a series has at least one pack. Null before it exists and after it is empty. */
+function seriesInService(series: string): (string | null)[] {
+  return categories.map((category) => {
+    if (restBaselineSessions.has(category.id)) return null;
+    const live = packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, category.id)) === series);
+    return live ? "0" : null;
+  });
+}
+
+/**
+ * Pack span only while that pack's label is in this series. Nights before the
+ * move into the series, and nights after the move out, are out of span.
+ */
+function membershipSpans(uid: string, series: string): (string | null)[] {
+  const spans = serviceSpans(uid);
+  return categories.map((category, index) => {
+    if (spans[index] == null) return null;
+    if (seriesOfLabel(labelAsOf(uid, category.id)) !== series) return null;
+    return spans[index];
+  });
 }
 
 export function fleetModel(): FleetModel {
@@ -894,7 +917,7 @@ export function fleetModel(): FleetModel {
       packs: seriesPacks(series),
       rest: nights.map((night) => night.value),
       restNa: nights.map((night) => night.na),
-      restService: categories.map((category) => (restBaselineSessions.has(category.id) ? null : "0")),
+      restService: seriesInService(series),
       individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
     };
   });
@@ -917,7 +940,7 @@ export function fleetModel(): FleetModel {
       id: fleet.id,
       color: seriesColor(fleet.id),
       values: fleetMean(fleet.packs),
-      service: seriesScope(),
+      service: seriesInService(fleet.id),
     })),
     fleets,
   };
@@ -1324,6 +1347,108 @@ function assertDerived() {
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-09") {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
+  }
+  assertRingWindows(model);
+}
+
+function chartLine(
+  label: string,
+  values: (number | null)[],
+  service?: (string | null)[],
+  logged?: boolean[],
+  rest?: boolean[],
+  na?: boolean[],
+): ChartSeries {
+  return { id: label, label, color: "#888", values, service, logged, rest, na };
+}
+
+function ringNights(series: ChartSeries): string[] {
+  return openEndIndices(series).map((index) => categories[index].id);
+}
+
+/** Rings stay inside the first in-service span: not before that date, and not after a move. */
+function assertRingWindows(model: FleetModel) {
+  const member = (series: string, night: string) =>
+    packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, night)) === series);
+
+  for (const line of model.mean) {
+    const chart = chartLine(line.id, line.values, line.service);
+    const nights = ringNights(chart);
+    if (line.id === "D" && nights.length > 0) {
+      throw new Error(`Series D mean has a ring on ${nights.join(", ")}`);
+    }
+    for (const night of nights) {
+      if (!member(line.id, night)) {
+        throw new Error(`${line.id} mean ring on ${night} is before that series or after its packs moved out`);
+      }
+    }
+  }
+
+  const dMean = model.mean.find((line) => line.id === "D");
+  const dIndex = categories.findIndex((category) => category.id === "2026-10-09");
+  const dValue = dMean?.values[dIndex];
+  if (dValue == null || dValue.toFixed(3) !== "2.767") {
+    throw new Error(`Series D mean on 2026-10-09 is ${dValue}`);
+  }
+  if (!dMean || !lonePointIndices(chartLine("D", dMean.values, dMean.service)).includes(dIndex)) {
+    throw new Error("Series D mean point is not a single visible dot");
+  }
+
+  for (const fleet of model.fleets) {
+    const restChart = chartLine(fleet.id, fleet.rest, fleet.restService, undefined, undefined, fleet.restNa);
+    for (const night of ringNights(restChart)) {
+      if (!member(fleet.id, night)) {
+        throw new Error(`${fleet.id} Rule B ring on ${night} is outside that series`);
+      }
+    }
+    for (const pack of fleet.packs) {
+      const lines = [pack.avg, pack.spread, pack.floor, ...pack.cells];
+      for (const values of lines) {
+        const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
+        for (const night of ringNights(chart)) {
+          if (seriesOfLabel(labelAsOf(pack.uid, night)) !== fleet.id) {
+            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before that series or after the move`);
+          }
+          const move = movedEvent(pack.uid);
+          if (move && seriesOfLabel(move.from) === fleet.id && compareTime(night, move.date) >= 0) {
+            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is after the move`);
+          }
+          if (move && seriesOfLabel(move.to) === fleet.id && compareTime(night, move.date) < 0) {
+            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before the move into ${fleet.id}`);
+          }
+          const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
+          if (!commission || compareTime(night, commission.date) < 0) {
+            throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
+          }
+        }
+      }
+    }
+  }
+
+  for (const pack of packs) {
+    const meta = lineMeta(pack.uid);
+    const rest = restFlags(pack.uid);
+    const lines = [
+      alignUid(pack.uid, (row) => row.avg),
+      alignUid(pack.uid, (row) => row.spread),
+      alignUid(pack.uid, (row) => row.floor),
+      alignUid(pack.uid, (row) => row.cells[0] ?? null),
+    ];
+    for (const values of lines) {
+      for (const night of ringNights(chartLine(pack.uid, values, meta.service, meta.logged, rest))) {
+        const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
+        if (!commission || compareTime(night, commission.date) < 0) {
+          throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
+        }
+        const move = movedEvent(pack.uid);
+        if (move && compareTime(night, move.date) >= 0) {
+          throw new Error(`${pack.uid} ring on ${night} is after its move`);
+        }
+        if (pack.retired && compareTime(night, pack.retired) >= 0) {
+          throw new Error(`${pack.uid} ring on ${night} is after retirement`);
+        }
+      }
+    }
   }
 }
 

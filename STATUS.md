@@ -27,7 +27,7 @@ IR is true milliohms from `ir_store_v4` (159 rows). Rules v3: spread caution at 
 
 ## Gaps
 - C1 last fleet night 2026-09-27; C2 last fleet night 2026-09-30; D-1 measured 2026-10-09. C1-P4 and C2-P2 also have the rest-day baseline.
-- Partial nights stay incomplete. On every line chart, a not-charged night between two readings in the same service span is a faint dotted join with no invented value. A not-charged night before the first reading or after the last is a hollow ring on the bottom edge, with no value. The rest-day baseline does not create those marks for packs that did not run. Series mean IR skips that night entirely. Rule B is N/A when a series ran as an individual baseline. Legend: dotted = not charged · ○ = not charged (start/end).
+- Partial nights stay incomplete. On every line chart, a not-charged night between two readings in the same service span is a faint dotted join with no invented value. A not-charged night before the first reading or after the last, while that line is in service, is a hollow ring on the bottom edge, with no value. Nights before the pack or series existed, and nights after a move, are not marked. A single reading is a dot. The rest-day baseline does not create those marks for packs that did not run. Series mean IR skips that night entirely. Rule B is N/A when a series ran as an individual baseline. Legend: dotted = not charged · ○ = not charged (start/end).
 - No capacity in/out series — storage runs are top-ups, not capacity tests.
 - DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.
 - Mapping uses the night's manifest. The usual-low-cell check is advisory only.

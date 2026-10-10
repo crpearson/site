@@ -28,6 +28,9 @@ import {
 
 export default function Home() {
   const stats = headline();
+  const individualPacks = chargedIndividually();
+  const restPacks = stats.rest.map((row) => row.label);
+  const ruleOff = stats.off.map((row) => row.label);
   const rows = statusRows();
   const blocks = seriesBlocks();
   const model = fleetModel();
@@ -48,38 +51,56 @@ export default function Home() {
             Each series has its own as-of date. The calls below are the latest status. Charts follow
             a pack through every measured night, including nights under an earlier label. On every
             line, a skipped night between two readings is a faint dotted line, with no value. A
-            skipped night before the first reading or after the last is a small hollow ring on the
-            bottom edge, also with no value. Nothing is filled in.
+            skipped night before the first reading or after the last, while that line was in service,
+            is a small hollow ring on the bottom edge, also with no value. Nights before the pack or
+            series existed, and nights after a move, are not marked. A single reading is a dot.
+            Nothing is filled in.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
           <article className="stat" data-tone="ok">
             <p className="eyebrow">Parallel Go</p>
             <p className="stat-value">
               {stats.ok.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
+              <span className="ml-1 text-sm text-[var(--muted)]">{stats.ok.length === 1 ? "pack" : "packs"}</span>
             </p>
-            <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "—"}</p>
+            <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="caution">
             <p className="eyebrow">Parallel Caution</p>
             <p className="stat-value">
               {stats.caution.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
+              <span className="ml-1 text-sm text-[var(--muted)]">
+                {stats.caution.length === 1 ? "pack" : "packs"}
+              </span>
             </p>
-            <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "—"}</p>
+            <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="off">
-            <p className="eyebrow">Individual only (series packs)</p>
+            <p className="eyebrow">Charged individually</p>
             <p className="stat-value">
-              {stats.off.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
+              {individualPacks.length}
+              <span className="ml-1 text-sm text-[var(--muted)]">
+                {individualPacks.length === 1 ? "pack" : "packs"}
+              </span>
             </p>
-            <p className="stat-sub">
-              {stats.off.map((row) => row.label).join(" · ") || "None on a series board."} Charged
-              individually: {chargedIndividually().join(", ") || "none"}. Rest pool:{" "}
-              {stats.rest.map((row) => row.label).join(", ")}.
+            <p className="stat-sub">{individualPacks.join(" · ") || "None"}</p>
+          </article>
+          <article className="stat" data-tone="floor">
+            <p className="eyebrow">Rest pool</p>
+            <p className="stat-value">
+              {restPacks.length}
+              <span className="ml-1 text-sm text-[var(--muted)]">{restPacks.length === 1 ? "pack" : "packs"}</span>
             </p>
+            <p className="stat-sub">{restPacks.join(" · ") || "None"}</p>
+          </article>
+          <article className="stat" data-tone="off">
+            <p className="eyebrow">Individual only · Rules v3</p>
+            <p className="stat-value">
+              {ruleOff.length}
+              <span className="ml-1 text-sm text-[var(--muted)]">{ruleOff.length === 1 ? "pack" : "packs"}</span>
+            </p>
+            <p className="stat-sub">Rule outcome. {ruleOff.join(" · ") || "None."}</p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
@@ -125,9 +146,10 @@ export default function Home() {
         title="Series mean IR"
         action={
           <span className="note">
-            {IR_UNIT} · a night that series was not measured is a faint dotted join, or a hollow ring on
-            the bottom edge before the first reading or after the last. Rest-test day 0 is left off
-            this mean. D-1 on 10-09 stays on series D.
+            {IR_UNIT} · one reading is a dot. A night that series was in service and was not measured
+            is a faint dotted join, or a hollow ring before the first reading or after the last.
+            Nights before that series existed are not marked. Rest-test day 0 is left off this mean.
+            D-1 on 10-09 stays on series D.
           </span>
         }
       >
@@ -390,10 +412,11 @@ export default function Home() {
             A star marks a partial night: that night did not include every pack, and it is left
             incomplete. On every line, a faint dotted join means that pack or series was not charged
             between two readings, with no value on the skipped night. A skipped night before the
-            first reading or after the last is a hollow ring on the bottom edge, with no value. A
-            partial night the pack or series was charged is still a normal point. A pack that
-            changed labels stays on the series it was measured in. The line is not joined across a
-            move, and nights after the move are not marked.
+            first reading or after the last, while that line was in service, is a hollow ring on the
+            bottom edge, with no value. Nights before the series existed are not marked. A single
+            reading is a dot. A partial night the pack or series was charged is still a normal point.
+            A pack that changed labels stays on the series it was measured in. The line is not joined
+            across a move, and nights after the move are not marked.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
@@ -474,9 +497,10 @@ export default function Home() {
             }
           >
             <p className="note mb-3">
-              One line per series. A night that series did not run is a faint dotted join, or a
-              hollow ring on the bottom edge before the first reading or after the last, with no
-              value. Rule B needs two packs that charged in parallel. A night the series did run,
+              One line per series. A night that series was in service and did not run is a faint
+              dotted join, or a hollow ring on the bottom edge before the first reading or after the
+              last, with no value. Nights before that series existed are not marked. Rule B needs two
+              packs that charged in parallel. A night the series did run,
               but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
               The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
               pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.

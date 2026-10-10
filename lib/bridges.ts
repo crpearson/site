@@ -133,12 +133,23 @@ export function allNa(series: ChartSeries[], nightIds: string[]): string[] {
 }
 
 /**
- * In-service misses before the first reading or after the last, still in the
- * span from before any move. Nights before commission have no span. Nights
- * after a move use a later span and are not marked. A series line with no
- * service array is in span "0" for the whole axis.
+ * The span a line is first in service. Omitted service means the whole axis
+ * is span "0". A later span is a move, and those nights are not ringed.
+ */
+function firstSpan(series: ChartSeries): string | null {
+  if (!series.service) return "0";
+  return series.service.find((span) => span != null) ?? null;
+}
+
+/**
+ * In-service misses before the first reading or after the last, inside the
+ * line's first service span. Nights with no span are before commission, after
+ * retirement, or before this series existed. Nights in a later span are after
+ * a move and are not marked.
  */
 export function openEndIndices(series: ChartSeries): number[] {
+  const allowed = firstSpan(series);
+  if (allowed == null) return [];
   const nightIds = series.values.map((_, index) => String(index));
   const interior = new Set<number>();
   for (const bridge of missBridges(series, nightIds)) {
@@ -146,11 +157,39 @@ export function openEndIndices(series: ChartSeries): number[] {
   }
   const ends: number[] = [];
   series.values.forEach((_, index) => {
-    if (spanAt(series, index) !== "0") return;
+    if (spanAt(series, index) !== allowed) return;
     if (!seriesGap(series, index) || interior.has(index)) return;
     ends.push(index);
   });
   return ends;
+}
+
+/**
+ * A real reading whose solid path is only a moveto, and which is not an end of
+ * a dotted join. A one-point line has no stroke, so the chart draws a dot.
+ */
+export function lonePointIndices(series: ChartSeries): number[] {
+  const nightIds = series.values.map((_, index) => String(index));
+  const bridged = new Set<number>();
+  for (const bridge of missBridges(series, nightIds)) {
+    bridged.add(bridge.from);
+    bridged.add(bridge.to);
+  }
+  const lone: number[] = [];
+  let run: number[] = [];
+  const flush = () => {
+    if (run.length === 1 && !bridged.has(run[0])) lone.push(run[0]);
+    run = [];
+  };
+  series.values.forEach((value, index) => {
+    if (value == null || gapKind(series, index) !== "value") {
+      flush();
+      return;
+    }
+    run.push(index);
+  });
+  flush();
+  return lone;
 }
 
 export function hasOpenEnd(series: ChartSeries[]): boolean {
