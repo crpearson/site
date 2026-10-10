@@ -1,22 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { SiteHeader } from "@/components/SiteHeader";
 import { siteMeta } from "@/lib/fleet";
+import "./fonts.css";
 import "./globals.css";
-
-const plex = IBM_Plex_Sans({
-  subsets: ["latin", "greek"],
-  weight: ["400", "500", "600"],
-  variable: "--font-plex",
-  display: "swap",
-});
-
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-plex-mono",
-  display: "swap",
-});
 
 const description =
   "Health over time for 12 LiPo packs: internal resistance, intra-pack spread, start floor, and inter-pack rest delta from iCharger DX8 storage charges.";
@@ -50,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${plex.variable} ${plexMono.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full font-sans text-[var(--ink)]">
         <a className="skip" href="#content">
           Skip to content
