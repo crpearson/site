@@ -3,14 +3,14 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import nextDoc from "@/data/v2/next.json";
 import registryDoc from "@/data/pack-registry.json";
-import sessionsDoc from "@/data/sessions.json";
 import statusDoc from "@/data/status.json";
 import { missBridges } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
-import { lampTone, type LampTone } from "@/lib/lamp";
+import { lampTone, splitCall, type LampTone } from "@/lib/lamp";
+import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
 type Measurement = {
@@ -21,10 +21,16 @@ type Measurement = {
   cells: number[];
   avg: number;
   spread: number;
+  sr: number | null;
+  lr: number | null;
   floor: number | null;
+  floorCell: number | null;
   imbalance: number | null;
   rest: number | null;
+  lowGap: number | null;
+  starts: number[];
   chargeMode: string;
+  sessionType: string;
   note: string;
 };
 
@@ -37,6 +43,9 @@ type PackRec = {
   cells: number;
   capacityMah: number;
   chargeMode: string;
+  serviceStatus: string;
+  parallelCall: string;
+  chargeCount: number;
   retired: string;
   purchaseDate: string;
   priceUsd: string;
@@ -61,6 +70,7 @@ type StatusCall = {
   reason: string;
   source: string;
   session: string;
+  order: number;
 };
 
 const dataDir = path.join(process.cwd(), "data");
@@ -76,6 +86,8 @@ function num(value: string): number | null {
 }
 
 function timeKey(token: string): [number, string, number] {
+  const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
+  if (rest) return [1, rest[1], 2];
   const eve = token.endsWith("-eve");
   const day = eve ? token.slice(0, -4) : token;
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
@@ -101,6 +113,9 @@ const packs: PackRec[] = readCsv("v2/packs.csv").map((row) => ({
   cells: Number(row.cells),
   capacityMah: Number(row.capacity_mAh),
   chargeMode: row.charge_mode,
+  serviceStatus: row.status,
+  parallelCall: row.parallel_call,
+  chargeCount: Number(row.charge_count),
   retired: row.retired.trim(),
   purchaseDate: row.purchase_date.trim(),
   priceUsd: row.price_usd.trim(),
@@ -119,15 +134,15 @@ const events: PackEvent[] = readCsv("v2/pack_events.csv").map((row) => ({
 
 function sessionFromSource(source: string, date: string): string {
   const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
-  const iso = raw.match(/^(\d{4}-\d{2}-\d{2}(?:-eve)?)\b/);
-  if (iso) return iso[1];
-  const sid = raw.match(/^(S\d+)\b/);
-  if (sid) return sid[1];
-  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(date) || /^S\d+$/.test(date)) return date;
-  return raw || date;
+  const token = raw.split(/\s+/)[0] ?? "";
+  if (/^\d{4}-\d{2}-\d{2}-restday0$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token)) return token;
+  if (/^S\d+$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}(?:-eve|-restday0)?$/.test(date) || /^S\d+$/.test(date)) return date;
+  return token || date;
 }
 
-const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row) => ({
+const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row, index) => ({
   date: row.date,
   uid: row.pack_uid,
   label: row.label_at_time,
@@ -135,36 +150,70 @@ const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row) => ({
   reason: row.reason,
   source: row.source,
   session: sessionFromSource(row.source, row.date),
+  order: index,
 }));
 
-const storeRows = readCsv("store.csv");
-const v2Rows = readCsv("v2/ir_store_v2.public.csv");
-const storeByKey = new Map(storeRows.map((row) => [`${row.session}\t${row.pack}`, row]));
-
-const measurements: Measurement[] = v2Rows.map((row) => {
-  const store = storeByKey.get(`${row.session}\t${row.pack}`);
-  return {
-    session: row.session,
-    label: row.label_at_time,
-    uid: row.pack_uid,
-    series: row.series_at_time,
-    cells: [1, 2, 3, 4, 5, 6].map((index) => scaleStoredIr(Number(row[`c${index}`]))),
-    avg: scaleStoredIr(Number(row.avg)),
-    spread: scaleStoredIr(Number(row.spread)),
-    floor: num(store?.start_floor_mV || row.start_floor_mV),
-    imbalance: num(store?.start_imbalance_mV ?? ""),
-    rest: num(store?.rest_V ?? ""),
-    chargeMode: row.charge_mode_at_time,
-    note: row.note,
-  };
-});
-
-const sessionMeta = sessionsDoc.sessions as {
+type RestTest = {
   id: string;
-  partial: boolean;
-}[];
+  uid: string;
+  label: string;
+  cell: string;
+  start: string;
+  due: string;
+  result: string;
+  note: string;
+  readingDate: string;
+};
 
-const sessionOrder = metaDoc.sessions as string[];
+const restTests: RestTest[] = readCsv("v2/rest_tests.csv")
+  .filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW")
+  .map((row) => ({
+    id: row.test_id,
+    uid: row.pack_uid,
+    label: row.label,
+    cell: row.suspect_cell,
+    start: row.start_date,
+    due: row.due_date,
+    result: row.result.trim() || "pending",
+    note: row.note,
+    readingDate: row.reading_date.trim(),
+  }));
+
+const v4Rows = readCsv("v2/ir_store_v4.public.csv");
+
+const measurements: Measurement[] = v4Rows.map((row) => ({
+  session: row.session,
+  label: row.label_at_time,
+  uid: row.pack_uid,
+  series: row.series_at_time,
+  cells: [1, 2, 3, 4, 5, 6].map((index) => scaleStoredIr(Number(row[`c${index}_mOhm`]))),
+  avg: scaleStoredIr(Number(row.avg_mOhm)),
+  spread: scaleStoredIr(Number(row.spread_mOhm)),
+  sr: num(row.pack_SR_mOhm),
+  lr: num(row.LR_mOhm),
+  floor: num(row.floor_mV),
+  floorCell: num(row.floor_cell),
+  imbalance: num(row.imbalance_mV),
+  rest: num(row.rest_V),
+  lowGap: num(row.low_cell_gap_mV),
+  starts: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`start_c${index}_mV`])),
+  chargeMode: row.charge_mode_at_time,
+  sessionType: row.session_type,
+  note: row.v4_note,
+}));
+
+/** One-off individual rest-test baselines. Not a fleet night for packs that did not run. */
+const restBaselineSessions = new Set(
+  measurements.filter((row) => row.sessionType === "rest-test-day0").map((row) => row.session),
+);
+
+const listedSessions = metaDoc.sessions as string[];
+const sessionOrder = [
+  ...listedSessions,
+  ...[...new Set(measurements.map((row) => row.session))]
+    .filter((id) => !listedSessions.includes(id))
+    .sort((a, b) => compareTime(a, b)),
+];
 
 function packByUid(uid: string): PackRec | undefined {
   return packs.find((pack) => pack.uid === uid);
@@ -208,12 +257,21 @@ export function badgeFor(uid: string): string | null {
 export function callsFor(uid: string): StatusCall[] {
   return calls
     .filter((call) => call.uid === uid)
-    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date));
+    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date) || a.order - b.order);
+}
+
+/** A later factual measurement does not replace the parallel/service call. */
+function countsAsStatus(call: StatusCall): boolean {
+  return !/^unchanged\b/i.test(call.status.trim());
 }
 
 export function latestCall(uid: string): StatusCall | undefined {
-  const list = callsFor(uid);
+  const list = callsFor(uid).filter(countsAsStatus);
   return list[list.length - 1];
+}
+
+function ruleHistory(uid: string): Measurement[] {
+  return pointsFor(uid).filter((point) => point.sessionType !== "rest-test-day0");
 }
 
 function pointsFor(uid: string): Measurement[] {
@@ -224,53 +282,76 @@ function pointsFor(uid: string): Measurement[] {
 }
 
 const EXPECTED_LATEST: Record<string, string> = {
-  "CNHL-2026-001": "D pool / no parallel",
-  "CNHL-2026-002": "GO",
-  "CNHL-2026-003": "CAUTION",
-  "CNHL-2026-004": "CAUTION onboard",
-  "CNHL-2026-005": "Watch",
-  "CNHL-2026-006": "GO",
-  "CNHL-2026-007": "GO",
-  "CNHL-2026-008": "CAUTION floor EYE",
-  "CNHL-2026-009": "GO",
-  "CNHL-2026-010": "GO",
-  "CNHL-2026-011": "GO",
-  "CNHL-2026-012": "GO",
+  "CNHL-2026-001": "PARALLEL INDIVIDUAL-ONLY | SERVICE D pool (Watch); rest test cycle 1 started 2026-10-09",
+  "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-003": "PARALLEL CAUTION; GO after one clean night | SERVICE In service",
+  "CNHL-2026-004": "PARALLEL CAUTION (reduced current) | SERVICE Watch; rest test Cell 1 cycle 1 started 2026-10-09",
+  "CNHL-2026-005": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
+  "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
+  "CNHL-2026-008": "PARALLEL CAUTION (reduced current) | SERVICE Watch; rest test Cell 6 cycle 1 started 2026-10-09",
+  "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-012": "PARALLEL GO | SERVICE In service",
 };
 
 function assertStore() {
-  if (measurements.length !== 156 || storeRows.length !== 156) {
-    throw new Error(`Expected 156 measurements, got v2=${measurements.length} store=${storeRows.length}`);
+  if (measurements.length !== 159 || v4Rows.length !== 159) {
+    throw new Error(`Expected 159 measurements, got ${measurements.length}`);
   }
-  const s413raw = v2Rows.find((row) => row.pack_uid === "CNHL-2026-001" && row.session === "S413");
-  const rawCells = s413raw
-    ? [1, 2, 3, 4, 5, 6].map((index) => s413raw[`c${index}`]).join(",")
-    : "";
-  const c2raw = v2Rows.find((row) => row.label_at_time === "C2-P2" && row.session === "2026-09-30");
-  const s413 = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "S413");
-  const c2 = measurements.find((row) => row.label === "C2-P2" && row.session === "2026-09-30");
-  const shown = s413?.cells.map((cell) => cell.toFixed(2)).join(",");
   if (IR_STORE_IS_DX8_INTEGER) {
-    if (rawCells !== "569,543,524,538,552,545") {
-      throw new Error("CNHL-2026-001 S413 raw IR spot check failed");
-    }
-    if (!c2raw || c2raw.c3 !== "514") {
-      throw new Error("C2-P2 2026-09-30 Cell3 raw spot check failed");
-    }
-    if (shown !== "5.69,5.43,5.24,5.38,5.52,5.45") {
-      throw new Error("CNHL-2026-001 S413 scaled IR spot check failed");
-    }
-    if (!c2 || c2.cells[2].toFixed(2) !== "5.14") {
-      throw new Error("C2-P2 2026-09-30 Cell3 scaled spot check failed");
-    }
-  } else if (rawCells === "569,543,524,538,552,545") {
-    // TODO(lary): once the CSVs are milliohms, replace this guard with the corrected row.
-    throw new Error("IR_STORE_IS_DX8_INTEGER is false but the CSV still holds DX8 integers");
+    throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
+  }
+  const sample = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "2026-10-09");
+  if (!sample || sample.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.2,2.9,2.5,2.2,3.0,2.8") {
+    throw new Error("D-1 2026-10-09 IR spot check failed");
+  }
+  if (sample.avg.toFixed(3) !== "2.767" || sample.spread.toFixed(1) !== "1.0") {
+    throw new Error("D-1 2026-10-09 average or spread spot check failed");
+  }
+  const restC2 = measurements.find((row) => row.uid === "CNHL-2026-008" && row.session === "2026-10-09-restday0");
+  const restC1 = measurements.find((row) => row.uid === "CNHL-2026-004" && row.session === "2026-10-09-restday0");
+  if (!restC2 || restC2.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.3,2.3,3.9,3.4,3.1,2.8") {
+    throw new Error("C2-P2 rest-day IR spot check failed");
+  }
+  if (!restC1 || restC1.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.1,3.4,3.2,3.7,2.8,2.8") {
+    throw new Error("C1-P4 rest-day IR spot check failed");
+  }
+  if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
+    throw new Error("C1-P4 and C2-P2 charge_count should be 14");
+  }
+  if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3) {
+    throw new Error("Rest tests should be the three day-0 rows, with no C1-P3 test");
   }
   for (const [uid, status] of Object.entries(EXPECTED_LATEST)) {
     const call = latestCall(uid);
     if (!call || call.status !== status) {
       throw new Error(`Latest status for ${uid} is ${call?.status ?? "missing"}`);
+    }
+    const pack = packByUid(uid);
+    const computed = parallelBucket(
+      ruleHistory(uid).map((point) => ({
+        spread: point.spread,
+        cells: point.cells,
+        gap: point.lowGap ?? 0,
+        floor: point.floor ?? 0,
+        floorCell: point.floorCell ?? 0,
+        starts: point.starts,
+      })),
+      {
+        inDPool: pack?.series === "D" || /d pool/i.test(pack?.serviceStatus ?? ""),
+        failedRest: restTests.some((test) => test.uid === uid && /fail/i.test(test.result)),
+        selfDischargeWatch: /self-discharge/i.test(pack?.serviceStatus ?? ""),
+      },
+    );
+    const recorded = laryParallelBucket(call.status);
+    if (/OWNER OVERRIDE/i.test(call.reason)) {
+      console.warn(
+        `owner override ${uid}: recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
+      );
+    } else if (computed.call !== recorded) {
+      console.warn(`parallel call disagreement ${uid}: computed ${computed.call}, recorded ${recorded}`);
     }
   }
   if (packs.some((pack) => pack.label === "C1-P1")) {
@@ -286,10 +367,13 @@ function assertStore() {
 
 assertStore();
 
+const loggedThrough =
+  [...sessionOrder].reverse().find((id) => /^\d{4}-\d{2}-\d{2}/.test(id))?.slice(0, 10) ?? metaDoc.last_ingest;
+
 export const siteMeta = {
-  lastIngest: metaDoc.last_ingest,
-  rowCount: metaDoc.row_count,
-  sessionCount: metaDoc.session_count,
+  lastIngest: loggedThrough,
+  rowCount: measurements.length,
+  sessionCount: sessionOrder.length,
   source: metaDoc.data_source,
   ingestNote: metaDoc.ingest_note,
   sessions: metaDoc.sessions as string[],
@@ -300,19 +384,17 @@ export const siteMeta = {
 };
 
 export const thresholds = statusDoc.thresholds;
-// TODO(lary): these cuts are still the DX8-integer thresholds in data/status.json
-// (go under 40, caution 40–49, pull at 50). They are read as true mΩ and are not scaled.
-const spreadRule = thresholds.intra_pack_spread_mohm;
+const spreadRule = thresholds.spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
-  { y: spreadRule.go_lt, label: `Go < ${formatValue("ir", spreadRule.go_lt)}`, color: "#3ddc97" },
-  { y: spreadRule.pull_gte, label: `Pull ≥ ${formatValue("ir", spreadRule.pull_gte)}`, color: "#ff5c7a" },
+  { y: spreadRule.caution_gte, label: `Caution ≥ ${formatValue("ir", spreadRule.caution_gte)}`, color: "#f5b942" },
+  { y: spreadRule.individual_gte, label: `Individual ≥ ${formatValue("ir", spreadRule.individual_gte)}`, color: "#ff5c7a" },
 ];
 
 export const ruleABands: Band[] = [
-  { from: spreadRule.caution_lo, to: spreadRule.caution_hi, color: "rgba(245, 185, 66, 0.18)" },
-  { from: spreadRule.pull_gte, to: Number.POSITIVE_INFINITY, color: "rgba(255, 92, 122, 0.12)" },
+  { from: spreadRule.caution_gte, to: spreadRule.individual_gte, color: "rgba(245, 185, 66, 0.18)" },
+  { from: spreadRule.individual_gte, to: Number.POSITIVE_INFINITY, color: "rgba(255, 92, 122, 0.12)" },
 ];
 
 export const ruleBGuides: Guide[] = [
@@ -333,10 +415,13 @@ export const floorBands: Band[] = [
   { from: 0, to: thresholds.floor_eye_mv, color: "rgba(121, 184, 255, 0.1)" },
 ];
 
-export const categories: Category[] = sessionMeta.map((session) => ({
-  id: session.id,
-  label: shortSession(session.id),
-  partial: session.partial,
+const nightCount = new Map<string, number>();
+for (const row of measurements) nightCount.set(row.session, (nightCount.get(row.session) ?? 0) + 1);
+
+export const categories: Category[] = sessionOrder.map((id) => ({
+  id,
+  label: shortSession(id),
+  partial: (nightCount.get(id) ?? 0) < 12,
 }));
 
 /**
@@ -356,6 +441,12 @@ function serviceSpans(uid: string): (string | null)[] {
     let span = 0;
     for (const move of moves) {
       if (compareTime(category.id, move.date) >= 0) span += 1;
+    }
+    // A rest-test baseline is in span only for the packs that ran. Everyone else
+    // is out of scope, so the night draws neither a join nor a ring.
+    if (restBaselineSessions.has(category.id)) {
+      const ran = measurements.some((row) => row.uid === uid && row.session === category.id);
+      return ran ? String(span) : null;
     }
     return String(span);
   });
@@ -392,11 +483,7 @@ function nums(values: (number | null)[]): number[] {
 
 function spreadChartDomain(spreads: number[]): [number, number] {
   const dataMax = Math.max(0, ...spreads);
-  const pull = spreadRule.pull_gte;
-  // The published pull cut is only drawn when it sits near the measurements.
-  // TODO(lary): replace the status.json cuts so this can include them again.
-  const near = pull > 0 && pull <= Math.max(dataMax, 0.01) * 4;
-  const top = near ? Math.max(pull, dataMax) : dataMax;
+  const top = Math.max(dataMax, spreadRule.individual_gte);
   return [0, Math.max(0.01, top + Math.max(top, 0.01) * 0.12)];
 }
 
@@ -461,6 +548,12 @@ export type StatusRow = {
   excluded: boolean;
   badge: string | null;
   chargeMode: string;
+  chargeCount: number;
+  sr: number | null;
+  lr: number | null;
+  lowGap: number | null;
+  parallel: string;
+  service: string;
 };
 
 export function statusRows(): StatusRow[] {
@@ -495,8 +588,22 @@ export function statusRows(): StatusRow[] {
       excluded: isExcludedFromHeadline(pack.uid),
       badge: badgeFor(pack.uid),
       chargeMode: pack.chargeMode,
+      chargeCount: pack.chargeCount,
+      sr: latest.sr,
+      lr: latest.lr,
+      lowGap: latest.lowGap,
+      parallel: splitCall(call.status).parallel,
+      service: splitCall(call.status).service,
     };
   });
+}
+
+export function restTestsFor(uid: string): RestTest[] {
+  return restTests.filter((test) => test.uid === uid);
+}
+
+export function allRestTests(): RestTest[] {
+  return restTests;
 }
 
 export function headline() {
@@ -538,7 +645,7 @@ export type SeriesBlock = {
 };
 
 function lastMeasured(series: string): string {
-  const rows = measurements.filter((row) => row.series === series);
+  const rows = measurements.filter((row) => row.series === series && row.sessionType !== "rest-test-day0");
   if (rows.length === 0) return "no storage rows in this series yet";
   return rows.reduce((latest, row) => (compareTime(row.session, latest) > 0 ? row.session : latest), rows[0].session);
 }
@@ -607,6 +714,11 @@ export function restDelta(session: string, series: string): number | null {
  */
 export function restNight(session: string, series: string): { value: number | null; na: boolean } {
   const ran = measurements.some((row) => row.session === session && row.series === series);
+  if (restBaselineSessions.has(session)) {
+    // Individual rest-test baseline. Rule B does not apply. A series that did
+    // not run stays unmarked rather than a skipped-night ring.
+    return ran ? { value: null, na: true } : { value: null, na: false };
+  }
   const value = restDelta(session, series);
   if (!ran) return { value: null, na: false };
   if (value == null) return { value: null, na: true };
@@ -633,12 +745,13 @@ export type FleetModel = {
   spreadDomain: [number, number];
   floorDomain: [number, number];
   restDomain: [number, number];
-  mean: { id: string; color: string; values: (number | null)[] }[];
+  mean: { id: string; color: string; values: (number | null)[]; service: (string | null)[] }[];
   fleets: {
     id: string;
     packs: PackSeries[];
     rest: (number | null)[];
     restNa: boolean[];
+    restService: (string | null)[];
     individual: boolean;
   }[];
 };
@@ -667,13 +780,18 @@ function seriesPacks(series: string): PackSeries[] {
 }
 
 function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
-  return categories.map((_, index) => {
+  return categories.map((category, index) => {
+    if (restBaselineSessions.has(category.id)) return null;
     const values = packsInSeries
       .map((pack) => pack.avg[index])
       .filter((value): value is number => value != null);
     if (values.length === 0) return null;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   });
+}
+
+function seriesScope(): (string | null)[] {
+  return categories.map((category) => (restBaselineSessions.has(category.id) ? null : "0"));
 }
 
 export function fleetModel(): FleetModel {
@@ -685,6 +803,11 @@ export function fleetModel(): FleetModel {
       packs: seriesPacks(series),
       rest: nights.map((night) => night.value),
       restNa: nights.map((night) => night.na),
+      restService: categories.map((category) => {
+        if (!restBaselineSessions.has(category.id)) return "0";
+        const ran = measurements.some((row) => row.session === category.id && row.series === series);
+        return ran ? "0" : null;
+      }),
       individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
     };
   });
@@ -707,6 +830,7 @@ export function fleetModel(): FleetModel {
       id: fleet.id,
       color: seriesColor(fleet.id),
       values: fleetMean(fleet.packs),
+      service: seriesScope(),
     })),
     fleets,
   };
@@ -1017,10 +1141,9 @@ export function nextParallel() {
   return nextDoc;
 }
 
-export function ruleABand(spread: number): "Go" | "Caution" | "Pull" {
-  // spread is already milliohms. The cuts are the status.json numbers, as mΩ.
-  if (spread >= spreadRule.pull_gte) return "Pull";
-  if (spread >= spreadRule.caution_lo) return "Caution";
+export function ruleABand(spread: number): "Go" | "Caution" | "Individual" {
+  if (spread >= spreadRule.individual_gte) return "Individual";
+  if (spread >= spreadRule.caution_gte) return "Caution";
   return "Go";
 }
 

@@ -38,20 +38,19 @@ Mapping (see data/README or the site "About the data" page):
     as of the session date. Rows carry pack_uid, label_at_time, series_at_time,
     charger alias, channel, file_nnn, charge_mode_at_time, and session_type.
   * Charger/fleet lock applies only when that alias has "fleet_lock": true.
-  * HARD fingerprints must pass or ingest exits non-zero: C1-P4 Cell1 =
-    pack-max IR; C2-P2 Cell3 = pack-min IR. Soft fingerprints (C2-P6 lowest
-    C2 avg, C2-P4 tightest spread) are advisory and do not remap.
-  * IR: the DX8 ;130; fields 3-8 are integers. log.ir stores milliohms
-    (integer * IR_SCALE, IR_SCALE = 0.01). IR_STORE_IS_DX8_INTEGER must match
-    lib/ir.ts. While it is true, the published CSVs are still DX8 integers and
-    the site scales on read. This script scales at log.ir and refuses to append
-    those milliohm rows onto the integer CSV. When the CSVs are replaced with
-    milliohm values, set the flag false in both files so the site does not
-    scale again.
-  * Discard from the numeric store: 0-byte, no ;130; IR line, duration < 60 s,
-    not 6S, negative or implausible IR (over MAX_PLAUSIBLE_IR mΩ after scaling),
-    non-Storage, LiHV. TODO(lary): confirm the 10 mΩ cap. It is the old
-    1000-integer limit after ÷100.
+  * The usual low cell, from ir_store_v4, is a soft check only. A mismatch is
+    printed and does not refuse or remap. The retired ;130; cell fingerprint
+    gate is gone.
+  * IR is the per-run median of the ;128; cell columns, divided by 10 (those
+    samples are 0.1 mΩ steps). The ;130; line is charge taken per cell in mAh
+    and is not IR. IR_STORE_IS_DX8_INTEGER is false, matching lib/ir.ts, so the
+    site does not divide a parsed row again. IR_SCALE = 0.01 remains only as
+    the historical DX8-integer factor.
+  * Discard from the numeric store: 0-byte, no ;128; IR samples, duration < 60 s,
+    not 6S, negative or implausible IR (over MAX_PLAUSIBLE_IR mΩ after the ÷10),
+    non-Storage, LiHV. The 10 mΩ cap is a sanity limit, not a Rules v3 cut.
+  * data/store.csv is the retired ;130; archive. This script will not append
+    true-mΩ rows onto it. The site reads data/v2/ir_store_v4.public.csv.
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
   * Do not invent a row for a pack that did not run. The site treats that night as
@@ -87,9 +86,10 @@ REGISTRY = DATA / "pack-registry.json"
 NAME_RE = re.compile(r"(LiPo|LiHV)\[([A-Za-z ]+)_(\d+)_(CH[12])\]\.txt(?:\.gz)?$")
 MIN_DURATION_MS = 60_000
 # Keep IR_SCALE and IR_STORE_IS_DX8_INTEGER identical to lib/ir.ts.
+# ;128; samples are 0.1 mΩ, so a raw log is divided by 10 once here.
 IR_SCALE = 0.01
-IR_STORE_IS_DX8_INTEGER = True
-# TODO(lary): confirm. True mΩ after scaling; equal to the old 1000-integer cap.
+IR_STORE_IS_DX8_INTEGER = False
+IR_128_DIVISOR = 10
 MAX_PLAUSIBLE_IR = 10
 STORE_COLS = [
     "session", "pack", "c1", "c2", "c3", "c4", "c5", "c6", "avg", "spread",
@@ -138,7 +138,7 @@ class Log:
 
     @property
     def avg(self):
-        return round(statistics.mean(self.ir), 2) if self.ir else None
+        return round(statistics.mean(self.ir), 3) if self.ir else None
 
     @property
     def spread(self):
@@ -208,7 +208,7 @@ def parse(name: str, raw: bytes) -> tuple[Log, Optional[str]]:
     header_serial = sm.group(1) if sm else None
 
     samples = []
-    ir_line = None
+    ir_samples = []
     for line in lines:
         if not re.match(r"^\$[12];", line):
             continue
@@ -220,24 +220,28 @@ def parse(name: str, raw: bytes) -> tuple[Log, Optional[str]]:
                 cells = [int(parts[i]) for i in range(11, 17)]
             except ValueError:
                 continue
-            samples.append(cells)
-        elif parts[1] == "130":
-            ir_line = parts
+            samples.append((parts, cells))
+        elif parts[1] == "128" and len(parts) >= 11:
+            ir_samples.append(parts)
     if samples:
-        log.start_cells, log.end_cells = samples[0], samples[-1]
+        log.start_cells, log.end_cells = samples[0][1], samples[-1][1]
 
     if log.chem == "LiHV":
         log.discard = "LiHV (not fleet chemistry)"
     elif log.program and log.program != "Storage":
         log.discard = f"non-Storage program ({log.program})"
-    if ir_line is None:
-        log.discard = log.discard or "no ;130; IR line"
+    if not ir_samples:
+        log.discard = log.discard or "no ;128; IR samples"
         return log, header_serial
     try:
-        log.duration_ms = int(ir_line[2])
-        log.ir = [round(int(ir_line[i]) * IR_SCALE, 2) for i in range(3, 9)]
+        stamps = [int(ir_samples[-1][2])]
+        if samples:
+            stamps.append(int(samples[-1][0][2]))
+        log.duration_ms = max(stamps)
+        columns = [[int(sample[5 + index]) for sample in ir_samples] for index in range(6)]
+        log.ir = [statistics.median(column) / IR_128_DIVISOR for column in columns]
     except (ValueError, IndexError):
-        log.discard = log.discard or "unparseable IR line"
+        log.discard = log.discard or "unparseable ;128; IR"
         log.ir = None
         return log, header_serial
     if log.discard:
@@ -318,30 +322,49 @@ def charger_fleet_lock(registry) -> dict:
     }
 
 
-def hard_fp(fleet: str, packs: dict) -> tuple[bool, list]:
-    notes = []
-    ok = True
-    if fleet == "C1" and "C1-P4" in packs:
-        ir = packs["C1-P4"].ir
-        if ir[0] != max(ir):
-            ok = False
-            notes.append("HARD FP FAIL: C1-P4 Cell1 is not pack-max IR")
-    if fleet == "C2" and "C2-P2" in packs:
-        ir = packs["C2-P2"].ir
-        if ir[2] != min(ir):
-            ok = False
-            notes.append("HARD FP FAIL: C2-P2 Cell3 is not pack-min IR")
-    if fleet == "C2" and len(packs) == 6:
-        avgs = {p: l.avg for p, l in packs.items()}
-        if min(avgs, key=avgs.get) != "C2-P6":
-            notes.append("soft FP advisory: C2-P6 not lowest C2 avg")
-        sp = {p: l.spread for p, l in packs.items()}
-        if sorted(sp.values()).count(sp["C2-P4"]) > 1 or min(sp, key=sp.get) != "C2-P4":
-            notes.append("soft FP advisory: C2-P4 not uniquely tightest spread")
-    return ok, notes
+def usual_low_cells() -> dict:
+    """Mode of floor_cell in ir_store_v4. Ties keep the cell that reached the count first."""
+    path = DATA / "v2" / "ir_store_v4.public.csv"
+    if not path.exists():
+        return {}
+    order: dict = {}
+    with path.open() as handle:
+        for row in csv.DictReader(handle):
+            uid = row.get("pack_uid") or ""
+            cell = row.get("floor_cell") or ""
+            if uid and cell:
+                order.setdefault(uid, []).append(cell)
+    usual = {}
+    for uid, cells in order.items():
+        counts: dict = {}
+        best = cells[-1]
+        seen = -1
+        for cell in cells:
+            counts[cell] = counts.get(cell, 0) + 1
+            if counts[cell] > seen:
+                best = cell
+                seen = counts[cell]
+        usual[uid] = int(best)
+    return usual
+
+
+def advise_low_cell(logs: list[Log]):
+    usual = usual_low_cells()
+    for log in logs:
+        if not log.pack or not log.pack_uid or not log.start_cells:
+            continue
+        floor = log.start_cells.index(min(log.start_cells)) + 1
+        known = usual.get(log.pack_uid)
+        if known and floor != known:
+            note = f"usual-low-cell advisory: floor cell {floor}, usual is {known}"
+            log.assign_note = f"{log.assign_note}; {note}" if log.assign_note else note
+            print(f"{log.session} {log.pack}: {note}", file=sys.stderr)
 
 
 def time_key(token: str):
+    rest = re.fullmatch(r"(\d{4}-\d{2}-\d{2})-restday0", token or "")
+    if rest:
+        return (1, rest.group(1), 2)
     eve = token.endswith("-eve")
     day = token[:-4] if eve else token
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", day or ""):
@@ -406,24 +429,6 @@ def bind_slots(logs: list[Log], slots: list[str], session: str, mode: str, regis
         log.series_at_time = pack.get("series") if pack.get("series") == series else series
         log.charge_mode = mode
         log.assign_note = how
-
-
-def check_fingerprints(logs: list[Log]):
-    groups: dict = {}
-    for log in logs:
-        if log.pack and log.series_at_time and log.session:
-            groups.setdefault((log.session, log.series_at_time), []).append(log)
-    for (sid, series), items in groups.items():
-        packs = {log.pack: log for log in items}
-        ok, notes = hard_fp(series, packs)
-        if not ok:
-            for log in items:
-                log.pack = None
-                log.assign_note = "UNASSIGNED (needs_review): " + "; ".join(notes)
-            refuse(f"refusing to assign {sid} {series}: " + "; ".join(notes))
-        if notes:
-            for log in items:
-                log.assign_note = "; ".join(notes)
 
 
 def stamp_session_type(logs: list[Log]):
@@ -508,12 +513,19 @@ def assign(logs: list[Log], session: Optional[str], registry, file_manifest: dic
                     continue
                 bind_slots(items, slots, sid, "parallel", registry, packs, events, None, "mapped default split")
 
-    check_fingerprints(logs)
+    advise_low_cell(logs)
     stamp_session_type(logs)
     return logs
 
 
 # ----------------------------------------------------------------- store
+def _legacy_integer_row(row: dict) -> bool:
+    try:
+        return float(row.get("c1") or 0) > 20
+    except ValueError:
+        return False
+
+
 def read_store() -> list[dict]:
     if not STORE.exists():
         return []
@@ -675,12 +687,10 @@ def ingest(paths: list[Path], session: Optional[str], file_manifest: dict, sessi
     if dry:
         print("dry run: store not modified")
         return summary
-    if new_rows and IR_STORE_IS_DX8_INTEGER:
+    if new_rows and any(_legacy_integer_row(row) for row in rows):
         refuse(
-            "refusing to write: IR_STORE_IS_DX8_INTEGER is true, so the site still "
-            "scales the CSV, and this run would append milliohm rows onto DX8 integers. "
-            "Set IR_STORE_IS_DX8_INTEGER false in scripts/ingest.py and lib/ir.ts in the "
-            "same change that replaces the store with milliohms."
+            "refusing to write: data/store.csv is the retired ;130; archive. "
+            "The site reads data/v2/ir_store_v4.public.csv, which is already milliohms."
         )
     rows.extend(new_rows)
     write_store(rows)

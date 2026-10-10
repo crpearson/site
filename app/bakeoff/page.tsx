@@ -113,7 +113,7 @@ export default function BakeoffPage() {
                 format="ir"
                 unit={IR_UNIT}
                 height={180}
-                ariaLabel="Mean internal resistance by series, milliohms"
+                ariaLabel="Mean internal resistance by series, true milliohms"
               />
             </div>
           </div>

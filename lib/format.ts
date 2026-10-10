@@ -24,6 +24,7 @@ export function volts(n: number): string {
 
 export function shortSession(id: string): string {
   if (id === "2026-09-26-eve") return "09-26e";
+  if (id.endsWith("-restday0")) return `${id.slice(5, 10)}r`;
   if (id.startsWith("2026-")) return id.slice(5);
   return id;
 }

@@ -56,7 +56,6 @@ export function SlotDetail({ label }: { label: string }) {
           </div>
           <p className="note mt-2 font-mono">{current.uid}</p>
           {current.lineage ? <p className="mt-2">{current.lineage}</p> : null}
-          {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
           <p className="mt-3 leading-relaxed">{call.reason}</p>
           <p className="note mt-2">
             Purchase {current.purchaseDate} · price {current.priceUsd} · vendor {current.vendor}

@@ -1,25 +1,19 @@
 /**
- * DX8 IR integer ÷ 100 = mΩ (a log integer of 281 is 2.81 mΩ).
+ * IR on this site is already milliohms from ir_store_v4 (median of the DX8
+ * ;128; samples, divided by 10 in the published file).
  *
- * IR_STORE_IS_DX8_INTEGER
- *   true  — data/store.csv and data/v2/ir_store_v2.public.csv still hold the
- *           raw DX8 integer. scaleStoredIr applies IR_SCALE on read.
- *   false — those CSVs are already milliohms (corrected files, or a re-ingest
- *           that wrote scaled rows). scaleStoredIr returns the value unchanged
- *           so it is not scaled twice.
+ * IR_STORE_IS_DX8_INTEGER is false, so scaleStoredIr applies a factor of 1.
+ * Do not divide these rows again. The old ;130; line is charge taken per cell
+ * in mAh and is not IR.
  *
- * scripts/ingest.py mirrors both constants. Raw logs are always DX8 integers.
- * Ingest scales them once when it assigns log.ir. While this flag is true it
- * will not append those milliohm rows onto the integer CSV. Flip the flag in
- * both files in the same change that replaces the CSVs.
- *
- * TODO(lary): set IR_STORE_IS_DX8_INTEGER false when the corrected CSVs arrive.
- * TODO(lary): confirm MAX_PLAUSIBLE_IR_MOHM. 10 is the old 1000-integer cap
- * after ÷100, not a new measurement limit.
+ * IR_SCALE remains 0.01 only as the historical DX8-integer factor. Ingest now
+ * divides the ;128; sample by 10 when it parses a raw log, which is the same
+ * physical scale as a published v4 row.
  */
 export const IR_SCALE = 0.01;
 export const IR_UNIT = "mΩ";
-export const IR_STORE_IS_DX8_INTEGER = true;
+export const IR_STORE_IS_DX8_INTEGER = false;
+/** Sanity cap on a cell after the ;128; ÷10 conversion. Not a Rules v3 cut. */
 export const MAX_PLAUSIBLE_IR_MOHM = 10;
 
 export function scaleStoredIr(value: number): number {

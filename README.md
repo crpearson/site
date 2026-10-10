@@ -2,7 +2,7 @@
 
 Static dashboard for a 12-pack LiPo fleet. Internal resistance, intra-pack spread, start-floor voltage, and inter-pack rest delta come from iCharger DX8 Storage charges.
 
-The canonical store is `data/store.csv`: 156 rows across 14 sessions, joined to `data/v2/` for pack identity. The site reads those CSVs. Status calls live in `data/v2/status_calls.csv`. `data/status.json` still holds Rule A / Rule B thresholds and the gap list.
+The IR the site shows is `data/v2/ir_store_v4.public.csv`: 159 rows, already true milliohms (median of the DX8 `;128;` samples, divided by 10 in the file). `data/store.csv` and `data/v2/ir_store_v2.public.csv` are the retired `;130;` archive. That line is charge taken per cell in mAh, not IR, and the site does not read it. Status calls live in `data/v2/status_calls.csv`. `data/status.json` holds the Rules v3 thresholds and the gap list.
 
 C1 and C2 are owned CNHL Black Series V2 packs. Partial nights are stored as measured and are never filled in. Capacity in/out and cost per cycle are not in this store.
 
@@ -11,6 +11,8 @@ C1 and C2 are owned CNHL Black Series V2 packs. Partial nights are stored as mea
 A night is "not charged" for a pack when it is on the fleet night list and the pack has no measurement that night, while the pack was in service. In service means on or after the pack's commission night and before a retirement date. Each move starts a new service span. Nights before commission are not marked. Nights on or after a move are not given the hollow start/end marker.
 
 The store is never filled in. No value is invented. Every line chart uses the same skipped-night drawing (`lib/bridges.ts`, rendered by `LineChart` and the tile `Sparkline`). On a per-pack line (pack pages, the overview pack trends, the cell explorer, and the tile sparklines), a faint dotted segment at about 40% opacity joins the two real readings on either side of one or more not-charged nights in the same span. Those skipped nights have no marker and no number. A not-charged night before the first reading or after the last, still in the pre-move span, is a small hollow ring on the bottom edge of the graph, in the line color at low opacity, also with no value. A dotted join never crosses a move. A series-level line (series mean IR, including the bake-off chart, and Rule B rest-Δ) has no pack service span: a night with no value is a skipped night and gets the same dotted join or hollow ring. Rule B is N/A, and is not drawn as a skip, when the series did run but fewer than two packs charged in parallel. Series D (pack D-1) is charged individually and has no rest-Δ line. The legend on an affected chart reads: dotted = not charged · ○ = not charged (start/end).
+
+`2026-10-09-restday0` is an individual rest-test baseline for C1-P4 and C2-P2 only. Rule B is N/A. Those two packs keep a real point. The night is left out of the series mean, so it is not a one-pack average and not a skip ring on that line. Every other pack is out of span on that night, so it adds no dotted join and no hollow ring. Skipped fleet nights between a pack's previous reading and this baseline still follow the rule above: they become a dotted join, because two real readings now sit on either side.
 
 A star on the night label is a partial night (the night did not include every pack). That mark stays separate. A pack that was charged on a partial night still has a solid point. When the pack itself was not charged, the tooltip is only the night and "Not charged: <night>", with no partial tag and no number. CNHL-2026-001 moved from C1-P1 to D-1 on 2026-10-08, which is after every night on the axis, so 2026-09-30 is still before the move. That night is after its last reading on 2026-09-27, so it gets a hollow ring, not a bridge into D-1. C1-P5 and the other C1 packs are the same shape on 2026-09-30. Each C2 pack was not charged on 2026-09-26, between S413 and 2026-09-26-eve, so those lines have one dotted join and no ring on that night. `fixtures/v2-gap` is a two-slot manifest for ingest, not this chart mark.
 
@@ -80,11 +82,10 @@ The public historical manifest is `data/v2/session_manifest.public.csv`. The sto
 - For each manifest row, sort that charger and channel by NNN ascending and map the files onto `slots` in order. The lowest NNN is the first label. Parallel and individual nights use the same order. If the file count does not equal the slot count, ingest exits non-zero and assigns nothing for that row.
 - The manifest `slots` column always wins. With no session manifest, a new night uses the default split: DX8-1 CH1 = C1-P1..P3, DX8-1 CH2 = C1-P4..P6, DX8-2 CH1 = C2-P1..P3, DX8-2 CH2 = C2-P4..P6. The same count check applies, so a legacy 6-file channel without the manifest is refused rather than reshuffled. Rows with a blank NNN range apply only when `--session` matches.
 - Each label resolves to a `pack_uid` from `data/v2/packs.csv` and `data/v2/pack_events.csv` as of the session date.
-- Hard fingerprints must pass or ingest exits non-zero: C1-P4 cell 1 is the pack-max IR, and C2-P2 cell 3 is the pack-min IR.
-- Soft fingerprints are advisory and can fail without remapping: C2-P6 is the lowest C2 average, and C2-P4 has the tightest C2 spread.
+- The usual low cell, taken from `ir_store_v4`, is advisory only. A mismatch is printed and does not remap. The old `;130;` fingerprint gate is retired.
 - `fleet_lock`. A charger alias is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-1 and DX8-2 are unlocked.
-- IR on a DX8 log is an integer. The site and a future ingest show milliohms as that integer divided by 100 (`IR_SCALE` in `lib/ir.ts`, mirrored in `scripts/ingest.py`). The published CSVs are still those integers. `IR_STORE_IS_DX8_INTEGER` stays true until the CSVs themselves are milliohms, so the same rows are not divided twice. TODO(lary): flip that flag in both files when the corrected CSVs arrive.
-- Discarded from the numeric store: 0-byte files, logs with no `;130;` IR line, duration under 60 s, not 6S, negative or implausible IR (over 10 mΩ after scaling), non-Storage programs, and LiHV chemistry. TODO(lary): confirm the 10 mΩ cap. It is the old 1000-integer limit after ÷100.
+- Cell IR on a raw DX8 log is the median of the `;128;` samples, in 0.1 mΩ steps. Ingest divides that median by 10 once. `IR_STORE_IS_DX8_INTEGER` is false in `lib/ir.ts` and `scripts/ingest.py`, so v4 rows are not divided again. `IR_SCALE` (0.01) is only the old integer factor. The `;130;` line is mAh and is not stored as IR.
+- Discarded from a numeric ingest: 0-byte files, logs with no `;128;` IR samples, duration under 60 s, not 6S, negative or implausible IR (over 10 mΩ after the ÷10), non-Storage programs, and LiHV chemistry. The 10 mΩ cap is a sanity limit, not a Rules v3 cut. Ingest will not append those milliohm rows onto `data/store.csv`, which is the retired archive.
 - Dedupe is by sha256 of the decompressed log, and by `(charger alias, NNN, channel)`.
 
 ### Charger alias map
@@ -122,7 +123,7 @@ python3 scripts/ingest.py fixtures/v2-individual-d --charger-map fixtures/charge
 - `/pack/C1-P1/` and the other label URLs show that same slot view. An empty slot says it was vacated and links to the pack that moved.
 - `/methodology` how packs are charged, logged, and judged
 - `/bakeoff` brand and series prices
-- `/about` glossary, Rule A, Rule B, and gaps
+- `/about` glossary, Rules v3, Rule B, and gaps
 
 ## Deploy
 

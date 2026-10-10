@@ -9,6 +9,7 @@ import { Sparkline } from "@/components/Sparkline";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
+  allRestTests,
   fleetModel,
   floorBands,
   floorGuide,
@@ -52,17 +53,17 @@ export default function Home() {
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <article className="stat" data-tone="ok">
-            <p className="eyebrow">OK</p>
+            <p className="eyebrow">Parallel Go</p>
             <p className="stat-value">{stats.ok.length}</p>
             <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="caution">
-            <p className="eyebrow">Caution / watch</p>
+            <p className="eyebrow">Parallel Caution</p>
             <p className="stat-value">{stats.caution.length}</p>
             <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="off">
-            <p className="eyebrow">Off / pull</p>
+            <p className="eyebrow">Individual only</p>
             <p className="stat-value">{stats.off.length}</p>
             <p className="stat-sub">{stats.off.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
@@ -84,7 +85,9 @@ export default function Home() {
         action={
           <span className="note">
             {IR_UNIT} · a night that series was not measured is a faint dotted join, or a hollow ring on
-            the bottom edge before the first reading or after the last
+            the bottom edge before the first reading or after the last. 10-09r is an individual
+            rest-test baseline for two packs, so it is left off this series mean and unmarked for
+            every other pack.
           </span>
         }
       >
@@ -95,12 +98,13 @@ export default function Home() {
             label: fleet.id,
             color: fleet.color,
             values: fleet.values,
+            service: fleet.service,
           }))}
           yDomain={model.meanDomain}
           format="ir"
           unit={IR_UNIT}
           height={200}
-          ariaLabel="Mean pack IR by series across nights, milliohms"
+          ariaLabel="Mean pack IR by series across nights, true milliohms"
         />
       </Panel>
 
@@ -236,10 +240,11 @@ export default function Home() {
                       </span>
                     </th>
                     <td>
-                      <Lamp status={row.status} />
+                      <Lamp status={row.parallel || row.status} />
+                      <p className="mt-1 text-sm">{row.parallel || row.status}</p>
+                      {row.service ? <p className="note mt-1">Service {row.service}</p> : null}
                     </td>
                     <td>
-                      {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
                       <p className="reason">{row.reason}</p>
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
@@ -264,21 +269,37 @@ export default function Home() {
                   <Link href={`/pack/${row.uid}`} className="pack-link">
                     {row.label}
                   </Link>
-                  <Lamp status={row.status} />
+                  <Lamp status={row.parallel || row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
                 <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 <p className="note mt-2 font-mono">
-                  Call {row.session} · IR {formatValue("ir", row.avg)} {IR_UNIT} · spread{" "}
-                  {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor ?? "—"}
+                  {row.parallel || row.status}
+                  {row.service ? ` · Service ${row.service}` : ""} · IR {formatValue("ir", row.avg)} {IR_UNIT} ·
+                  spread {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor ?? "—"}
                 </p>
               </article>
             ))}
           </div>
         </div>
       </section>
+
+      <Panel accent="floor" eyebrow="7-day rest" title="Rest tests">
+        <p className="note mb-3">
+          Day-0 baselines are recorded. The 7-day reading stays pending until the due date. C1-P3 has
+          no rest test.
+        </p>
+        <ul className="space-y-2 text-sm">
+          {allRestTests().map((test) => (
+            <li key={`${test.id}-${test.uid}`}>
+              <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
+              day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
+              {test.result === "pending" ? "pending" : test.result}
+            </li>
+          ))}
+        </ul>
+      </Panel>
 
       <Panel accent="signal" eyebrow="Latest night per pack" title="Cell IR heatmap">
         <Heatmap
@@ -322,7 +343,7 @@ export default function Home() {
                 yDomain={model.irDomain}
                 format="ir"
                 unit={IR_UNIT}
-                ariaLabel={`${fleet.id} pack average internal resistance, milliohms`}
+                ariaLabel={`${fleet.id} pack average internal resistance, true milliohms`}
               />
             </Panel>
           ))}
@@ -331,15 +352,13 @@ export default function Home() {
               key={`${fleet.id}-spread`}
               heading="h3"
               accent="rulea"
-              eyebrow={`Rule A · ${fleet.id}`}
+              eyebrow={`Rules v3 · ${fleet.id}`}
               title="Intra-pack spread"
               action={
                 <span className="note">
-                  {/* TODO(lary): these cuts are the status.json DX8-integer values, shown as mΩ. */}
-                  Go &lt; {formatValue("ir", thresholds.intra_pack_spread_mohm.go_lt)} · Caution{" "}
-                  {formatValue("ir", thresholds.intra_pack_spread_mohm.caution_lo)}–
-                  {formatValue("ir", thresholds.intra_pack_spread_mohm.caution_hi)} · Pull ≥{" "}
-                  {formatValue("ir", thresholds.intra_pack_spread_mohm.pull_gte)} {IR_UNIT}
+                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Caution ≥{" "}
+                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Individual ≥{" "}
+                  {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT}
                 </span>
               }
             >
@@ -352,7 +371,7 @@ export default function Home() {
                 yDomain={model.spreadDomain}
                 format="ir"
                 unit={IR_UNIT}
-                ariaLabel={`${fleet.id} intra-pack IR spread with Rule A guides, milliohms`}
+                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with Rules v3 caution and individual guides`}
               />
             </Panel>
           ))}
@@ -396,8 +415,9 @@ export default function Home() {
               One line per series. A night that series did not run is a faint dotted join, or a
               hollow ring on the bottom edge before the first reading or after the last, with no
               value. Rule B needs two packs that charged in parallel. A night the series did run,
-              but fewer than two did, is N/A. Series D, pack D-1, is charged on its own, so Rule B
-              does not apply and it is not a line here.
+              but fewer than two did, is N/A. The 10-09r rest-test baseline is individual, so Rule
+              B is N/A for the series that ran and unmarked for a series that did not. Series D,
+              pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
             </p>
             <LineChart
               categories={model.categories}
@@ -409,6 +429,7 @@ export default function Home() {
                   color: seriesColor(fleet.id),
                   values: fleet.rest,
                   na: fleet.restNa,
+                  service: fleet.restService,
                 }))}
               guides={ruleBGuides}
               bands={ruleBBands}

@@ -13,6 +13,7 @@ import {
   floorBands,
   floorGuide,
   getPack,
+  restTestsFor,
   packRouteIds,
   packUids,
   resolvePackRoute,
@@ -34,6 +35,7 @@ function historyNote(event: { event: string; to: string; date: string; reason: s
 function historyVerb(event: string) {
   if (event === "commission") return "Commissioned";
   if (event === "move") return "Moved";
+  if (event === "rest_test_start") return "Rest test started";
   return event;
 }
 
@@ -127,8 +129,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </div>
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
-        {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
+        <p className="note">
+          Parallel {pack.row.parallel || pack.call.status}
+          {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
+        </p>
         <p className="note">
           Status call {pack.call.session}
           {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
@@ -149,12 +154,15 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="stat-sub">{pack.row.latestSession}</p>
         </article>
         <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "off"}>
-          <p className="eyebrow">Spread · Rule A</p>
+          <p className="eyebrow">Spread</p>
           <p className="stat-value">
             {formatValue("ir", pack.row.spread)}
             <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
           </p>
-          <p className="stat-sub">{band} on this spread. The status call is separate.</p>
+          <p className="stat-sub">
+            {band} on this spread alone. Caution starts at {thresholds.spread_mohm.caution_gte} {IR_UNIT},
+            individual at {thresholds.spread_mohm.individual_gte} {IR_UNIT}. The status call is separate.
+          </p>
         </article>
         <article className="stat" data-tone="floor">
           <p className="eyebrow">Start floor</p>
@@ -172,12 +180,26 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="eyebrow">Rule B · rest</p>
           <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
           <p className="stat-sub">
-            Self-discharge watch {thresholds.self_discharge_imbalance_mv} mV
-            {pack.row.imbalance != null ? ` · imbalance ${pack.row.imbalance} mV` : ""}
+            {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
+            {pack.row.sr != null ? ` · S_R ${formatValue("ir", pack.row.sr)} ${IR_UNIT}` : ""}
+            {pack.row.lr != null ? ` · L_R ${formatValue("ir", pack.row.lr)} ${IR_UNIT}` : ""}
           </p>
         </article>
       </div>
+
+      {restTestsFor(pack.uid).length ? (
+        <Panel accent="floor" eyebrow="7-day rest" title="Rest test">
+          <ul className="space-y-2 text-sm">
+            {restTestsFor(pack.uid).map((test) => (
+              <li key={`${test.id}-${test.uid}`}>
+                Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
+                7-day reading due {test.due}. {test.result === "pending" ? "Pending." : test.result}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Panel accent="muted" eyebrow="History" title="Label history">
@@ -202,7 +224,6 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   <Lamp status={call.status} />
                   <span className="note">{call.label}</span>
                 </p>
-                {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
                 <p className="mt-1 leading-relaxed">{call.reason}</p>
               </li>
             ))}
@@ -241,7 +262,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel heading="h3" accent="rulea" eyebrow="Rule A" title="Intra-pack spread">
+        <Panel heading="h3" accent="rulea" eyebrow="Rules v3" title="Intra-pack spread">
           <LineChart
             categories={pack.categories}
             series={pack.spreadSeries}
@@ -250,7 +271,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             yDomain={pack.spreadDomain}
             format="ir"
             unit={IR_UNIT}
-            ariaLabel={`${pack.uid} intra-pack spread with Rule A guides, milliohms`}
+            ariaLabel={`${pack.uid} intra-pack spread with Rules v3 caution and individual guides, milliohms`}
           />
         </Panel>
         <Panel heading="h3" accent="floor" eyebrow="Watch line" title="Start floor">
