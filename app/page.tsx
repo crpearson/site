@@ -3,9 +3,9 @@ import { CellExplorer } from "@/components/CellExplorer";
 import { seriesColor } from "@/lib/color";
 import { Heatmap } from "@/components/Heatmap";
 import { Lamp } from "@/components/Lamp";
+import { PackTile } from "@/components/PackTile";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
-import { Sparkline } from "@/components/Sparkline";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
@@ -205,6 +205,11 @@ export default function Home() {
         <h2 id="packs-heading" className="section-title">
           Packs
         </h2>
+        <p className="note">
+          The chip is one word from the latest call. Rest pool wins, then charged alone, then
+          Caution, then Go. D pool or Watch is the chip only when the parallel half is none of
+          those. The note under the sparkline is the full call, shortened to two lines.
+        </p>
         {blocks.map((block) => (
           <div key={block.id}>
             <p className="eyebrow mb-2">
@@ -215,66 +220,10 @@ export default function Home() {
               {" · last measured "}
               {block.lastMeasured}
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {block.slots.map((slot) =>
-                slot.empty || !slot.uid ? (
-                  <Link
-                    key={slot.label}
-                    href={`/slot/${slot.label}`}
-                    className="tile is-empty"
-                    data-tone="pool"
-                  >
-                    <span className="font-mono text-sm">{slot.label}</span>
-                    <span className="note">empty</span>
-                  </Link>
-                ) : (
-                  <Link
-                    key={slot.label}
-                    href={`/pack/${slot.uid}`}
-                    className={slot.excluded ? "tile is-retired" : "tile"}
-                    data-tone={slot.tone ?? "pool"}
-                  >
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-sm">{slot.label}</span>
-                      {slot.status ? <Lamp status={slot.status} /> : null}
-                    </span>
-                    {slot.badge ? <span className="badge">{slot.badge}</span> : null}
-                    <Sparkline
-                      values={slot.avgSeries}
-                      color={slot.color}
-                      service={slot.service}
-                      logged={slot.logged}
-                      rest={slot.rest}
-                    />
-                    {slot.restPool ? (
-                      <span className="badge">Rest pool · day 0 {slot.restDay0} · due {slot.restDue}</span>
-                    ) : null}
-                    <span className="note">
-                      {slot.latestSession ? slot.latestSession.slice(5) : "—"}
-                      {slot.sr == null ? "" : ` · S_R ${formatValue("ir", slot.sr)} ${IR_UNIT}`}
-                      {slot.lowGap == null ? "" : ` · gap ${slot.lowGap} mV`}
-                    </span>
-                    <span className="grid grid-cols-3 gap-1">
-                      <span>
-                        <span className="metric-label">IR</span>
-                        <span className="metric-value block">
-                          {slot.avg == null ? "—" : `${formatValue("ir", slot.avg)} ${IR_UNIT}`}
-                        </span>
-                      </span>
-                      <span>
-                        <span className="metric-label">Spread</span>
-                        <span className="metric-value block">
-                          {slot.spread == null ? "—" : `${formatValue("ir", slot.spread)} ${IR_UNIT}`}
-                        </span>
-                      </span>
-                      <span>
-                        <span className="metric-label">Floor</span>
-                        <span className="metric-value block">{slot.floor == null ? "—" : `${slot.floor} mV`}</span>
-                      </span>
-                    </span>
-                  </Link>
-                ),
-              )}
+            <div className="pack-grid">
+              {block.slots.map((slot) => (
+                <PackTile key={slot.label} slot={slot} />
+              ))}
             </div>
           </div>
         ))}

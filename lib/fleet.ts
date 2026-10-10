@@ -8,7 +8,7 @@ import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
-import { lampTone, splitCall, type LampTone } from "@/lib/lamp";
+import { lampTone, splitCall, statusChip, STATUS_CHIPS, type LampTone, type StatusChipName } from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
@@ -701,6 +701,7 @@ export type SlotTile = {
   restPool: boolean;
   restDay0: string | null;
   restDue: string | null;
+  chargeMode: string | null;
 };
 
 export type SeriesBlock = {
@@ -758,6 +759,7 @@ export function seriesBlocks(): SeriesBlock[] {
         restPool: row?.restPool ?? false,
         restDay0: row?.restDay0 ?? null,
         restDue: row?.restDue ?? null,
+        chargeMode: pack?.chargeMode ?? null,
       };
     });
     return {
@@ -1348,7 +1350,48 @@ function assertDerived() {
   if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-09") {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
+  assertStatusChips();
   assertRingWindows(model);
+}
+
+const EXPECTED_CHIPS: Record<string, StatusChipName> = {
+  "C1-P2": "GO",
+  "C1-P3": "CAUTION",
+  "C1-P4": "REST",
+  "C1-P5": "ALONE",
+  "C1-P6": "GO",
+  "C2-P1": "GO",
+  "C2-P2": "REST",
+  "C2-P3": "GO",
+  "C2-P4": "GO",
+  "C2-P5": "GO",
+  "C2-P6": "GO",
+  "D-1": "REST",
+};
+
+function assertStatusChips() {
+  const rows = statusRows();
+  if (rows.length !== 12) throw new Error(`Expected 12 packs for status chips, got ${rows.length}`);
+  const seen = new Map<string, StatusChipName>();
+  for (const row of rows) {
+    const chip = statusChip(row.status, row.chargeMode);
+    if (!STATUS_CHIPS.includes(chip) || seen.has(row.label)) {
+      throw new Error(`${row.label} did not map to exactly one status chip`);
+    }
+    seen.set(row.label, chip);
+    if (EXPECTED_CHIPS[row.label] !== chip) {
+      throw new Error(`${row.label} chip is ${chip}, expected ${EXPECTED_CHIPS[row.label]}`);
+    }
+  }
+  if (statusChip("PARALLEL GO | SERVICE Watch (IR spread)") !== "GO") {
+    throw new Error("Parallel Go must outrank a service Watch note");
+  }
+  if (statusChip("SERVICE D pool (Watch)") !== "WATCH") {
+    throw new Error("D pool or Watch with no parallel action must be WATCH");
+  }
+  if (statusChip("PARALLEL OFF (Rest pool) | SERVICE D pool (Watch)", "individual") !== "REST") {
+    throw new Error("Rest pool must outrank D pool and charging alone");
+  }
 }
 
 function chartLine(

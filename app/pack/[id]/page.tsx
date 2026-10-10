@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AliasStub } from "@/components/AliasStub";
 import { Heatmap } from "@/components/Heatmap";
-import { Lamp } from "@/components/Lamp";
+import { StatusChip } from "@/components/StatusChip";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { SlotDetail } from "@/components/SlotDetail";
@@ -125,9 +125,10 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="h1">{pack.label}</h1>
-          <Lamp status={pack.call.status} />
+          <StatusChip status={pack.call.status} chargeMode={pack.chargeMode} />
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
+        <p className="call-full">{pack.call.status}</p>
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
@@ -268,9 +269,9 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="font-mono">{call.session}</span>
-                  <Lamp status={call.status} />
                   <span className="note">{call.label}</span>
                 </p>
+                <p className="call-full mt-1">{call.status}</p>
                 <p className="mt-1 leading-relaxed">{call.reason}</p>
               </li>
             ))}
