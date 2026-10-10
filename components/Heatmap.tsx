@@ -42,7 +42,7 @@ export function Heatmap({
         <div
           className="grid min-w-[36rem] gap-1"
           style={{
-            gridTemplateColumns: `minmax(5.5rem, 7.5rem) repeat(${columnLabels.length}, minmax(3.1rem, 1fr))`,
+            gridTemplateColumns: `minmax(5.5rem, 7.5rem) repeat(${columnLabels.length}, minmax(3.4rem, 1fr))`,
           }}
         >
           <span />
@@ -77,7 +77,10 @@ export function Heatmap({
                     style={style}
                     title={`${columnLabels[index]} ${formatValue("ir", value)} ${IR_UNIT}`}
                   >
-                    {formatValue("ir", value)}
+                    <span>
+                      {formatValue("ir", value)}
+                      <span className="mt-0.5 block text-[9px] font-normal">{IR_UNIT}</span>
+                    </span>
                   </div>
                 );
               })}

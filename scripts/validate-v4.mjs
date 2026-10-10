@@ -74,15 +74,62 @@ if (v4.length !== 159) {
   process.exit(1);
 }
 
+const CELL_IR = [0.5, 15];
+const PACK_IR = [5, 60];
+const CELL_V = [2.5, 4.35];
+const plausibility = [];
+
+function flag(row, field, value, message) {
+  const where = [row.session, row.pack || row.label || row.pack_uid].filter(Boolean).join("/");
+  plausibility.push(`${where} ${field}=${value}: ${message}`);
+}
+
+function finite(raw) {
+  if (raw == null || String(raw).trim() === "") return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : Number.NaN;
+}
+
+function within(row, field, raw, [lo, hi], unit) {
+  const value = finite(raw);
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < lo || value > hi) {
+    flag(row, field, raw, `outside ${lo}–${hi} ${unit}`);
+  }
+}
+
+function nonNegative(row, field, raw) {
+  const value = finite(raw);
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < 0) flag(row, field, raw, "count must be non-negative");
+}
+
 let matched = 0;
 for (const row of v4) {
   const cells = [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}_mOhm`]));
   const avg = Number(row.avg_mOhm);
   const spread = Number(row.spread_mOhm);
-  if (cells.some((cell) => !Number.isFinite(cell) || cell > 20) || !Number.isFinite(avg) || !Number.isFinite(spread)) {
-    console.error(`IR row out of true-mΩ range: ${row.session}/${row.pack}`);
+  if (cells.some((cell) => !Number.isFinite(cell)) || !Number.isFinite(avg) || !Number.isFinite(spread)) {
+    console.error(`IR row is not a number: ${row.session}/${row.pack}`);
     process.exit(1);
   }
+  cells.forEach((cell, index) => within(row, `c${index + 1}_mOhm`, cell, CELL_IR, "mΩ"));
+  const sum = cells.reduce((total, cell) => total + cell, 0);
+  if (String(row.pack_SR_mOhm).trim() === "") within(row, "sum of c1..c6_mOhm", sum, PACK_IR, "mΩ");
+  else within(row, "pack_SR_mOhm", row.pack_SR_mOhm, PACK_IR, "mΩ");
+  within(row, "sum of c1..c6_mOhm", sum, PACK_IR, "mΩ");
+  const cellMax = Math.max(...cells);
+  if (spread < 0 || spread > cellMax) {
+    flag(row, "spread_mOhm", spread, `outside 0–${cellMax} mΩ (cell max on this row)`);
+  }
+  for (let index = 1; index <= 6; index += 1) {
+    const mv = finite(row[`start_c${index}_mV`]);
+    if (mv == null) flag(row, `start_c${index}_mV`, row[`start_c${index}_mV`], "missing cell voltage");
+    else within(row, `start_c${index}_mV`, mv / 1000, CELL_V, "V");
+  }
+  if (String(row.floor_mV).trim() !== "") within(row, "floor_mV", Number(row.floor_mV) / 1000, CELL_V, "V");
+  nonNegative(row, "n128", row.n128);
+  nonNegative(row, "duration_s", row.duration_s);
   matched += 1;
 }
 
@@ -93,9 +140,28 @@ if (spotCells !== "3.2,2.9,2.5,2.2,3.0,2.8") {
   process.exit(1);
 }
 
-const calls = parseCsv(fs.readFileSync(path.join(root, "data/v2/status_calls.csv"), "utf8"));
 const packs = parseCsv(fs.readFileSync(path.join(root, "data/v2/packs.csv"), "utf8"));
+for (const pack of packs) nonNegative(pack, "charge_count", pack.charge_count);
+
 const rests = parseCsv(fs.readFileSync(path.join(root, "data/v2/rest_tests.csv"), "utf8"));
+for (const test of rests) {
+  if (test.result.trim() === "FILLED-SEE-DAY0-ROW") continue;
+  nonNegative(test, "cycle", test.cycle);
+  for (let index = 1; index <= 6; index += 1) {
+    const mv = finite(test[`c${index}_mV`]);
+    if (mv == null) continue;
+    within(test, `c${index}_mV`, mv / 1000, CELL_V, "V");
+  }
+}
+
+if (plausibility.length) {
+  console.error(`plausibility failed (${plausibility.length}). Lary's files were not edited:`);
+  for (const line of plausibility) console.error(line);
+  process.exit(1);
+}
+console.log(`plausibility passed ${v4.length}/${v4.length} (no real-data row outside the bounds)`);
+
+const calls = parseCsv(fs.readFileSync(path.join(root, "data/v2/status_calls.csv"), "utf8"));
 const visibleRests = rests.filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW");
 if (visibleRests.length !== 3 || visibleRests.some((row) => row.pack_uid === "CNHL-2026-003")) {
   console.error("rest tests should show three day-0 rows and no C1-P3 test");

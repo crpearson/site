@@ -388,8 +388,8 @@ const spreadRule = thresholds.spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
-  { y: spreadRule.caution_gte, label: `Caution ≥ ${formatValue("ir", spreadRule.caution_gte)}`, color: "#f5b942" },
-  { y: spreadRule.individual_gte, label: `Individual ≥ ${formatValue("ir", spreadRule.individual_gte)}`, color: "#ff5c7a" },
+  { y: spreadRule.caution_gte, label: `Caution ≥ ${formatValue("ir", spreadRule.caution_gte)} ${IR_UNIT}`, color: "#f5b942" },
+  { y: spreadRule.individual_gte, label: `Individual ≥ ${formatValue("ir", spreadRule.individual_gte)} ${IR_UNIT}`, color: "#ff5c7a" },
 ];
 
 export const ruleABands: Band[] = [
@@ -398,8 +398,8 @@ export const ruleABands: Band[] = [
 ];
 
 export const ruleBGuides: Guide[] = [
-  { y: restRule.go_lte, label: `Go ≤ ${restRule.go_lte.toFixed(2)}`, color: "#3ddc97" },
-  { y: restRule.hard_stop_gt, label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)}`, color: "#ff5c7a" },
+  { y: restRule.go_lte, label: `Go ≤ ${restRule.go_lte.toFixed(2)} V`, color: "#3ddc97" },
+  { y: restRule.hard_stop_gt, label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)} V`, color: "#ff5c7a" },
 ];
 
 export const ruleBBands: Band[] = [

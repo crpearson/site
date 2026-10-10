@@ -148,7 +148,7 @@ export function LineChart({
               <span className="swatch" style={{ background: item.color }} aria-hidden="true" />
               <span>{item.label}</span>
               <span className="font-mono text-[var(--muted)]">
-                {latest == null ? "—" : formatValue(format, latest)}
+                {latest == null ? "—" : `${formatValue(format, latest)} ${unit}`}
               </span>
             </button>
           );
@@ -176,7 +176,7 @@ export function LineChart({
               className="y-tick"
               style={{ top: `${yPos(tick, yDomain)}%` }}
             >
-              {formatAxis(format, tick)}
+              {formatAxis(format, tick)} {unit}
             </span>
           ))}
         </div>

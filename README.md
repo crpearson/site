@@ -131,11 +131,13 @@ This is a static Next.js export. Publish `out/` or connect the repo to a host th
 
 ## Maintenance mode
 
-The live site is in maintenance mode when `MAINTENANCE` in `middleware.js` is `true` (the committed default). Vercel Routing Middleware (`middleware.js`, wired by `proxy.entrypoint` in `vercel.json`) answers every route with HTTP 503, a `Retry-After: 3600` header, and a short LostPennyFPV page. Static assets that page needs (fonts, favicon) still load. Next.js middleware does not run on a static export, so this switch is the Vercel one.
+`MAINTENANCE` in `middleware.js` stays `true`. The 503 page runs only when `process.env.VERCEL_ENV === "production"`, which is wtfpv.com. Preview deployments (`VERCEL_ENV=preview`) and any other environment skip it and serve the site, so a pull request can be reviewed. Static assets the maintenance page needs (fonts, favicon) still load. Next.js middleware does not run on a static export of `out/`.
 
-To turn maintenance off:
+Production keeps returning HTTP 503 with `Retry-After: 3600` and a short LostPennyFPV page. Opening a preview does not change wtfpv.com. Do not promote a preview deployment onto production to bypass the page.
+
+To turn maintenance off on wtfpv.com:
 
 1. In `middleware.js`, change `const MAINTENANCE = true;` to `const MAINTENANCE = false;`.
-2. Redeploy. Push that one-line change to the branch Vercel deploys (production is `main`). No other file needs to change.
+2. Deploy that change to production (`main`). No other file needs to change.
 
-To turn it back on, set `const MAINTENANCE = true` and redeploy.
+To turn it back on, set `const MAINTENANCE = true` and deploy production again.

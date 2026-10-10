@@ -323,15 +323,15 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               <tr>
                 <th scope="col">Night</th>
                 <th scope="col">Label</th>
-                <th scope="col">Cell 1</th>
-                <th scope="col">Cell 2</th>
-                <th scope="col">Cell 3</th>
-                <th scope="col">Cell 4</th>
-                <th scope="col">Cell 5</th>
-                <th scope="col">Cell 6</th>
-                <th scope="col">Avg</th>
-                <th scope="col">Spread</th>
-                <th scope="col">Floor</th>
+                <th scope="col">Cell 1 ({IR_UNIT})</th>
+                <th scope="col">Cell 2 ({IR_UNIT})</th>
+                <th scope="col">Cell 3 ({IR_UNIT})</th>
+                <th scope="col">Cell 4 ({IR_UNIT})</th>
+                <th scope="col">Cell 5 ({IR_UNIT})</th>
+                <th scope="col">Cell 6 ({IR_UNIT})</th>
+                <th scope="col">Avg ({IR_UNIT})</th>
+                <th scope="col">Spread ({IR_UNIT})</th>
+                <th scope="col">Floor (mV)</th>
               </tr>
             </thead>
             <tbody>

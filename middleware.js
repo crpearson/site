@@ -4,12 +4,13 @@
  * true  — every page returns 503.
  * false — the static site is served.
  *
- * Production deploys run this file. Leave MAINTENANCE true until the IR
- * correction is published. A local static server of out/ does not run
- * middleware, so review screenshots can be taken there without turning
- * this switch off.
+ * Production (wtfpv.com) runs this file with VERCEL_ENV=production and
+ * returns 503 while MAINTENANCE is true. Preview deployments and any
+ * other VERCEL_ENV skip the 503 page so reviewers can open the branch.
+ * A local static server of out/ does not run middleware.
  *
- * Turn it off by changing MAINTENANCE to false, then redeploy.
+ * Turn production maintenance off by changing MAINTENANCE to false, then
+ * redeploy production. Do not promote a preview to do that.
  */
 const MAINTENANCE = true;
 const RETRY_AFTER_SECONDS = "3600";
@@ -172,9 +173,13 @@ function isStaticAsset(pathname) {
   return /^\/fonts\/[a-z0-9.-]+\.woff2$/i.test(pathname);
 }
 
+function maintenanceForThisDeploy() {
+  return MAINTENANCE && process.env.VERCEL_ENV === "production";
+}
+
 function middleware(request) {
   const { pathname } = new URL(request.url);
-  if (!MAINTENANCE || isStaticAsset(pathname)) return next();
+  if (!maintenanceForThisDeploy() || isStaticAsset(pathname)) return next();
   return new Response(PAGE, {
     status: 503,
     headers: {

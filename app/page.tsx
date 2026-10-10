@@ -54,17 +54,26 @@ export default function Home() {
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           <article className="stat" data-tone="ok">
             <p className="eyebrow">Parallel Go</p>
-            <p className="stat-value">{stats.ok.length}</p>
+            <p className="stat-value">
+              {stats.ok.length}
+              <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
+            </p>
             <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="caution">
             <p className="eyebrow">Parallel Caution</p>
-            <p className="stat-value">{stats.caution.length}</p>
+            <p className="stat-value">
+              {stats.caution.length}
+              <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
+            </p>
             <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="off">
             <p className="eyebrow">Individual only</p>
-            <p className="stat-value">{stats.off.length}</p>
+            <p className="stat-value">
+              {stats.off.length}
+              <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
+            </p>
             <p className="stat-sub">{stats.off.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="signal">
@@ -182,18 +191,18 @@ export default function Home() {
                       <span>
                         <span className="metric-label">IR</span>
                         <span className="metric-value block">
-                          {slot.avg == null ? "—" : formatValue("ir", slot.avg)}
+                          {slot.avg == null ? "—" : `${formatValue("ir", slot.avg)} ${IR_UNIT}`}
                         </span>
                       </span>
                       <span>
                         <span className="metric-label">Spread</span>
                         <span className="metric-value block">
-                          {slot.spread == null ? "—" : formatValue("ir", slot.spread)}
+                          {slot.spread == null ? "—" : `${formatValue("ir", slot.spread)} ${IR_UNIT}`}
                         </span>
                       </span>
                       <span>
                         <span className="metric-label">Floor</span>
-                        <span className="metric-value block">{slot.floor ?? "—"}</span>
+                        <span className="metric-value block">{slot.floor == null ? "—" : `${slot.floor} mV`}</span>
                       </span>
                     </span>
                   </Link>
@@ -225,7 +234,7 @@ export default function Home() {
                   <th scope="col">Call</th>
                   <th scope="col">Latest IR ({IR_UNIT})</th>
                   <th scope="col">Spread ({IR_UNIT})</th>
-                  <th scope="col">Floor</th>
+                  <th scope="col">Floor (mV)</th>
                 </tr>
               </thead>
               <tbody>
@@ -277,7 +286,7 @@ export default function Home() {
                 <p className="note mt-2 font-mono">
                   {row.parallel || row.status}
                   {row.service ? ` · Service ${row.service}` : ""} · IR {formatValue("ir", row.avg)} {IR_UNIT} ·
-                  spread {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor ?? "—"}
+                  spread {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor == null ? "—" : `${row.floor} mV`}
                 </p>
               </article>
             ))}

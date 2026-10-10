@@ -89,8 +89,8 @@ export default function BakeoffPage() {
               <article key={block.id} className="rounded-xl border border-[var(--line)] p-3">
                 <p className="eyebrow">{block.id}</p>
                 <p className="mt-2 font-mono text-sm">
-                  {countFor(block.id, "ok")} OK · {countFor(block.id, "caution")} Caution ·{" "}
-                  {countFor(block.id, "off")} OFF
+                  {countFor(block.id, "ok")} packs Go · {countFor(block.id, "caution")} packs Caution ·{" "}
+                  {countFor(block.id, "off")} packs individual only
                 </p>
                 <p className="stat-sub">
                   Status as of {block.asOf}
