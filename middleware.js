@@ -4,6 +4,11 @@
  * true  — every page returns 503.
  * false — the static site is served.
  *
+ * Production deploys run this file. Leave MAINTENANCE true until the IR
+ * correction is published. A local static server of out/ does not run
+ * middleware, so review screenshots can be taken there without turning
+ * this switch off.
+ *
  * Turn it off by changing MAINTENANCE to false, then redeploy.
  */
 const MAINTENANCE = true;

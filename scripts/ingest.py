@@ -41,8 +41,17 @@ Mapping (see data/README or the site "About the data" page):
   * HARD fingerprints must pass or ingest exits non-zero: C1-P4 Cell1 =
     pack-max IR; C2-P2 Cell3 = pack-min IR. Soft fingerprints (C2-P6 lowest
     C2 avg, C2-P4 tightest spread) are advisory and do not remap.
+  * IR: the DX8 ;130; fields 3-8 are integers. log.ir stores milliohms
+    (integer * IR_SCALE, IR_SCALE = 0.01). IR_STORE_IS_DX8_INTEGER must match
+    lib/ir.ts. While it is true, the published CSVs are still DX8 integers and
+    the site scales on read. This script scales at log.ir and refuses to append
+    those milliohm rows onto the integer CSV. When the CSVs are replaced with
+    milliohm values, set the flag false in both files so the site does not
+    scale again.
   * Discard from the numeric store: 0-byte, no ;130; IR line, duration < 60 s,
-    not 6S, negative or implausible IR (> 1000 mOhm), non-Storage, LiHV.
+    not 6S, negative or implausible IR (over MAX_PLAUSIBLE_IR mΩ after scaling),
+    non-Storage, LiHV. TODO(lary): confirm the 10 mΩ cap. It is the old
+    1000-integer limit after ÷100.
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
   * Do not invent a row for a pack that did not run. The site treats that night as
@@ -77,7 +86,11 @@ REGISTRY = DATA / "pack-registry.json"
 
 NAME_RE = re.compile(r"(LiPo|LiHV)\[([A-Za-z ]+)_(\d+)_(CH[12])\]\.txt(?:\.gz)?$")
 MIN_DURATION_MS = 60_000
-MAX_PLAUSIBLE_IR = 1000
+# Keep IR_SCALE and IR_STORE_IS_DX8_INTEGER identical to lib/ir.ts.
+IR_SCALE = 0.01
+IR_STORE_IS_DX8_INTEGER = True
+# TODO(lary): confirm. True mΩ after scaling; equal to the old 1000-integer cap.
+MAX_PLAUSIBLE_IR = 10
 STORE_COLS = [
     "session", "pack", "c1", "c2", "c3", "c4", "c5", "c6", "avg", "spread",
     "start_floor_mV", "start_imbalance_mV", "rest_V", "end_avg_mV", "duration_s",
@@ -125,11 +138,11 @@ class Log:
 
     @property
     def avg(self):
-        return round(statistics.mean(self.ir), 1) if self.ir else None
+        return round(statistics.mean(self.ir), 2) if self.ir else None
 
     @property
     def spread(self):
-        return max(self.ir) - min(self.ir) if self.ir else None
+        return round(max(self.ir) - min(self.ir), 2) if self.ir else None
 
 
 # ----------------------------------------------------------------- reading
@@ -222,7 +235,7 @@ def parse(name: str, raw: bytes) -> tuple[Log, Optional[str]]:
         return log, header_serial
     try:
         log.duration_ms = int(ir_line[2])
-        log.ir = [int(ir_line[i]) for i in range(3, 9)]
+        log.ir = [round(int(ir_line[i]) * IR_SCALE, 2) for i in range(3, 9)]
     except (ValueError, IndexError):
         log.discard = log.discard or "unparseable IR line"
         log.ir = None
@@ -238,7 +251,7 @@ def parse(name: str, raw: bytes) -> tuple[Log, Optional[str]]:
     elif any(v < 0 for v in log.ir):
         log.discard = "negative IR"
     elif any(v > MAX_PLAUSIBLE_IR for v in log.ir):
-        log.discard = f"implausible IR (>{MAX_PLAUSIBLE_IR} mOhm)"
+        log.discard = f"implausible IR (>{MAX_PLAUSIBLE_IR} mΩ)"
     return log, header_serial
 
 
@@ -566,9 +579,9 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
                 "label_at_time": r.get("label_at_time") or r.get("pack") or "",
                 "series_at_time": r.get("series_at_time") or "",
                 "charger": r.get("charger") or "",
-                "cells_ir_mohm": [num(r[f"c{i}"], int) for i in range(1, 7)],
+                "cells_ir_mohm": [num(r[f"c{i}"]) for i in range(1, 7)],
                 "avg_ir_mohm": num(r["avg"]),
-                "spread_mohm": num(r["spread"], int),
+                "spread_mohm": num(r["spread"]),
                 "start_floor_mV": num(r["start_floor_mV"], int),
                 "start_imbalance_mV": num(r.get("start_imbalance_mV"), int),
                 "rest_V": num(r.get("rest_V")),
@@ -662,6 +675,13 @@ def ingest(paths: list[Path], session: Optional[str], file_manifest: dict, sessi
     if dry:
         print("dry run: store not modified")
         return summary
+    if new_rows and IR_STORE_IS_DX8_INTEGER:
+        refuse(
+            "refusing to write: IR_STORE_IS_DX8_INTEGER is true, so the site still "
+            "scales the CSV, and this run would append milliohm rows onto DX8 integers. "
+            "Set IR_STORE_IS_DX8_INTEGER false in scripts/ingest.py and lib/ir.ts in the "
+            "same change that replaces the store with milliohms."
+        )
     rows.extend(new_rows)
     write_store(rows)
     rebuild_json(rows, last_ingest=session)

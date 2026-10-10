@@ -1,4 +1,6 @@
 import { missBridges, openEndIndices } from "@/lib/bridges";
+import { formatValue } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import type { ChartSeries } from "@/lib/types";
 
 export function Sparkline({
@@ -32,6 +34,7 @@ export function Sparkline({
     path += `${command}${xy(index, value)}`;
   });
   const series: ChartSeries = { id: "spark", label: "", color, values, service, logged };
+  const latest = [...values].reverse().find((value) => value != null);
   const ends = openEndIndices(series);
   const dash = missBridges(series, values.map((_, index) => String(index)))
     .map((bridge) => {
@@ -47,7 +50,10 @@ export function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       className="h-8 w-full"
-      aria-hidden="true"
+      role="img"
+      aria-label={
+        latest == null ? "IR sparkline" : `IR sparkline, latest ${formatValue("ir", latest)} ${IR_UNIT}`
+      }
     >
       {ends.map((index) => (
         <circle

@@ -23,6 +23,8 @@ const accents: PanelAccent[] = [
 ];
 
 export default function MethodologyPage() {
+  // TODO(lary): content/methodology.md still calls the DX8 integer mΩ and states Rule A as 40/50.
+  // Leave that file byte-identical until the replacement text arrives.
   const markdown = readFileSync(path.join(process.cwd(), "content/methodology.md"), "utf8");
   const doc = parseMethodology(markdown);
 

@@ -8,7 +8,8 @@ import statusDoc from "@/data/status.json";
 import { missBridges } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
-import { shortSession } from "@/lib/format";
+import { formatValue, shortSession } from "@/lib/format";
+import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { lampTone, type LampTone } from "@/lib/lamp";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
@@ -147,9 +148,9 @@ const measurements: Measurement[] = v2Rows.map((row) => {
     label: row.label_at_time,
     uid: row.pack_uid,
     series: row.series_at_time,
-    cells: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}`])),
-    avg: Number(row.avg),
-    spread: Number(row.spread),
+    cells: [1, 2, 3, 4, 5, 6].map((index) => scaleStoredIr(Number(row[`c${index}`]))),
+    avg: scaleStoredIr(Number(row.avg)),
+    spread: scaleStoredIr(Number(row.spread)),
     floor: num(store?.start_floor_mV || row.start_floor_mV),
     imbalance: num(store?.start_imbalance_mV ?? ""),
     rest: num(store?.rest_V ?? ""),
@@ -241,13 +242,30 @@ function assertStore() {
   if (measurements.length !== 156 || storeRows.length !== 156) {
     throw new Error(`Expected 156 measurements, got v2=${measurements.length} store=${storeRows.length}`);
   }
+  const s413raw = v2Rows.find((row) => row.pack_uid === "CNHL-2026-001" && row.session === "S413");
+  const rawCells = s413raw
+    ? [1, 2, 3, 4, 5, 6].map((index) => s413raw[`c${index}`]).join(",")
+    : "";
+  const c2raw = v2Rows.find((row) => row.label_at_time === "C2-P2" && row.session === "2026-09-30");
   const s413 = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "S413");
-  if (!s413 || s413.cells.join(",") !== "569,543,524,538,552,545") {
-    throw new Error("CNHL-2026-001 S413 IR spot check failed");
-  }
   const c2 = measurements.find((row) => row.label === "C2-P2" && row.session === "2026-09-30");
-  if (!c2 || c2.cells[2] !== 514) {
-    throw new Error("C2-P2 2026-09-30 Cell3 spot check failed");
+  const shown = s413?.cells.map((cell) => cell.toFixed(2)).join(",");
+  if (IR_STORE_IS_DX8_INTEGER) {
+    if (rawCells !== "569,543,524,538,552,545") {
+      throw new Error("CNHL-2026-001 S413 raw IR spot check failed");
+    }
+    if (!c2raw || c2raw.c3 !== "514") {
+      throw new Error("C2-P2 2026-09-30 Cell3 raw spot check failed");
+    }
+    if (shown !== "5.69,5.43,5.24,5.38,5.52,5.45") {
+      throw new Error("CNHL-2026-001 S413 scaled IR spot check failed");
+    }
+    if (!c2 || c2.cells[2].toFixed(2) !== "5.14") {
+      throw new Error("C2-P2 2026-09-30 Cell3 scaled spot check failed");
+    }
+  } else if (rawCells === "569,543,524,538,552,545") {
+    // TODO(lary): once the CSVs are milliohms, replace this guard with the corrected row.
+    throw new Error("IR_STORE_IS_DX8_INTEGER is false but the CSV still holds DX8 integers");
   }
   for (const [uid, status] of Object.entries(EXPECTED_LATEST)) {
     const call = latestCall(uid);
@@ -282,17 +300,19 @@ export const siteMeta = {
 };
 
 export const thresholds = statusDoc.thresholds;
+// TODO(lary): these cuts are still the DX8-integer thresholds in data/status.json
+// (go under 40, caution 40–49, pull at 50). They are read as true mΩ and are not scaled.
 const spreadRule = thresholds.intra_pack_spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
-  { y: spreadRule.go_lt, label: `Go < ${spreadRule.go_lt}`, color: "#3ddc97" },
-  { y: spreadRule.pull_gte, label: `Pull ≥ ${spreadRule.pull_gte}`, color: "#ff5c7a" },
+  { y: spreadRule.go_lt, label: `Go < ${formatValue("ir", spreadRule.go_lt)}`, color: "#3ddc97" },
+  { y: spreadRule.pull_gte, label: `Pull ≥ ${formatValue("ir", spreadRule.pull_gte)}`, color: "#ff5c7a" },
 ];
 
 export const ruleABands: Band[] = [
   { from: spreadRule.caution_lo, to: spreadRule.caution_hi, color: "rgba(245, 185, 66, 0.18)" },
-  { from: spreadRule.pull_gte, to: 1000, color: "rgba(255, 92, 122, 0.12)" },
+  { from: spreadRule.pull_gte, to: Number.POSITIVE_INFINITY, color: "rgba(255, 92, 122, 0.12)" },
 ];
 
 export const ruleBGuides: Guide[] = [
@@ -368,6 +388,16 @@ function padded(values: number[], ratio = 0.08): [number, number] {
 
 function nums(values: (number | null)[]): number[] {
   return values.filter((value): value is number => value != null);
+}
+
+function spreadChartDomain(spreads: number[]): [number, number] {
+  const dataMax = Math.max(0, ...spreads);
+  const pull = spreadRule.pull_gte;
+  // The published pull cut is only drawn when it sits near the measurements.
+  // TODO(lary): replace the status.json cuts so this can include them again.
+  const near = pull > 0 && pull <= Math.max(dataMax, 0.01) * 4;
+  const top = near ? Math.max(pull, dataMax) : dataMax;
+  return [0, Math.max(0.01, top + Math.max(top, 0.01) * 0.12)];
 }
 
 const SERIES_ORDER = ["C1", "C2", "D", "C3", "C4"];
@@ -670,7 +700,7 @@ export function fleetModel(): FleetModel {
     categories,
     irDomain: padded(nums(allIr), 0.06),
     meanDomain: padded(nums(meanValues), 0.14),
-    spreadDomain: [0, Math.max(64, ...nums(allSpread))],
+    spreadDomain: spreadChartDomain(nums(allSpread)),
     floorDomain: padded([...nums(allFloor), thresholds.floor_eye_mv], 0.12),
     restDomain: [0, Math.max(0.8, restTop * 1.12)],
     mean: measured.map((fleet) => ({
@@ -850,7 +880,7 @@ export function getPack(uid: string): PackView | null {
       },
     ],
     irDomain: padded(cells, 0.1),
-    spreadDomain: [0, Math.max(64, ...spreads)],
+    spreadDomain: spreadChartDomain(spreads),
     floorDomain: padded([...floors, thresholds.floor_eye_mv], 0.15),
   };
 }
@@ -988,15 +1018,16 @@ export function nextParallel() {
 }
 
 export function ruleABand(spread: number): "Go" | "Caution" | "Pull" {
+  // spread is already milliohms. The cuts are the status.json numbers, as mΩ.
   if (spread >= spreadRule.pull_gte) return "Pull";
   if (spread >= spreadRule.caution_lo) return "Caution";
   return "Go";
 }
 
 export const metricLabels: Record<string, string> = {
-  per_cell_ir_mohm: "Per-cell IR (mΩ)",
-  pack_avg_ir_mohm: "Pack-average IR (mΩ)",
-  intra_pack_spread_mohm: "Intra-pack spread (mΩ)",
+  per_cell_ir_mohm: `Per-cell IR (${IR_UNIT})`,
+  pack_avg_ir_mohm: `Pack-average IR (${IR_UNIT})`,
+  intra_pack_spread_mohm: `Intra-pack spread (${IR_UNIT})`,
   start_floor_mV: "Start floor (mV)",
   arrival_imbalance_mv: "Arrival imbalance (mV)",
   rest_voltage_for_inter_pack_delta: "Rest voltage for inter-pack delta",

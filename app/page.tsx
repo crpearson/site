@@ -6,6 +6,8 @@ import { Lamp } from "@/components/Lamp";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { Sparkline } from "@/components/Sparkline";
+import { formatValue } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import {
   fleetModel,
   floorBands,
@@ -67,8 +69,8 @@ export default function Home() {
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
-              {stats.mean.toFixed(1)}
-              <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+              {formatValue("ir", stats.mean)}
+              <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
             </p>
             <p className="stat-sub">Latest averages of {stats.counted} packs still in a slot</p>
           </article>
@@ -81,7 +83,7 @@ export default function Home() {
         title="Series mean IR"
         action={
           <span className="note">
-            mΩ · a night that series was not measured is a faint dotted join, or a hollow ring on
+            {IR_UNIT} · a night that series was not measured is a faint dotted join, or a hollow ring on
             the bottom edge before the first reading or after the last
           </span>
         }
@@ -96,9 +98,9 @@ export default function Home() {
           }))}
           yDomain={model.meanDomain}
           format="ir"
-          unit="mΩ"
+          unit={IR_UNIT}
           height={200}
-          ariaLabel="Mean pack IR by series across nights"
+          ariaLabel="Mean pack IR by series across nights, milliohms"
         />
       </Panel>
 
@@ -175,11 +177,15 @@ export default function Home() {
                     <span className="grid grid-cols-3 gap-1">
                       <span>
                         <span className="metric-label">IR</span>
-                        <span className="metric-value block">{slot.avg?.toFixed(0) ?? "—"}</span>
+                        <span className="metric-value block">
+                          {slot.avg == null ? "—" : formatValue("ir", slot.avg)}
+                        </span>
                       </span>
                       <span>
                         <span className="metric-label">Spread</span>
-                        <span className="metric-value block">{slot.spread ?? "—"}</span>
+                        <span className="metric-value block">
+                          {slot.spread == null ? "—" : formatValue("ir", slot.spread)}
+                        </span>
                       </span>
                       <span>
                         <span className="metric-label">Floor</span>
@@ -213,8 +219,8 @@ export default function Home() {
                   <th scope="col">Status</th>
                   <th scope="col">Reason</th>
                   <th scope="col">Call</th>
-                  <th scope="col">Latest IR</th>
-                  <th scope="col">Spread</th>
+                  <th scope="col">Latest IR ({IR_UNIT})</th>
+                  <th scope="col">Spread ({IR_UNIT})</th>
                   <th scope="col">Floor</th>
                 </tr>
               </thead>
@@ -233,6 +239,7 @@ export default function Home() {
                       <Lamp status={row.status} />
                     </td>
                     <td>
+                      {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
                       <p className="reason">{row.reason}</p>
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
@@ -240,10 +247,10 @@ export default function Home() {
                       {row.session === row.callDate ? row.callDate : `${row.callDate} · ${row.session}`}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
-                      {row.avg.toFixed(1)}
+                      {formatValue("ir", row.avg)}
                       <span className="mt-1 block text-[10px] text-[var(--faint)]">{row.latestSession}</span>
                     </td>
-                    <td className="font-mono text-sm">{row.spread}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", row.spread)}</td>
                     <td className="font-mono text-sm">{row.floor ?? "—"}</td>
                   </tr>
                 ))}
@@ -260,10 +267,12 @@ export default function Home() {
                   <Lamp status={row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
+                {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
                 <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 <p className="note mt-2 font-mono">
-                  Call {row.session} · IR {row.avg.toFixed(1)} · spread {row.spread} · floor {row.floor ?? "—"}
+                  Call {row.session} · IR {formatValue("ir", row.avg)} {IR_UNIT} · spread{" "}
+                  {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor ?? "—"}
                 </p>
               </article>
             ))}
@@ -312,8 +321,8 @@ export default function Home() {
                 series={seriesOf(fleet.packs, "avg")}
                 yDomain={model.irDomain}
                 format="ir"
-                unit="mΩ"
-                ariaLabel={`${fleet.id} pack average internal resistance`}
+                unit={IR_UNIT}
+                ariaLabel={`${fleet.id} pack average internal resistance, milliohms`}
               />
             </Panel>
           ))}
@@ -326,10 +335,11 @@ export default function Home() {
               title="Intra-pack spread"
               action={
                 <span className="note">
-                  Go &lt; {thresholds.intra_pack_spread_mohm.go_lt} · Caution{" "}
-                  {thresholds.intra_pack_spread_mohm.caution_lo}–
-                  {thresholds.intra_pack_spread_mohm.caution_hi} · Pull ≥{" "}
-                  {thresholds.intra_pack_spread_mohm.pull_gte} mΩ
+                  {/* TODO(lary): these cuts are the status.json DX8-integer values, shown as mΩ. */}
+                  Go &lt; {formatValue("ir", thresholds.intra_pack_spread_mohm.go_lt)} · Caution{" "}
+                  {formatValue("ir", thresholds.intra_pack_spread_mohm.caution_lo)}–
+                  {formatValue("ir", thresholds.intra_pack_spread_mohm.caution_hi)} · Pull ≥{" "}
+                  {formatValue("ir", thresholds.intra_pack_spread_mohm.pull_gte)} {IR_UNIT}
                 </span>
               }
             >
@@ -340,9 +350,9 @@ export default function Home() {
                 guides={ruleAGuides}
                 bands={ruleABands}
                 yDomain={model.spreadDomain}
-                format="int"
-                unit="mΩ"
-                ariaLabel={`${fleet.id} intra-pack IR spread with Rule A guides`}
+                format="ir"
+                unit={IR_UNIT}
+                ariaLabel={`${fleet.id} intra-pack IR spread with Rule A guides, milliohms`}
               />
             </Panel>
           ))}

@@ -69,4 +69,40 @@ if (mismatches.length) {
   process.exit(1);
 }
 
-console.log("v2 IR validation passed 156/156");
+// The 156/156 check compares the two CSV files as stored. It does not scale.
+// Display scaling lives in lib/ir.ts and applies only while the CSVs are still
+// DX8 integers. TODO(lary): when the corrected milliohm CSVs arrive, set
+// IR_STORE_IS_DX8_INTEGER false and drop the raw-integer expectation below.
+const irSource = fs.readFileSync(path.join(root, "lib/ir.ts"), "utf8");
+function irConst(name) {
+  const match = irSource.match(new RegExp(`export const ${name} = (true|false|[0-9.]+)`));
+  if (!match) {
+    console.error(`lib/ir.ts is missing ${name}`);
+    process.exit(1);
+  }
+  if (match[1] === "true") return true;
+  if (match[1] === "false") return false;
+  return Number(match[1]);
+}
+const storeIsRaw = irConst("IR_STORE_IS_DX8_INTEGER");
+const scale = irConst("IR_SCALE");
+const sample = v2.find((row) => row.pack_uid === "CNHL-2026-001" && row.session === "S413");
+const rawCells = sample ? [1, 2, 3, 4, 5, 6].map((index) => sample[`c${index}`]).join(",") : "";
+if (storeIsRaw) {
+  if (rawCells !== "569,543,524,538,552,545") {
+    console.error(`expected raw S413 cells 569,543,524,538,552,545, got ${rawCells}`);
+    process.exit(1);
+  }
+  const scaled = rawCells.split(",").map((value) => (Number(value) * scale).toFixed(2));
+  if (scaled.join(",") !== "5.69,5.43,5.24,5.38,5.52,5.45") {
+    console.error(`scaled S413 cells ${scaled.join(",")} do not match ÷100`);
+    process.exit(1);
+  }
+  console.log("v2 IR validation passed 156/156 (CSV match is the DX8 integer; display uses IR_SCALE)");
+} else {
+  if (rawCells === "569,543,524,538,552,545") {
+    console.error("IR_STORE_IS_DX8_INTEGER is false but the CSV still holds DX8 integers");
+    process.exit(1);
+  }
+  console.log("v2 IR validation passed 156/156 (CSV values are already mΩ; IR_SCALE is not applied)");
+}

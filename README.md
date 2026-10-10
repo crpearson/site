@@ -83,7 +83,8 @@ The public historical manifest is `data/v2/session_manifest.public.csv`. The sto
 - Hard fingerprints must pass or ingest exits non-zero: C1-P4 cell 1 is the pack-max IR, and C2-P2 cell 3 is the pack-min IR.
 - Soft fingerprints are advisory and can fail without remapping: C2-P6 is the lowest C2 average, and C2-P4 has the tightest C2 spread.
 - `fleet_lock`. A charger alias is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-1 and DX8-2 are unlocked.
-- Discarded from the numeric store: 0-byte files, logs with no `;130;` IR line, duration under 60 s, not 6S, negative or implausible IR (over 1000 mΩ), non-Storage programs, and LiHV chemistry.
+- IR on a DX8 log is an integer. The site and a future ingest show milliohms as that integer divided by 100 (`IR_SCALE` in `lib/ir.ts`, mirrored in `scripts/ingest.py`). The published CSVs are still those integers. `IR_STORE_IS_DX8_INTEGER` stays true until the CSVs themselves are milliohms, so the same rows are not divided twice. TODO(lary): flip that flag in both files when the corrected CSVs arrive.
+- Discarded from the numeric store: 0-byte files, logs with no `;130;` IR line, duration under 60 s, not 6S, negative or implausible IR (over 10 mΩ after scaling), non-Storage programs, and LiHV chemistry. TODO(lary): confirm the 10 mΩ cap. It is the old 1000-integer limit after ÷100.
 - Dedupe is by sha256 of the decompressed log, and by `(charger alias, NNN, channel)`.
 
 ### Charger alias map

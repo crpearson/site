@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Panel } from "@/components/Panel";
 import { chargers, metricLabels, siteMeta, thresholds } from "@/lib/fleet";
+import { formatValue } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 
 export const metadata: Metadata = {
   title: "About the data",
@@ -75,14 +77,15 @@ export default function AboutPage() {
       <section className="grid gap-3 lg:grid-cols-2" aria-label="Glossary">
         <Panel accent="signal" eyebrow="Glossary" title="IR">
           <p className="note">
-            Internal resistance in milliohms, one number per cell, from the DX8 storage-charge IR
-            line. Pack average is the mean of the six cells.
+            Internal resistance in milliohms. The DX8 log stores an integer; the site shows that
+            integer divided by 100, so 281 on the log is 2.81 {IR_UNIT}. One number per cell, from
+            the storage-charge IR line. Pack average is the mean of the six cells.
           </p>
         </Panel>
         <Panel accent="rulea" eyebrow="Glossary" title="Spread">
           <p className="note">
             Intra-pack spread: the highest cell IR minus the lowest cell IR in that pack, in
-            milliohms. Rule A reads this number.
+            milliohms, on the same ÷100 scale. Rule A reads this number.
           </p>
         </Panel>
         <Panel accent="floor" eyebrow="Glossary" title="Floor">
@@ -121,12 +124,13 @@ export default function AboutPage() {
         <article className="panel" data-accent="rulea">
           <p className="eyebrow">Inside one pack</p>
           <h2 className="panel-title mt-1">Rule A · spread</h2>
+          {/* TODO(lary): replace these cuts. They are the status.json DX8-integer values, shown as mΩ. */}
           <ul className="mt-4 space-y-2 font-mono text-sm">
-            <li className="text-[var(--ok)]">Go &lt; {spread.go_lt} mΩ</li>
+            <li className="text-[var(--ok)]">Go &lt; {formatValue("ir", spread.go_lt)} {IR_UNIT}</li>
             <li className="text-[var(--caution)]">
-              Caution {spread.caution_lo}–{spread.caution_hi} mΩ
+              Caution {formatValue("ir", spread.caution_lo)}–{formatValue("ir", spread.caution_hi)} {IR_UNIT}
             </li>
-            <li className="text-[var(--off)]">Pull ≥ {spread.pull_gte} mΩ</li>
+            <li className="text-[var(--off)]">Pull ≥ {formatValue("ir", spread.pull_gte)} {IR_UNIT}</li>
           </ul>
           <p className="note mt-4">
             Amber panel, amber caution band. This rule does not retire a pack by itself. The status
@@ -168,13 +172,14 @@ export default function AboutPage() {
 
       <Panel accent="off" eyebrow="Do not mix scales" title="DX8 IR is not a manufacturer rating">
         <p className="note">
-          DX8 absolute IR, roughly 400–600 mΩ per cell in this fleet, does not map to manufacturer
-          IR ratings or to Oscar/CNHL absolute retire bins. The rules above are relative to this
-          fleet.
+          Displayed IR is the DX8 integer divided by 100. On these packs that is roughly 4–6 {IR_UNIT}{" "}
+          per cell. It does not map to manufacturer IR ratings or to Oscar/CNHL absolute retire
+          bins. The rules above are relative to this fleet.
         </p>
       </Panel>
 
       <Panel accent="muted" eyebrow="Still open" title="Gaps">
+        {/* TODO(lary): gaps text is verbatim from data/status.json and still says 400–600 mΩ. */}
         <ul className="list-disc space-y-2 pl-4 text-sm leading-relaxed">
           {siteMeta.gaps.map((gap) => (
             <li key={gap}>{gap}</li>

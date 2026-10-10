@@ -2,13 +2,13 @@ import type { ValueFormat } from "@/lib/types";
 
 export function formatValue(kind: ValueFormat, n: number): string {
   if (kind === "volt") return n.toFixed(3);
-  if (kind === "ir") return n.toFixed(1);
+  if (kind === "ir") return n.toFixed(2);
   return Math.round(n).toString();
 }
 
 export function formatAxis(kind: ValueFormat, n: number): string {
   if (kind === "volt") return n.toFixed(2);
-  if (kind === "ir") return Math.round(n).toString();
+  if (kind === "ir") return n.toFixed(2);
   return Math.round(n).toString();
 }
 

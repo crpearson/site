@@ -7,7 +7,8 @@ import { Lamp } from "@/components/Lamp";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { SlotDetail } from "@/components/SlotDetail";
-import { volts } from "@/lib/format";
+import { formatValue, volts } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
   floorGuide,
@@ -126,6 +127,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </div>
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
+        {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
         <p className="note">
           Status call {pack.call.session}
@@ -141,16 +143,16 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <article className="stat" data-tone="signal">
           <p className="eyebrow">Latest avg IR</p>
           <p className="stat-value">
-            {pack.row.avg.toFixed(1)}
-            <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+            {formatValue("ir", pack.row.avg)}
+            <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
           </p>
           <p className="stat-sub">{pack.row.latestSession}</p>
         </article>
         <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "off"}>
           <p className="eyebrow">Spread · Rule A</p>
           <p className="stat-value">
-            {pack.row.spread}
-            <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+            {formatValue("ir", pack.row.spread)}
+            <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
           </p>
           <p className="stat-sub">{band} on this spread. The status call is separate.</p>
         </article>
@@ -200,6 +202,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   <Lamp status={call.status} />
                   <span className="note">{call.label}</span>
                 </p>
+                {/* TODO(lary): status-call wording is verbatim and still quotes the old IR integers. */}
                 <p className="mt-1 leading-relaxed">{call.reason}</p>
               </li>
             ))}
@@ -231,9 +234,9 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           series={pack.cellSeries}
           yDomain={pack.irDomain}
           format="ir"
-          unit="mΩ"
+          unit={IR_UNIT}
           height={260}
-          ariaLabel={`${pack.uid} per-cell internal resistance`}
+          ariaLabel={`${pack.uid} per-cell internal resistance, milliohms`}
         />
       </Panel>
 
@@ -245,9 +248,9 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             guides={ruleAGuides}
             bands={ruleABands}
             yDomain={pack.spreadDomain}
-            format="int"
-            unit="mΩ"
-            ariaLabel={`${pack.uid} intra-pack spread with Rule A guides`}
+            format="ir"
+            unit={IR_UNIT}
+            ariaLabel={`${pack.uid} intra-pack spread with Rule A guides, milliohms`}
           />
         </Panel>
         <Panel heading="h3" accent="floor" eyebrow="Watch line" title="Start floor">
@@ -286,7 +289,8 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       <details className="panel" data-accent="muted">
         <summary className="cursor-pointer font-medium">Night table</summary>
         <p className="note mt-3">
-          Not charged means this pack was in service and was not logged that night. On the charts, a
+          Cell, average, and spread figures are {IR_UNIT}. Not charged means this pack was in
+          service and was not logged that night. On the charts, a
           faint dotted line joins the readings on either side when both exist, and that night has no
           value. A skipped night before the first reading or after the last is a hollow ring on the
           bottom edge, also with no value. A star is a partial night, which is different. Nights
@@ -320,11 +324,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                     <td className="font-mono text-sm">{night.point.label}</td>
                     {night.point.cells.map((cell, index) => (
                       <td key={`${night.session}-${index}`} className="font-mono text-sm">
-                        {cell}
+                        {formatValue("ir", cell)}
                       </td>
                     ))}
-                    <td className="font-mono text-sm">{night.point.avg.toFixed(1)}</td>
-                    <td className="font-mono text-sm">{night.point.spread}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", night.point.avg)}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", night.point.spread)}</td>
                     <td className="font-mono text-sm">{night.point.floor ?? "—"}</td>
                   </tr>
                 ) : (
