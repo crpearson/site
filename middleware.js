@@ -12,7 +12,7 @@
  * Turn production maintenance off by changing MAINTENANCE to false, then
  * redeploy production. Do not promote a preview to do that.
  */
-const MAINTENANCE = true;
+const MAINTENANCE = false;
 const RETRY_AFTER_SECONDS = "3600";
 
 const PAGE = `<!DOCTYPE html>
