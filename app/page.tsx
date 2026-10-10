@@ -61,17 +61,17 @@ export default function Home() {
           <article className="stat" data-tone="ok">
             <p className="eyebrow">Parallel Go</p>
             <p className="stat-value">
-              {stats.ok.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">{stats.ok.length === 1 ? "pack" : "packs"}</span>
+              <span className="num">
+                {stats.ok.length} {stats.ok.length === 1 ? "pack" : "packs"}
+              </span>
             </p>
             <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="caution">
             <p className="eyebrow">Parallel Caution</p>
             <p className="stat-value">
-              {stats.caution.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">
-                {stats.caution.length === 1 ? "pack" : "packs"}
+              <span className="num">
+                {stats.caution.length} {stats.caution.length === 1 ? "pack" : "packs"}
               </span>
             </p>
             <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "None"}</p>
@@ -79,9 +79,8 @@ export default function Home() {
           <article className="stat" data-tone="off">
             <p className="eyebrow">Charged individually</p>
             <p className="stat-value">
-              {individualPacks.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">
-                {individualPacks.length === 1 ? "pack" : "packs"}
+              <span className="num">
+                {individualPacks.length} {individualPacks.length === 1 ? "pack" : "packs"}
               </span>
             </p>
             <p className="stat-sub">{individualPacks.join(" · ") || "None"}</p>
@@ -89,24 +88,27 @@ export default function Home() {
           <article className="stat" data-tone="floor">
             <p className="eyebrow">Rest pool</p>
             <p className="stat-value">
-              {restPacks.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">{restPacks.length === 1 ? "pack" : "packs"}</span>
+              <span className="num">
+                {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
+              </span>
             </p>
             <p className="stat-sub">{restPacks.join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="off">
             <p className="eyebrow">Individual only · Rules v3</p>
             <p className="stat-value">
-              {ruleOff.length}
-              <span className="ml-1 text-sm text-[var(--muted)]">{ruleOff.length === 1 ? "pack" : "packs"}</span>
+              <span className="num">
+                {ruleOff.length} {ruleOff.length === 1 ? "pack" : "packs"}
+              </span>
             </p>
             <p className="stat-sub">Rule outcome. {ruleOff.join(" · ") || "None."}</p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
-              {stats.mean.toFixed(2)}
-              <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
+              <span className="num">
+                {stats.mean.toFixed(2)} {IR_UNIT}
+              </span>
             </p>
             <p className="stat-sub">
               {formatValue("ir", stats.mean)} {IR_UNIT} across {stats.counted} packs still in a slot.
@@ -206,9 +208,8 @@ export default function Home() {
           Packs
         </h2>
         <p className="note">
-          The chip is one word from the latest call. Rest pool wins, then charged alone, then
-          Caution, then Go. D pool or Watch is the chip only when the parallel half is none of
-          those. The note under the sparkline is the full call, shortened to two lines.
+          Each card shows one status word. The full note from the latest check is under the small
+          chart, and in full on the pack page.
         </p>
         {blocks.map((block) => (
           <div key={block.id}>
@@ -240,7 +241,7 @@ export default function Home() {
           </p>
         </div>
         <div className="panel" data-accent="off">
-          <div className="table-wrap hidden md:block">
+          <div className="table-wrap hidden md:block" data-scroll-ok="">
             <table className="status-table">
               <thead>
                 <tr>
@@ -295,7 +296,7 @@ export default function Home() {
           <div className="cards md:hidden">
             {rows.map((row) => (
               <article key={row.uid} className="rounded-xl border border-[var(--line)] p-3">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <Link href={`/pack/${row.uid}`} className="pack-link">
                     {row.label}
                   </Link>

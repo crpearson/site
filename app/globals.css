@@ -135,7 +135,10 @@ body {
 
 .nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.25rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .nav-link {
@@ -157,6 +160,9 @@ body {
 }
 
 .header-meta {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   letter-spacing: 0.04em;
@@ -192,6 +198,8 @@ body {
 
 .panel {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--panel);
@@ -227,12 +235,22 @@ body {
 .panel[data-accent="muted"] { --accent: var(--faint); }
 
 .panel-title {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-size: 1.02rem;
   font-weight: 500;
   letter-spacing: -0.02em;
 }
 
+.panel > header,
+.panel > header > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
 .stat {
+  min-width: 0;
+  max-width: 100%;
   min-height: 6.6rem;
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -249,16 +267,24 @@ body {
 .stat[data-tone="floor"] { --tone: var(--floor); }
 
 .stat-value {
+  max-width: 100%;
   margin-top: 0.35rem;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono);
-  font-size: clamp(1.55rem, 2vw, 2rem);
+  font-size: clamp(1.35rem, 2vw, 2rem);
   font-weight: 500;
   letter-spacing: -0.04em;
   line-height: 1.05;
 }
 
+.stat-value .num {
+  white-space: nowrap;
+}
+
 .stat-sub {
+  max-width: 100%;
   margin-top: 0.35rem;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   line-height: 1.35;
@@ -267,16 +293,21 @@ body {
 
 .lamp {
   display: inline-flex;
-  flex: none;
-  align-items: center;
+  flex: 0 1 auto;
+  align-items: flex-start;
   gap: 0.38rem;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid transparent;
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 0.12rem 0.5rem 0.12rem 0.38rem;
+  overflow-wrap: anywhere;
   font-family: var(--font-mono);
   font-size: 0.68rem;
   letter-spacing: 0.08em;
+  line-height: 1.35;
   text-transform: uppercase;
+  white-space: normal;
 }
 
 .lamp-dot,
@@ -333,7 +364,6 @@ body {
   gap: 0.45rem;
   min-width: 0;
   max-width: 100%;
-  overflow-wrap: anywhere;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: rgba(18, 26, 34, 0.92);
@@ -439,9 +469,29 @@ body {
 }
 
 .tile-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+}
+
+.tile-metric {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  max-width: 100%;
+}
+
+.num {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.tile .note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.12rem 0.4rem;
+  max-width: 100%;
 }
 
 .tile[data-tone="ok"] { --tone: var(--ok); }
@@ -474,10 +524,11 @@ body {
   letter-spacing: 0.04em;
   color: var(--muted);
 }
-.tile .note,
 .tile .metric-value,
-.tile .metric-label {
-  overflow-wrap: anywhere;
+.tile .num {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .tile:hover {
@@ -495,8 +546,9 @@ body {
 
 .metric-value {
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--ink);
+  white-space: nowrap;
 }
 
 .table-wrap {
@@ -549,14 +601,25 @@ body {
   text-decoration: underline;
 }
 
+.chart,
+.chart-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .chart-body {
   display: grid;
   grid-template-columns: 4.8rem minmax(0, 1fr);
   gap: 0.35rem;
 }
 
+.chart-body > * {
+  min-width: 0;
+}
+
 .y-axis {
   position: relative;
+  overflow: clip;
 }
 
 .y-tick {
@@ -617,12 +680,16 @@ body {
   position: absolute;
   top: 2px;
   right: 4px;
+  max-width: calc(100% - 8px);
+  overflow: clip;
   border-radius: 4px;
   background: rgba(12, 16, 22, 0.82);
   padding: 0 0.25rem;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .crosshair {
@@ -646,6 +713,7 @@ body {
   position: relative;
   height: 1.7rem;
   margin-top: 0.35rem;
+  overflow: clip;
 }
 
 .x-label {
@@ -661,10 +729,21 @@ body {
   cursor: pointer;
 }
 
+.x-label:first-child {
+  left: 0 !important;
+  transform: none;
+}
+
+.x-label:last-child {
+  left: auto !important;
+  right: 0;
+  transform: none;
+}
+
 .legend-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  flex: 1 1 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   color: var(--muted);
   font-size: 0.75rem;
@@ -702,6 +781,8 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+  max-width: 100%;
+  min-width: 0;
   margin-bottom: 0.7rem;
 }
 
@@ -709,8 +790,11 @@ body {
 .chip-btn,
 .switch-link {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: transparent;
@@ -718,6 +802,11 @@ body {
   color: var(--ink);
   font-size: 0.75rem;
   text-decoration: none;
+  white-space: normal;
+}
+
+.legend-btn > span:last-child {
+  white-space: nowrap;
 }
 
 .legend-btn.is-off {
@@ -768,6 +857,8 @@ body {
 }
 
 .note {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--muted);
@@ -851,14 +942,32 @@ body {
   gap: 0.7rem;
 }
 
+.grid > * {
+  min-width: 0;
+}
+
 @media (max-width: 760px) {
   .x-axis {
     height: 2.8rem;
   }
 
-  .x-label {
-    transform: translate(-20%, 0) rotate(-32deg);
+  .x-label,
+  .x-label:first-child,
+  .x-label:last-child {
+    right: auto;
+    transform: translate(0, 0) rotate(-32deg);
     transform-origin: top left;
+  }
+
+  .x-label:first-child {
+    left: 0 !important;
+  }
+
+  .x-label:last-child {
+    left: auto !important;
+    right: 0;
+    transform: translate(-10px, 0) rotate(-32deg);
+    transform-origin: top right;
   }
 
   .x-label-alt {
@@ -899,9 +1008,15 @@ body {
 }
 
 .methodology .md-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--ink);
   font-size: 1rem;
   line-height: 1.65;
+}
+
+.sr-only {
+  overflow: clip !important;
 }
 
 .methodology .md-body p {

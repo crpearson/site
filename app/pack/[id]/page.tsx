@@ -160,16 +160,18 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <article className="stat" data-tone="signal">
           <p className="eyebrow">Latest avg IR</p>
           <p className="stat-value">
-            {formatValue("ir", pack.row.avg)}
-            <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
+            <span className="num">
+              {formatValue("ir", pack.row.avg)} {IR_UNIT}
+            </span>
           </p>
           <p className="stat-sub">{pack.row.latestSession}</p>
         </article>
         <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "off"}>
           <p className="eyebrow">Spread</p>
           <p className="stat-value">
-            {formatValue("ir", pack.row.spread)}
-            <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
+            <span className="num">
+              {formatValue("ir", pack.row.spread)} {IR_UNIT}
+            </span>
           </p>
           <p className="stat-sub">
             {band} on this spread alone. Caution starts at {thresholds.spread_mohm.caution_gte} {IR_UNIT},
@@ -179,8 +181,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <article className="stat" data-tone="floor">
           <p className="eyebrow">Start floor</p>
           <p className="stat-value">
-            {pack.row.floor ?? "—"}
-            <span className="ml-1 text-sm text-[var(--muted)]">mV</span>
+            <span className="num">{pack.row.floor ?? "—"} mV</span>
           </p>
           <p className="stat-sub">
             {pack.row.floor != null && pack.row.floor < thresholds.floor_eye_mv
@@ -205,7 +206,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             This individual top-up is the day-0 baseline. It is not the latest IR, not a fleet or series
             mean, and not a Rule B night.
           </p>
-          <div className="table-wrap">
+          <div className="table-wrap" data-scroll-ok="">
             <table className="status-table">
               <thead>
                 <tr>
@@ -366,7 +367,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           bottom edge, also with no value. A star is a partial night, which is different. Nights
           before this pack was commissioned, and nights after it moved slots, are not marked.
         </p>
-        <div className="table-wrap mt-3">
+        <div className="table-wrap mt-3" data-scroll-ok="">
           <table className="status-table">
             <thead>
               <tr>

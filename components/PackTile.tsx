@@ -46,26 +46,28 @@ export function PackTile({ slot }: { slot: SlotTile }) {
         </span>
       ) : null}
       <span className="note">
-        {slot.latestSession ? slot.latestSession.slice(5) : "—"}
-        {slot.sr == null ? "" : ` · S_R ${formatValue("ir", slot.sr)} ${IR_UNIT}`}
-        {slot.lowGap == null ? "" : ` · gap ${slot.lowGap} mV`}
+        <span>{slot.latestSession ? slot.latestSession.slice(5) : "—"}</span>
+        {slot.sr == null ? null : (
+          <span className="num">
+            · S_R {formatValue("ir", slot.sr)} {IR_UNIT}
+          </span>
+        )}
+        {slot.lowGap == null ? null : <span className="num">· gap {slot.lowGap} mV</span>}
       </span>
       <span className="tile-metrics">
-        <span>
+        <span className="tile-metric">
           <span className="metric-label">IR</span>
-          <span className="metric-value block">
-            {slot.avg == null ? "—" : `${formatValue("ir", slot.avg)} ${IR_UNIT}`}
-          </span>
+          <span className="metric-value">{slot.avg == null ? "—" : `${formatValue("ir", slot.avg)} ${IR_UNIT}`}</span>
         </span>
-        <span>
+        <span className="tile-metric">
           <span className="metric-label">Spread</span>
-          <span className="metric-value block">
+          <span className="metric-value">
             {slot.spread == null ? "—" : `${formatValue("ir", slot.spread)} ${IR_UNIT}`}
           </span>
         </span>
-        <span>
+        <span className="tile-metric">
           <span className="metric-label">Floor</span>
-          <span className="metric-value block">{slot.floor == null ? "—" : `${slot.floor} mV`}</span>
+          <span className="metric-value">{slot.floor == null ? "—" : `${slot.floor} mV`}</span>
         </span>
       </span>
     </Link>

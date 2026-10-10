@@ -87,7 +87,7 @@ export function parseMethodology(markdown: string): MethodologyDoc {
           body += this.tablerow({ text: cells });
         }
         if (body) body = `<tbody>${body}</tbody>`;
-        return `<div class="table-wrap"><table><thead>${headRow}</thead>${body}</table></div>\n`;
+        return `<div class="table-wrap" data-scroll-ok=""><table><thead>${headRow}</thead>${body}</table></div>\n`;
       },
     },
   });

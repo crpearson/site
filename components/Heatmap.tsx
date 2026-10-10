@@ -38,7 +38,7 @@ export function Heatmap({
       {caption ? (
         <p className="mb-3 text-xs leading-relaxed text-[var(--muted)]">{caption}</p>
       ) : null}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" data-scroll-ok="">
         <div
           className="grid min-w-[36rem] gap-1"
           style={{
