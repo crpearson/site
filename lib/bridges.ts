@@ -6,7 +6,7 @@ export type MissBridge = {
   nights: string[];
 };
 
-export type GapKind = "value" | "skip" | "na" | "out";
+export type GapKind = "value" | "skip" | "na" | "out" | "rest";
 
 export const SKIP_LEGEND = "dotted = not charged · ○ = not charged (start/end)";
 
@@ -22,6 +22,7 @@ export function spanAt(series: ChartSeries, index: number): string | null {
  * a logged night whose metric is empty and is not a skip.
  */
 export function gapKind(series: ChartSeries, index: number): GapKind {
+  if (series.rest?.[index] && series.values[index] == null) return "rest";
   if (spanAt(series, index) == null) return "out";
   if (series.na?.[index]) return "na";
   if (series.logged) {
@@ -37,6 +38,10 @@ export function seriesNotCharged(series: ChartSeries, index: number): boolean {
 
 export function seriesNa(series: ChartSeries, index: number): boolean {
   return gapKind(series, index) === "na";
+}
+
+export function seriesRest(series: ChartSeries, index: number): boolean {
+  return gapKind(series, index) === "rest";
 }
 
 /** A night drawn as a dotted join or a hollow ring, with no value. */
@@ -87,7 +92,9 @@ function nightsForGap(series: ChartSeries, nightIds: string[], index: number): s
 export function gapPhrase(series: ChartSeries[], nightIds: string[], index: number): string {
   const skipped = new Set<string>();
   const na = new Set<string>();
+  const resting = new Set<string>();
   for (const item of series) {
+    if (gapKind(item, index) === "rest") resting.add(nightIds[index]);
     if (!seriesGap(item, index)) continue;
     for (const night of nightsForGap(item, nightIds, index)) {
       const nightIndex = nightIds.indexOf(night);
@@ -99,6 +106,8 @@ export function gapPhrase(series: ChartSeries[], nightIds: string[], index: numb
   const parts: string[] = [];
   const skipOrdered = nightIds.filter((night) => skipped.has(night));
   const naOrdered = nightIds.filter((night) => na.has(night));
+  const restOrdered = nightIds.filter((night) => resting.has(night));
+  if (restOrdered.length) parts.push(`Rest pool: ${restOrdered.join(", ")}`);
   if (skipOrdered.length) parts.push(`Not charged: ${skipOrdered.join(", ")}`);
   if (naOrdered.length) parts.push(`N/A: ${naOrdered.join(", ")}`);
   return parts.join(". ");

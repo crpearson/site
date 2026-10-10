@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Lamp } from "@/components/Lamp";
-import { getPack, getSlot, latestCall } from "@/lib/fleet";
+import { getPack, getSlot, latestCall, restTestsFor } from "@/lib/fleet";
 
 export function SlotDetail({ label }: { label: string }) {
   const slot = getSlot(label);
@@ -57,6 +57,11 @@ export function SlotDetail({ label }: { label: string }) {
           <p className="note mt-2 font-mono">{current.uid}</p>
           {current.lineage ? <p className="mt-2">{current.lineage}</p> : null}
           <p className="mt-3 leading-relaxed">{call.reason}</p>
+          {restTestsFor(current.uid).map((test) => (
+            <p key={test.id} className="note mt-2">
+              Rest pool · day 0 {test.readingDate || test.start} · 7-day reading due {test.due}
+            </p>
+          ))}
           <p className="note mt-2">
             Purchase {current.purchaseDate} · price {current.priceUsd} · vendor {current.vendor}
           </p>

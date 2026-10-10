@@ -27,6 +27,11 @@ export type ChartSeries = {
    * is still drawn as a skip, with the tooltip "N/A: <night>".
    */
   na?: boolean[];
+  /**
+   * True when the pack is in the Rest pool that night and the night is not a
+   * plotted charge. Drawn as "Rest pool", not as a skipped charge.
+   */
+  rest?: boolean[];
 };
 
 export type Guide = {

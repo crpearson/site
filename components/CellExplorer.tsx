@@ -19,6 +19,7 @@ export function CellExplorer({
     cells: (number | null)[][];
     service?: (string | null)[];
     logged?: boolean[];
+    rest?: boolean[];
   }[];
   domain: [number, number];
 }) {
@@ -51,6 +52,7 @@ export function CellExplorer({
           values,
           service: pack.service,
           logged: pack.logged,
+          rest: pack.rest,
         }))}
         yDomain={domain}
         format="ir"

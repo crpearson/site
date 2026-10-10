@@ -1,4 +1,4 @@
-export type LampTone = "ok" | "caution" | "off" | "pool";
+export type LampTone = "ok" | "caution" | "off" | "pool" | "rest";
 
 export function splitCall(status: string): { parallel: string; service: string } {
   const match = status.match(/^PARALLEL\s+([\s\S]+?)\s+\|\s+SERVICE\s+([\s\S]+)$/i);
@@ -9,6 +9,7 @@ export function splitCall(status: string): { parallel: string; service: string }
 /** Lamp for the parallel half of a Rules v3 call. Older one-word calls still map. */
 export function parallelTone(status: string): LampTone {
   const parallel = splitCall(status).parallel.toUpperCase();
+  if (parallel.includes("REST POOL")) return "rest";
   if (parallel.includes("INDIVIDUAL-ONLY") || parallel.includes("DO NOT PARALLEL")) return "off";
   if (/\bOFF\b/.test(parallel) || /\bPULL\b/.test(parallel)) return "off";
   if (parallel.includes("CAUTION") || parallel.includes("EYE")) return "caution";

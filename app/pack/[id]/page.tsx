@@ -36,6 +36,7 @@ function historyVerb(event: string) {
   if (event === "commission") return "Commissioned";
   if (event === "move") return "Moved";
   if (event === "rest_test_start") return "Rest test started";
+  if (event === "rest_pool_enter") return "Entered Rest pool";
   return event;
 }
 
@@ -134,6 +135,12 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           Parallel {pack.row.parallel || pack.call.status}
           {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
         </p>
+        {pack.row.restPool ? (
+          <p className="note">
+            Rest pool · day 0 {pack.row.restDay0} · 7-day reading due {pack.row.restDue}. Off every board
+            and not charged during the test. {pack.label} keeps this slot.
+          </p>
+        ) : null}
         <p className="note">
           Status call {pack.call.session}
           {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
@@ -183,10 +190,46 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
             {pack.row.sr != null ? ` · S_R ${formatValue("ir", pack.row.sr)} ${IR_UNIT}` : ""}
-            {pack.row.lr != null ? ` · L_R ${formatValue("ir", pack.row.lr)} ${IR_UNIT}` : ""}
           </p>
         </article>
       </div>
+
+      {pack.restDays.length ? (
+        <Panel accent="floor" eyebrow="Not a parallel charge" title="Rest test day 0">
+          <p className="note mb-3">
+            This individual top-up is the day-0 baseline. It is not the latest IR, not a fleet or series
+            mean, and not a Rule B night.
+          </p>
+          <div className="table-wrap">
+            <table className="status-table">
+              <thead>
+                <tr>
+                  <th scope="col">Night</th>
+                  <th scope="col">Avg ({IR_UNIT})</th>
+                  <th scope="col">Spread ({IR_UNIT})</th>
+                  <th scope="col">S_R ({IR_UNIT})</th>
+                  <th scope="col">Floor (mV)</th>
+                  <th scope="col">Gap (mV)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pack.restDays.map((point) => (
+                  <tr key={point.session}>
+                    <th scope="row" className="font-mono text-sm font-normal">
+                      {point.session}
+                    </th>
+                    <td className="font-mono text-sm">{formatValue("ir", point.avg)}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", point.spread)}</td>
+                    <td className="font-mono text-sm">{point.sr == null ? "—" : formatValue("ir", point.sr)}</td>
+                    <td className="font-mono text-sm">{point.floor ?? "—"}</td>
+                    <td className="font-mono text-sm">{point.lowGap ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      ) : null}
 
       {restTestsFor(pack.uid).length ? (
         <Panel accent="floor" eyebrow="7-day rest" title="Rest test">
@@ -336,7 +379,18 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             </thead>
             <tbody>
               {pack.nights.map((night) =>
-                night.kind === "measured" ? (
+                night.kind === "rest-pool" ? (
+                  <tr key={night.session}>
+                    <th scope="row" className="font-mono text-sm font-normal">
+                      {night.session}
+                      {night.partial ? "*" : ""}
+                    </th>
+                    <td className="font-mono text-sm">{night.label}</td>
+                    <td className="text-sm" colSpan={8}>
+                      Rest pool
+                    </td>
+                  </tr>
+                ) : night.kind === "measured" ? (
                   <tr key={night.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
                       {night.point.session}

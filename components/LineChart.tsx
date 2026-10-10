@@ -10,6 +10,7 @@ import {
   seriesGap,
   seriesNa,
   seriesNotCharged,
+  seriesRest,
 } from "@/lib/bridges";
 import { formatAxis, formatValue } from "@/lib/format";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
@@ -123,6 +124,7 @@ export function LineChart({
               if (value != null && !seriesGap(item, hover)) {
                 return `${item.label} ${formatValue(format, value)} ${unit}`;
               }
+              if (seriesRest(item, hover)) return `${item.label} Rest pool`;
               if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
               if (seriesNa(item, hover)) return `${item.label} N/A`;
               return `${item.label} no value`;

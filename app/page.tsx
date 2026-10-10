@@ -10,6 +10,7 @@ import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
   allRestTests,
+  chargedIndividually,
   fleetModel,
   floorBands,
   floorGuide,
@@ -69,23 +70,54 @@ export default function Home() {
             <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "—"}</p>
           </article>
           <article className="stat" data-tone="off">
-            <p className="eyebrow">Individual only</p>
+            <p className="eyebrow">Individual only (series packs)</p>
             <p className="stat-value">
               {stats.off.length}
               <span className="ml-1 text-sm text-[var(--muted)]">packs</span>
             </p>
-            <p className="stat-sub">{stats.off.map((row) => row.label).join(" · ") || "None"}</p>
+            <p className="stat-sub">
+              {stats.off.map((row) => row.label).join(" · ") || "None on a series board."} Charged
+              individually: {chargedIndividually().join(", ") || "none"}. Rest pool:{" "}
+              {stats.rest.map((row) => row.label).join(", ")}.
+            </p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
-              {formatValue("ir", stats.mean)}
+              {stats.mean.toFixed(2)}
               <span className="ml-1 text-sm text-[var(--muted)]">{IR_UNIT}</span>
             </p>
-            <p className="stat-sub">Latest averages of {stats.counted} packs still in a slot</p>
+            <p className="stat-sub">
+              {formatValue("ir", stats.mean)} {IR_UNIT} across {stats.counted} packs still in a slot.
+              Rest-test day 0 is not included.
+            </p>
           </article>
         </div>
       </header>
+
+      <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
+        <p className="eyebrow">Off every board</p>
+        <h2 id="rest-pool-heading" className="panel-title mt-1">
+          Rest pool
+        </h2>
+        <p className="note mt-2">
+          Day 0 {stats.rest[0]?.restDay0 ?? "2026-10-09"}. 7-day reading due {stats.rest[0]?.restDue ?? "2026-10-16"}.
+          These packs are not charged during the test. D-1 stays in series D. C1-P4 and C2-P2 keep their slots.
+        </p>
+        <ul className="mt-3 space-y-2 text-sm">
+          {stats.rest.map((row) => (
+            <li key={row.uid}>
+              <Link href={`/pack/${row.uid}`} className="pack-link">
+                {row.label}
+              </Link>
+              <span className="note">
+                {" "}
+                · day 0 {row.restDay0} · due {row.restDue} · {row.series}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <Panel
         accent="signal"
@@ -94,9 +126,8 @@ export default function Home() {
         action={
           <span className="note">
             {IR_UNIT} · a night that series was not measured is a faint dotted join, or a hollow ring on
-            the bottom edge before the first reading or after the last. 10-09r is an individual
-            rest-test baseline for two packs, so it is left off this series mean and unmarked for
-            every other pack.
+            the bottom edge before the first reading or after the last. Rest-test day 0 is left off
+            this mean. D-1 on 10-09 stays on series D.
           </span>
         }
       >
@@ -125,6 +156,11 @@ export default function Home() {
           <p className="note mt-1">
             As of {next.as_of}. {next.note}
           </p>
+          {next.resting.length ? (
+            <p className="note mt-1">
+              Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
           {next.series.map((board) => (
@@ -186,7 +222,16 @@ export default function Home() {
                       color={slot.color}
                       service={slot.service}
                       logged={slot.logged}
+                      rest={slot.rest}
                     />
+                    {slot.restPool ? (
+                      <span className="badge">Rest pool · day 0 {slot.restDay0} · due {slot.restDue}</span>
+                    ) : null}
+                    <span className="note">
+                      {slot.latestSession ? slot.latestSession.slice(5) : "—"}
+                      {slot.sr == null ? "" : ` · S_R ${formatValue("ir", slot.sr)} ${IR_UNIT}`}
+                      {slot.lowGap == null ? "" : ` · gap ${slot.lowGap} mV`}
+                    </span>
                     <span className="grid grid-cols-3 gap-1">
                       <span>
                         <span className="metric-label">IR</span>
@@ -252,6 +297,11 @@ export default function Home() {
                       <Lamp status={row.parallel || row.status} />
                       <p className="mt-1 text-sm">{row.parallel || row.status}</p>
                       {row.service ? <p className="note mt-1">Service {row.service}</p> : null}
+                      {row.restPool ? (
+                        <p className="note mt-1">
+                          Rest pool · day 0 {row.restDay0} · due {row.restDue}
+                        </p>
+                      ) : null}
                     </td>
                     <td>
                       <p className="reason">{row.reason}</p>
@@ -283,6 +333,9 @@ export default function Home() {
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
                 <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
+                {row.restPool ? (
+                  <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
+                ) : null}
                 <p className="note mt-2 font-mono">
                   {row.parallel || row.status}
                   {row.service ? ` · Service ${row.service}` : ""} · IR {formatValue("ir", row.avg)} {IR_UNIT} ·
@@ -424,8 +477,8 @@ export default function Home() {
               One line per series. A night that series did not run is a faint dotted join, or a
               hollow ring on the bottom edge before the first reading or after the last, with no
               value. Rule B needs two packs that charged in parallel. A night the series did run,
-              but fewer than two did, is N/A. The 10-09r rest-test baseline is individual, so Rule
-              B is N/A for the series that ran and unmarked for a series that did not. Series D,
+              but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
+              The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
               pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
             </p>
             <LineChart
@@ -480,6 +533,7 @@ export default function Home() {
                 cells: pack.cells,
                 service: pack.service,
                 logged: pack.logged,
+                rest: pack.rest,
               })),
             )}
           />

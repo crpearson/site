@@ -300,11 +300,14 @@ body {
 .dot-off { color: var(--off); }
 .lamp-pool,
 .dot-pool { color: #b7c6d4; }
+.lamp-rest,
+.dot-rest { color: var(--floor); }
 
 .lamp-ok { background: rgba(61, 220, 151, 0.1); border-color: rgba(61, 220, 151, 0.35); }
 .lamp-caution { background: rgba(245, 185, 66, 0.1); border-color: rgba(245, 185, 66, 0.38); }
 .lamp-off { background: rgba(255, 92, 122, 0.1); border-color: rgba(255, 92, 122, 0.4); }
 .lamp-pool { background: rgba(183, 198, 212, 0.12); border-color: rgba(183, 198, 212, 0.45); }
+.lamp-rest { background: rgba(121, 184, 255, 0.12); border-color: rgba(121, 184, 255, 0.45); }
 
 .tile {
   display: flex;
@@ -323,6 +326,7 @@ body {
 .tile[data-tone="caution"] { --tone: var(--caution); }
 .tile[data-tone="off"] { --tone: var(--off); }
 .tile[data-tone="pool"] { --tone: #b7c6d4; }
+.tile[data-tone="rest"] { --tone: var(--floor); }
 .tile.is-retired { opacity: 0.62; filter: grayscale(0.55); }
 .tile.is-empty {
   --tone: transparent;

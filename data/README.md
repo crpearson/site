@@ -8,10 +8,10 @@
 - `pack_events.csv` — commission, moves, and rest-test starts
 - `status_calls.csv` — verbatim status text. The latest real call per pack is shown. A row marked unchanged is a measurement note.
 - `session_manifest.public.csv` — historical slot lists (the slots column wins over the default 3+3 split)
-- `ir_store_v4.public.csv` — true cell IR in milliohms, pack S_R, and line L_R
+- `ir_store_v4.public.csv` — true cell IR in milliohms and pack S_R. Line resistance is in the file and is not shown.
 - `ir_store_v2.public.csv` — legacy `;130;` rows, not shown as IR
 - `rest_tests.csv` — 7-day rest tests. Placeholder rows marked `FILLED-SEE-DAY0-ROW` are not shown
-- `next.json` — next parallel boards as of 2026-10-08, because that composition is not a column on the status calls
+- `next.json` — next parallel boards as of 2026-10-10, rebuilt from the latest parallel calls. Rest pool packs are off the boards. `packs-timeseries.json` stores the retired `;130;` charge line as `cells_chg_mah` and `avg_chg_mah`, not as IR. The site does not render that file.
 
 `archive/v1-20261008/ir_store.csv` is the previous shorter export. `sessions.json`, `packs-timeseries.json`, and `meta.json` can still be rebuilt from the store by `scripts/ingest.py`. The site uses the JSON for session order, thresholds, and gaps. `status.json` holds those thresholds. `pack-registry.json` is chargers and brand catalog prices. Do not treat a registry pack price as a purchase price. `legacy-manifest.csv` maps renamed logs that have no NNN in the filename.
 

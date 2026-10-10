@@ -151,6 +151,10 @@ A pack leaves the D pool only after passing 3 rest tests in a row, then 3 Go nig
 - A pack that's finally disposed of is marked retired, with the date. Its history stays.
 - *First entry:* the pack that was C1-P1 became **D-1** on 2026-10-08 for self-discharge on Cell 6 (a chronic low floor).
 
+## Rest pool
+
+Rest pool: packs under a 7-day rest test sit here at storage voltage, off every board and not charged, until their 7-day reading. Each then returns to its series, the D pool, or retirement based on the result.
+
 ## What isn't measured yet
 
 - **Capacity in/out (mAh) over time:** not tracked. Storage runs are top-ups, not capacity tests.

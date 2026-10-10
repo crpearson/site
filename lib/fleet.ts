@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import metaDoc from "@/data/meta.json";
-import nextDoc from "@/data/v2/next.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
 import { missBridges } from "@/lib/bridges";
@@ -10,6 +9,7 @@ import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { lampTone, splitCall, type LampTone } from "@/lib/lamp";
+import { buildNextBoard } from "@/lib/next-board.mjs";
 import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
@@ -22,7 +22,6 @@ type Measurement = {
   avg: number;
   spread: number;
   sr: number | null;
-  lr: number | null;
   floor: number | null;
   floorCell: number | null;
   imbalance: number | null;
@@ -46,6 +45,8 @@ type PackRec = {
   serviceStatus: string;
   parallelCall: string;
   chargeCount: number;
+  pool: string;
+  poolSince: string;
   retired: string;
   purchaseDate: string;
   priceUsd: string;
@@ -116,6 +117,8 @@ const packs: PackRec[] = readCsv("v2/packs.csv").map((row) => ({
   serviceStatus: row.status,
   parallelCall: row.parallel_call,
   chargeCount: Number(row.charge_count),
+  pool: row.pool.trim(),
+  poolSince: row.pool_since.trim(),
   retired: row.retired.trim(),
   purchaseDate: row.purchase_date.trim(),
   priceUsd: row.price_usd.trim(),
@@ -190,7 +193,6 @@ const measurements: Measurement[] = v4Rows.map((row) => ({
   avg: scaleStoredIr(Number(row.avg_mOhm)),
   spread: scaleStoredIr(Number(row.spread_mOhm)),
   sr: num(row.pack_SR_mOhm),
-  lr: num(row.LR_mOhm),
   floor: num(row.floor_mV),
   floorCell: num(row.floor_cell),
   imbalance: num(row.imbalance_mV),
@@ -281,15 +283,42 @@ function pointsFor(uid: string): Measurement[] {
     .sort((a, b) => (order.get(a.session) ?? 999) - (order.get(b.session) ?? 999));
 }
 
+/** Rest-test day-0 rows stay off the latest card, the means, and Rule B. */
+function operationalPoints(uid: string): Measurement[] {
+  return pointsFor(uid).filter((point) => point.sessionType !== "rest-test-day0");
+}
+
+function latestOperational(uid: string): Measurement | undefined {
+  const points = operationalPoints(uid);
+  return points[points.length - 1];
+}
+
+export function isRestPool(uid: string): boolean {
+  return packByUid(uid)?.pool === "Rest";
+}
+
+function inRestPool(uid: string, session: string): boolean {
+  let since: string | null = null;
+  for (const event of eventsFor(uid)) {
+    if (compareTime(event.date, session) > 0) break;
+    if (event.event === "rest_pool_enter") since = event.date;
+    if (event.event === "rest_pool_exit") since = null;
+  }
+  return since != null;
+}
+
 const EXPECTED_LATEST: Record<string, string> = {
-  "CNHL-2026-001": "PARALLEL INDIVIDUAL-ONLY | SERVICE D pool (Watch); rest test cycle 1 started 2026-10-09",
+  "CNHL-2026-001":
+    "PARALLEL OFF (Rest pool) | SERVICE D pool (Watch); rest test RT-001-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL CAUTION; GO after one clean night | SERVICE In service",
-  "CNHL-2026-004": "PARALLEL CAUTION (reduced current) | SERVICE Watch; rest test Cell 1 cycle 1 started 2026-10-09",
+  "CNHL-2026-004":
+    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-005": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
-  "CNHL-2026-008": "PARALLEL CAUTION (reduced current) | SERVICE Watch; rest test Cell 6 cycle 1 started 2026-10-09",
+  "CNHL-2026-008":
+    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-008-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
@@ -346,7 +375,9 @@ function assertStore() {
       },
     );
     const recorded = laryParallelBucket(call.status);
-    if (/OWNER OVERRIDE/i.test(call.reason)) {
+    if (/REST POOL/i.test(call.status)) {
+      console.log(`rest pool ${uid}: recorded OFF, not a parallel-call disagreement`);
+    } else if (/OWNER OVERRIDE/i.test(call.reason)) {
       console.warn(
         `owner override ${uid}: recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
       );
@@ -461,11 +492,26 @@ function lineMeta(uid: string): { service: (string | null)[]; logged: boolean[] 
   return { service: serviceSpans(uid), logged: loggedNights(uid) };
 }
 
-function alignUid(uid: string, pick: (row: Measurement) => number | null): (number | null)[] {
+function alignUid(
+  uid: string,
+  pick: (row: Measurement) => number | null,
+  series?: string,
+): (number | null)[] {
   const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
     const row = map.get(category.id);
-    return row ? pick(row) : null;
+    if (!row || row.sessionType === "rest-test-day0") return null;
+    if (series && row.series !== series) return null;
+    return pick(row);
+  });
+}
+
+function restFlags(uid: string): boolean[] {
+  const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
+  return categories.map((category) => {
+    if (!inRestPool(uid, category.id)) return false;
+    const row = map.get(category.id);
+    return !row || row.sessionType === "rest-test-day0";
   });
 }
 
@@ -550,10 +596,12 @@ export type StatusRow = {
   chargeMode: string;
   chargeCount: number;
   sr: number | null;
-  lr: number | null;
   lowGap: number | null;
   parallel: string;
   service: string;
+  restPool: boolean;
+  restDay0: string | null;
+  restDue: string | null;
 };
 
 export function statusRows(): StatusRow[] {
@@ -564,8 +612,8 @@ export function statusRows(): StatusRow[] {
   });
   return ordered.map((pack) => {
     const call = latestCall(pack.uid);
-    const points = pointsFor(pack.uid);
-    const latest = points[points.length - 1];
+    const latest = latestOperational(pack.uid);
+    const restTest = restTests.find((test) => test.uid === pack.uid);
     if (!call || !latest) throw new Error(`Missing call or measurement for ${pack.uid}`);
     return {
       uid: pack.uid,
@@ -590,10 +638,12 @@ export function statusRows(): StatusRow[] {
       chargeMode: pack.chargeMode,
       chargeCount: pack.chargeCount,
       sr: latest.sr,
-      lr: latest.lr,
       lowGap: latest.lowGap,
       parallel: splitCall(call.status).parallel,
       service: splitCall(call.status).service,
+      restPool: pack.pool === "Rest",
+      restDay0: pack.pool === "Rest" ? restTest?.readingDate || restTest?.start || pack.poolSince : null,
+      restDue: pack.pool === "Rest" ? restTest?.due || null : null,
     };
   });
 }
@@ -607,16 +657,22 @@ export function allRestTests(): RestTest[] {
 }
 
 export function headline() {
-  const rows = statusRows().filter((row) => !row.excluded);
-  const mean = rows.reduce((sum, row) => sum + row.avg, 0) / rows.length;
+  const slotted = statusRows().filter((row) => !row.excluded);
+  const onBoards = slotted.filter((row) => !row.restPool);
+  const mean = slotted.reduce((sum, row) => sum + row.avg, 0) / slotted.length;
   return {
-    ok: rows.filter((row) => row.tone === "ok"),
-    caution: rows.filter((row) => row.tone === "caution"),
-    off: rows.filter((row) => row.tone === "off"),
+    ok: onBoards.filter((row) => row.tone === "ok"),
+    caution: onBoards.filter((row) => row.tone === "caution"),
+    off: onBoards.filter((row) => row.tone === "off"),
     pool: statusRows().filter((row) => row.tone === "pool"),
+    rest: statusRows().filter((row) => row.restPool),
     mean,
-    counted: rows.length,
+    counted: slotted.length,
   };
+}
+
+export function chargedIndividually(): string[] {
+  return packs.filter((pack) => pack.chargeMode === "individual" && pack.pool !== "Rest").map((pack) => pack.label);
 }
 
 export type SlotTile = {
@@ -631,9 +687,16 @@ export type SlotTile = {
   avgSeries: (number | null)[];
   service?: (string | null)[];
   logged?: boolean[];
+  rest?: boolean[];
   color: string;
   badge: string | null;
   excluded: boolean;
+  sr: number | null;
+  lowGap: number | null;
+  latestSession: string | null;
+  restPool: boolean;
+  restDay0: string | null;
+  restDue: string | null;
 };
 
 export type SeriesBlock = {
@@ -680,9 +743,16 @@ export function seriesBlocks(): SeriesBlock[] {
         avgSeries: pack ? alignUid(pack.uid, (point) => point.avg) : [],
         service: meta?.service,
         logged: meta?.logged,
+        rest: pack ? restFlags(pack.uid) : undefined,
         color: packColor(label),
         badge: pack ? badgeFor(pack.uid) : null,
         excluded: pack ? isExcludedFromHeadline(pack.uid) : false,
+        sr: row?.sr ?? null,
+        lowGap: row?.lowGap ?? null,
+        latestSession: row?.latestSession ?? null,
+        restPool: row?.restPool ?? false,
+        restDay0: row?.restDay0 ?? null,
+        restDue: row?.restDue ?? null,
       };
     });
     return {
@@ -695,11 +765,19 @@ export function seriesBlocks(): SeriesBlock[] {
   });
 }
 
+function parallelBoardUids(): Set<string> {
+  const labels = new Set(buildNextBoard().series.flatMap((board: { labels: string[] }) => board.labels));
+  return new Set(packs.filter((pack) => labels.has(pack.label)).map((pack) => pack.uid));
+}
+
 export function restDelta(session: string, series: string): number | null {
+  const board = parallelBoardUids();
   const rows = measurements.filter(
     (row) =>
       row.session === session &&
       row.series === series &&
+      board.has(row.uid) &&
+      row.sessionType !== "rest-test-day0" &&
       row.chargeMode === "parallel" &&
       row.rest != null,
   );
@@ -713,12 +791,18 @@ export function restDelta(session: string, series: string): number | null {
  * without two parallel rests means the series ran and Rule B is N/A.
  */
 export function restNight(session: string, series: string): { value: number | null; na: boolean } {
-  const ran = measurements.some((row) => row.session === session && row.series === series);
   if (restBaselineSessions.has(session)) {
-    // Individual rest-test baseline. Rule B does not apply. A series that did
-    // not run stays unmarked rather than a skipped-night ring.
-    return ran ? { value: null, na: true } : { value: null, na: false };
+    // Day-0 rest rows are not a parallel charge and are not a Rule B night.
+    return { value: null, na: false };
   }
+  const board = parallelBoardUids();
+  const ran = measurements.some(
+    (row) =>
+      row.session === session &&
+      row.series === series &&
+      board.has(row.uid) &&
+      row.sessionType !== "rest-test-day0",
+  );
   const value = restDelta(session, series);
   if (!ran) return { value: null, na: false };
   if (value == null) return { value: null, na: true };
@@ -736,6 +820,7 @@ export type PackSeries = {
   cells: (number | null)[][];
   service: (string | null)[];
   logged: boolean[];
+  rest: boolean[];
 };
 
 export type FleetModel = {
@@ -769,12 +854,13 @@ function seriesPacks(series: string): PackSeries[] {
       uid,
       color: packColor(pack?.label ?? uid),
       tone: call ? lampTone(call.status) : "pool",
-      avg: alignUid(uid, (row) => row.avg),
-      spread: alignUid(uid, (row) => row.spread),
-      floor: alignUid(uid, (row) => row.floor),
-      cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null)),
+      avg: alignUid(uid, (row) => row.avg, series),
+      spread: alignUid(uid, (row) => row.spread, series),
+      floor: alignUid(uid, (row) => row.floor, series),
+      cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null, series)),
       service: meta.service,
       logged: meta.logged,
+      rest: restFlags(uid),
     };
   });
 }
@@ -803,11 +889,7 @@ export function fleetModel(): FleetModel {
       packs: seriesPacks(series),
       rest: nights.map((night) => night.value),
       restNa: nights.map((night) => night.na),
-      restService: categories.map((category) => {
-        if (!restBaselineSessions.has(category.id)) return "0";
-        const ran = measurements.some((row) => row.session === category.id && row.series === series);
-        return ran ? "0" : null;
-      }),
+      restService: categories.map((category) => (restBaselineSessions.has(category.id) ? null : "0")),
       individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
     };
   });
@@ -844,6 +926,7 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     values: row[pick],
     service: row.service,
     logged: row.logged,
+    rest: row.rest,
   }));
 }
 
@@ -878,6 +961,7 @@ export function lineage(uid: string): string | null {
 
 export type PackNight =
   | { session: string; partial: boolean; kind: "measured"; point: Measurement }
+  | { session: string; partial: boolean; kind: "rest-pool"; label: string }
   | { session: string; partial: boolean; kind: "not-charged"; label: string; bridged: boolean };
 
 function packNights(uid: string): PackNight[] {
@@ -894,8 +978,17 @@ function packNights(uid: string): PackNight[] {
   const nights: PackNight[] = [];
   categories.forEach((category, index) => {
     const point = bySession.get(category.id);
-    if (point) {
+    if (point && point.sessionType !== "rest-test-day0") {
       nights.push({ session: category.id, partial: category.partial, kind: "measured", point });
+      return;
+    }
+    if (inRestPool(uid, category.id)) {
+      nights.push({
+        session: category.id,
+        partial: category.partial,
+        kind: "rest-pool",
+        label: labelAsOf(uid, category.id) ?? "—",
+      });
       return;
     }
     if (service[index] == null) return;
@@ -932,6 +1025,7 @@ export type PackView = {
   nights: PackNight[];
   row: StatusRow;
   points: Measurement[];
+  restDays: Measurement[];
   categories: Category[];
   cellSeries: ChartSeries[];
   spreadSeries: ChartSeries[];
@@ -946,12 +1040,14 @@ export function getPack(uid: string): PackView | null {
   const call = latestCall(uid);
   const row = statusRows().find((item) => item.uid === uid);
   if (!pack || !call || !row) return null;
-  const points = pointsFor(uid);
+  const points = operationalPoints(uid);
   const meta = lineMeta(uid);
+  const rest = restFlags(uid);
   const cells = points.flatMap((point) => point.cells);
   const spreads = points.map((point) => point.spread);
   const floors = points.map((point) => point.floor).filter((value): value is number => value != null);
   const individual = pack.chargeMode !== "parallel";
+  const resting = pack.pool === "Rest";
   return {
     uid,
     label: pack.label,
@@ -967,13 +1063,14 @@ export function getPack(uid: string): PackView | null {
     badge: badgeFor(uid),
     lineage: lineage(uid),
     excluded: isExcludedFromHeadline(uid),
-    ruleB: individual ? "N/A, charged individually" : null,
+    ruleB: resting ? "Rest pool, not charged" : individual ? "N/A, charged individually" : null,
     call,
     calls: callsFor(uid),
     events: eventsFor(uid),
     nights: packNights(uid),
     row,
     points,
+    restDays: pointsFor(uid).filter((point) => point.sessionType === "rest-test-day0"),
     categories,
     cellSeries: [0, 1, 2, 3, 4, 5].map((index) => ({
       id: `c${index + 1}`,
@@ -982,6 +1079,7 @@ export function getPack(uid: string): PackView | null {
       values: alignUid(uid, (point) => point.cells[index] ?? null),
       service: meta.service,
       logged: meta.logged,
+      rest,
     })),
     spreadSeries: [
       {
@@ -991,6 +1089,7 @@ export function getPack(uid: string): PackView | null {
         values: alignUid(uid, (point) => point.spread),
         service: meta.service,
         logged: meta.logged,
+        rest,
       },
     ],
     floorSeries: [
@@ -1001,6 +1100,7 @@ export function getPack(uid: string): PackView | null {
         values: alignUid(uid, (point) => point.floor),
         service: meta.service,
         logged: meta.logged,
+        rest,
       },
     ],
     irDomain: padded(cells, 0.1),
@@ -1138,7 +1238,12 @@ export function chargers(): ChargerInfo[] {
 }
 
 export function nextParallel() {
-  return nextDoc;
+  return buildNextBoard() as {
+    as_of: string;
+    note: string;
+    series: { series: string; labels: string[] }[];
+    resting: { label: string; uid: string; day0: string; until: string }[];
+  };
 }
 
 export function ruleABand(spread: number): "Go" | "Caution" | "Individual" {
@@ -1165,3 +1270,56 @@ export function ruleBNote(series: string): string | null {
   if (block?.individual) return "N/A, charged individually";
   return null;
 }
+
+function assertDerived() {
+  const stats = headline();
+  if (stats.mean.toFixed(3) !== "2.893" || stats.counted !== 11) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.893 mΩ over 11 slotted packs`);
+  }
+  const c1p4 = statusRows().find((row) => row.label === "C1-P4");
+  if (
+    !c1p4 ||
+    c1p4.latestSession !== "2026-09-27" ||
+    c1p4.avg.toFixed(3) !== "2.875" ||
+    c1p4.spread.toFixed(2) !== "0.65" ||
+    c1p4.sr !== 17.25 ||
+    c1p4.floor !== 3603 ||
+    c1p4.lowGap !== 93
+  ) {
+    throw new Error(`C1-P4 card is ${c1p4?.latestSession} ${c1p4?.avg} ${c1p4?.spread} ${c1p4?.sr} ${c1p4?.floor} ${c1p4?.lowGap}`);
+  }
+  const c2p2 = statusRows().find((row) => row.label === "C2-P2");
+  if (!c2p2 || c2p2.latestSession !== "2026-09-30" || c2p2.avg.toFixed(3) !== "3.217" || c2p2.sr !== 19.3 || c2p2.floor !== 3597 || c2p2.lowGap !== 98) {
+    throw new Error(`C2-P2 card is ${c2p2?.latestSession} ${c2p2?.avg}`);
+  }
+  const model = fleetModel();
+  const lastOf = (id: string) => {
+    const line = model.mean.find((item) => item.id === id);
+    return [...(line?.values ?? [])].reverse().find((value) => value != null);
+  };
+  const c1Last = lastOf("C1");
+  const c2Last = lastOf("C2");
+  if (c1Last == null || c1Last.toFixed(3) !== "2.907") throw new Error(`C1 series mean last is ${c1Last}`);
+  if (c2Last == null || c2Last.toFixed(3) !== "2.886") throw new Error(`C2 series mean last is ${c2Last}`);
+  const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
+  const day = model.categories.findIndex((category) => category.id === "2026-10-09");
+  const restNightIndex = model.categories.findIndex((category) => category.id === "2026-10-09-restday0");
+  const moved = c1Fleet?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  if (!moved || moved.avg[day] != null) throw new Error("D-1 2026-10-09 is on the C1 line");
+  const d1 = model.fleets.find((fleet) => fleet.id === "D")?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  if (!d1 || d1.avg[day] == null || d1.avg[day].toFixed(3) !== "2.767") throw new Error("D-1 2026-10-09 is missing from series D");
+  const p4 = c1Fleet?.packs.find((pack) => pack.uid === "CNHL-2026-004");
+  if (!p4 || p4.avg[restNightIndex] != null) throw new Error("C1-P4 rest-day row is on a series line");
+  if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
+  const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
+  const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
+  if (c1Rule == null || Math.abs(c1Rule - 0.13) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
+  if (c2Rule == null || Math.abs(c2Rule - 0.147) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  const board = nextParallel();
+  const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
+  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-10") {
+    throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
+  }
+}
+
+assertDerived();

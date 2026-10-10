@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { buildNextBoard, EXPECTED_BOARDS, NEXT_BOARD_AS_OF } from "../lib/next-board.mjs";
 import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
 function parseCsv(text) {
@@ -217,7 +218,9 @@ for (const [uid, list] of byUid) {
     },
   );
   const recorded = laryParallelBucket(latest.status);
-  if (/OWNER OVERRIDE/i.test(latest.reason)) {
+  if (/REST POOL/i.test(latest.status)) {
+    console.log(`rest pool ${uid} (${latest.label_at_time}): recorded OFF, not a parallel-call disagreement`);
+  } else if (/OWNER OVERRIDE/i.test(latest.reason)) {
     console.log(
       `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
     );
@@ -232,3 +235,129 @@ if (disagreements.length) {
 }
 
 console.log(`v4 IR validation passed ${matched}/${v4.length} (site scale is 1; displayed mΩ match ir_store_v4)`);
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+const events = parseCsv(fs.readFileSync(path.join(root, "data/v2/pack_events.csv"), "utf8"));
+const moved = new Set(events.filter((row) => row.event === "move").map((row) => row.pack_uid));
+const slotted = packs.filter((pack) => !moved.has(pack.pack_uid) && !pack.retired.trim());
+const latestAvg = (uid) => {
+  const rows = v4
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .sort((a, b) => compareTime(a.session, b.session));
+  return rows[rows.length - 1];
+};
+const fleetMean =
+  slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
+if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.893") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.893 mΩ over 11`);
+}
+const c1p4 = latestAvg("CNHL-2026-004");
+if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
+  fail(`C1-P4 latest operational row is ${c1p4?.session} ${c1p4?.avg_mOhm}`);
+}
+const c2p2 = latestAvg("CNHL-2026-008");
+if (!c2p2 || c2p2.session !== "2026-09-30" || Number(c2p2.avg_mOhm) !== 3.217) {
+  fail(`C2-P2 latest operational row is ${c2p2?.session} ${c2p2?.avg_mOhm}`);
+}
+if (v4.some((row) => row.session === "2026-10-09" && row.series_at_time === "C1")) {
+  fail("D-1 2026-10-09 must not belong to series C1");
+}
+const d1 = v4.find((row) => row.session === "2026-10-09" && row.pack_uid === "CNHL-2026-001");
+if (!d1 || d1.series_at_time !== "D") fail("D-1 2026-10-09 must belong to series D");
+
+function seriesMean(series) {
+  const groups = new Map();
+  for (const row of v4) {
+    if (row.series_at_time !== series || row.session_type === "rest-test-day0") continue;
+    const list = groups.get(row.session) ?? [];
+    list.push(Number(row.avg_mOhm));
+    groups.set(row.session, list);
+  }
+  const sessions = [...groups.keys()].sort(compareTime);
+  const last = sessions[sessions.length - 1];
+  const values = groups.get(last);
+  return { session: last, mean: values.reduce((sum, value) => sum + value, 0) / values.length };
+}
+const c1Mean = seriesMean("C1");
+const c2Mean = seriesMean("C2");
+if (c1Mean.session !== "2026-09-27" || c1Mean.mean.toFixed(3) !== "2.907") {
+  fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
+}
+if (c2Mean.session !== "2026-09-30" || c2Mean.mean.toFixed(3) !== "2.886") {
+  fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
+}
+
+const board = buildNextBoard();
+const rendered = board.series.map((item) => item.labels.join("+")).join(" | ");
+const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | ");
+if (rendered !== expected || board.as_of !== NEXT_BOARD_AS_OF) {
+  fail(`next parallel ${board.as_of} ${rendered}, expected ${NEXT_BOARD_AS_OF} ${expected}`);
+}
+for (const label of ["D-1", "C1-P4", "C2-P2", "C1-P5"]) {
+  if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
+}
+const nextFile = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next.json"), "utf8"));
+if (JSON.stringify(nextFile) !== JSON.stringify(board)) {
+  fail("data/v2/next.json does not match the boards built from the latest parallel calls");
+}
+console.log(`next parallel ${board.as_of}: ${rendered}`);
+
+for (const file of ["data/packs-timeseries.json", "data/sessions.json"]) {
+  const text = fs.readFileSync(path.join(root, file), "utf8");
+  if (text.includes('"cells_ir_mohm"') || text.includes('"avg_ir_mohm"')) {
+    fail(`${file} still labels ;130; mAh as IR`);
+  }
+}
+
+function walk(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else if (entry.name.endsWith(".tsx")) out.push(full);
+  }
+  return out;
+}
+
+function unvalidatedColumns(markdown) {
+  const names = new Set();
+  for (const line of markdown.split("\n")) {
+    if (!line.startsWith("|") || line.includes("---")) continue;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (cells.length < 2) continue;
+    const ground = cells[cells.length - 1].replace(/\*/g, "").trim();
+    if (!/NOT VALIDATED/i.test(ground) || /^DERIVED/i.test(ground)) continue;
+    for (const piece of cells[0].replace(/\*/g, "").split(",")) {
+      const part = piece.trim();
+      const range = part.split(/\s*(?:…|\.\.\.)\s*/);
+      if (range.length === 2) {
+        const start = range[0].match(/^(.*?)(\d+)(.*)$/);
+        const end = range[1].match(/^(.*?)(\d+)(.*)$/);
+        if (start && end) {
+          for (let n = Number(start[2]); n <= Number(end[2]); n += 1) names.add(`${start[1]}${n}${start[3]}`);
+          continue;
+        }
+      }
+      if (part.includes("_")) names.add(part);
+    }
+  }
+  return names;
+}
+
+const banned = unvalidatedColumns(fs.readFileSync(path.join(root, "data/UNITS.md"), "utf8"));
+if (!banned.has("LR_mOhm")) fail("UNITS.md did not mark LR_mOhm unvalidated");
+const ui = walk(path.join(root, "app")).concat(walk(path.join(root, "components")));
+for (const file of ui) {
+  const text = fs.readFileSync(file, "utf8");
+  if (/\bL_R\b/.test(text) || text.includes("LR_mOhm") || /\.lr\b/.test(text)) {
+    fail(`${path.relative(root, file)} renders L_R`);
+  }
+  for (const name of banned) {
+    if (name.length < 4 || !name.includes("_")) continue;
+    if (text.includes(name)) fail(`${path.relative(root, file)} displays unvalidated field ${name}`);
+  }
+}
+console.log("units check passed (L_R is not rendered; unvalidated column names are not displayed)");

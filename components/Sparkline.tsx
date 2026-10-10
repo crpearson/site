@@ -8,11 +8,13 @@ export function Sparkline({
   color,
   service,
   logged,
+  rest,
 }: {
   values: (number | null)[];
   color: string;
   service?: (string | null)[];
   logged?: boolean[];
+  rest?: boolean[];
 }) {
   const present = values.filter((value): value is number => value != null);
   if (present.length < 2) return null;
@@ -33,7 +35,7 @@ export function Sparkline({
     const command = index > 0 && values[index - 1] != null ? "L" : "M";
     path += `${command}${xy(index, value)}`;
   });
-  const series: ChartSeries = { id: "spark", label: "", color, values, service, logged };
+  const series: ChartSeries = { id: "spark", label: "", color, values, service, logged, rest };
   const latest = [...values].reverse().find((value) => value != null);
   const ends = openEndIndices(series);
   const dash = missBridges(series, values.map((_, index) => String(index)))

@@ -25,8 +25,9 @@ export default function AboutPage() {
           {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
           {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
           comes from the start of each storage charge. Rules v3 and Rule B use the limits shown
-          below. 2026-10-09-restday0 is an individual rest-test baseline for C1-P4 and C2-P2. It
-          is not a series mean. Packs that did not run that night are not given a join or a ring.
+          below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and not a
+          series mean. D-1, C1-P4, and C2-P2 are in the Rest pool until 2026-10-16. A Rest pool night
+          is labeled Rest pool. D-1's 2026-10-09 run stays on series D.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">
@@ -63,7 +64,7 @@ export default function AboutPage() {
           <p className="note">
             Internal resistance in milliohms. Each cell is the median of the DX8 IR samples on that
             storage run, already in {IR_UNIT}. Pack average is the mean of the six cells. Pack S_R
-            is the whole-pack sample and L_R is the line sample. The old end-of-run charge line is
+            is the whole-pack sample. Line resistance is not shown. The old end-of-run charge line is
             milliamp-hours, not IR, and it is not shown.
           </p>
         </Panel>
@@ -128,8 +129,9 @@ export default function AboutPage() {
             </li>
           </ul>
           <p className="note mt-4">
-            Service is separate: In service, Watch, D pool, or Retire. A status line reads Parallel,
-            then Service. The words on each pack are the recorded call.
+            Service is separate: In service, Watch, D pool, or Retire. A Rest pool pack is off every
+            board until the 7-day reading. A status line reads Parallel, then Service. The words on
+            each pack are the recorded call.
           </p>
         </article>
         <article className="panel" data-accent="ruleb">

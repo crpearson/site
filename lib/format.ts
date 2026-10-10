@@ -1,8 +1,16 @@
 import type { ValueFormat } from "@/lib/types";
 
+/** Milliohms with a third decimal when it is not zero, so 2.875 stays 2.875 and 0.65 stays 0.65. */
+export function formatIr(n: number): string {
+  const thousandths = n.toFixed(3);
+  if (thousandths.endsWith("00")) return n.toFixed(1);
+  if (thousandths.endsWith("0")) return n.toFixed(2);
+  return thousandths;
+}
+
 export function formatValue(kind: ValueFormat, n: number): string {
   if (kind === "volt") return n.toFixed(3);
-  if (kind === "ir") return n.toFixed(2);
+  if (kind === "ir") return formatIr(n);
   return Math.round(n).toString();
 }
 
