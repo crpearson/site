@@ -1,4 +1,6 @@
 import { heatGradient, heatStyle } from "@/lib/color";
+import { formatValue } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import type { ReactNode } from "react";
 
 export function Heatmap({
@@ -21,22 +23,26 @@ export function Heatmap({
   return (
     <div>
       <div className="mb-3 flex items-center gap-3">
-        <span className="font-mono text-[11px] text-[var(--muted)]">{min} mΩ</span>
+        <span className="font-mono text-[11px] text-[var(--muted)]">
+          {formatValue("ir", min)} {IR_UNIT}
+        </span>
         <div
           className="h-2 flex-1 rounded-full"
           style={{ background: heatGradient() }}
           aria-hidden="true"
         />
-        <span className="font-mono text-[11px] text-[var(--muted)]">{max} mΩ</span>
+        <span className="font-mono text-[11px] text-[var(--muted)]">
+          {formatValue("ir", max)} {IR_UNIT}
+        </span>
       </div>
       {caption ? (
         <p className="mb-3 text-xs leading-relaxed text-[var(--muted)]">{caption}</p>
       ) : null}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" data-scroll-ok="">
         <div
           className="grid min-w-[36rem] gap-1"
           style={{
-            gridTemplateColumns: `minmax(5.5rem, 7.5rem) repeat(${columnLabels.length}, minmax(2.6rem, 1fr))`,
+            gridTemplateColumns: `minmax(5.5rem, 7.5rem) repeat(${columnLabels.length}, minmax(3.4rem, 1fr))`,
           }}
         >
           <span />
@@ -69,9 +75,12 @@ export function Heatmap({
                     key={`${row.key}-${columnLabels[index]}`}
                     className="grid h-11 place-items-center rounded-md font-mono text-[12px] font-medium"
                     style={style}
-                    title={`${columnLabels[index]} ${value} mΩ`}
+                    title={`${columnLabels[index]} ${formatValue("ir", value)} ${IR_UNIT}`}
                   >
-                    {value}
+                    <span>
+                      {formatValue("ir", value)}
+                      <span className="mt-0.5 block text-[9px] font-normal">{IR_UNIT}</span>
+                    </span>
                   </div>
                 );
               })}

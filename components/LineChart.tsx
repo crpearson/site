@@ -5,11 +5,13 @@ import {
   allNotCharged,
   gapPhrase,
   legendNote,
+  lonePointIndices,
   missBridges,
   openEndIndices,
   seriesGap,
   seriesNa,
   seriesNotCharged,
+  seriesRest,
 } from "@/lib/bridges";
 import { formatAxis, formatValue } from "@/lib/format";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
@@ -123,6 +125,7 @@ export function LineChart({
               if (value != null && !seriesGap(item, hover)) {
                 return `${item.label} ${formatValue(format, value)} ${unit}`;
               }
+              if (seriesRest(item, hover)) return `${item.label} Rest pool`;
               if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
               if (seriesNa(item, hover)) return `${item.label} N/A`;
               return `${item.label} no value`;
@@ -148,7 +151,7 @@ export function LineChart({
               <span className="swatch" style={{ background: item.color }} aria-hidden="true" />
               <span>{item.label}</span>
               <span className="font-mono text-[var(--muted)]">
-                {latest == null ? "—" : formatValue(format, latest)}
+                {latest == null ? "—" : `${formatValue(format, latest)} ${unit}`}
               </span>
             </button>
           );
@@ -159,9 +162,9 @@ export function LineChart({
         {ariaLabel} Arrow keys and the night labels move between nights. A faint dotted line joins
         the real readings on either side of a skipped night. No value is plotted there. A skipped
         night before the first reading or after the last is a small hollow ring on the bottom edge,
-        also with no value. Nights before the pack was commissioned, and nights after it moved
-        slots, are not marked. A star on the night label is a partial night and is separate: a pack
-        that was charged still has a point.
+        also with no value. Nights before the pack or series was in service, and nights after a
+        move, are not marked. A single reading is a dot. A star on the night label is a partial
+        night and is separate: a pack that was charged still has a point.
         {missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
         {naNights.length ? ` N/A: ${naNights.join(", ")}.` : ""}
       </p>
@@ -176,7 +179,7 @@ export function LineChart({
               className="y-tick"
               style={{ top: `${yPos(tick, yDomain)}%` }}
             >
-              {formatAxis(format, tick)}
+              {formatAxis(format, tick)} {unit}
             </span>
           ))}
         </div>
@@ -303,9 +306,10 @@ export function LineChart({
                 style={{ left: `${((hover + 0.5) / n) * 100}%` }}
               />
             ) : null}
-            {shown.map((item) =>
-              item.values.map((value, index) => {
-                if (value == null || hover !== index) return null;
+            {shown.map((item) => {
+              const lone = new Set(lonePointIndices(item));
+              return item.values.map((value, index) => {
+                if (value == null || (hover !== index && !lone.has(index))) return null;
                 return (
                   <span
                     key={`${item.id}-${categories[index].id}`}
@@ -317,8 +321,8 @@ export function LineChart({
                     }}
                   />
                 );
-              }),
-            )}
+              });
+            })}
             {hover != null ? (
               <div
                 className="tip"

@@ -1,4 +1,6 @@
-import { missBridges, openEndIndices } from "@/lib/bridges";
+import { lonePointIndices, missBridges, openEndIndices } from "@/lib/bridges";
+import { formatValue } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import type { ChartSeries } from "@/lib/types";
 
 export function Sparkline({
@@ -6,14 +8,16 @@ export function Sparkline({
   color,
   service,
   logged,
+  rest,
 }: {
   values: (number | null)[];
   color: string;
   service?: (string | null)[];
   logged?: boolean[];
+  rest?: boolean[];
 }) {
   const present = values.filter((value): value is number => value != null);
-  if (present.length < 2) return null;
+  if (present.length === 0) return null;
   const min = Math.min(...present);
   const max = Math.max(...present);
   const span = max - min || 1;
@@ -31,8 +35,10 @@ export function Sparkline({
     const command = index > 0 && values[index - 1] != null ? "L" : "M";
     path += `${command}${xy(index, value)}`;
   });
-  const series: ChartSeries = { id: "spark", label: "", color, values, service, logged };
+  const series: ChartSeries = { id: "spark", label: "", color, values, service, logged, rest };
+  const latest = [...values].reverse().find((value) => value != null);
   const ends = openEndIndices(series);
+  const lone = lonePointIndices(series);
   const dash = missBridges(series, values.map((_, index) => String(index)))
     .map((bridge) => {
       const from = values[bridge.from];
@@ -47,8 +53,17 @@ export function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       className="h-8 w-full"
-      aria-hidden="true"
+      role="img"
+      aria-label={
+        latest == null ? "IR sparkline" : `IR sparkline, latest ${formatValue("ir", latest)} ${IR_UNIT}`
+      }
     >
+      {lone.map((index) => {
+        const value = values[index];
+        if (value == null) return null;
+        const [x, y] = xy(index, value).split(" ");
+        return <circle key={`dot-${index}`} cx={x} cy={y} r={2.2} fill={color} />;
+      })}
       {ends.map((index) => (
         <circle
           key={index}

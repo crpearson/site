@@ -1,13 +1,12 @@
 {
-  "as_of": "2026-10-08",
-  "note": "Packs cleared for the series parallel board; D pool and individually charged packs are excluded.",
+  "as_of": "2026-10-09",
+  "note": "C1-P3 stays Caution until one clean night (owner override). C1-P5 is charged individually and is not on a board. Rest pool packs are off every board until the 7-day reading.",
   "series": [
     {
       "series": "C1",
       "labels": [
         "C1-P2",
         "C1-P3",
-        "C1-P4",
         "C1-P6"
       ]
     },
@@ -15,12 +14,31 @@
       "series": "C2",
       "labels": [
         "C2-P1",
-        "C2-P2",
         "C2-P3",
         "C2-P4",
         "C2-P5",
         "C2-P6"
       ]
+    }
+  ],
+  "resting": [
+    {
+      "label": "D-1",
+      "uid": "CNHL-2026-001",
+      "day0": "2026-10-09",
+      "until": "2026-10-16"
+    },
+    {
+      "label": "C1-P4",
+      "uid": "CNHL-2026-004",
+      "day0": "2026-10-09",
+      "until": "2026-10-16"
+    },
+    {
+      "label": "C2-P2",
+      "uid": "CNHL-2026-008",
+      "day0": "2026-10-09",
+      "until": "2026-10-16"
     }
   ]
 }

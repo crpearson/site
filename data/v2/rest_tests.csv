@@ -1,0 +1,6 @@
+test_id,pack_uid,label,suspect_cell,start_date,due_date,reading,reading_date,c1_mV,c2_mV,c3_mV,c4_mV,c5_mV,c6_mV,sibling_median_drop_mV,suspect_drop_mV,excess_mV,result,cycle,source,note
+RT-001-1,CNHL-2026-001,D-1,6,2026-10-09,2026-10-16,storage_end,2026-10-09,3862,3862,3862,3862,3862,3861,,,,,1,DX8 log end cells,day-0 baseline; drops computed at 90min and 7day vs this row
+RT-004-1,CNHL-2026-004,C1-P4,1,2026-10-09,2026-10-16,storage_end,,,,,,,,,,,FILLED-SEE-DAY0-ROW,1,awaiting log,placeholder superseded by the 2026-10-09-restday0 row below
+RT-008-1,CNHL-2026-008,C2-P2,6,2026-10-09,2026-10-16,storage_end,,,,,,,,,,,FILLED-SEE-DAY0-ROW,1,awaiting log,placeholder superseded by the 2026-10-09-restday0 row below
+RT-008-1,CNHL-2026-008,C2-P2,6,2026-10-09,2026-10-16,storage_end,2026-10-09,3861,3861,3861,3861,3862,3861,,,,,1,DX8 log end cells,day-0 baseline; drops at 90min and 7day vs this row
+RT-004-1,CNHL-2026-004,C1-P4,1,2026-10-09,2026-10-16,storage_end,2026-10-09,3861,3862,3861,3861,3861,3861,,,,,1,DX8 log end cells,day-0 baseline; drops at 90min and 7day vs this row

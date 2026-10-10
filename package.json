@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/validate-v2.mjs && node scripts/write-redirects.mjs && node scripts/next-build.mjs",
+    "build": "node scripts/validate-v4.mjs && node scripts/write-redirects.mjs && node scripts/next-build.mjs && node scripts/check-overflow.mjs",
     "start": "next start",
     "lint": "eslint"
   },
@@ -22,6 +22,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
+    "playwright-core": "^1.64.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

@@ -1,0 +1,458 @@
+import fs from "node:fs";
+import path from "node:path";
+import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
+import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
+import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
+
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (quoted) {
+      if (char === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i += 1;
+        } else quoted = false;
+      } else field += char;
+      continue;
+    }
+    if (char === '"') quoted = true;
+    else if (char === ",") {
+      row.push(field);
+      field = "";
+    } else if (char === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (char !== "\r") field += char;
+  }
+  if (field.length || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+  const [header, ...body] = rows.filter((cells) => cells.some((cell) => cell.length));
+  return body.map((cells) => Object.fromEntries(header.map((key, index) => [key, cells[index] ?? ""])));
+}
+
+function timeKey(token) {
+  const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
+  if (rest) return [1, rest[1], 2];
+  const eve = token.endsWith("-eve");
+  const day = eve ? token.slice(0, -4) : token;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
+  const session = token.match(/^S(\d+)$/);
+  if (session) return [0, session[1].padStart(6, "0"), 0];
+  return [2, token, 0];
+}
+
+function compareTime(a, b) {
+  const left = timeKey(a);
+  const right = timeKey(b);
+  if (left[0] !== right[0]) return left[0] - right[0];
+  if (left[1] !== right[1]) return left[1] < right[1] ? -1 : 1;
+  return left[2] - right[2];
+}
+
+const root = process.cwd();
+const irSource = fs.readFileSync(path.join(root, "lib/ir.ts"), "utf8");
+const fleetSource = fs.readFileSync(path.join(root, "lib/fleet.ts"), "utf8");
+if (!/IR_STORE_IS_DX8_INTEGER = false/.test(irSource)) {
+  console.error("lib/ir.ts must keep IR_STORE_IS_DX8_INTEGER false");
+  process.exit(1);
+}
+if (fleetSource.includes("ir_store_v2")) {
+  console.error("lib/fleet.ts must not read ir_store_v2");
+  process.exit(1);
+}
+
+const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
+if (v4.length !== 159) {
+  console.error(`expected 159 ir_store_v4 rows, got ${v4.length}`);
+  process.exit(1);
+}
+
+const CELL_IR = [0.5, 15];
+const PACK_IR = [5, 60];
+const CELL_V = [2.5, 4.35];
+const plausibility = [];
+
+function flag(row, field, value, message) {
+  const where = [row.session, row.pack || row.label || row.pack_uid].filter(Boolean).join("/");
+  plausibility.push(`${where} ${field}=${value}: ${message}`);
+}
+
+function finite(raw) {
+  if (raw == null || String(raw).trim() === "") return null;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : Number.NaN;
+}
+
+function within(row, field, raw, [lo, hi], unit) {
+  const value = finite(raw);
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < lo || value > hi) {
+    flag(row, field, raw, `outside ${lo}–${hi} ${unit}`);
+  }
+}
+
+function nonNegative(row, field, raw) {
+  const value = finite(raw);
+  if (value == null) return;
+  if (!Number.isFinite(value) || value < 0) flag(row, field, raw, "count must be non-negative");
+}
+
+let matched = 0;
+for (const row of v4) {
+  const cells = [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}_mOhm`]));
+  const avg = Number(row.avg_mOhm);
+  const spread = Number(row.spread_mOhm);
+  if (cells.some((cell) => !Number.isFinite(cell)) || !Number.isFinite(avg) || !Number.isFinite(spread)) {
+    console.error(`IR row is not a number: ${row.session}/${row.pack}`);
+    process.exit(1);
+  }
+  cells.forEach((cell, index) => within(row, `c${index + 1}_mOhm`, cell, CELL_IR, "mΩ"));
+  const sum = cells.reduce((total, cell) => total + cell, 0);
+  if (String(row.pack_SR_mOhm).trim() === "") within(row, "sum of c1..c6_mOhm", sum, PACK_IR, "mΩ");
+  else within(row, "pack_SR_mOhm", row.pack_SR_mOhm, PACK_IR, "mΩ");
+  within(row, "sum of c1..c6_mOhm", sum, PACK_IR, "mΩ");
+  const cellMax = Math.max(...cells);
+  if (spread < 0 || spread > cellMax) {
+    flag(row, "spread_mOhm", spread, `outside 0–${cellMax} mΩ (cell max on this row)`);
+  }
+  for (let index = 1; index <= 6; index += 1) {
+    const mv = finite(row[`start_c${index}_mV`]);
+    if (mv == null) flag(row, `start_c${index}_mV`, row[`start_c${index}_mV`], "missing cell voltage");
+    else within(row, `start_c${index}_mV`, mv / 1000, CELL_V, "V");
+  }
+  if (String(row.floor_mV).trim() !== "") within(row, "floor_mV", Number(row.floor_mV) / 1000, CELL_V, "V");
+  nonNegative(row, "n128", row.n128);
+  nonNegative(row, "duration_s", row.duration_s);
+  matched += 1;
+}
+
+const spot = v4.find((row) => row.pack_uid === "CNHL-2026-001" && row.session === "2026-10-09");
+const spotCells = spot ? [1, 2, 3, 4, 5, 6].map((index) => Number(spot[`c${index}_mOhm`]).toFixed(1)).join(",") : "";
+if (spotCells !== "3.2,2.9,2.5,2.2,3.0,2.8") {
+  console.error(`D-1 2026-10-09 cells ${spotCells}`);
+  process.exit(1);
+}
+
+const packs = parseCsv(fs.readFileSync(path.join(root, "data/v2/packs.csv"), "utf8"));
+for (const pack of packs) nonNegative(pack, "charge_count", pack.charge_count);
+
+const rests = parseCsv(fs.readFileSync(path.join(root, "data/v2/rest_tests.csv"), "utf8"));
+for (const test of rests) {
+  if (test.result.trim() === "FILLED-SEE-DAY0-ROW") continue;
+  nonNegative(test, "cycle", test.cycle);
+  for (let index = 1; index <= 6; index += 1) {
+    const mv = finite(test[`c${index}_mV`]);
+    if (mv == null) continue;
+    within(test, `c${index}_mV`, mv / 1000, CELL_V, "V");
+  }
+}
+
+if (plausibility.length) {
+  console.error(`plausibility failed (${plausibility.length}). Lary's files were not edited:`);
+  for (const line of plausibility) console.error(line);
+  process.exit(1);
+}
+console.log(`plausibility passed ${v4.length}/${v4.length} (no real-data row outside the bounds)`);
+
+const calls = parseCsv(fs.readFileSync(path.join(root, "data/v2/status_calls.csv"), "utf8"));
+const visibleRests = rests.filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW");
+if (visibleRests.length !== 3 || visibleRests.some((row) => row.pack_uid === "CNHL-2026-003")) {
+  console.error("rest tests should show three day-0 rows and no C1-P3 test");
+  process.exit(1);
+}
+for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
+  const pack = packs.find((row) => row.pack_uid === uid);
+  if (!pack || pack.charge_count !== "14") {
+    console.error(`${uid} charge_count should be 14`);
+    process.exit(1);
+  }
+}
+
+function sessionOf(source, date) {
+  const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
+  const token = raw.split(/\s+/)[0] ?? "";
+  if (/^\d{4}-\d{2}-\d{2}-restday0$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token) || /^S\d+$/.test(token)) return token;
+  return date;
+}
+
+const byUid = new Map();
+calls.forEach((row, index) => {
+  const list = byUid.get(row.pack_uid) ?? [];
+  list.push({ ...row, index, session: sessionOf(row.source, row.date) });
+  byUid.set(row.pack_uid, list);
+});
+
+const disagreements = [];
+for (const [uid, list] of byUid) {
+  const statusRows = list
+    .filter((row) => !/^unchanged\b/i.test(row.status.trim()))
+    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date) || a.index - b.index);
+  const latest = statusRows[statusRows.length - 1];
+  if (!latest || !latest.date.startsWith("2026-10-09") || !latest.status.startsWith("PARALLEL")) continue;
+  const history = v4
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .sort((a, b) => compareTime(a.session, b.session));
+  const pack = packs.find((row) => row.pack_uid === uid);
+  const computed = parallelBucket(
+    history.map((row) => ({
+      spread: Number(row.spread_mOhm),
+      cells: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}_mOhm`])),
+      gap: Number(row.low_cell_gap_mV),
+      floor: Number(row.floor_mV),
+      floorCell: Number(row.floor_cell),
+      starts: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`start_c${index}_mV`])),
+    })),
+    {
+      inDPool: pack?.series === "D" || /d pool/i.test(pack?.status ?? ""),
+      failedRest: visibleRests.some((row) => row.pack_uid === uid && /fail/i.test(row.result)),
+      selfDischargeWatch: /self-discharge/i.test(pack?.status ?? ""),
+    },
+  );
+  const recorded = laryParallelBucket(latest.status);
+  if (/REST POOL/i.test(latest.status)) {
+    console.log(`rest pool ${uid} (${latest.label_at_time}): recorded OFF, not a parallel-call disagreement`);
+  } else if (/OWNER OVERRIDE/i.test(latest.reason)) {
+    console.log(
+      `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
+    );
+  } else if (computed.call !== recorded) {
+    disagreements.push(`${uid}: computed ${computed.call}, recorded ${recorded}`);
+  }
+}
+
+if (disagreements.length) {
+  console.log(`parallel call disagreements (${disagreements.length}), Lary's text left unchanged:`);
+  for (const line of disagreements) console.log(line);
+}
+
+console.log(`v4 IR validation passed ${matched}/${v4.length} (site scale is 1; displayed mΩ match ir_store_v4)`);
+
+function fail(message) {
+  console.error(message);
+  process.exit(1);
+}
+
+const events = parseCsv(fs.readFileSync(path.join(root, "data/v2/pack_events.csv"), "utf8"));
+const moved = new Set(events.filter((row) => row.event === "move").map((row) => row.pack_uid));
+const slotted = packs.filter((pack) => !moved.has(pack.pack_uid) && !pack.retired.trim());
+const latestAvg = (uid) => {
+  const rows = v4
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .sort((a, b) => compareTime(a.session, b.session));
+  return rows[rows.length - 1];
+};
+const fleetMean =
+  slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
+if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.893") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.893 mΩ over 11`);
+}
+const c1p4 = latestAvg("CNHL-2026-004");
+if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
+  fail(`C1-P4 latest operational row is ${c1p4?.session} ${c1p4?.avg_mOhm}`);
+}
+const c2p2 = latestAvg("CNHL-2026-008");
+if (!c2p2 || c2p2.session !== "2026-09-30" || Number(c2p2.avg_mOhm) !== 3.217) {
+  fail(`C2-P2 latest operational row is ${c2p2?.session} ${c2p2?.avg_mOhm}`);
+}
+if (v4.some((row) => row.session === "2026-10-09" && row.series_at_time === "C1")) {
+  fail("D-1 2026-10-09 must not belong to series C1");
+}
+const d1 = v4.find((row) => row.session === "2026-10-09" && row.pack_uid === "CNHL-2026-001");
+if (!d1 || d1.series_at_time !== "D") fail("D-1 2026-10-09 must belong to series D");
+
+function seriesMean(series) {
+  const groups = new Map();
+  for (const row of v4) {
+    if (row.series_at_time !== series || row.session_type === "rest-test-day0") continue;
+    const list = groups.get(row.session) ?? [];
+    list.push(Number(row.avg_mOhm));
+    groups.set(row.session, list);
+  }
+  const sessions = [...groups.keys()].sort(compareTime);
+  const last = sessions[sessions.length - 1];
+  const values = groups.get(last);
+  return { session: last, mean: values.reduce((sum, value) => sum + value, 0) / values.length };
+}
+const c1Mean = seriesMean("C1");
+const c2Mean = seriesMean("C2");
+if (c1Mean.session !== "2026-09-27" || c1Mean.mean.toFixed(3) !== "2.907") {
+  fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
+}
+if (c2Mean.session !== "2026-09-30" || c2Mean.mean.toFixed(3) !== "2.886") {
+  fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
+}
+
+const latestPtDate = latestCalendarDate([
+  ...v4.map((row) => row.session),
+  ...calls.map((row) => row.date),
+  ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
+]);
+if (latestPtDate !== "2026-10-09") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-09`);
+if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
+  fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
+}
+if (pacificCalendarDate(new Date("2026-10-10T08:00:00Z")) !== "2026-10-10") {
+  fail("Pacific date helper did not roll the calendar at Pacific midnight");
+}
+const board = buildNextBoard();
+const rendered = board.series.map((item) => item.labels.join("+")).join(" | ");
+const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | ");
+if (rendered !== expected || board.as_of !== latestPtDate) {
+  fail(`next parallel ${board.as_of} ${rendered}, expected ${latestPtDate} ${expected}`);
+}
+for (const label of ["D-1", "C1-P4", "C2-P2", "C1-P5"]) {
+  if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
+}
+const nextFile = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next.json"), "utf8"));
+if (JSON.stringify(nextFile) !== JSON.stringify(board)) {
+  fail("data/v2/next.json does not match the boards built from the latest parallel calls");
+}
+console.log(`next parallel ${board.as_of}: ${rendered}`);
+
+for (const file of ["data/packs-timeseries.json", "data/sessions.json"]) {
+  const text = fs.readFileSync(path.join(root, file), "utf8");
+  if (text.includes('"cells_ir_mohm"') || text.includes('"avg_ir_mohm"') || text.includes("spread_mohm") || text.includes("_ir_mohm")) {
+    fail(`${file} still labels ;130; charge as milliohms`);
+  }
+}
+
+function jsonFiles(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) jsonFiles(full, out);
+    else if (entry.name.endsWith(".json")) out.push(full);
+  }
+  return out;
+}
+
+function numbersUnder(value, out = []) {
+  if (typeof value === "number" && Number.isFinite(value)) out.push(value);
+  else if (Array.isArray(value)) value.forEach((item) => numbersUnder(item, out));
+  else if (value && typeof value === "object") Object.values(value).forEach((item) => numbersUnder(item, out));
+  return out;
+}
+
+function mohmLimit(key) {
+  return /pack|(^|_)avg|sr|s_r/i.test(key) ? 60 : 15;
+}
+
+for (const file of jsonFiles(path.join(root, "data"))) {
+  const data = JSON.parse(fs.readFileSync(file, "utf8"));
+  const walkValues = (value) => {
+    if (Array.isArray(value)) value.forEach(walkValues);
+    else if (value && typeof value === "object") {
+      for (const [key, child] of Object.entries(value)) {
+        if (key.endsWith("_mohm")) {
+          const limit = mohmLimit(key);
+          for (const number of numbersUnder(child)) {
+            if (number > limit) fail(`${path.relative(root, file)} ${key}=${number} exceeds ${limit}`);
+          }
+        } else walkValues(child);
+      }
+    }
+  };
+  walkValues(data);
+}
+
+for (const file of ["data/meta.json", "data/sessions.json"]) {
+  const data = JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
+  const metrics = file.endsWith("sessions.json") ? data.meta.metrics_available : data.metrics_available;
+  for (const name of metrics) {
+    if (String(name).includes("mohm") || String(name).includes("_ir_")) {
+      fail(`${file} metrics_available still uses a milliohm name for the charge store: ${name}`);
+    }
+  }
+}
+console.log("charge-store names and _mohm bounds passed");
+
+function walkTsx(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walkTsx(full, out);
+    else if (entry.name.endsWith(".tsx")) out.push(full);
+  }
+  return out;
+}
+
+function expandColumns(cell) {
+  const names = [];
+  for (const piece of cell.replace(/\*/g, "").split(",")) {
+    const part = piece.trim();
+    const range = part.split(/\s*(?:…|\.\.\.)\s*/);
+    if (range.length === 2) {
+      const start = range[0].match(/^(.*?)(\d+)(.*)$/);
+      const end = range[1].match(/^(.*?)(\d+)(.*)$/);
+      if (start && end && start[1] === end[1] && start[3] === end[3]) {
+        for (let n = Number(start[2]); n <= Number(end[2]); n += 1) names.push(`${start[1]}${n}${start[3]}`);
+        continue;
+      }
+    }
+    if (part.includes("_")) names.push(part);
+  }
+  return names;
+}
+
+function validationMark(text) {
+  const plain = text.replace(/\*/g, "");
+  if (/not published/i.test(plain)) return "not-published";
+  if (/not validated/i.test(plain)) return "not-validated";
+  if (/validated/i.test(plain)) return "validated";
+  if (/derived/i.test(plain)) return "derived";
+  if (/label/i.test(plain)) return "label";
+  return "other";
+}
+
+function unitsColumns(markdown) {
+  const marks = new Map();
+  for (const line of markdown.split("\n")) {
+    if (!line.startsWith("|") || line.includes("---")) continue;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (cells.length < 2) continue;
+    const mark = validationMark(cells[cells.length - 1]);
+    for (const name of expandColumns(cells[0])) marks.set(name, mark);
+  }
+  return marks;
+}
+
+function findNamed(dir, name, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".preview-main" || entry.name === "out") continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) findNamed(full, name, out);
+    else if (entry.name === name) out.push(full);
+  }
+  return out;
+}
+
+const privateUnits = findNamed(root, "UNITS.md");
+if (privateUnits.length) fail(`private units file is still in the repo: ${privateUnits.map((file) => path.relative(root, file)).join(", ")}`);
+const unitsPath = path.join(root, "data/UNITS.public.md");
+if (!fs.existsSync(unitsPath)) fail("data/UNITS.public.md is missing");
+const units = unitsColumns(fs.readFileSync(unitsPath, "utf8"));
+if (units.get("LR_mOhm") !== "not-published") fail("LR_mOhm must be marked not published in data/UNITS.public.md");
+
+const ui = walkTsx(path.join(root, "app")).concat(walkTsx(path.join(root, "components")));
+const uiText = ui.map((file) => fs.readFileSync(file, "utf8")).join("\n");
+const codeText = `${uiText}\n${fs.readFileSync(path.join(root, "lib/fleet.ts"), "utf8")}`;
+if (/\bL_R\b/.test(codeText) || codeText.includes("LR_mOhm") || /\.lr\b/.test(codeText)) {
+  fail("displayed code renders L_R");
+}
+for (const [name, mark] of units) {
+  if (name.length < 4 || !name.includes("_")) continue;
+  const inPage = uiText.includes(name);
+  const usedAsIr = /mOhm$/i.test(name) && (codeText.includes(name) || (/^c\d_mOhm$/.test(name) && codeText.includes("_mOhm")));
+  if ((inPage || usedAsIr) && mark !== "validated") {
+    fail(`${name} is displayed and marked ${mark}`);
+  }
+}
+console.log("units check passed (displayed fields are validated; L_R is not published)");

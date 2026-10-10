@@ -1,126 +1,101 @@
 {
+  "call_date": "2026-10-09",
   "call_date_c1": "2026-09-27",
   "call_date_c2": "2026-09-30",
-  "status_source": "Lipo Lary live SoT relayed 2026-10-08 via Chad",
+  "status_source": "Lipo Lary Rules v3, approved 2026-10-09",
   "thresholds": {
-    "intra_pack_spread_mohm": {
-      "go_lt": 40,
-      "caution_lo": 40,
-      "caution_hi": 49,
-      "pull_gte": 50
+    "spread_mohm": {
+      "caution_gte": 2.0,
+      "individual_gte": 3.0,
+      "nights_in_a_row": 2
     },
+    "cell_ratio_to_median": {
+      "caution_gte": 1.5,
+      "individual_gte": 2.0,
+      "nights_in_a_row": 2
+    },
+    "low_cell_gap_mv": {
+      "caution_gte": 60,
+      "individual_gte": 100,
+      "rule": "2 of last 3 nights"
+    },
+    "floor_eye_mv": 3600,
+    "min_cell_rest_mv": 3300,
     "inter_pack_rest_delta_v": {
       "go_lte": 0.3,
       "caution_lo": 0.3,
       "caution_hi": 0.6,
       "hard_stop_gt": 0.6
-    },
-    "self_discharge_imbalance_mv": 150,
-    "floor_eye_mv": 3600
-  },
-  "packs": {
-    "C1-P1": {
-      "status": "OFF",
-      "reason": "Chronic Cell6 self-discharge (floor 3509 mV, imb 191 mV \u2265~150 SD)",
-      "call_date": "2026-09-27",
-      "detail": "worse vs eve"
-    },
-    "C1-P2": {
-      "status": "OK",
-      "reason": "spr 26; floor OK",
-      "call_date": "2026-09-27"
-    },
-    "C1-P3": {
-      "status": "Caution",
-      "reason": "spr 40 + floor 3578 EYE (<3600); imb 122 not SD \u2014 still ON next board",
-      "call_date": "2026-09-27"
-    },
-    "C1-P4": {
-      "status": "Caution",
-      "reason": "Chronic Cell1 pack-max IR 561; spr 45 Caution; floor OK (not SD); reduced C1 amps; not scrap",
-      "call_date": "2026-09-27"
-    },
-    "C1-P5": {
-      "status": "OFF",
-      "reason": "floor 3539 EYE + lowest rest; spr 33 Go / imb 71 not SD \u2014 not scrap; off keeps board rest-\u0394 GO (prefer off tonight)",
-      "call_date": "2026-09-27"
-    },
-    "C1-P6": {
-      "status": "OK",
-      "reason": "spr 16",
-      "call_date": "2026-09-27"
-    },
-    "C2-P1": {
-      "status": "OK",
-      "reason": "spr 17",
-      "call_date": "2026-09-30"
-    },
-    "C2-P2": {
-      "status": "Caution",
-      "reason": "floor 3597 EYE; imb 103 not SD; spr 26 Go \u2014 still ON",
-      "call_date": "2026-09-30"
-    },
-    "C2-P3": {
-      "status": "OK",
-      "reason": "spr 26",
-      "call_date": "2026-09-30"
-    },
-    "C2-P4": {
-      "status": "OK",
-      "reason": "spr 17",
-      "call_date": "2026-09-30"
-    },
-    "C2-P5": {
-      "status": "OK",
-      "reason": "spr 19",
-      "call_date": "2026-09-30"
-    },
-    "C2-P6": {
-      "status": "OK",
-      "reason": "spr 18; lowest C2 pack avg",
-      "call_date": "2026-09-30"
     }
   },
-  "next_parallel": {
-    "C1": {
-      "packs_on": [
-        "C1-P2",
-        "C1-P3",
-        "C1-P4",
-        "C1-P6"
-      ],
-      "packs_off": [
-        "C1-P1",
-        "C1-P5"
-      ],
-      "rest_delta_v": 0.13,
-      "rest_delta_band": "GO",
-      "amps": "reduced",
-      "as_of": "2026-09-27"
+  "packs": {
+    "D-1": {
+      "status": "PARALLEL INDIVIDUAL-ONLY | SERVICE D pool (Watch); rest test cycle 1 started 2026-10-09",
+      "reason": "Individual only. Rest test cycle 1 started 2026-10-09. Last night IR avg 2.77 mΩ, spread 1.0 mΩ.",
+      "call_date": "2026-10-09"
     },
-    "C2": {
-      "packs_on": [
-        "C2-P1",
-        "C2-P2",
-        "C2-P3",
-        "C2-P4",
-        "C2-P5",
-        "C2-P6"
-      ],
-      "packs_off": [],
-      "rest_delta_v": 0.154,
-      "rest_delta_band": "GO",
-      "amps": "normal",
-      "as_of": "2026-09-30",
-      "note": "cleared from 0.415 CAUTION on 2026-09-27"
+    "C1-P2": {
+      "status": "PARALLEL GO | SERVICE In service",
+      "reason": "Go. IR avg 2.93 mΩ, spread 0.6 mΩ. No trigger.",
+      "call_date": "2026-10-09"
+    },
+    "C1-P3": {
+      "status": "PARALLEL CAUTION; GO after one clean night | SERVICE In service",
+      "reason": "OWNER OVERRIDE 2026-10-09: keep GO-after-one-clean-night; strict 60 mV low-cell-gap rule NOT applied to C1-P3; no rest test on Cell 4. Monitor: Cell4 gap last 3 = 63/61/92 mV.",
+      "call_date": "2026-10-09"
+    },
+    "C1-P4": {
+      "status": "PARALLEL CAUTION (reduced current) | SERVICE Watch; rest test Cell 1 cycle 1 started 2026-10-09",
+      "reason": "Caution, reduced current. Cell 1 starts low (gap 166/49/93 mV over the last 3 nights). IR is normal (spread 0.65 mΩ). 7-day rest test running.",
+      "call_date": "2026-10-09"
+    },
+    "C1-P5": {
+      "status": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
+      "reason": "Caution. Charged individually until one clean night, then Go. Floor 3539 mV on Cell 4.",
+      "call_date": "2026-10-09"
+    },
+    "C1-P6": {
+      "status": "PARALLEL GO | SERVICE In service",
+      "reason": "Go. IR avg 2.70 mΩ, spread 0.8 mΩ. No trigger.",
+      "call_date": "2026-10-09"
+    },
+    "C2-P1": {
+      "status": "PARALLEL GO | SERVICE Watch (IR spread)",
+      "reason": "Go. Service watch for IR spread. Last spread 1.4 mΩ.",
+      "call_date": "2026-10-09"
+    },
+    "C2-P2": {
+      "status": "PARALLEL CAUTION (reduced current) | SERVICE Watch; rest test Cell 6 cycle 1 started 2026-10-09",
+      "reason": "Caution, reduced current. Cell 6 starts low. Floor 3597 mV. 7-day rest test running.",
+      "call_date": "2026-10-09"
+    },
+    "C2-P3": {
+      "status": "PARALLEL GO | SERVICE In service",
+      "reason": "Go. IR avg 2.93 mΩ, spread 0.4 mΩ. No trigger.",
+      "call_date": "2026-10-09"
+    },
+    "C2-P4": {
+      "status": "PARALLEL GO | SERVICE In service",
+      "reason": "Go. IR avg 2.90 mΩ, spread 0.6 mΩ. No trigger.",
+      "call_date": "2026-10-09"
+    },
+    "C2-P5": {
+      "status": "PARALLEL GO | SERVICE In service",
+      "reason": "Go. IR avg 2.88 mΩ, spread 1.2 mΩ. No trigger.",
+      "call_date": "2026-10-09"
+    },
+    "C2-P6": {
+      "status": "PARALLEL GO | SERVICE In service",
+      "reason": "Go. IR avg 3.13 mΩ, spread 0.7 mΩ. No trigger.",
+      "call_date": "2026-10-09"
     }
   },
   "gaps": [
-    "C1 was last measured on 2026-09-27. C2 was last measured on 2026-09-30.",
+    "C1 was last measured on 2026-09-27. C2 was last measured on 2026-09-30. D-1 was measured on 2026-10-09.",
     "A night that did not include every pack stays incomplete. Missing packs are not filled in.",
-    "Storage charges have internal resistance and voltage only. Capacity in and capacity out are not in this record.",
-    "DX8 internal resistance, roughly 400\u2013600 m\u03a9 per cell here, is not a manufacturer rating and is not an Oscar or CNHL retire limit. The rules on this site are relative to this fleet.",
-    "A soft identity check can miss without moving a pack to another slot.",
+    "No capacity in/out series — storage runs are top-ups, not capacity tests.",
+    "DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.",
+    "Mapping uses the night's manifest. The usual-low-cell check is advisory only.",
     "C3 and C4 are not in service. Bake-off prices are shop prices, not purchase prices.",
     "The second charger is not in service yet."
   ]

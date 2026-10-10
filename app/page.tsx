@@ -3,10 +3,14 @@ import { CellExplorer } from "@/components/CellExplorer";
 import { seriesColor } from "@/lib/color";
 import { Heatmap } from "@/components/Heatmap";
 import { Lamp } from "@/components/Lamp";
+import { PackTile } from "@/components/PackTile";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
-import { Sparkline } from "@/components/Sparkline";
+import { formatValue } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import {
+  allRestTests,
+  chargedIndividually,
   fleetModel,
   floorBands,
   floorGuide,
@@ -24,6 +28,9 @@ import {
 
 export default function Home() {
   const stats = headline();
+  const individualPacks = chargedIndividually();
+  const restPacks = stats.rest.map((row) => row.label);
+  const ruleOff = stats.off.map((row) => row.label);
   const rows = statusRows();
   const blocks = seriesBlocks();
   const model = fleetModel();
@@ -44,36 +51,96 @@ export default function Home() {
             Each series has its own as-of date. The calls below are the latest status. Charts follow
             a pack through every measured night, including nights under an earlier label. On every
             line, a skipped night between two readings is a faint dotted line, with no value. A
-            skipped night before the first reading or after the last is a small hollow ring on the
-            bottom edge, also with no value. Nothing is filled in.
+            skipped night before the first reading or after the last, while that line was in service,
+            is a small hollow ring on the bottom edge, also with no value. Nights before the pack or
+            series existed, and nights after a move, are not marked. A single reading is a dot.
+            Nothing is filled in.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
           <article className="stat" data-tone="ok">
-            <p className="eyebrow">OK</p>
-            <p className="stat-value">{stats.ok.length}</p>
-            <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "—"}</p>
+            <p className="eyebrow">Parallel Go</p>
+            <p className="stat-value">
+              <span className="num">
+                {stats.ok.length} {stats.ok.length === 1 ? "pack" : "packs"}
+              </span>
+            </p>
+            <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="caution">
-            <p className="eyebrow">Caution / watch</p>
-            <p className="stat-value">{stats.caution.length}</p>
-            <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "—"}</p>
+            <p className="eyebrow">Parallel Caution</p>
+            <p className="stat-value">
+              <span className="num">
+                {stats.caution.length} {stats.caution.length === 1 ? "pack" : "packs"}
+              </span>
+            </p>
+            <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="off">
-            <p className="eyebrow">Off / pull</p>
-            <p className="stat-value">{stats.off.length}</p>
-            <p className="stat-sub">{stats.off.map((row) => row.label).join(" · ") || "None"}</p>
+            <p className="eyebrow">Charged individually</p>
+            <p className="stat-value">
+              <span className="num">
+                {individualPacks.length} {individualPacks.length === 1 ? "pack" : "packs"}
+              </span>
+            </p>
+            <p className="stat-sub">{individualPacks.join(" · ") || "None"}</p>
+          </article>
+          <article className="stat" data-tone="floor">
+            <p className="eyebrow">Rest pool</p>
+            <p className="stat-value">
+              <span className="num">
+                {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
+              </span>
+            </p>
+            <p className="stat-sub">{restPacks.join(" · ") || "None"}</p>
+          </article>
+          <article className="stat" data-tone="off">
+            <p className="eyebrow">Individual only · Rules v3</p>
+            <p className="stat-value">
+              <span className="num">
+                {ruleOff.length} {ruleOff.length === 1 ? "pack" : "packs"}
+              </span>
+            </p>
+            <p className="stat-sub">Rule outcome. {ruleOff.join(" · ") || "None."}</p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
-              {stats.mean.toFixed(1)}
-              <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+              <span className="num">
+                {stats.mean.toFixed(2)} {IR_UNIT}
+              </span>
             </p>
-            <p className="stat-sub">Latest averages of {stats.counted} packs still in a slot</p>
+            <p className="stat-sub">
+              {formatValue("ir", stats.mean)} {IR_UNIT} across {stats.counted} packs still in a slot.
+              Rest-test day 0 is not included.
+            </p>
           </article>
         </div>
       </header>
+
+      <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
+        <p className="eyebrow">Off every board</p>
+        <h2 id="rest-pool-heading" className="panel-title mt-1">
+          Rest pool
+        </h2>
+        <p className="note mt-2">
+          Day 0 {stats.rest[0]?.restDay0 ?? "2026-10-09"}. 7-day reading due {stats.rest[0]?.restDue ?? "2026-10-16"}.
+          These packs are not charged during the test. D-1 stays in series D. C1-P4 and C2-P2 keep their slots.
+        </p>
+        <ul className="mt-3 space-y-2 text-sm">
+          {stats.rest.map((row) => (
+            <li key={row.uid}>
+              <Link href={`/pack/${row.uid}`} className="pack-link">
+                {row.label}
+              </Link>
+              <span className="note">
+                {" "}
+                · day 0 {row.restDay0} · due {row.restDue} · {row.series}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <Panel
         accent="signal"
@@ -81,8 +148,10 @@ export default function Home() {
         title="Series mean IR"
         action={
           <span className="note">
-            mΩ · a night that series was not measured is a faint dotted join, or a hollow ring on
-            the bottom edge before the first reading or after the last
+            {IR_UNIT} · one reading is a dot. A night that series was in service and was not measured
+            is a faint dotted join, or a hollow ring before the first reading or after the last.
+            Nights before that series existed are not marked. Rest-test day 0 is left off this mean.
+            D-1 on 10-09 stays on series D.
           </span>
         }
       >
@@ -93,12 +162,13 @@ export default function Home() {
             label: fleet.id,
             color: fleet.color,
             values: fleet.values,
+            service: fleet.service,
           }))}
           yDomain={model.meanDomain}
           format="ir"
-          unit="mΩ"
+          unit={IR_UNIT}
           height={200}
-          ariaLabel="Mean pack IR by series across nights"
+          ariaLabel="Mean pack IR by series across nights, true milliohms"
         />
       </Panel>
 
@@ -110,6 +180,11 @@ export default function Home() {
           <p className="note mt-1">
             As of {next.as_of}. {next.note}
           </p>
+          {next.resting.length ? (
+            <p className="note mt-1">
+              Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
           {next.series.map((board) => (
@@ -132,6 +207,10 @@ export default function Home() {
         <h2 id="packs-heading" className="section-title">
           Packs
         </h2>
+        <p className="note">
+          Each card shows one status word. The full note from the latest check is under the small
+          chart, and in full on the pack page.
+        </p>
         {blocks.map((block) => (
           <div key={block.id}>
             <p className="eyebrow mb-2">
@@ -142,53 +221,10 @@ export default function Home() {
               {" · last measured "}
               {block.lastMeasured}
             </p>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-              {block.slots.map((slot) =>
-                slot.empty || !slot.uid ? (
-                  <Link
-                    key={slot.label}
-                    href={`/slot/${slot.label}`}
-                    className="tile is-empty"
-                    data-tone="pool"
-                  >
-                    <span className="font-mono text-sm">{slot.label}</span>
-                    <span className="note">empty</span>
-                  </Link>
-                ) : (
-                  <Link
-                    key={slot.label}
-                    href={`/pack/${slot.uid}`}
-                    className={slot.excluded ? "tile is-retired" : "tile"}
-                    data-tone={slot.tone ?? "pool"}
-                  >
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-sm">{slot.label}</span>
-                      {slot.status ? <Lamp status={slot.status} /> : null}
-                    </span>
-                    {slot.badge ? <span className="badge">{slot.badge}</span> : null}
-                    <Sparkline
-                      values={slot.avgSeries}
-                      color={slot.color}
-                      service={slot.service}
-                      logged={slot.logged}
-                    />
-                    <span className="grid grid-cols-3 gap-1">
-                      <span>
-                        <span className="metric-label">IR</span>
-                        <span className="metric-value block">{slot.avg?.toFixed(0) ?? "—"}</span>
-                      </span>
-                      <span>
-                        <span className="metric-label">Spread</span>
-                        <span className="metric-value block">{slot.spread ?? "—"}</span>
-                      </span>
-                      <span>
-                        <span className="metric-label">Floor</span>
-                        <span className="metric-value block">{slot.floor ?? "—"}</span>
-                      </span>
-                    </span>
-                  </Link>
-                ),
-              )}
+            <div className="pack-grid">
+              {block.slots.map((slot) => (
+                <PackTile key={slot.label} slot={slot} />
+              ))}
             </div>
           </div>
         ))}
@@ -205,7 +241,7 @@ export default function Home() {
           </p>
         </div>
         <div className="panel" data-accent="off">
-          <div className="table-wrap hidden md:block">
+          <div className="table-wrap hidden md:block" data-scroll-ok="">
             <table className="status-table">
               <thead>
                 <tr>
@@ -213,9 +249,9 @@ export default function Home() {
                   <th scope="col">Status</th>
                   <th scope="col">Reason</th>
                   <th scope="col">Call</th>
-                  <th scope="col">Latest IR</th>
-                  <th scope="col">Spread</th>
-                  <th scope="col">Floor</th>
+                  <th scope="col">Latest IR ({IR_UNIT})</th>
+                  <th scope="col">Spread ({IR_UNIT})</th>
+                  <th scope="col">Floor (mV)</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,7 +266,14 @@ export default function Home() {
                       </span>
                     </th>
                     <td>
-                      <Lamp status={row.status} />
+                      <Lamp status={row.parallel || row.status} />
+                      <p className="mt-1 text-sm">{row.parallel || row.status}</p>
+                      {row.service ? <p className="note mt-1">Service {row.service}</p> : null}
+                      {row.restPool ? (
+                        <p className="note mt-1">
+                          Rest pool · day 0 {row.restDay0} · due {row.restDue}
+                        </p>
+                      ) : null}
                     </td>
                     <td>
                       <p className="reason">{row.reason}</p>
@@ -240,10 +283,10 @@ export default function Home() {
                       {row.session === row.callDate ? row.callDate : `${row.callDate} · ${row.session}`}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
-                      {row.avg.toFixed(1)}
+                      {formatValue("ir", row.avg)}
                       <span className="mt-1 block text-[10px] text-[var(--faint)]">{row.latestSession}</span>
                     </td>
-                    <td className="font-mono text-sm">{row.spread}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", row.spread)}</td>
                     <td className="font-mono text-sm">{row.floor ?? "—"}</td>
                   </tr>
                 ))}
@@ -253,23 +296,44 @@ export default function Home() {
           <div className="cards md:hidden">
             {rows.map((row) => (
               <article key={row.uid} className="rounded-xl border border-[var(--line)] p-3">
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
                   <Link href={`/pack/${row.uid}`} className="pack-link">
                     {row.label}
                   </Link>
-                  <Lamp status={row.status} />
+                  <Lamp status={row.parallel || row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
                 <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
+                {row.restPool ? (
+                  <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
+                ) : null}
                 <p className="note mt-2 font-mono">
-                  Call {row.session} · IR {row.avg.toFixed(1)} · spread {row.spread} · floor {row.floor ?? "—"}
+                  {row.parallel || row.status}
+                  {row.service ? ` · Service ${row.service}` : ""} · IR {formatValue("ir", row.avg)} {IR_UNIT} ·
+                  spread {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor == null ? "—" : `${row.floor} mV`}
                 </p>
               </article>
             ))}
           </div>
         </div>
       </section>
+
+      <Panel accent="floor" eyebrow="7-day rest" title="Rest tests">
+        <p className="note mb-3">
+          Day-0 baselines are recorded. The 7-day reading stays pending until the due date. C1-P3 has
+          no rest test.
+        </p>
+        <ul className="space-y-2 text-sm">
+          {allRestTests().map((test) => (
+            <li key={`${test.id}-${test.uid}`}>
+              <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
+              day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
+              {test.result === "pending" ? "pending" : test.result}
+            </li>
+          ))}
+        </ul>
+      </Panel>
 
       <Panel accent="signal" eyebrow="Latest night per pack" title="Cell IR heatmap">
         <Heatmap
@@ -298,10 +362,11 @@ export default function Home() {
             A star marks a partial night: that night did not include every pack, and it is left
             incomplete. On every line, a faint dotted join means that pack or series was not charged
             between two readings, with no value on the skipped night. A skipped night before the
-            first reading or after the last is a hollow ring on the bottom edge, with no value. A
-            partial night the pack or series was charged is still a normal point. A pack that
-            changed labels stays on the series it was measured in. The line is not joined across a
-            move, and nights after the move are not marked.
+            first reading or after the last, while that line was in service, is a hollow ring on the
+            bottom edge, with no value. Nights before the series existed are not marked. A single
+            reading is a dot. A partial night the pack or series was charged is still a normal point.
+            A pack that changed labels stays on the series it was measured in. The line is not joined
+            across a move, and nights after the move are not marked.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
@@ -312,8 +377,8 @@ export default function Home() {
                 series={seriesOf(fleet.packs, "avg")}
                 yDomain={model.irDomain}
                 format="ir"
-                unit="mΩ"
-                ariaLabel={`${fleet.id} pack average internal resistance`}
+                unit={IR_UNIT}
+                ariaLabel={`${fleet.id} pack average internal resistance, true milliohms`}
               />
             </Panel>
           ))}
@@ -322,14 +387,13 @@ export default function Home() {
               key={`${fleet.id}-spread`}
               heading="h3"
               accent="rulea"
-              eyebrow={`Rule A · ${fleet.id}`}
+              eyebrow={`Rules v3 · ${fleet.id}`}
               title="Intra-pack spread"
               action={
                 <span className="note">
-                  Go &lt; {thresholds.intra_pack_spread_mohm.go_lt} · Caution{" "}
-                  {thresholds.intra_pack_spread_mohm.caution_lo}–
-                  {thresholds.intra_pack_spread_mohm.caution_hi} · Pull ≥{" "}
-                  {thresholds.intra_pack_spread_mohm.pull_gte} mΩ
+                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Caution ≥{" "}
+                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Individual ≥{" "}
+                  {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT}
                 </span>
               }
             >
@@ -340,9 +404,9 @@ export default function Home() {
                 guides={ruleAGuides}
                 bands={ruleABands}
                 yDomain={model.spreadDomain}
-                format="int"
-                unit="mΩ"
-                ariaLabel={`${fleet.id} intra-pack IR spread with Rule A guides`}
+                format="ir"
+                unit={IR_UNIT}
+                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with Rules v3 caution and individual guides`}
               />
             </Panel>
           ))}
@@ -383,11 +447,13 @@ export default function Home() {
             }
           >
             <p className="note mb-3">
-              One line per series. A night that series did not run is a faint dotted join, or a
-              hollow ring on the bottom edge before the first reading or after the last, with no
-              value. Rule B needs two packs that charged in parallel. A night the series did run,
-              but fewer than two did, is N/A. Series D, pack D-1, is charged on its own, so Rule B
-              does not apply and it is not a line here.
+              One line per series. A night that series was in service and did not run is a faint
+              dotted join, or a hollow ring on the bottom edge before the first reading or after the
+              last, with no value. Nights before that series existed are not marked. Rule B needs two
+              packs that charged in parallel. A night the series did run,
+              but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
+              The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
+              pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
             </p>
             <LineChart
               categories={model.categories}
@@ -399,6 +465,7 @@ export default function Home() {
                   color: seriesColor(fleet.id),
                   values: fleet.rest,
                   na: fleet.restNa,
+                  service: fleet.restService,
                 }))}
               guides={ruleBGuides}
               bands={ruleBBands}
@@ -440,6 +507,7 @@ export default function Home() {
                 cells: pack.cells,
                 service: pack.service,
                 logged: pack.logged,
+                rest: pack.rest,
               })),
             )}
           />

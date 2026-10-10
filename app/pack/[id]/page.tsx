@@ -3,15 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AliasStub } from "@/components/AliasStub";
 import { Heatmap } from "@/components/Heatmap";
-import { Lamp } from "@/components/Lamp";
+import { StatusChip } from "@/components/StatusChip";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { SlotDetail } from "@/components/SlotDetail";
-import { volts } from "@/lib/format";
+import { formatValue, volts } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
   floorGuide,
   getPack,
+  restTestsFor,
   packRouteIds,
   packUids,
   resolvePackRoute,
@@ -33,6 +35,8 @@ function historyNote(event: { event: string; to: string; date: string; reason: s
 function historyVerb(event: string) {
   if (event === "commission") return "Commissioned";
   if (event === "move") return "Moved";
+  if (event === "rest_test_start") return "Rest test started";
+  if (event === "rest_pool_enter") return "Entered Rest pool";
   return event;
 }
 
@@ -121,16 +125,31 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </p>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="h1">{pack.label}</h1>
-          <Lamp status={pack.call.status} />
+          <StatusChip status={pack.call.status} chargeMode={pack.chargeMode} />
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
+        <p className="call-full">{pack.call.status}</p>
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
         <p className="note">
+          Parallel {pack.row.parallel || pack.call.status}
+          {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
+        </p>
+        {pack.row.restPool ? (
+          <p className="note">
+            Rest pool · day 0 {pack.row.restDay0} · 7-day reading due {pack.row.restDue}. Off every board
+            and not charged during the test. {pack.label} keeps this slot.
+          </p>
+        ) : null}
+        <p className="note">
           Status call {pack.call.session}
           {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
-          {pack.chargeMode === "individual" ? "charged on its own" : "charged in parallel"}
+          {pack.row.restPool
+            ? "not charged (Rest pool)"
+            : pack.chargeMode === "individual"
+              ? "charged on its own"
+              : "charged in parallel"}
         </p>
         <p className="note">
           Purchase {pack.purchaseDate} · price {pack.priceUsd} · vendor {pack.vendor}
@@ -141,24 +160,28 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <article className="stat" data-tone="signal">
           <p className="eyebrow">Latest avg IR</p>
           <p className="stat-value">
-            {pack.row.avg.toFixed(1)}
-            <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+            <span className="num">
+              {formatValue("ir", pack.row.avg)} {IR_UNIT}
+            </span>
           </p>
           <p className="stat-sub">{pack.row.latestSession}</p>
         </article>
         <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "off"}>
-          <p className="eyebrow">Spread · Rule A</p>
+          <p className="eyebrow">Spread</p>
           <p className="stat-value">
-            {pack.row.spread}
-            <span className="ml-1 text-sm text-[var(--muted)]">mΩ</span>
+            <span className="num">
+              {formatValue("ir", pack.row.spread)} {IR_UNIT}
+            </span>
           </p>
-          <p className="stat-sub">{band} on this spread. The status call is separate.</p>
+          <p className="stat-sub">
+            {band} on this spread alone. Caution starts at {thresholds.spread_mohm.caution_gte} {IR_UNIT},
+            individual at {thresholds.spread_mohm.individual_gte} {IR_UNIT}. The status call is separate.
+          </p>
         </article>
         <article className="stat" data-tone="floor">
           <p className="eyebrow">Start floor</p>
           <p className="stat-value">
-            {pack.row.floor ?? "—"}
-            <span className="ml-1 text-sm text-[var(--muted)]">mV</span>
+            <span className="num">{pack.row.floor ?? "—"} mV</span>
           </p>
           <p className="stat-sub">
             {pack.row.floor != null && pack.row.floor < thresholds.floor_eye_mv
@@ -170,12 +193,62 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="eyebrow">Rule B · rest</p>
           <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
           <p className="stat-sub">
-            Self-discharge watch {thresholds.self_discharge_imbalance_mv} mV
-            {pack.row.imbalance != null ? ` · imbalance ${pack.row.imbalance} mV` : ""}
+            {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
+            {pack.row.sr != null ? ` · S_R ${formatValue("ir", pack.row.sr)} ${IR_UNIT}` : ""}
           </p>
         </article>
       </div>
+
+      {pack.restDays.length ? (
+        <Panel accent="floor" eyebrow="Not a parallel charge" title="Rest test day 0">
+          <p className="note mb-3">
+            This individual top-up is the day-0 baseline. It is not the latest IR, not a fleet or series
+            mean, and not a Rule B night.
+          </p>
+          <div className="table-wrap" data-scroll-ok="">
+            <table className="status-table">
+              <thead>
+                <tr>
+                  <th scope="col">Night</th>
+                  <th scope="col">Avg ({IR_UNIT})</th>
+                  <th scope="col">Spread ({IR_UNIT})</th>
+                  <th scope="col">S_R ({IR_UNIT})</th>
+                  <th scope="col">Floor (mV)</th>
+                  <th scope="col">Gap (mV)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pack.restDays.map((point) => (
+                  <tr key={point.session}>
+                    <th scope="row" className="font-mono text-sm font-normal">
+                      {point.session}
+                    </th>
+                    <td className="font-mono text-sm">{formatValue("ir", point.avg)}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", point.spread)}</td>
+                    <td className="font-mono text-sm">{point.sr == null ? "—" : formatValue("ir", point.sr)}</td>
+                    <td className="font-mono text-sm">{point.floor ?? "—"}</td>
+                    <td className="font-mono text-sm">{point.lowGap ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      ) : null}
+
+      {restTestsFor(pack.uid).length ? (
+        <Panel accent="floor" eyebrow="7-day rest" title="Rest test">
+          <ul className="space-y-2 text-sm">
+            {restTestsFor(pack.uid).map((test) => (
+              <li key={`${test.id}-${test.uid}`}>
+                Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
+                7-day reading due {test.due}. {test.result === "pending" ? "Pending." : test.result}
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
 
       <div className="grid gap-3 lg:grid-cols-2">
         <Panel accent="muted" eyebrow="History" title="Label history">
@@ -197,9 +270,9 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
                 <p className="flex flex-wrap items-center gap-2">
                   <span className="font-mono">{call.session}</span>
-                  <Lamp status={call.status} />
                   <span className="note">{call.label}</span>
                 </p>
+                <p className="call-full mt-1">{call.status}</p>
                 <p className="mt-1 leading-relaxed">{call.reason}</p>
               </li>
             ))}
@@ -231,23 +304,23 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           series={pack.cellSeries}
           yDomain={pack.irDomain}
           format="ir"
-          unit="mΩ"
+          unit={IR_UNIT}
           height={260}
-          ariaLabel={`${pack.uid} per-cell internal resistance`}
+          ariaLabel={`${pack.uid} per-cell internal resistance, milliohms`}
         />
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel heading="h3" accent="rulea" eyebrow="Rule A" title="Intra-pack spread">
+        <Panel heading="h3" accent="rulea" eyebrow="Rules v3" title="Intra-pack spread">
           <LineChart
             categories={pack.categories}
             series={pack.spreadSeries}
             guides={ruleAGuides}
             bands={ruleABands}
             yDomain={pack.spreadDomain}
-            format="int"
-            unit="mΩ"
-            ariaLabel={`${pack.uid} intra-pack spread with Rule A guides`}
+            format="ir"
+            unit={IR_UNIT}
+            ariaLabel={`${pack.uid} intra-pack spread with Rules v3 caution and individual guides, milliohms`}
           />
         </Panel>
         <Panel heading="h3" accent="floor" eyebrow="Watch line" title="Start floor">
@@ -286,32 +359,45 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       <details className="panel" data-accent="muted">
         <summary className="cursor-pointer font-medium">Night table</summary>
         <p className="note mt-3">
-          Not charged means this pack was in service and was not logged that night. On the charts, a
+          Cell, average, and spread figures are {IR_UNIT}. A Rest pool night is labeled Rest
+          pool: the pack is off every board and is not charged. Not charged means this pack was in
+          service and was not logged that night. On the charts, a
           faint dotted line joins the readings on either side when both exist, and that night has no
           value. A skipped night before the first reading or after the last is a hollow ring on the
           bottom edge, also with no value. A star is a partial night, which is different. Nights
           before this pack was commissioned, and nights after it moved slots, are not marked.
         </p>
-        <div className="table-wrap mt-3">
+        <div className="table-wrap mt-3" data-scroll-ok="">
           <table className="status-table">
             <thead>
               <tr>
                 <th scope="col">Night</th>
                 <th scope="col">Label</th>
-                <th scope="col">Cell 1</th>
-                <th scope="col">Cell 2</th>
-                <th scope="col">Cell 3</th>
-                <th scope="col">Cell 4</th>
-                <th scope="col">Cell 5</th>
-                <th scope="col">Cell 6</th>
-                <th scope="col">Avg</th>
-                <th scope="col">Spread</th>
-                <th scope="col">Floor</th>
+                <th scope="col">Cell 1 ({IR_UNIT})</th>
+                <th scope="col">Cell 2 ({IR_UNIT})</th>
+                <th scope="col">Cell 3 ({IR_UNIT})</th>
+                <th scope="col">Cell 4 ({IR_UNIT})</th>
+                <th scope="col">Cell 5 ({IR_UNIT})</th>
+                <th scope="col">Cell 6 ({IR_UNIT})</th>
+                <th scope="col">Avg ({IR_UNIT})</th>
+                <th scope="col">Spread ({IR_UNIT})</th>
+                <th scope="col">Floor (mV)</th>
               </tr>
             </thead>
             <tbody>
               {pack.nights.map((night) =>
-                night.kind === "measured" ? (
+                night.kind === "rest-pool" ? (
+                  <tr key={night.session}>
+                    <th scope="row" className="font-mono text-sm font-normal">
+                      {night.session}
+                      {night.partial ? "*" : ""}
+                    </th>
+                    <td className="font-mono text-sm">{night.label}</td>
+                    <td className="text-sm" colSpan={8}>
+                      Rest pool
+                    </td>
+                  </tr>
+                ) : night.kind === "measured" ? (
                   <tr key={night.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
                       {night.point.session}
@@ -320,11 +406,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                     <td className="font-mono text-sm">{night.point.label}</td>
                     {night.point.cells.map((cell, index) => (
                       <td key={`${night.session}-${index}`} className="font-mono text-sm">
-                        {cell}
+                        {formatValue("ir", cell)}
                       </td>
                     ))}
-                    <td className="font-mono text-sm">{night.point.avg.toFixed(1)}</td>
-                    <td className="font-mono text-sm">{night.point.spread}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", night.point.avg)}</td>
+                    <td className="font-mono text-sm">{formatValue("ir", night.point.spread)}</td>
                     <td className="font-mono text-sm">{night.point.floor ?? "—"}</td>
                   </tr>
                 ) : (

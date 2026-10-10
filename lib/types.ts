@@ -14,10 +14,10 @@ export type ChartSeries = {
   color: string;
   values: (number | null)[];
   /**
-   * Service span per night, aligned with values. Null means the pack was not
-   * in service (before commission, or after retirement). A move starts a new
-   * span so a dotted join never crosses it. Omit on a series-level line: every
-   * night is in scope, and a null value is a skipped night.
+   * Service span per night, aligned with values. Null means the line was not
+   * in service: before commission, after retirement, or before this series had
+   * a pack. A move starts a new span so a dotted join never crosses it, and
+   * hollow rings stay in the first span. Omit only when every night is in scope.
    */
   service?: (string | null)[];
   /** True when a measurement row exists that night. Omit to treat a value as the row. */
@@ -27,6 +27,11 @@ export type ChartSeries = {
    * is still drawn as a skip, with the tooltip "N/A: <night>".
    */
   na?: boolean[];
+  /**
+   * True when the pack is in the Rest pool that night and the night is not a
+   * plotted charge. Drawn as "Rest pool", not as a skipped charge.
+   */
+  rest?: boolean[];
 };
 
 export type Guide = {

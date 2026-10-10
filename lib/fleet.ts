@@ -1,15 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import metaDoc from "@/data/meta.json";
-import nextDoc from "@/data/v2/next.json";
 import registryDoc from "@/data/pack-registry.json";
-import sessionsDoc from "@/data/sessions.json";
 import statusDoc from "@/data/status.json";
-import { missBridges } from "@/lib/bridges";
+import { lonePointIndices, missBridges, openEndIndices } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
-import { shortSession } from "@/lib/format";
-import { lampTone, type LampTone } from "@/lib/lamp";
+import { formatValue, shortSession } from "@/lib/format";
+import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
+import { lampTone, splitCall, statusChip, STATUS_CHIPS, type LampTone, type StatusChipName } from "@/lib/lamp";
+import { buildNextBoard } from "@/lib/next-board.mjs";
+import { calendarDate } from "@/lib/pacific-date.mjs";
+import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
 type Measurement = {
@@ -20,10 +22,15 @@ type Measurement = {
   cells: number[];
   avg: number;
   spread: number;
+  sr: number | null;
   floor: number | null;
+  floorCell: number | null;
   imbalance: number | null;
   rest: number | null;
+  lowGap: number | null;
+  starts: number[];
   chargeMode: string;
+  sessionType: string;
   note: string;
 };
 
@@ -36,6 +43,11 @@ type PackRec = {
   cells: number;
   capacityMah: number;
   chargeMode: string;
+  serviceStatus: string;
+  parallelCall: string;
+  chargeCount: number;
+  pool: string;
+  poolSince: string;
   retired: string;
   purchaseDate: string;
   priceUsd: string;
@@ -60,6 +72,7 @@ type StatusCall = {
   reason: string;
   source: string;
   session: string;
+  order: number;
 };
 
 const dataDir = path.join(process.cwd(), "data");
@@ -75,6 +88,8 @@ function num(value: string): number | null {
 }
 
 function timeKey(token: string): [number, string, number] {
+  const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
+  if (rest) return [1, rest[1], 2];
   const eve = token.endsWith("-eve");
   const day = eve ? token.slice(0, -4) : token;
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
@@ -100,6 +115,11 @@ const packs: PackRec[] = readCsv("v2/packs.csv").map((row) => ({
   cells: Number(row.cells),
   capacityMah: Number(row.capacity_mAh),
   chargeMode: row.charge_mode,
+  serviceStatus: row.status,
+  parallelCall: row.parallel_call,
+  chargeCount: Number(row.charge_count),
+  pool: row.pool.trim(),
+  poolSince: row.pool_since.trim(),
   retired: row.retired.trim(),
   purchaseDate: row.purchase_date.trim(),
   priceUsd: row.price_usd.trim(),
@@ -118,15 +138,15 @@ const events: PackEvent[] = readCsv("v2/pack_events.csv").map((row) => ({
 
 function sessionFromSource(source: string, date: string): string {
   const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
-  const iso = raw.match(/^(\d{4}-\d{2}-\d{2}(?:-eve)?)\b/);
-  if (iso) return iso[1];
-  const sid = raw.match(/^(S\d+)\b/);
-  if (sid) return sid[1];
-  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(date) || /^S\d+$/.test(date)) return date;
-  return raw || date;
+  const token = raw.split(/\s+/)[0] ?? "";
+  if (/^\d{4}-\d{2}-\d{2}-restday0$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token)) return token;
+  if (/^S\d+$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}(?:-eve|-restday0)?$/.test(date) || /^S\d+$/.test(date)) return date;
+  return token || date;
 }
 
-const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row) => ({
+const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row, index) => ({
   date: row.date,
   uid: row.pack_uid,
   label: row.label_at_time,
@@ -134,36 +154,69 @@ const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row) => ({
   reason: row.reason,
   source: row.source,
   session: sessionFromSource(row.source, row.date),
+  order: index,
 }));
 
-const storeRows = readCsv("store.csv");
-const v2Rows = readCsv("v2/ir_store_v2.public.csv");
-const storeByKey = new Map(storeRows.map((row) => [`${row.session}\t${row.pack}`, row]));
-
-const measurements: Measurement[] = v2Rows.map((row) => {
-  const store = storeByKey.get(`${row.session}\t${row.pack}`);
-  return {
-    session: row.session,
-    label: row.label_at_time,
-    uid: row.pack_uid,
-    series: row.series_at_time,
-    cells: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}`])),
-    avg: Number(row.avg),
-    spread: Number(row.spread),
-    floor: num(store?.start_floor_mV || row.start_floor_mV),
-    imbalance: num(store?.start_imbalance_mV ?? ""),
-    rest: num(store?.rest_V ?? ""),
-    chargeMode: row.charge_mode_at_time,
-    note: row.note,
-  };
-});
-
-const sessionMeta = sessionsDoc.sessions as {
+type RestTest = {
   id: string;
-  partial: boolean;
-}[];
+  uid: string;
+  label: string;
+  cell: string;
+  start: string;
+  due: string;
+  result: string;
+  note: string;
+  readingDate: string;
+};
 
-const sessionOrder = metaDoc.sessions as string[];
+const restTests: RestTest[] = readCsv("v2/rest_tests.csv")
+  .filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW")
+  .map((row) => ({
+    id: row.test_id,
+    uid: row.pack_uid,
+    label: row.label,
+    cell: row.suspect_cell,
+    start: row.start_date,
+    due: row.due_date,
+    result: row.result.trim() || "pending",
+    note: row.note,
+    readingDate: row.reading_date.trim(),
+  }));
+
+const v4Rows = readCsv("v2/ir_store_v4.public.csv");
+
+const measurements: Measurement[] = v4Rows.map((row) => ({
+  session: row.session,
+  label: row.label_at_time,
+  uid: row.pack_uid,
+  series: row.series_at_time,
+  cells: [1, 2, 3, 4, 5, 6].map((index) => scaleStoredIr(Number(row[`c${index}_mOhm`]))),
+  avg: scaleStoredIr(Number(row.avg_mOhm)),
+  spread: scaleStoredIr(Number(row.spread_mOhm)),
+  sr: num(row.pack_SR_mOhm),
+  floor: num(row.floor_mV),
+  floorCell: num(row.floor_cell),
+  imbalance: num(row.imbalance_mV),
+  rest: num(row.rest_V),
+  lowGap: num(row.low_cell_gap_mV),
+  starts: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`start_c${index}_mV`])),
+  chargeMode: row.charge_mode_at_time,
+  sessionType: row.session_type,
+  note: row.v4_note,
+}));
+
+/** One-off individual rest-test baselines. Not a fleet night for packs that did not run. */
+const restBaselineSessions = new Set(
+  measurements.filter((row) => row.sessionType === "rest-test-day0").map((row) => row.session),
+);
+
+const listedSessions = metaDoc.sessions as string[];
+const sessionOrder = [
+  ...listedSessions,
+  ...[...new Set(measurements.map((row) => row.session))]
+    .filter((id) => !listedSessions.includes(id))
+    .sort((a, b) => compareTime(a, b)),
+];
 
 function packByUid(uid: string): PackRec | undefined {
   return packs.find((pack) => pack.uid === uid);
@@ -207,12 +260,21 @@ export function badgeFor(uid: string): string | null {
 export function callsFor(uid: string): StatusCall[] {
   return calls
     .filter((call) => call.uid === uid)
-    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date));
+    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date) || a.order - b.order);
+}
+
+/** A later factual measurement does not replace the parallel/service call. */
+function countsAsStatus(call: StatusCall): boolean {
+  return !/^unchanged\b/i.test(call.status.trim());
 }
 
 export function latestCall(uid: string): StatusCall | undefined {
-  const list = callsFor(uid);
+  const list = callsFor(uid).filter(countsAsStatus);
   return list[list.length - 1];
+}
+
+function ruleHistory(uid: string): Measurement[] {
+  return pointsFor(uid).filter((point) => point.sessionType !== "rest-test-day0");
 }
 
 function pointsFor(uid: string): Measurement[] {
@@ -222,37 +284,106 @@ function pointsFor(uid: string): Measurement[] {
     .sort((a, b) => (order.get(a.session) ?? 999) - (order.get(b.session) ?? 999));
 }
 
+/** Rest-test day-0 rows stay off the latest card, the means, and Rule B. */
+function operationalPoints(uid: string): Measurement[] {
+  return pointsFor(uid).filter((point) => point.sessionType !== "rest-test-day0");
+}
+
+function latestOperational(uid: string): Measurement | undefined {
+  const points = operationalPoints(uid);
+  return points[points.length - 1];
+}
+
+export function isRestPool(uid: string): boolean {
+  return packByUid(uid)?.pool === "Rest";
+}
+
+function inRestPool(uid: string, session: string): boolean {
+  let since: string | null = null;
+  for (const event of eventsFor(uid)) {
+    if (compareTime(event.date, session) > 0) break;
+    if (event.event === "rest_pool_enter") since = event.date;
+    if (event.event === "rest_pool_exit") since = null;
+  }
+  return since != null;
+}
+
 const EXPECTED_LATEST: Record<string, string> = {
-  "CNHL-2026-001": "D pool / no parallel",
-  "CNHL-2026-002": "GO",
-  "CNHL-2026-003": "CAUTION",
-  "CNHL-2026-004": "CAUTION onboard",
-  "CNHL-2026-005": "Watch",
-  "CNHL-2026-006": "GO",
-  "CNHL-2026-007": "GO",
-  "CNHL-2026-008": "CAUTION floor EYE",
-  "CNHL-2026-009": "GO",
-  "CNHL-2026-010": "GO",
-  "CNHL-2026-011": "GO",
-  "CNHL-2026-012": "GO",
+  "CNHL-2026-001":
+    "PARALLEL OFF (Rest pool) | SERVICE D pool (Watch); rest test RT-001-1, 7-day reading due 2026-10-16; not charged during test",
+  "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-003": "PARALLEL CAUTION; GO after one clean night | SERVICE In service",
+  "CNHL-2026-004":
+    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
+  "CNHL-2026-005": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
+  "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
+  "CNHL-2026-008":
+    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-008-1, 7-day reading due 2026-10-16; not charged during test",
+  "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-012": "PARALLEL GO | SERVICE In service",
 };
 
 function assertStore() {
-  if (measurements.length !== 156 || storeRows.length !== 156) {
-    throw new Error(`Expected 156 measurements, got v2=${measurements.length} store=${storeRows.length}`);
+  if (measurements.length !== 159 || v4Rows.length !== 159) {
+    throw new Error(`Expected 159 measurements, got ${measurements.length}`);
   }
-  const s413 = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "S413");
-  if (!s413 || s413.cells.join(",") !== "569,543,524,538,552,545") {
-    throw new Error("CNHL-2026-001 S413 IR spot check failed");
+  if (IR_STORE_IS_DX8_INTEGER) {
+    throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
   }
-  const c2 = measurements.find((row) => row.label === "C2-P2" && row.session === "2026-09-30");
-  if (!c2 || c2.cells[2] !== 514) {
-    throw new Error("C2-P2 2026-09-30 Cell3 spot check failed");
+  const sample = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "2026-10-09");
+  if (!sample || sample.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.2,2.9,2.5,2.2,3.0,2.8") {
+    throw new Error("D-1 2026-10-09 IR spot check failed");
+  }
+  if (sample.avg.toFixed(3) !== "2.767" || sample.spread.toFixed(1) !== "1.0") {
+    throw new Error("D-1 2026-10-09 average or spread spot check failed");
+  }
+  const restC2 = measurements.find((row) => row.uid === "CNHL-2026-008" && row.session === "2026-10-09-restday0");
+  const restC1 = measurements.find((row) => row.uid === "CNHL-2026-004" && row.session === "2026-10-09-restday0");
+  if (!restC2 || restC2.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.3,2.3,3.9,3.4,3.1,2.8") {
+    throw new Error("C2-P2 rest-day IR spot check failed");
+  }
+  if (!restC1 || restC1.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.1,3.4,3.2,3.7,2.8,2.8") {
+    throw new Error("C1-P4 rest-day IR spot check failed");
+  }
+  if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
+    throw new Error("C1-P4 and C2-P2 charge_count should be 14");
+  }
+  if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3) {
+    throw new Error("Rest tests should be the three day-0 rows, with no C1-P3 test");
   }
   for (const [uid, status] of Object.entries(EXPECTED_LATEST)) {
     const call = latestCall(uid);
     if (!call || call.status !== status) {
       throw new Error(`Latest status for ${uid} is ${call?.status ?? "missing"}`);
+    }
+    const pack = packByUid(uid);
+    const computed = parallelBucket(
+      ruleHistory(uid).map((point) => ({
+        spread: point.spread,
+        cells: point.cells,
+        gap: point.lowGap ?? 0,
+        floor: point.floor ?? 0,
+        floorCell: point.floorCell ?? 0,
+        starts: point.starts,
+      })),
+      {
+        inDPool: pack?.series === "D" || /d pool/i.test(pack?.serviceStatus ?? ""),
+        failedRest: restTests.some((test) => test.uid === uid && /fail/i.test(test.result)),
+        selfDischargeWatch: /self-discharge/i.test(pack?.serviceStatus ?? ""),
+      },
+    );
+    const recorded = laryParallelBucket(call.status);
+    if (/REST POOL/i.test(call.status)) {
+      console.log(`rest pool ${uid}: recorded OFF, not a parallel-call disagreement`);
+    } else if (/OWNER OVERRIDE/i.test(call.reason)) {
+      console.warn(
+        `owner override ${uid}: recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
+      );
+    } else if (computed.call !== recorded) {
+      console.warn(`parallel call disagreement ${uid}: computed ${computed.call}, recorded ${recorded}`);
     }
   }
   if (packs.some((pack) => pack.label === "C1-P1")) {
@@ -268,10 +399,16 @@ function assertStore() {
 
 assertStore();
 
+const loggedThrough =
+  sessionOrder.reduce((latest, id) => {
+    const day = calendarDate(id);
+    return day > latest ? day : latest;
+  }, "") || metaDoc.last_ingest;
+
 export const siteMeta = {
-  lastIngest: metaDoc.last_ingest,
-  rowCount: metaDoc.row_count,
-  sessionCount: metaDoc.session_count,
+  lastIngest: loggedThrough,
+  rowCount: measurements.length,
+  sessionCount: sessionOrder.length,
   source: metaDoc.data_source,
   ingestNote: metaDoc.ingest_note,
   sessions: metaDoc.sessions as string[],
@@ -282,22 +419,22 @@ export const siteMeta = {
 };
 
 export const thresholds = statusDoc.thresholds;
-const spreadRule = thresholds.intra_pack_spread_mohm;
+const spreadRule = thresholds.spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
-  { y: spreadRule.go_lt, label: `Go < ${spreadRule.go_lt}`, color: "#3ddc97" },
-  { y: spreadRule.pull_gte, label: `Pull ≥ ${spreadRule.pull_gte}`, color: "#ff5c7a" },
+  { y: spreadRule.caution_gte, label: `Caution ≥ ${formatValue("ir", spreadRule.caution_gte)} ${IR_UNIT}`, color: "#f5b942" },
+  { y: spreadRule.individual_gte, label: `Individual ≥ ${formatValue("ir", spreadRule.individual_gte)} ${IR_UNIT}`, color: "#ff5c7a" },
 ];
 
 export const ruleABands: Band[] = [
-  { from: spreadRule.caution_lo, to: spreadRule.caution_hi, color: "rgba(245, 185, 66, 0.18)" },
-  { from: spreadRule.pull_gte, to: 1000, color: "rgba(255, 92, 122, 0.12)" },
+  { from: spreadRule.caution_gte, to: spreadRule.individual_gte, color: "rgba(245, 185, 66, 0.18)" },
+  { from: spreadRule.individual_gte, to: Number.POSITIVE_INFINITY, color: "rgba(255, 92, 122, 0.12)" },
 ];
 
 export const ruleBGuides: Guide[] = [
-  { y: restRule.go_lte, label: `Go ≤ ${restRule.go_lte.toFixed(2)}`, color: "#3ddc97" },
-  { y: restRule.hard_stop_gt, label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)}`, color: "#ff5c7a" },
+  { y: restRule.go_lte, label: `Go ≤ ${restRule.go_lte.toFixed(2)} V`, color: "#3ddc97" },
+  { y: restRule.hard_stop_gt, label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)} V`, color: "#ff5c7a" },
 ];
 
 export const ruleBBands: Band[] = [
@@ -313,10 +450,13 @@ export const floorBands: Band[] = [
   { from: 0, to: thresholds.floor_eye_mv, color: "rgba(121, 184, 255, 0.1)" },
 ];
 
-export const categories: Category[] = sessionMeta.map((session) => ({
-  id: session.id,
-  label: shortSession(session.id),
-  partial: session.partial,
+const nightCount = new Map<string, number>();
+for (const row of measurements) nightCount.set(row.session, (nightCount.get(row.session) ?? 0) + 1);
+
+export const categories: Category[] = sessionOrder.map((id) => ({
+  id,
+  label: shortSession(id),
+  partial: (nightCount.get(id) ?? 0) < 12,
 }));
 
 /**
@@ -337,6 +477,12 @@ function serviceSpans(uid: string): (string | null)[] {
     for (const move of moves) {
       if (compareTime(category.id, move.date) >= 0) span += 1;
     }
+    // A rest-test baseline is in span only for the packs that ran. Everyone else
+    // is out of scope, so the night draws neither a join nor a ring.
+    if (restBaselineSessions.has(category.id)) {
+      const ran = measurements.some((row) => row.uid === uid && row.session === category.id);
+      return ran ? String(span) : null;
+    }
     return String(span);
   });
 }
@@ -350,11 +496,26 @@ function lineMeta(uid: string): { service: (string | null)[]; logged: boolean[] 
   return { service: serviceSpans(uid), logged: loggedNights(uid) };
 }
 
-function alignUid(uid: string, pick: (row: Measurement) => number | null): (number | null)[] {
+function alignUid(
+  uid: string,
+  pick: (row: Measurement) => number | null,
+  series?: string,
+): (number | null)[] {
   const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
     const row = map.get(category.id);
-    return row ? pick(row) : null;
+    if (!row || row.sessionType === "rest-test-day0") return null;
+    if (series && row.series !== series) return null;
+    return pick(row);
+  });
+}
+
+function restFlags(uid: string): boolean[] {
+  const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
+  return categories.map((category) => {
+    if (!inRestPool(uid, category.id)) return false;
+    const row = map.get(category.id);
+    return !row || row.sessionType === "rest-test-day0";
   });
 }
 
@@ -368,6 +529,12 @@ function padded(values: number[], ratio = 0.08): [number, number] {
 
 function nums(values: (number | null)[]): number[] {
   return values.filter((value): value is number => value != null);
+}
+
+function spreadChartDomain(spreads: number[]): [number, number] {
+  const dataMax = Math.max(0, ...spreads);
+  const top = Math.max(dataMax, spreadRule.individual_gte);
+  return [0, Math.max(0.01, top + Math.max(top, 0.01) * 0.12)];
 }
 
 const SERIES_ORDER = ["C1", "C2", "D", "C3", "C4"];
@@ -431,6 +598,14 @@ export type StatusRow = {
   excluded: boolean;
   badge: string | null;
   chargeMode: string;
+  chargeCount: number;
+  sr: number | null;
+  lowGap: number | null;
+  parallel: string;
+  service: string;
+  restPool: boolean;
+  restDay0: string | null;
+  restDue: string | null;
 };
 
 export function statusRows(): StatusRow[] {
@@ -441,8 +616,8 @@ export function statusRows(): StatusRow[] {
   });
   return ordered.map((pack) => {
     const call = latestCall(pack.uid);
-    const points = pointsFor(pack.uid);
-    const latest = points[points.length - 1];
+    const latest = latestOperational(pack.uid);
+    const restTest = restTests.find((test) => test.uid === pack.uid);
     if (!call || !latest) throw new Error(`Missing call or measurement for ${pack.uid}`);
     return {
       uid: pack.uid,
@@ -465,21 +640,43 @@ export function statusRows(): StatusRow[] {
       excluded: isExcludedFromHeadline(pack.uid),
       badge: badgeFor(pack.uid),
       chargeMode: pack.chargeMode,
+      chargeCount: pack.chargeCount,
+      sr: latest.sr,
+      lowGap: latest.lowGap,
+      parallel: splitCall(call.status).parallel,
+      service: splitCall(call.status).service,
+      restPool: pack.pool === "Rest",
+      restDay0: pack.pool === "Rest" ? restTest?.readingDate || restTest?.start || pack.poolSince : null,
+      restDue: pack.pool === "Rest" ? restTest?.due || null : null,
     };
   });
 }
 
+export function restTestsFor(uid: string): RestTest[] {
+  return restTests.filter((test) => test.uid === uid);
+}
+
+export function allRestTests(): RestTest[] {
+  return restTests;
+}
+
 export function headline() {
-  const rows = statusRows().filter((row) => !row.excluded);
-  const mean = rows.reduce((sum, row) => sum + row.avg, 0) / rows.length;
+  const slotted = statusRows().filter((row) => !row.excluded);
+  const onBoards = slotted.filter((row) => !row.restPool);
+  const mean = slotted.reduce((sum, row) => sum + row.avg, 0) / slotted.length;
   return {
-    ok: rows.filter((row) => row.tone === "ok"),
-    caution: rows.filter((row) => row.tone === "caution"),
-    off: rows.filter((row) => row.tone === "off"),
+    ok: onBoards.filter((row) => row.tone === "ok"),
+    caution: onBoards.filter((row) => row.tone === "caution"),
+    off: onBoards.filter((row) => row.tone === "off"),
     pool: statusRows().filter((row) => row.tone === "pool"),
+    rest: statusRows().filter((row) => row.restPool),
     mean,
-    counted: rows.length,
+    counted: slotted.length,
   };
+}
+
+export function chargedIndividually(): string[] {
+  return packs.filter((pack) => pack.chargeMode === "individual" && pack.pool !== "Rest").map((pack) => pack.label);
 }
 
 export type SlotTile = {
@@ -494,9 +691,17 @@ export type SlotTile = {
   avgSeries: (number | null)[];
   service?: (string | null)[];
   logged?: boolean[];
+  rest?: boolean[];
   color: string;
   badge: string | null;
   excluded: boolean;
+  sr: number | null;
+  lowGap: number | null;
+  latestSession: string | null;
+  restPool: boolean;
+  restDay0: string | null;
+  restDue: string | null;
+  chargeMode: string | null;
 };
 
 export type SeriesBlock = {
@@ -508,7 +713,7 @@ export type SeriesBlock = {
 };
 
 function lastMeasured(series: string): string {
-  const rows = measurements.filter((row) => row.series === series);
+  const rows = measurements.filter((row) => row.series === series && row.sessionType !== "rest-test-day0");
   if (rows.length === 0) return "no storage rows in this series yet";
   return rows.reduce((latest, row) => (compareTime(row.session, latest) > 0 ? row.session : latest), rows[0].session);
 }
@@ -519,7 +724,8 @@ function asOf(series: string): string {
     .map((pack) => latestCall(pack.uid)?.session)
     .filter((value): value is string => Boolean(value));
   if (dates.length === 0) return "—";
-  return dates.reduce((latest, value) => (compareTime(value, latest) > 0 ? value : latest));
+  const latest = dates.reduce((value, current) => (compareTime(current, value) > 0 ? current : value));
+  return calendarDate(latest) || latest;
 }
 
 export function seriesBlocks(): SeriesBlock[] {
@@ -543,9 +749,17 @@ export function seriesBlocks(): SeriesBlock[] {
         avgSeries: pack ? alignUid(pack.uid, (point) => point.avg) : [],
         service: meta?.service,
         logged: meta?.logged,
+        rest: pack ? restFlags(pack.uid) : undefined,
         color: packColor(label),
         badge: pack ? badgeFor(pack.uid) : null,
         excluded: pack ? isExcludedFromHeadline(pack.uid) : false,
+        sr: row?.sr ?? null,
+        lowGap: row?.lowGap ?? null,
+        latestSession: row?.latestSession ?? null,
+        restPool: row?.restPool ?? false,
+        restDay0: row?.restDay0 ?? null,
+        restDue: row?.restDue ?? null,
+        chargeMode: pack?.chargeMode ?? null,
       };
     });
     return {
@@ -558,11 +772,19 @@ export function seriesBlocks(): SeriesBlock[] {
   });
 }
 
+function parallelBoardUids(): Set<string> {
+  const labels = new Set(buildNextBoard().series.flatMap((board: { labels: string[] }) => board.labels));
+  return new Set(packs.filter((pack) => labels.has(pack.label)).map((pack) => pack.uid));
+}
+
 export function restDelta(session: string, series: string): number | null {
+  const board = parallelBoardUids();
   const rows = measurements.filter(
     (row) =>
       row.session === session &&
       row.series === series &&
+      board.has(row.uid) &&
+      row.sessionType !== "rest-test-day0" &&
       row.chargeMode === "parallel" &&
       row.rest != null,
   );
@@ -576,7 +798,18 @@ export function restDelta(session: string, series: string): number | null {
  * without two parallel rests means the series ran and Rule B is N/A.
  */
 export function restNight(session: string, series: string): { value: number | null; na: boolean } {
-  const ran = measurements.some((row) => row.session === session && row.series === series);
+  if (restBaselineSessions.has(session)) {
+    // Day-0 rest rows are not a parallel charge and are not a Rule B night.
+    return { value: null, na: false };
+  }
+  const board = parallelBoardUids();
+  const ran = measurements.some(
+    (row) =>
+      row.session === session &&
+      row.series === series &&
+      board.has(row.uid) &&
+      row.sessionType !== "rest-test-day0",
+  );
   const value = restDelta(session, series);
   if (!ran) return { value: null, na: false };
   if (value == null) return { value: null, na: true };
@@ -594,6 +827,7 @@ export type PackSeries = {
   cells: (number | null)[][];
   service: (string | null)[];
   logged: boolean[];
+  rest: boolean[];
 };
 
 export type FleetModel = {
@@ -603,12 +837,13 @@ export type FleetModel = {
   spreadDomain: [number, number];
   floorDomain: [number, number];
   restDomain: [number, number];
-  mean: { id: string; color: string; values: (number | null)[] }[];
+  mean: { id: string; color: string; values: (number | null)[]; service: (string | null)[] }[];
   fleets: {
     id: string;
     packs: PackSeries[];
     rest: (number | null)[];
     restNa: boolean[];
+    restService: (string | null)[];
     individual: boolean;
   }[];
 };
@@ -626,23 +861,52 @@ function seriesPacks(series: string): PackSeries[] {
       uid,
       color: packColor(pack?.label ?? uid),
       tone: call ? lampTone(call.status) : "pool",
-      avg: alignUid(uid, (row) => row.avg),
-      spread: alignUid(uid, (row) => row.spread),
-      floor: alignUid(uid, (row) => row.floor),
-      cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null)),
-      service: meta.service,
+      avg: alignUid(uid, (row) => row.avg, series),
+      spread: alignUid(uid, (row) => row.spread, series),
+      floor: alignUid(uid, (row) => row.floor, series),
+      cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null, series)),
+      service: membershipSpans(uid, series),
       logged: meta.logged,
+      rest: restFlags(uid),
     };
   });
 }
 
 function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
-  return categories.map((_, index) => {
+  return categories.map((category, index) => {
+    if (restBaselineSessions.has(category.id)) return null;
     const values = packsInSeries
       .map((pack) => pack.avg[index])
       .filter((value): value is number => value != null);
     if (values.length === 0) return null;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
+  });
+}
+
+function seriesOfLabel(label: string | null): string | null {
+  if (!label) return null;
+  return seriesIds().find((id) => label === id || label.startsWith(`${id}-`)) ?? null;
+}
+
+/** Nights a series has at least one pack. Null before it exists and after it is empty. */
+function seriesInService(series: string): (string | null)[] {
+  return categories.map((category) => {
+    if (restBaselineSessions.has(category.id)) return null;
+    const live = packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, category.id)) === series);
+    return live ? "0" : null;
+  });
+}
+
+/**
+ * Pack span only while that pack's label is in this series. Nights before the
+ * move into the series, and nights after the move out, are out of span.
+ */
+function membershipSpans(uid: string, series: string): (string | null)[] {
+  const spans = serviceSpans(uid);
+  return categories.map((category, index) => {
+    if (spans[index] == null) return null;
+    if (seriesOfLabel(labelAsOf(uid, category.id)) !== series) return null;
+    return spans[index];
   });
 }
 
@@ -655,6 +919,7 @@ export function fleetModel(): FleetModel {
       packs: seriesPacks(series),
       rest: nights.map((night) => night.value),
       restNa: nights.map((night) => night.na),
+      restService: seriesInService(series),
       individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
     };
   });
@@ -670,13 +935,14 @@ export function fleetModel(): FleetModel {
     categories,
     irDomain: padded(nums(allIr), 0.06),
     meanDomain: padded(nums(meanValues), 0.14),
-    spreadDomain: [0, Math.max(64, ...nums(allSpread))],
+    spreadDomain: spreadChartDomain(nums(allSpread)),
     floorDomain: padded([...nums(allFloor), thresholds.floor_eye_mv], 0.12),
     restDomain: [0, Math.max(0.8, restTop * 1.12)],
     mean: measured.map((fleet) => ({
       id: fleet.id,
       color: seriesColor(fleet.id),
       values: fleetMean(fleet.packs),
+      service: seriesInService(fleet.id),
     })),
     fleets,
   };
@@ -690,6 +956,7 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     values: row[pick],
     service: row.service,
     logged: row.logged,
+    rest: row.rest,
   }));
 }
 
@@ -724,6 +991,7 @@ export function lineage(uid: string): string | null {
 
 export type PackNight =
   | { session: string; partial: boolean; kind: "measured"; point: Measurement }
+  | { session: string; partial: boolean; kind: "rest-pool"; label: string }
   | { session: string; partial: boolean; kind: "not-charged"; label: string; bridged: boolean };
 
 function packNights(uid: string): PackNight[] {
@@ -740,8 +1008,17 @@ function packNights(uid: string): PackNight[] {
   const nights: PackNight[] = [];
   categories.forEach((category, index) => {
     const point = bySession.get(category.id);
-    if (point) {
+    if (point && point.sessionType !== "rest-test-day0") {
       nights.push({ session: category.id, partial: category.partial, kind: "measured", point });
+      return;
+    }
+    if (inRestPool(uid, category.id)) {
+      nights.push({
+        session: category.id,
+        partial: category.partial,
+        kind: "rest-pool",
+        label: labelAsOf(uid, category.id) ?? "—",
+      });
       return;
     }
     if (service[index] == null) return;
@@ -778,6 +1055,7 @@ export type PackView = {
   nights: PackNight[];
   row: StatusRow;
   points: Measurement[];
+  restDays: Measurement[];
   categories: Category[];
   cellSeries: ChartSeries[];
   spreadSeries: ChartSeries[];
@@ -792,12 +1070,14 @@ export function getPack(uid: string): PackView | null {
   const call = latestCall(uid);
   const row = statusRows().find((item) => item.uid === uid);
   if (!pack || !call || !row) return null;
-  const points = pointsFor(uid);
+  const points = operationalPoints(uid);
   const meta = lineMeta(uid);
+  const rest = restFlags(uid);
   const cells = points.flatMap((point) => point.cells);
   const spreads = points.map((point) => point.spread);
   const floors = points.map((point) => point.floor).filter((value): value is number => value != null);
   const individual = pack.chargeMode !== "parallel";
+  const resting = pack.pool === "Rest";
   return {
     uid,
     label: pack.label,
@@ -813,13 +1093,14 @@ export function getPack(uid: string): PackView | null {
     badge: badgeFor(uid),
     lineage: lineage(uid),
     excluded: isExcludedFromHeadline(uid),
-    ruleB: individual ? "N/A, charged individually" : null,
+    ruleB: resting ? "Rest pool, not charged" : individual ? "N/A, charged individually" : null,
     call,
     calls: callsFor(uid),
     events: eventsFor(uid),
     nights: packNights(uid),
     row,
     points,
+    restDays: pointsFor(uid).filter((point) => point.sessionType === "rest-test-day0"),
     categories,
     cellSeries: [0, 1, 2, 3, 4, 5].map((index) => ({
       id: `c${index + 1}`,
@@ -828,6 +1109,7 @@ export function getPack(uid: string): PackView | null {
       values: alignUid(uid, (point) => point.cells[index] ?? null),
       service: meta.service,
       logged: meta.logged,
+      rest,
     })),
     spreadSeries: [
       {
@@ -837,6 +1119,7 @@ export function getPack(uid: string): PackView | null {
         values: alignUid(uid, (point) => point.spread),
         service: meta.service,
         logged: meta.logged,
+        rest,
       },
     ],
     floorSeries: [
@@ -847,10 +1130,11 @@ export function getPack(uid: string): PackView | null {
         values: alignUid(uid, (point) => point.floor),
         service: meta.service,
         logged: meta.logged,
+        rest,
       },
     ],
     irDomain: padded(cells, 0.1),
-    spreadDomain: [0, Math.max(64, ...spreads)],
+    spreadDomain: spreadChartDomain(spreads),
     floorDomain: padded([...floors, thresholds.floor_eye_mv], 0.15),
   };
 }
@@ -984,19 +1268,24 @@ export function chargers(): ChargerInfo[] {
 }
 
 export function nextParallel() {
-  return nextDoc;
+  return buildNextBoard() as {
+    as_of: string;
+    note: string;
+    series: { series: string; labels: string[] }[];
+    resting: { label: string; uid: string; day0: string; until: string }[];
+  };
 }
 
-export function ruleABand(spread: number): "Go" | "Caution" | "Pull" {
-  if (spread >= spreadRule.pull_gte) return "Pull";
-  if (spread >= spreadRule.caution_lo) return "Caution";
+export function ruleABand(spread: number): "Go" | "Caution" | "Individual" {
+  if (spread >= spreadRule.individual_gte) return "Individual";
+  if (spread >= spreadRule.caution_gte) return "Caution";
   return "Go";
 }
 
 export const metricLabels: Record<string, string> = {
-  per_cell_ir_mohm: "Per-cell IR (mΩ)",
-  pack_avg_ir_mohm: "Pack-average IR (mΩ)",
-  intra_pack_spread_mohm: "Intra-pack spread (mΩ)",
+  per_cell_chg_mah: "Charge taken per cell (mAh)",
+  pack_avg_chg_mah: "Average charge taken (mAh)",
+  intra_pack_spread_chg_mah: "Charge spread (mAh)",
   start_floor_mV: "Start floor (mV)",
   arrival_imbalance_mv: "Arrival imbalance (mV)",
   rest_voltage_for_inter_pack_delta: "Rest voltage for inter-pack delta",
@@ -1011,3 +1300,199 @@ export function ruleBNote(series: string): string | null {
   if (block?.individual) return "N/A, charged individually";
   return null;
 }
+
+function assertDerived() {
+  const stats = headline();
+  if (stats.mean.toFixed(3) !== "2.893" || stats.counted !== 11) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.893 mΩ over 11 slotted packs`);
+  }
+  const c1p4 = statusRows().find((row) => row.label === "C1-P4");
+  if (
+    !c1p4 ||
+    c1p4.latestSession !== "2026-09-27" ||
+    c1p4.avg.toFixed(3) !== "2.875" ||
+    c1p4.spread.toFixed(2) !== "0.65" ||
+    c1p4.sr !== 17.25 ||
+    c1p4.floor !== 3603 ||
+    c1p4.lowGap !== 93
+  ) {
+    throw new Error(`C1-P4 card is ${c1p4?.latestSession} ${c1p4?.avg} ${c1p4?.spread} ${c1p4?.sr} ${c1p4?.floor} ${c1p4?.lowGap}`);
+  }
+  const c2p2 = statusRows().find((row) => row.label === "C2-P2");
+  if (!c2p2 || c2p2.latestSession !== "2026-09-30" || c2p2.avg.toFixed(3) !== "3.217" || c2p2.sr !== 19.3 || c2p2.floor !== 3597 || c2p2.lowGap !== 98) {
+    throw new Error(`C2-P2 card is ${c2p2?.latestSession} ${c2p2?.avg}`);
+  }
+  const model = fleetModel();
+  const lastOf = (id: string) => {
+    const line = model.mean.find((item) => item.id === id);
+    return [...(line?.values ?? [])].reverse().find((value) => value != null);
+  };
+  const c1Last = lastOf("C1");
+  const c2Last = lastOf("C2");
+  if (c1Last == null || c1Last.toFixed(3) !== "2.907") throw new Error(`C1 series mean last is ${c1Last}`);
+  if (c2Last == null || c2Last.toFixed(3) !== "2.886") throw new Error(`C2 series mean last is ${c2Last}`);
+  const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
+  const day = model.categories.findIndex((category) => category.id === "2026-10-09");
+  const restNightIndex = model.categories.findIndex((category) => category.id === "2026-10-09-restday0");
+  const moved = c1Fleet?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  if (!moved || moved.avg[day] != null) throw new Error("D-1 2026-10-09 is on the C1 line");
+  const d1 = model.fleets.find((fleet) => fleet.id === "D")?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  if (!d1 || d1.avg[day] == null || d1.avg[day].toFixed(3) !== "2.767") throw new Error("D-1 2026-10-09 is missing from series D");
+  const p4 = c1Fleet?.packs.find((pack) => pack.uid === "CNHL-2026-004");
+  if (!p4 || p4.avg[restNightIndex] != null) throw new Error("C1-P4 rest-day row is on a series line");
+  if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
+  const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
+  const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
+  if (c1Rule == null || Math.abs(c1Rule - 0.13) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
+  if (c2Rule == null || Math.abs(c2Rule - 0.147) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  const board = nextParallel();
+  const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
+  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-09") {
+    throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
+  }
+  assertStatusChips();
+  assertRingWindows(model);
+}
+
+const EXPECTED_CHIPS: Record<string, StatusChipName> = {
+  "C1-P2": "GO",
+  "C1-P3": "CAUTION",
+  "C1-P4": "REST",
+  "C1-P5": "ALONE",
+  "C1-P6": "GO",
+  "C2-P1": "GO",
+  "C2-P2": "REST",
+  "C2-P3": "GO",
+  "C2-P4": "GO",
+  "C2-P5": "GO",
+  "C2-P6": "GO",
+  "D-1": "REST",
+};
+
+function assertStatusChips() {
+  const rows = statusRows();
+  if (rows.length !== 12) throw new Error(`Expected 12 packs for status chips, got ${rows.length}`);
+  const seen = new Map<string, StatusChipName>();
+  for (const row of rows) {
+    const chip = statusChip(row.status, row.chargeMode);
+    if (!STATUS_CHIPS.includes(chip) || seen.has(row.label)) {
+      throw new Error(`${row.label} did not map to exactly one status chip`);
+    }
+    seen.set(row.label, chip);
+    if (EXPECTED_CHIPS[row.label] !== chip) {
+      throw new Error(`${row.label} chip is ${chip}, expected ${EXPECTED_CHIPS[row.label]}`);
+    }
+  }
+  if (statusChip("PARALLEL GO | SERVICE Watch (IR spread)") !== "GO") {
+    throw new Error("Parallel Go must outrank a service Watch note");
+  }
+  if (statusChip("SERVICE D pool (Watch)") !== "WATCH") {
+    throw new Error("D pool or Watch with no parallel action must be WATCH");
+  }
+  if (statusChip("PARALLEL OFF (Rest pool) | SERVICE D pool (Watch)", "individual") !== "REST") {
+    throw new Error("Rest pool must outrank D pool and charging alone");
+  }
+}
+
+function chartLine(
+  label: string,
+  values: (number | null)[],
+  service?: (string | null)[],
+  logged?: boolean[],
+  rest?: boolean[],
+  na?: boolean[],
+): ChartSeries {
+  return { id: label, label, color: "#888", values, service, logged, rest, na };
+}
+
+function ringNights(series: ChartSeries): string[] {
+  return openEndIndices(series).map((index) => categories[index].id);
+}
+
+/** Rings stay inside the first in-service span: not before that date, and not after a move. */
+function assertRingWindows(model: FleetModel) {
+  const member = (series: string, night: string) =>
+    packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, night)) === series);
+
+  for (const line of model.mean) {
+    const chart = chartLine(line.id, line.values, line.service);
+    const nights = ringNights(chart);
+    if (line.id === "D" && nights.length > 0) {
+      throw new Error(`Series D mean has a ring on ${nights.join(", ")}`);
+    }
+    for (const night of nights) {
+      if (!member(line.id, night)) {
+        throw new Error(`${line.id} mean ring on ${night} is before that series or after its packs moved out`);
+      }
+    }
+  }
+
+  const dMean = model.mean.find((line) => line.id === "D");
+  const dIndex = categories.findIndex((category) => category.id === "2026-10-09");
+  const dValue = dMean?.values[dIndex];
+  if (dValue == null || dValue.toFixed(3) !== "2.767") {
+    throw new Error(`Series D mean on 2026-10-09 is ${dValue}`);
+  }
+  if (!dMean || !lonePointIndices(chartLine("D", dMean.values, dMean.service)).includes(dIndex)) {
+    throw new Error("Series D mean point is not a single visible dot");
+  }
+
+  for (const fleet of model.fleets) {
+    const restChart = chartLine(fleet.id, fleet.rest, fleet.restService, undefined, undefined, fleet.restNa);
+    for (const night of ringNights(restChart)) {
+      if (!member(fleet.id, night)) {
+        throw new Error(`${fleet.id} Rule B ring on ${night} is outside that series`);
+      }
+    }
+    for (const pack of fleet.packs) {
+      const lines = [pack.avg, pack.spread, pack.floor, ...pack.cells];
+      for (const values of lines) {
+        const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
+        for (const night of ringNights(chart)) {
+          if (seriesOfLabel(labelAsOf(pack.uid, night)) !== fleet.id) {
+            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before that series or after the move`);
+          }
+          const move = movedEvent(pack.uid);
+          if (move && seriesOfLabel(move.from) === fleet.id && compareTime(night, move.date) >= 0) {
+            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is after the move`);
+          }
+          if (move && seriesOfLabel(move.to) === fleet.id && compareTime(night, move.date) < 0) {
+            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before the move into ${fleet.id}`);
+          }
+          const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
+          if (!commission || compareTime(night, commission.date) < 0) {
+            throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
+          }
+        }
+      }
+    }
+  }
+
+  for (const pack of packs) {
+    const meta = lineMeta(pack.uid);
+    const rest = restFlags(pack.uid);
+    const lines = [
+      alignUid(pack.uid, (row) => row.avg),
+      alignUid(pack.uid, (row) => row.spread),
+      alignUid(pack.uid, (row) => row.floor),
+      alignUid(pack.uid, (row) => row.cells[0] ?? null),
+    ];
+    for (const values of lines) {
+      for (const night of ringNights(chartLine(pack.uid, values, meta.service, meta.logged, rest))) {
+        const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
+        if (!commission || compareTime(night, commission.date) < 0) {
+          throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
+        }
+        const move = movedEvent(pack.uid);
+        if (move && compareTime(night, move.date) >= 0) {
+          throw new Error(`${pack.uid} ring on ${night} is after its move`);
+        }
+        if (pack.retired && compareTime(night, pack.retired) >= 0) {
+          throw new Error(`${pack.uid} ring on ${night} is after retirement`);
+        }
+      }
+    }
+  }
+}
+
+assertDerived();

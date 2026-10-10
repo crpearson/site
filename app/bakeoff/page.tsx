@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { usd } from "@/lib/format";
+import { IR_UNIT } from "@/lib/ir";
 import { brandCards, fleetModel, headline, seriesBlocks } from "@/lib/fleet";
 
 export const metadata: Metadata = {
@@ -88,8 +89,8 @@ export default function BakeoffPage() {
               <article key={block.id} className="rounded-xl border border-[var(--line)] p-3">
                 <p className="eyebrow">{block.id}</p>
                 <p className="mt-2 font-mono text-sm">
-                  {countFor(block.id, "ok")} OK · {countFor(block.id, "caution")} Caution ·{" "}
-                  {countFor(block.id, "off")} OFF
+                  {countFor(block.id, "ok")} packs Go · {countFor(block.id, "caution")} packs Caution ·{" "}
+                  {countFor(block.id, "off")} packs individual only
                 </p>
                 <p className="stat-sub">
                   Status as of {block.asOf}
@@ -101,8 +102,10 @@ export default function BakeoffPage() {
           <div className="mt-4">
             <p className="eyebrow">Measured IR by series</p>
             <p className="note mt-1">
-              A night that series was not measured is a faint dotted join, or a hollow ring on the
-              bottom edge before the first reading or after the last. No value is filled in.
+              A night that series was in service and was not measured is a faint dotted join, or a
+              hollow ring on the bottom edge before the first reading or after the last. Nights
+              before that series existed are not marked. A single reading is a dot. No value is
+              filled in.
             </p>
             <div className="mt-2">
               <LineChart
@@ -110,9 +113,9 @@ export default function BakeoffPage() {
                 series={model.mean.map((series) => ({ ...series, label: series.id }))}
                 yDomain={model.meanDomain}
                 format="ir"
-                unit="mΩ"
+                unit={IR_UNIT}
                 height={180}
-                ariaLabel="Mean internal resistance by series"
+                ariaLabel="Mean internal resistance by series, true milliohms"
               />
             </div>
           </div>

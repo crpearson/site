@@ -6,7 +6,7 @@ export type MissBridge = {
   nights: string[];
 };
 
-export type GapKind = "value" | "skip" | "na" | "out";
+export type GapKind = "value" | "skip" | "na" | "out" | "rest";
 
 export const SKIP_LEGEND = "dotted = not charged · ○ = not charged (start/end)";
 
@@ -22,6 +22,7 @@ export function spanAt(series: ChartSeries, index: number): string | null {
  * a logged night whose metric is empty and is not a skip.
  */
 export function gapKind(series: ChartSeries, index: number): GapKind {
+  if (series.rest?.[index] && series.values[index] == null) return "rest";
   if (spanAt(series, index) == null) return "out";
   if (series.na?.[index]) return "na";
   if (series.logged) {
@@ -37,6 +38,10 @@ export function seriesNotCharged(series: ChartSeries, index: number): boolean {
 
 export function seriesNa(series: ChartSeries, index: number): boolean {
   return gapKind(series, index) === "na";
+}
+
+export function seriesRest(series: ChartSeries, index: number): boolean {
+  return gapKind(series, index) === "rest";
 }
 
 /** A night drawn as a dotted join or a hollow ring, with no value. */
@@ -83,15 +88,22 @@ function nightsForGap(series: ChartSeries, nightIds: string[], index: number): s
   return bridge ? bridge.nights : [nightIds[index]];
 }
 
+/** A night still has a plotted point on this chart. */
+function chartHasValue(series: ChartSeries[], index: number): boolean {
+  return series.some((item) => gapKind(item, index) === "value");
+}
+
 /** Tooltip text for skipped nights under the pointer. */
 export function gapPhrase(series: ChartSeries[], nightIds: string[], index: number): string {
   const skipped = new Set<string>();
   const na = new Set<string>();
+  const resting = new Set<string>();
   for (const item of series) {
+    if (gapKind(item, index) === "rest") resting.add(nightIds[index]);
     if (!seriesGap(item, index)) continue;
     for (const night of nightsForGap(item, nightIds, index)) {
       const nightIndex = nightIds.indexOf(night);
-      if (nightIndex < 0) continue;
+      if (nightIndex < 0 || chartHasValue(series, nightIndex)) continue;
       if (gapKind(item, nightIndex) === "na") na.add(night);
       else if (gapKind(item, nightIndex) === "skip") skipped.add(night);
     }
@@ -99,38 +111,45 @@ export function gapPhrase(series: ChartSeries[], nightIds: string[], index: numb
   const parts: string[] = [];
   const skipOrdered = nightIds.filter((night) => skipped.has(night));
   const naOrdered = nightIds.filter((night) => na.has(night));
+  const restOrdered = nightIds.filter((night) => resting.has(night));
+  if (restOrdered.length) parts.push(`Rest pool: ${restOrdered.join(", ")}`);
   if (skipOrdered.length) parts.push(`Not charged: ${skipOrdered.join(", ")}`);
   if (naOrdered.length) parts.push(`N/A: ${naOrdered.join(", ")}`);
   return parts.join(". ");
 }
 
 export function allNotCharged(series: ChartSeries[], nightIds: string[]): string[] {
-  const ids = new Set<string>();
-  for (const item of series) {
-    item.values.forEach((_, index) => {
-      if (seriesNotCharged(item, index)) ids.add(nightIds[index]);
-    });
-  }
-  return nightIds.filter((night) => ids.has(night));
+  return nightIds.filter((night, index) => {
+    if (chartHasValue(series, index)) return false;
+    return series.some((item) => seriesNotCharged(item, index));
+  });
 }
 
 export function allNa(series: ChartSeries[], nightIds: string[]): string[] {
-  const ids = new Set<string>();
-  for (const item of series) {
-    item.values.forEach((_, index) => {
-      if (seriesNa(item, index)) ids.add(nightIds[index]);
-    });
-  }
-  return nightIds.filter((night) => ids.has(night));
+  return nightIds.filter((_, index) => {
+    if (chartHasValue(series, index)) return false;
+    return series.some((item) => seriesNa(item, index));
+  });
 }
 
 /**
- * In-service misses before the first reading or after the last, still in the
- * span from before any move. Nights before commission have no span. Nights
- * after a move use a later span and are not marked. A series line with no
- * service array is in span "0" for the whole axis.
+ * The span a line is first in service. Omitted service means the whole axis
+ * is span "0". A later span is a move, and those nights are not ringed.
+ */
+function firstSpan(series: ChartSeries): string | null {
+  if (!series.service) return "0";
+  return series.service.find((span) => span != null) ?? null;
+}
+
+/**
+ * In-service misses before the first reading or after the last, inside the
+ * line's first service span. Nights with no span are before commission, after
+ * retirement, or before this series existed. Nights in a later span are after
+ * a move and are not marked.
  */
 export function openEndIndices(series: ChartSeries): number[] {
+  const allowed = firstSpan(series);
+  if (allowed == null) return [];
   const nightIds = series.values.map((_, index) => String(index));
   const interior = new Set<number>();
   for (const bridge of missBridges(series, nightIds)) {
@@ -138,11 +157,39 @@ export function openEndIndices(series: ChartSeries): number[] {
   }
   const ends: number[] = [];
   series.values.forEach((_, index) => {
-    if (spanAt(series, index) !== "0") return;
+    if (spanAt(series, index) !== allowed) return;
     if (!seriesGap(series, index) || interior.has(index)) return;
     ends.push(index);
   });
   return ends;
+}
+
+/**
+ * A real reading whose solid path is only a moveto, and which is not an end of
+ * a dotted join. A one-point line has no stroke, so the chart draws a dot.
+ */
+export function lonePointIndices(series: ChartSeries): number[] {
+  const nightIds = series.values.map((_, index) => String(index));
+  const bridged = new Set<number>();
+  for (const bridge of missBridges(series, nightIds)) {
+    bridged.add(bridge.from);
+    bridged.add(bridge.to);
+  }
+  const lone: number[] = [];
+  let run: number[] = [];
+  const flush = () => {
+    if (run.length === 1 && !bridged.has(run[0])) lone.push(run[0]);
+    run = [];
+  };
+  series.values.forEach((value, index) => {
+    if (value == null || gapKind(series, index) !== "value") {
+      flush();
+      return;
+    }
+    run.push(index);
+  });
+  flush();
+  return lone;
 }
 
 export function hasOpenEnd(series: ChartSeries[]): boolean {
