@@ -144,7 +144,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <p className="note">
           Status call {pack.call.session}
           {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
-          {pack.chargeMode === "individual" ? "charged on its own" : "charged in parallel"}
+          {pack.row.restPool
+            ? "not charged (Rest pool)"
+            : pack.chargeMode === "individual"
+              ? "charged on its own"
+              : "charged in parallel"}
         </p>
         <p className="note">
           Purchase {pack.purchaseDate} · price {pack.priceUsd} · vendor {pack.vendor}
@@ -353,7 +357,8 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       <details className="panel" data-accent="muted">
         <summary className="cursor-pointer font-medium">Night table</summary>
         <p className="note mt-3">
-          Cell, average, and spread figures are {IR_UNIT}. Not charged means this pack was in
+          Cell, average, and spread figures are {IR_UNIT}. A Rest pool night is labeled Rest
+          pool: the pack is off every board and is not charged. Not charged means this pack was in
           service and was not logged that night. On the charts, a
           faint dotted line joins the readings on either side when both exist, and that night has no
           value. A skipped night before the first reading or after the last is a hollow ring on the
