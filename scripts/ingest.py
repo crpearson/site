@@ -593,7 +593,7 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
                 "charger": r.get("charger") or "",
                 "cells_chg_mah": [num(r[f"c{i}"]) for i in range(1, 7)],
                 "avg_chg_mah": num(r["avg"]),
-                "spread_mohm": num(r["spread"]),
+                "spread_chg_mah": num(r["spread"]),
                 "start_floor_mV": num(r["start_floor_mV"], int),
                 "start_imbalance_mV": num(r.get("start_imbalance_mV"), int),
                 "rest_V": num(r.get("rest_V")),

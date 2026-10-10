@@ -88,6 +88,11 @@ function nightsForGap(series: ChartSeries, nightIds: string[], index: number): s
   return bridge ? bridge.nights : [nightIds[index]];
 }
 
+/** A night still has a plotted point on this chart. */
+function chartHasValue(series: ChartSeries[], index: number): boolean {
+  return series.some((item) => gapKind(item, index) === "value");
+}
+
 /** Tooltip text for skipped nights under the pointer. */
 export function gapPhrase(series: ChartSeries[], nightIds: string[], index: number): string {
   const skipped = new Set<string>();
@@ -98,7 +103,7 @@ export function gapPhrase(series: ChartSeries[], nightIds: string[], index: numb
     if (!seriesGap(item, index)) continue;
     for (const night of nightsForGap(item, nightIds, index)) {
       const nightIndex = nightIds.indexOf(night);
-      if (nightIndex < 0) continue;
+      if (nightIndex < 0 || chartHasValue(series, nightIndex)) continue;
       if (gapKind(item, nightIndex) === "na") na.add(night);
       else if (gapKind(item, nightIndex) === "skip") skipped.add(night);
     }
@@ -114,23 +119,17 @@ export function gapPhrase(series: ChartSeries[], nightIds: string[], index: numb
 }
 
 export function allNotCharged(series: ChartSeries[], nightIds: string[]): string[] {
-  const ids = new Set<string>();
-  for (const item of series) {
-    item.values.forEach((_, index) => {
-      if (seriesNotCharged(item, index)) ids.add(nightIds[index]);
-    });
-  }
-  return nightIds.filter((night) => ids.has(night));
+  return nightIds.filter((night, index) => {
+    if (chartHasValue(series, index)) return false;
+    return series.some((item) => seriesNotCharged(item, index));
+  });
 }
 
 export function allNa(series: ChartSeries[], nightIds: string[]): string[] {
-  const ids = new Set<string>();
-  for (const item of series) {
-    item.values.forEach((_, index) => {
-      if (seriesNa(item, index)) ids.add(nightIds[index]);
-    });
-  }
-  return nightIds.filter((night) => ids.has(night));
+  return nightIds.filter((_, index) => {
+    if (chartHasValue(series, index)) return false;
+    return series.some((item) => seriesNa(item, index));
+  });
 }
 
 /**

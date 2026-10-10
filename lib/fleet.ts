@@ -10,6 +10,7 @@ import { formatValue, shortSession } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { lampTone, splitCall, type LampTone } from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
+import { calendarDate } from "@/lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
@@ -399,7 +400,10 @@ function assertStore() {
 assertStore();
 
 const loggedThrough =
-  [...sessionOrder].reverse().find((id) => /^\d{4}-\d{2}-\d{2}/.test(id))?.slice(0, 10) ?? metaDoc.last_ingest;
+  sessionOrder.reduce((latest, id) => {
+    const day = calendarDate(id);
+    return day > latest ? day : latest;
+  }, "") || metaDoc.last_ingest;
 
 export const siteMeta = {
   lastIngest: loggedThrough,
@@ -719,7 +723,8 @@ function asOf(series: string): string {
     .map((pack) => latestCall(pack.uid)?.session)
     .filter((value): value is string => Boolean(value));
   if (dates.length === 0) return "—";
-  return dates.reduce((latest, value) => (compareTime(value, latest) > 0 ? value : latest));
+  const latest = dates.reduce((value, current) => (compareTime(current, value) > 0 ? current : value));
+  return calendarDate(latest) || latest;
 }
 
 export function seriesBlocks(): SeriesBlock[] {
@@ -1253,9 +1258,9 @@ export function ruleABand(spread: number): "Go" | "Caution" | "Individual" {
 }
 
 export const metricLabels: Record<string, string> = {
-  per_cell_ir_mohm: `Per-cell IR (${IR_UNIT})`,
-  pack_avg_ir_mohm: `Pack-average IR (${IR_UNIT})`,
-  intra_pack_spread_mohm: `Intra-pack spread (${IR_UNIT})`,
+  per_cell_chg_mah: "Charge taken per cell (mAh)",
+  pack_avg_chg_mah: "Average charge taken (mAh)",
+  intra_pack_spread_chg_mah: "Charge spread (mAh)",
   start_floor_mV: "Start floor (mV)",
   arrival_imbalance_mv: "Arrival imbalance (mV)",
   rest_voltage_for_inter_pack_delta: "Rest voltage for inter-pack delta",
@@ -1317,7 +1322,7 @@ function assertDerived() {
   if (c2Rule == null || Math.abs(c2Rule - 0.147) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
   const board = nextParallel();
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
-  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-10") {
+  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-09") {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
 }

@@ -3,9 +3,9 @@
   "ingest_note": "Taken from the storage-charge record. Capacity is not filled in.",
   "data_source": "iCharger DX8 Storage logs (individual pack storage charges)",
   "metrics_available": [
-    "per_cell_ir_mohm",
-    "pack_avg_ir_mohm",
-    "intra_pack_spread_mohm",
+    "per_cell_chg_mah",
+    "pack_avg_chg_mah",
+    "intra_pack_spread_chg_mah",
     "start_floor_mV",
     "arrival_imbalance_mv",
     "rest_voltage_for_inter_pack_delta"

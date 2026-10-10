@@ -19,7 +19,7 @@ Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A 
 
 C1-P3 is an owner override: Caution, then Go after one clean night. The strict 60 mV gap rule is not applied to that pack, the low-cell gap stays on monitor, and Cell 4 has no rest test.
 
-C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. C1-P5 is charged individually (Rule B N/A). Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel as of 2026-10-10: C1 is C1-P2, C1-P3, C1-P6. C2 is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6.
+C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. C1-P5 is charged individually (Rule B N/A). Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel as of 2026-10-09: C1 is C1-P2, C1-P3, C1-P6. C2 is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6.
 
 IR is true milliohms from `ir_store_v4` (159 rows). Rules v3: spread caution at 2.0 mΩ and individual at 3.0 mΩ, two nights in a row, with the low-cell gap, floor, and rest-test cuts in `data/status.json`. Rule B is unchanged: go at or under 0.30 V, caution through 0.60 V, hard stop above 0.60 V.
 

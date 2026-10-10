@@ -11,7 +11,7 @@
     573
    ],
    "avg_chg_mah": 572.5,
-   "spread_mohm": 33,
+   "spread_chg_mah": 33,
    "start_floor_mV": 3474,
    "start_imbalance_mV": 217,
    "rest_V": 21.697
@@ -27,7 +27,7 @@
     543
    ],
    "avg_chg_mah": 544.3,
-   "spread_mohm": 34,
+   "spread_chg_mah": 34,
    "start_floor_mV": 3563,
    "start_imbalance_mV": 134,
    "rest_V": 21.954
@@ -43,7 +43,7 @@
     473
    ],
    "avg_chg_mah": 467.8,
-   "spread_mohm": 34,
+   "spread_chg_mah": 34,
    "start_floor_mV": 3698,
    "start_imbalance_mV": 20,
    "rest_V": 22.249
@@ -59,7 +59,7 @@
     538
    ],
    "avg_chg_mah": 538.5,
-   "spread_mohm": 35,
+   "spread_chg_mah": 35,
    "start_floor_mV": 3576,
    "start_imbalance_mV": 127,
    "rest_V": 22.019
@@ -75,7 +75,7 @@
     529
    ],
    "avg_chg_mah": 526.3,
-   "spread_mohm": 31,
+   "spread_chg_mah": 31,
    "start_floor_mV": 3591,
    "start_imbalance_mV": 113,
    "rest_V": 22.052
@@ -91,7 +91,7 @@
     526
    ],
    "avg_chg_mah": 523.8,
-   "spread_mohm": 36,
+   "spread_chg_mah": 36,
    "start_floor_mV": 3605,
    "start_imbalance_mV": 99,
    "rest_V": 22.079
@@ -107,7 +107,7 @@
     529
    ],
    "avg_chg_mah": 527.2,
-   "spread_mohm": 42,
+   "spread_chg_mah": 42,
    "start_floor_mV": 3569,
    "start_imbalance_mV": 134,
    "rest_V": 21.989
@@ -123,7 +123,7 @@
     522
    ],
    "avg_chg_mah": 524.2,
-   "spread_mohm": 42,
+   "spread_chg_mah": 42,
    "start_floor_mV": 3608,
    "start_imbalance_mV": 99,
    "rest_V": 22.083
@@ -139,7 +139,7 @@
     549
    ],
    "avg_chg_mah": 546.0,
-   "spread_mohm": 36,
+   "spread_chg_mah": 36,
    "start_floor_mV": 3508,
    "start_imbalance_mV": 192,
    "rest_V": 21.842
@@ -155,7 +155,7 @@
     545
    ],
    "avg_chg_mah": 545.2,
-   "spread_mohm": 45,
+   "spread_chg_mah": 45,
    "start_floor_mV": 3507,
    "start_imbalance_mV": 190,
    "rest_V": 21.795
@@ -171,7 +171,7 @@
     547
    ],
    "avg_chg_mah": 547.0,
-   "spread_mohm": 29,
+   "spread_chg_mah": 29,
    "start_floor_mV": 3509,
    "start_imbalance_mV": 184,
    "rest_V": 21.755
@@ -187,7 +187,7 @@
     545
    ],
    "avg_chg_mah": 545.5,
-   "spread_mohm": 33,
+   "spread_chg_mah": 33,
    "start_floor_mV": 3543,
    "start_imbalance_mV": 155,
    "rest_V": 21.882
@@ -203,7 +203,7 @@
     551
    ],
    "avg_chg_mah": 550.0,
-   "spread_mohm": 42,
+   "spread_chg_mah": 42,
    "start_floor_mV": 3509,
    "start_imbalance_mV": 191,
    "rest_V": 21.826
@@ -221,7 +221,7 @@
     592
    ],
    "avg_chg_mah": 608.3,
-   "spread_mohm": 34,
+   "spread_chg_mah": 34,
    "start_floor_mV": 3604,
    "start_imbalance_mV": 25,
    "rest_V": 21.7
@@ -237,7 +237,7 @@
     541
    ],
    "avg_chg_mah": 553.7,
-   "spread_mohm": 29,
+   "spread_chg_mah": 29,
    "start_floor_mV": 3668,
    "start_imbalance_mV": 24,
    "rest_V": 22.094
@@ -253,7 +253,7 @@
     576
    ],
    "avg_chg_mah": 581.8,
-   "spread_mohm": 19,
+   "spread_chg_mah": 19,
    "start_floor_mV": 3651,
    "start_imbalance_mV": 26,
    "rest_V": 21.993
@@ -269,7 +269,7 @@
     522
    ],
    "avg_chg_mah": 532.7,
-   "spread_mohm": 37,
+   "spread_chg_mah": 37,
    "start_floor_mV": 3698,
    "start_imbalance_mV": 7,
    "rest_V": 22.213
@@ -285,7 +285,7 @@
     565
    ],
    "avg_chg_mah": 573.0,
-   "spread_mohm": 23,
+   "spread_chg_mah": 23,
    "start_floor_mV": 3650,
    "start_imbalance_mV": 28,
    "rest_V": 21.988
@@ -301,7 +301,7 @@
     550
    ],
    "avg_chg_mah": 561.0,
-   "spread_mohm": 24,
+   "spread_chg_mah": 24,
    "start_floor_mV": 3666,
    "start_imbalance_mV": 23,
    "rest_V": 22.048
@@ -317,7 +317,7 @@
     562
    ],
    "avg_chg_mah": 572.5,
-   "spread_mohm": 24,
+   "spread_chg_mah": 24,
    "start_floor_mV": 3651,
    "start_imbalance_mV": 28,
    "rest_V": 22.002
@@ -333,7 +333,7 @@
     531
    ],
    "avg_chg_mah": 544.5,
-   "spread_mohm": 30,
+   "spread_chg_mah": 30,
    "start_floor_mV": 3694,
    "start_imbalance_mV": 11,
    "rest_V": 22.181
@@ -349,7 +349,7 @@
     550
    ],
    "avg_chg_mah": 559.5,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3667,
    "start_imbalance_mV": 27,
    "rest_V": 22.083
@@ -365,7 +365,7 @@
     520
    ],
    "avg_chg_mah": 527.5,
-   "spread_mohm": 22,
+   "spread_chg_mah": 22,
    "start_floor_mV": 3699,
    "start_imbalance_mV": 7,
    "rest_V": 22.218
@@ -381,7 +381,7 @@
     562
    ],
    "avg_chg_mah": 567.2,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3648,
    "start_imbalance_mV": 32,
    "rest_V": 21.988
@@ -397,7 +397,7 @@
     562
    ],
    "avg_chg_mah": 566.5,
-   "spread_mohm": 23,
+   "spread_chg_mah": 23,
    "start_floor_mV": 3647,
    "start_imbalance_mV": 33,
    "rest_V": 21.986
@@ -413,7 +413,7 @@
     554
    ],
    "avg_chg_mah": 564.2,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3634,
    "start_imbalance_mV": 42,
    "rest_V": 21.944
@@ -431,7 +431,7 @@
     541
    ],
    "avg_chg_mah": 547.2,
-   "spread_mohm": 34,
+   "spread_chg_mah": 34,
    "start_floor_mV": 3607,
    "start_imbalance_mV": 78,
    "rest_V": 21.813
@@ -447,7 +447,7 @@
     500
    ],
    "avg_chg_mah": 514.7,
-   "spread_mohm": 37,
+   "spread_chg_mah": 37,
    "start_floor_mV": 3642,
    "start_imbalance_mV": 61,
    "rest_V": 22.044
@@ -463,7 +463,7 @@
     563
    ],
    "avg_chg_mah": 574.8,
-   "spread_mohm": 34,
+   "spread_chg_mah": 34,
    "start_floor_mV": 3478,
    "start_imbalance_mV": 139,
    "rest_V": 21.263
@@ -479,7 +479,7 @@
     564
    ],
    "avg_chg_mah": 573.7,
-   "spread_mohm": 27,
+   "spread_chg_mah": 27,
    "start_floor_mV": 3474,
    "start_imbalance_mV": 155,
    "rest_V": 21.279
@@ -495,7 +495,7 @@
     484
    ],
    "avg_chg_mah": 496.7,
-   "spread_mohm": 25,
+   "spread_chg_mah": 25,
    "start_floor_mV": 3673,
    "start_imbalance_mV": 32,
    "rest_V": 22.183
@@ -511,7 +511,7 @@
     519
    ],
    "avg_chg_mah": 530.0,
-   "spread_mohm": 28,
+   "spread_chg_mah": 28,
    "start_floor_mV": 3596,
    "start_imbalance_mV": 101,
    "rest_V": 21.892
@@ -527,7 +527,7 @@
     495
    ],
    "avg_chg_mah": 508.8,
-   "spread_mohm": 30,
+   "spread_chg_mah": 30,
    "start_floor_mV": 3624,
    "start_imbalance_mV": 79,
    "rest_V": 22.038
@@ -543,7 +543,7 @@
     496
    ],
    "avg_chg_mah": 509.0,
-   "spread_mohm": 30,
+   "spread_chg_mah": 30,
    "start_floor_mV": 3634,
    "start_imbalance_mV": 70,
    "rest_V": 22.054
@@ -559,7 +559,7 @@
     501
    ],
    "avg_chg_mah": 512.2,
-   "spread_mohm": 35,
+   "spread_chg_mah": 35,
    "start_floor_mV": 3613,
    "start_imbalance_mV": 89,
    "rest_V": 21.984
@@ -575,7 +575,7 @@
     502
    ],
    "avg_chg_mah": 518.3,
-   "spread_mohm": 31,
+   "spread_chg_mah": 31,
    "start_floor_mV": 3622,
    "start_imbalance_mV": 81,
    "rest_V": 21.969
@@ -591,7 +591,7 @@
     489
    ],
    "avg_chg_mah": 507.8,
-   "spread_mohm": 32,
+   "spread_chg_mah": 32,
    "start_floor_mV": 3622,
    "start_imbalance_mV": 78,
    "rest_V": 22.044
@@ -607,7 +607,7 @@
     485
    ],
    "avg_chg_mah": 504.0,
-   "spread_mohm": 37,
+   "spread_chg_mah": 37,
    "start_floor_mV": 3632,
    "start_imbalance_mV": 71,
    "rest_V": 22.09
@@ -623,7 +623,7 @@
     488
    ],
    "avg_chg_mah": 512.2,
-   "spread_mohm": 40,
+   "spread_chg_mah": 40,
    "start_floor_mV": 3578,
    "start_imbalance_mV": 122,
    "rest_V": 21.915
@@ -641,7 +641,7 @@
     487
    ],
    "avg_chg_mah": 497.3,
-   "spread_mohm": 55,
+   "spread_chg_mah": 55,
    "start_floor_mV": 3693,
    "start_imbalance_mV": 15,
    "rest_V": 22.219
@@ -657,7 +657,7 @@
     527
    ],
    "avg_chg_mah": 538.5,
-   "spread_mohm": 37,
+   "spread_chg_mah": 37,
    "start_floor_mV": 3604,
    "start_imbalance_mV": 98,
    "rest_V": 22.021
@@ -673,7 +673,7 @@
     530
    ],
    "avg_chg_mah": 543.2,
-   "spread_mohm": 36,
+   "spread_chg_mah": 36,
    "start_floor_mV": 3628,
    "start_imbalance_mV": 74,
    "rest_V": 22.076
@@ -689,7 +689,7 @@
     360
    ],
    "avg_chg_mah": 370.2,
-   "spread_mohm": 44,
+   "spread_chg_mah": 44,
    "start_floor_mV": 3740,
    "start_imbalance_mV": 19,
    "rest_V": 22.515
@@ -705,7 +705,7 @@
     469
    ],
    "avg_chg_mah": 483.0,
-   "spread_mohm": 47,
+   "spread_chg_mah": 47,
    "start_floor_mV": 3699,
    "start_imbalance_mV": 9,
    "rest_V": 22.233
@@ -721,7 +721,7 @@
     499
    ],
    "avg_chg_mah": 518.0,
-   "spread_mohm": 54,
+   "spread_chg_mah": 54,
    "start_floor_mV": 3630,
    "start_imbalance_mV": 75,
    "rest_V": 22.111
@@ -737,7 +737,7 @@
     541
    ],
    "avg_chg_mah": 550.7,
-   "spread_mohm": 44,
+   "spread_chg_mah": 44,
    "start_floor_mV": 3549,
    "start_imbalance_mV": 142,
    "rest_V": 21.867
@@ -753,7 +753,7 @@
     509
    ],
    "avg_chg_mah": 518.3,
-   "spread_mohm": 43,
+   "spread_chg_mah": 43,
    "start_floor_mV": 3657,
    "start_imbalance_mV": 49,
    "rest_V": 22.146
@@ -769,7 +769,7 @@
     524
    ],
    "avg_chg_mah": 534.2,
-   "spread_mohm": 49,
+   "spread_chg_mah": 49,
    "start_floor_mV": 3599,
    "start_imbalance_mV": 104,
    "rest_V": 22.039
@@ -785,7 +785,7 @@
     506
    ],
    "avg_chg_mah": 519.8,
-   "spread_mohm": 42,
+   "spread_chg_mah": 42,
    "start_floor_mV": 3640,
    "start_imbalance_mV": 65,
    "rest_V": 22.125
@@ -801,7 +801,7 @@
     546
    ],
    "avg_chg_mah": 560.0,
-   "spread_mohm": 46,
+   "spread_chg_mah": 46,
    "start_floor_mV": 3479,
    "start_imbalance_mV": 191,
    "rest_V": 21.642
@@ -817,7 +817,7 @@
     518
    ],
    "avg_chg_mah": 526.5,
-   "spread_mohm": 36,
+   "spread_chg_mah": 36,
    "start_floor_mV": 3654,
    "start_imbalance_mV": 50,
    "rest_V": 22.125
@@ -833,7 +833,7 @@
     521
    ],
    "avg_chg_mah": 533.8,
-   "spread_mohm": 45,
+   "spread_chg_mah": 45,
    "start_floor_mV": 3603,
    "start_imbalance_mV": 98,
    "rest_V": 22.025
@@ -851,7 +851,7 @@
     531
    ],
    "avg_chg_mah": 546.0,
-   "spread_mohm": 34,
+   "spread_chg_mah": 34,
    "start_floor_mV": 3648,
    "start_imbalance_mV": 39,
    "rest_V": 22.047
@@ -867,7 +867,7 @@
     536
    ],
    "avg_chg_mah": 545.5,
-   "spread_mohm": 30,
+   "spread_chg_mah": 30,
    "start_floor_mV": 3637,
    "start_imbalance_mV": 39,
    "rest_V": 21.975
@@ -883,7 +883,7 @@
     557
    ],
    "avg_chg_mah": 568.3,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3592,
    "start_imbalance_mV": 48,
    "rest_V": 21.724
@@ -899,7 +899,7 @@
     474
    ],
    "avg_chg_mah": 486.7,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3702,
    "start_imbalance_mV": 6,
    "rest_V": 22.235
@@ -915,7 +915,7 @@
     509
    ],
    "avg_chg_mah": 520.8,
-   "spread_mohm": 29,
+   "spread_chg_mah": 29,
    "start_floor_mV": 3686,
    "start_imbalance_mV": 17,
    "rest_V": 22.19
@@ -931,7 +931,7 @@
     524
    ],
    "avg_chg_mah": 533.5,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3665,
    "start_imbalance_mV": 31,
    "rest_V": 22.117
@@ -947,7 +947,7 @@
     499
    ],
    "avg_chg_mah": 517.8,
-   "spread_mohm": 35,
+   "spread_chg_mah": 35,
    "start_floor_mV": 3681,
    "start_imbalance_mV": 23,
    "rest_V": 22.189
@@ -963,7 +963,7 @@
     540
    ],
    "avg_chg_mah": 552.2,
-   "spread_mohm": 31,
+   "spread_chg_mah": 31,
    "start_floor_mV": 3598,
    "start_imbalance_mV": 47,
    "rest_V": 21.767
@@ -979,7 +979,7 @@
     520
    ],
    "avg_chg_mah": 538.5,
-   "spread_mohm": 35,
+   "spread_chg_mah": 35,
    "start_floor_mV": 3646,
    "start_imbalance_mV": 40,
    "rest_V": 22.047
@@ -995,7 +995,7 @@
     511
    ],
    "avg_chg_mah": 530.8,
-   "spread_mohm": 38,
+   "spread_chg_mah": 38,
    "start_floor_mV": 3658,
    "start_imbalance_mV": 33,
    "rest_V": 22.077
@@ -1011,7 +1011,7 @@
     525
    ],
    "avg_chg_mah": 537.5,
-   "spread_mohm": 28,
+   "spread_chg_mah": 28,
    "start_floor_mV": 3648,
    "start_imbalance_mV": 41,
    "rest_V": 22.047
@@ -1027,7 +1027,7 @@
     524
    ],
    "avg_chg_mah": 533.2,
-   "spread_mohm": 22,
+   "spread_chg_mah": 22,
    "start_floor_mV": 3663,
    "start_imbalance_mV": 34,
    "rest_V": 22.113
@@ -1043,7 +1043,7 @@
     554
    ],
    "avg_chg_mah": 569.5,
-   "spread_mohm": 33,
+   "spread_chg_mah": 33,
    "start_floor_mV": 3539,
    "start_imbalance_mV": 71,
    "rest_V": 21.523
@@ -1061,7 +1061,7 @@
     504
    ],
    "avg_chg_mah": 511.3,
-   "spread_mohm": 19,
+   "spread_chg_mah": 19,
    "start_floor_mV": 3702,
    "start_imbalance_mV": 6,
    "rest_V": 22.235
@@ -1077,7 +1077,7 @@
     542
    ],
    "avg_chg_mah": 548.3,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3670,
    "start_imbalance_mV": 32,
    "rest_V": 22.147
@@ -1093,7 +1093,7 @@
     600
    ],
    "avg_chg_mah": 609.0,
-   "spread_mohm": 13,
+   "spread_chg_mah": 13,
    "start_floor_mV": 3533,
    "start_imbalance_mV": 62,
    "rest_V": 21.392
@@ -1109,7 +1109,7 @@
     559
    ],
    "avg_chg_mah": 570.7,
-   "spread_mohm": 21,
+   "spread_chg_mah": 21,
    "start_floor_mV": 3631,
    "start_imbalance_mV": 51,
    "rest_V": 21.959
@@ -1125,7 +1125,7 @@
     541
    ],
    "avg_chg_mah": 550.7,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3638,
    "start_imbalance_mV": 50,
    "rest_V": 22.012
@@ -1141,7 +1141,7 @@
     563
    ],
    "avg_chg_mah": 575.0,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3585,
    "start_imbalance_mV": 64,
    "rest_V": 21.751
@@ -1157,7 +1157,7 @@
     540
    ],
    "avg_chg_mah": 553.8,
-   "spread_mohm": 24,
+   "spread_chg_mah": 24,
    "start_floor_mV": 3633,
    "start_imbalance_mV": 53,
    "rest_V": 22.002
@@ -1173,7 +1173,7 @@
     541
    ],
    "avg_chg_mah": 550.3,
-   "spread_mohm": 14,
+   "spread_chg_mah": 14,
    "start_floor_mV": 3660,
    "start_imbalance_mV": 35,
    "rest_V": 22.105
@@ -1189,7 +1189,7 @@
     545
    ],
    "avg_chg_mah": 556.7,
-   "spread_mohm": 19,
+   "spread_chg_mah": 19,
    "start_floor_mV": 3620,
    "start_imbalance_mV": 52,
    "rest_V": 21.931
@@ -1205,7 +1205,7 @@
     565
    ],
    "avg_chg_mah": 573.7,
-   "spread_mohm": 17,
+   "spread_chg_mah": 17,
    "start_floor_mV": 3577,
    "start_imbalance_mV": 64,
    "rest_V": 21.692
@@ -1221,7 +1221,7 @@
     560
    ],
    "avg_chg_mah": 574.8,
-   "spread_mohm": 24,
+   "spread_chg_mah": 24,
    "start_floor_mV": 3594,
    "start_imbalance_mV": 67,
    "rest_V": 21.815
@@ -1237,7 +1237,7 @@
     534
    ],
    "avg_chg_mah": 545.7,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3658,
    "start_imbalance_mV": 40,
    "rest_V": 22.115
@@ -1253,7 +1253,7 @@
     547
    ],
    "avg_chg_mah": 551.7,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3644,
    "start_imbalance_mV": 50,
    "rest_V": 22.045
@@ -1271,7 +1271,7 @@
     556
    ],
    "avg_chg_mah": 583.0,
-   "spread_mohm": 38,
+   "spread_chg_mah": 38,
    "start_floor_mV": 3606,
    "start_imbalance_mV": 71,
    "rest_V": 21.832
@@ -1287,7 +1287,7 @@
     568
    ],
    "avg_chg_mah": 588.3,
-   "spread_mohm": 29,
+   "spread_chg_mah": 29,
    "start_floor_mV": 3582,
    "start_imbalance_mV": 65,
    "rest_V": 21.699
@@ -1303,7 +1303,7 @@
     572
    ],
    "avg_chg_mah": 588.3,
-   "spread_mohm": 27,
+   "spread_chg_mah": 27,
    "start_floor_mV": 3589,
    "start_imbalance_mV": 45,
    "rest_V": 21.691
@@ -1319,7 +1319,7 @@
     478
    ],
    "avg_chg_mah": 493.2,
-   "spread_mohm": 25,
+   "spread_chg_mah": 25,
    "start_floor_mV": 3702,
    "start_imbalance_mV": 9,
    "rest_V": 22.227
@@ -1335,7 +1335,7 @@
     498
    ],
    "avg_chg_mah": 518.7,
-   "spread_mohm": 30,
+   "spread_chg_mah": 30,
    "start_floor_mV": 3701,
    "start_imbalance_mV": 6,
    "rest_V": 22.214
@@ -1351,7 +1351,7 @@
     492
    ],
    "avg_chg_mah": 506.7,
-   "spread_mohm": 24,
+   "spread_chg_mah": 24,
    "start_floor_mV": 3700,
    "start_imbalance_mV": 7,
    "rest_V": 22.21
@@ -1367,7 +1367,7 @@
     520
    ],
    "avg_chg_mah": 540.0,
-   "spread_mohm": 29,
+   "spread_chg_mah": 29,
    "start_floor_mV": 3685,
    "start_imbalance_mV": 20,
    "rest_V": 22.176
@@ -1383,7 +1383,7 @@
     521
    ],
    "avg_chg_mah": 531.3,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3695,
    "start_imbalance_mV": 9,
    "rest_V": 22.205
@@ -1399,7 +1399,7 @@
     550
    ],
    "avg_chg_mah": 561.0,
-   "spread_mohm": 23,
+   "spread_chg_mah": 23,
    "start_floor_mV": 3629,
    "start_imbalance_mV": 46,
    "rest_V": 21.939
@@ -1415,7 +1415,7 @@
     535
    ],
    "avg_chg_mah": 549.8,
-   "spread_mohm": 25,
+   "spread_chg_mah": 25,
    "start_floor_mV": 3645,
    "start_imbalance_mV": 48,
    "rest_V": 22.018
@@ -1431,7 +1431,7 @@
     551
    ],
    "avg_chg_mah": 566.2,
-   "spread_mohm": 23,
+   "spread_chg_mah": 23,
    "start_floor_mV": 3612,
    "start_imbalance_mV": 40,
    "rest_V": 21.82
@@ -1447,7 +1447,7 @@
     499
    ],
    "avg_chg_mah": 521.2,
-   "spread_mohm": 32,
+   "spread_chg_mah": 32,
    "start_floor_mV": 3694,
    "start_imbalance_mV": 13,
    "rest_V": 22.213
@@ -1463,7 +1463,7 @@
     493
    ],
    "avg_chg_mah": 498.7,
-   "spread_mohm": 17,
+   "spread_chg_mah": 17,
    "start_floor_mV": 3698,
    "start_imbalance_mV": 7,
    "rest_V": 22.203
@@ -1481,7 +1481,7 @@
     564
    ],
    "avg_chg_mah": 553.7,
-   "spread_mohm": 31,
+   "spread_chg_mah": 31,
    "start_floor_mV": 3547,
    "start_imbalance_mV": 144,
    "rest_V": 21.895
@@ -1497,7 +1497,7 @@
     552
    ],
    "avg_chg_mah": 544.3,
-   "spread_mohm": 33,
+   "spread_chg_mah": 33,
    "start_floor_mV": 3557,
    "start_imbalance_mV": 134,
    "rest_V": 21.924
@@ -1513,7 +1513,7 @@
     546
    ],
    "avg_chg_mah": 532.8,
-   "spread_mohm": 29,
+   "spread_chg_mah": 29,
    "start_floor_mV": 3606,
    "start_imbalance_mV": 92,
    "rest_V": 22.066
@@ -1529,7 +1529,7 @@
     468
    ],
    "avg_chg_mah": 451.7,
-   "spread_mohm": 50,
+   "spread_chg_mah": 50,
    "start_floor_mV": 3703,
    "start_imbalance_mV": 27,
    "rest_V": 22.308
@@ -1545,7 +1545,7 @@
     538
    ],
    "avg_chg_mah": 530.0,
-   "spread_mohm": 41,
+   "spread_chg_mah": 41,
    "start_floor_mV": 3606,
    "start_imbalance_mV": 94,
    "rest_V": 22.059
@@ -1561,7 +1561,7 @@
     518
    ],
    "avg_chg_mah": 517.7,
-   "spread_mohm": 25,
+   "spread_chg_mah": 25,
    "start_floor_mV": 3651,
    "start_imbalance_mV": 48,
    "rest_V": 22.137
@@ -1577,7 +1577,7 @@
     535
    ],
    "avg_chg_mah": 520.7,
-   "spread_mohm": 40,
+   "spread_chg_mah": 40,
    "start_floor_mV": 3621,
    "start_imbalance_mV": 81,
    "rest_V": 22.102
@@ -1593,7 +1593,7 @@
     498
    ],
    "avg_chg_mah": 484.5,
-   "spread_mohm": 38,
+   "spread_chg_mah": 38,
    "start_floor_mV": 3695,
    "start_imbalance_mV": 11,
    "rest_V": 22.21
@@ -1609,7 +1609,7 @@
     556
    ],
    "avg_chg_mah": 539.7,
-   "spread_mohm": 48,
+   "spread_chg_mah": 48,
    "start_floor_mV": 3545,
    "start_imbalance_mV": 152,
    "rest_V": 21.944
@@ -1625,7 +1625,7 @@
     519
    ],
    "avg_chg_mah": 509.3,
-   "spread_mohm": 28,
+   "spread_chg_mah": 28,
    "start_floor_mV": 3655,
    "start_imbalance_mV": 48,
    "rest_V": 22.157
@@ -1641,7 +1641,7 @@
     539
    ],
    "avg_chg_mah": 533.5,
-   "spread_mohm": 28,
+   "spread_chg_mah": 28,
    "start_floor_mV": 3596,
    "start_imbalance_mV": 101,
    "rest_V": 22.019
@@ -1657,7 +1657,7 @@
     495
    ],
    "avg_chg_mah": 479.3,
-   "spread_mohm": 44,
+   "spread_chg_mah": 44,
    "start_floor_mV": 3684,
    "start_imbalance_mV": 22,
    "rest_V": 22.201
@@ -1673,7 +1673,7 @@
     540
    ],
    "avg_chg_mah": 528.2,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3597,
    "start_imbalance_mV": 103,
    "rest_V": 22.055
@@ -1691,7 +1691,7 @@
     585
    ],
    "avg_chg_mah": 578.0,
-   "spread_mohm": 15,
+   "spread_chg_mah": 15,
    "start_floor_mV": 3667,
    "start_imbalance_mV": 23,
    "rest_V": 22.047
@@ -1707,7 +1707,7 @@
     578
    ],
    "avg_chg_mah": 573.8,
-   "spread_mohm": 21,
+   "spread_chg_mah": 21,
    "start_floor_mV": 3672,
    "start_imbalance_mV": 24,
    "rest_V": 22.078
@@ -1723,7 +1723,7 @@
     555
    ],
    "avg_chg_mah": 556.2,
-   "spread_mohm": 12,
+   "spread_chg_mah": 12,
    "start_floor_mV": 3690,
    "start_imbalance_mV": 9,
    "rest_V": 22.174
@@ -1739,7 +1739,7 @@
     585
    ],
    "avg_chg_mah": 581.2,
-   "spread_mohm": 22,
+   "spread_chg_mah": 22,
    "start_floor_mV": 3640,
    "start_imbalance_mV": 36,
    "rest_V": 21.918
@@ -1755,7 +1755,7 @@
     572
    ],
    "avg_chg_mah": 566.3,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3669,
    "start_imbalance_mV": 26,
    "rest_V": 22.077
@@ -1771,7 +1771,7 @@
     560
    ],
    "avg_chg_mah": 564.0,
-   "spread_mohm": 12,
+   "spread_chg_mah": 12,
    "start_floor_mV": 3671,
    "start_imbalance_mV": 26,
    "rest_V": 22.09
@@ -1787,7 +1787,7 @@
     571
    ],
    "avg_chg_mah": 563.8,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3680,
    "start_imbalance_mV": 17,
    "rest_V": 22.124
@@ -1803,7 +1803,7 @@
     551
    ],
    "avg_chg_mah": 545.2,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3697,
    "start_imbalance_mV": 5,
    "rest_V": 22.201
@@ -1819,7 +1819,7 @@
     588
    ],
    "avg_chg_mah": 578.5,
-   "spread_mohm": 30,
+   "spread_chg_mah": 30,
    "start_floor_mV": 3625,
    "start_imbalance_mV": 50,
    "rest_V": 21.873
@@ -1835,7 +1835,7 @@
     591
    ],
    "avg_chg_mah": 586.3,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3614,
    "start_imbalance_mV": 51,
    "rest_V": 21.803
@@ -1851,7 +1851,7 @@
     578
    ],
    "avg_chg_mah": 571.7,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3643,
    "start_imbalance_mV": 43,
    "rest_V": 21.95
@@ -1867,7 +1867,7 @@
     532
    ],
    "avg_chg_mah": 528.5,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3701,
    "start_imbalance_mV": 3,
    "rest_V": 22.213
@@ -1883,7 +1883,7 @@
     571
    ],
    "avg_chg_mah": 563.5,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3661,
    "start_imbalance_mV": 35,
    "rest_V": 22.062
@@ -1901,7 +1901,7 @@
     575
    ],
    "avg_chg_mah": 577.8,
-   "spread_mohm": 21,
+   "spread_chg_mah": 21,
    "start_floor_mV": 3633,
    "start_imbalance_mV": 58,
    "rest_V": 21.946
@@ -1917,7 +1917,7 @@
     570
    ],
    "avg_chg_mah": 572.8,
-   "spread_mohm": 11,
+   "spread_chg_mah": 11,
    "start_floor_mV": 3604,
    "start_imbalance_mV": 62,
    "rest_V": 21.772
@@ -1933,7 +1933,7 @@
     583
    ],
    "avg_chg_mah": 588.8,
-   "spread_mohm": 13,
+   "spread_chg_mah": 13,
    "start_floor_mV": 3604,
    "start_imbalance_mV": 56,
    "rest_V": 21.732
@@ -1949,7 +1949,7 @@
     472
    ],
    "avg_chg_mah": 480.2,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3703,
    "start_imbalance_mV": 12,
    "rest_V": 22.24
@@ -1965,7 +1965,7 @@
     564
    ],
    "avg_chg_mah": 563.5,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3628,
    "start_imbalance_mV": 58,
    "rest_V": 21.908
@@ -1981,7 +1981,7 @@
     549
    ],
    "avg_chg_mah": 551.8,
-   "spread_mohm": 14,
+   "spread_chg_mah": 14,
    "start_floor_mV": 3665,
    "start_imbalance_mV": 33,
    "rest_V": 22.077
@@ -1997,7 +1997,7 @@
     577
    ],
    "avg_chg_mah": 578.8,
-   "spread_mohm": 13,
+   "spread_chg_mah": 13,
    "start_floor_mV": 3601,
    "start_imbalance_mV": 69,
    "rest_V": 21.787
@@ -2013,7 +2013,7 @@
     532
    ],
    "avg_chg_mah": 534.7,
-   "spread_mohm": 12,
+   "spread_chg_mah": 12,
    "start_floor_mV": 3686,
    "start_imbalance_mV": 14,
    "rest_V": 22.16
@@ -2029,7 +2029,7 @@
     528
    ],
    "avg_chg_mah": 533.3,
-   "spread_mohm": 21,
+   "spread_chg_mah": 21,
    "start_floor_mV": 3679,
    "start_imbalance_mV": 20,
    "rest_V": 22.137
@@ -2045,7 +2045,7 @@
     552
    ],
    "avg_chg_mah": 556.2,
-   "spread_mohm": 12,
+   "spread_chg_mah": 12,
    "start_floor_mV": 3645,
    "start_imbalance_mV": 48,
    "rest_V": 22.013
@@ -2061,7 +2061,7 @@
     553
    ],
    "avg_chg_mah": 557.2,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3646,
    "start_imbalance_mV": 47,
    "rest_V": 21.996
@@ -2077,7 +2077,7 @@
     524
    ],
    "avg_chg_mah": 528.3,
-   "spread_mohm": 11,
+   "spread_chg_mah": 11,
    "start_floor_mV": 3691,
    "start_imbalance_mV": 10,
    "rest_V": 22.182
@@ -2093,7 +2093,7 @@
     544
    ],
    "avg_chg_mah": 539.2,
-   "spread_mohm": 17,
+   "spread_chg_mah": 17,
    "start_floor_mV": 3686,
    "start_imbalance_mV": 15,
    "rest_V": 22.161
@@ -2111,7 +2111,7 @@
     571
    ],
    "avg_chg_mah": 576.5,
-   "spread_mohm": 22,
+   "spread_chg_mah": 22,
    "start_floor_mV": 3612,
    "start_imbalance_mV": 54,
    "rest_V": 21.79
@@ -2127,7 +2127,7 @@
     561
    ],
    "avg_chg_mah": 563.8,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3647,
    "start_imbalance_mV": 44,
    "rest_V": 21.978
@@ -2143,7 +2143,7 @@
     501
    ],
    "avg_chg_mah": 509.7,
-   "spread_mohm": 21,
+   "spread_chg_mah": 21,
    "start_floor_mV": 3698,
    "start_imbalance_mV": 2,
    "rest_V": 22.196
@@ -2159,7 +2159,7 @@
     498
    ],
    "avg_chg_mah": 501.7,
-   "spread_mohm": 21,
+   "spread_chg_mah": 21,
    "start_floor_mV": 3701,
    "start_imbalance_mV": 3,
    "rest_V": 22.214
@@ -2175,7 +2175,7 @@
     493
    ],
    "avg_chg_mah": 501.3,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3700,
    "start_imbalance_mV": 4,
    "rest_V": 22.21
@@ -2191,7 +2191,7 @@
     554
    ],
    "avg_chg_mah": 563.2,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3636,
    "start_imbalance_mV": 52,
    "rest_V": 21.926
@@ -2207,7 +2207,7 @@
     556
    ],
    "avg_chg_mah": 565.0,
-   "spread_mohm": 22,
+   "spread_chg_mah": 22,
    "start_floor_mV": 3626,
    "start_imbalance_mV": 58,
    "rest_V": 21.87
@@ -2223,7 +2223,7 @@
     535
    ],
    "avg_chg_mah": 546.2,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3678,
    "start_imbalance_mV": 25,
    "rest_V": 22.14
@@ -2239,7 +2239,7 @@
     540
    ],
    "avg_chg_mah": 543.5,
-   "spread_mohm": 20,
+   "spread_chg_mah": 20,
    "start_floor_mV": 3663,
    "start_imbalance_mV": 36,
    "rest_V": 22.07
@@ -2255,7 +2255,7 @@
     531
    ],
    "avg_chg_mah": 537.3,
-   "spread_mohm": 16,
+   "spread_chg_mah": 16,
    "start_floor_mV": 3683,
    "start_imbalance_mV": 19,
    "rest_V": 22.158
@@ -2271,7 +2271,7 @@
     537
    ],
    "avg_chg_mah": 541.3,
-   "spread_mohm": 14,
+   "spread_chg_mah": 14,
    "start_floor_mV": 3663,
    "start_imbalance_mV": 36,
    "rest_V": 22.061
@@ -2287,7 +2287,7 @@
     550
    ],
    "avg_chg_mah": 558.8,
-   "spread_mohm": 22,
+   "spread_chg_mah": 22,
    "start_floor_mV": 3631,
    "start_imbalance_mV": 63,
    "rest_V": 21.914
@@ -2303,7 +2303,7 @@
     530
    ],
    "avg_chg_mah": 536.0,
-   "spread_mohm": 19,
+   "spread_chg_mah": 19,
    "start_floor_mV": 3681,
    "start_imbalance_mV": 20,
    "rest_V": 22.147
@@ -2321,7 +2321,7 @@
     567
    ],
    "avg_chg_mah": 554.7,
-   "spread_mohm": 23,
+   "spread_chg_mah": 23,
    "start_floor_mV": 3613,
    "start_imbalance_mV": 45,
    "rest_V": 21.855
@@ -2337,7 +2337,7 @@
     541
    ],
    "avg_chg_mah": 533.3,
-   "spread_mohm": 17,
+   "spread_chg_mah": 17,
    "start_floor_mV": 3682,
    "start_imbalance_mV": 18,
    "rest_V": 22.163
@@ -2353,7 +2353,7 @@
     592
    ],
    "avg_chg_mah": 592.7,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3499,
    "start_imbalance_mV": 96,
    "rest_V": 21.41
@@ -2369,7 +2369,7 @@
     506
    ],
    "avg_chg_mah": 506.5,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3699,
    "start_imbalance_mV": 7,
    "rest_V": 22.206
@@ -2385,7 +2385,7 @@
     541
    ],
    "avg_chg_mah": 535.0,
-   "spread_mohm": 15,
+   "spread_chg_mah": 15,
    "start_floor_mV": 3657,
    "start_imbalance_mV": 44,
    "rest_V": 22.127
@@ -2401,7 +2401,7 @@
     506
    ],
    "avg_chg_mah": 506.5,
-   "spread_mohm": 26,
+   "spread_chg_mah": 26,
    "start_floor_mV": 3696,
    "start_imbalance_mV": 10,
    "rest_V": 22.207
@@ -2417,7 +2417,7 @@
     523
    ],
    "avg_chg_mah": 518.8,
-   "spread_mohm": 14,
+   "spread_chg_mah": 14,
    "start_floor_mV": 3681,
    "start_imbalance_mV": 21,
    "rest_V": 22.18
@@ -2433,7 +2433,7 @@
     493
    ],
    "avg_chg_mah": 492.7,
-   "spread_mohm": 14,
+   "spread_chg_mah": 14,
    "start_floor_mV": 3701,
    "start_imbalance_mV": 5,
    "rest_V": 22.218
@@ -2449,7 +2449,7 @@
     523
    ],
    "avg_chg_mah": 522.2,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3651,
    "start_imbalance_mV": 51,
    "rest_V": 22.129
@@ -2465,7 +2465,7 @@
     505
    ],
    "avg_chg_mah": 507.0,
-   "spread_mohm": 23,
+   "spread_chg_mah": 23,
    "start_floor_mV": 3679,
    "start_imbalance_mV": 26,
    "rest_V": 22.188
@@ -2481,7 +2481,7 @@
     525
    ],
    "avg_chg_mah": 524.2,
-   "spread_mohm": 15,
+   "spread_chg_mah": 15,
    "start_floor_mV": 3649,
    "start_imbalance_mV": 51,
    "rest_V": 22.132
@@ -2497,7 +2497,7 @@
     432
    ],
    "avg_chg_mah": 434.8,
-   "spread_mohm": 25,
+   "spread_chg_mah": 25,
    "start_floor_mV": 3712,
    "start_imbalance_mV": 18,
    "rest_V": 22.329
@@ -2513,7 +2513,7 @@
     501
    ],
    "avg_chg_mah": 495.3,
-   "spread_mohm": 18,
+   "spread_chg_mah": 18,
    "start_floor_mV": 3694,
    "start_imbalance_mV": 12,
    "rest_V": 22.209

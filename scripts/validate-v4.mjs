@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { buildNextBoard, EXPECTED_BOARDS, NEXT_BOARD_AS_OF } from "../lib/next-board.mjs";
+import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
+import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
 function parseCsv(text) {
@@ -291,11 +292,23 @@ if (c2Mean.session !== "2026-09-30" || c2Mean.mean.toFixed(3) !== "2.886") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 
+const latestPtDate = latestCalendarDate([
+  ...v4.map((row) => row.session),
+  ...calls.map((row) => row.date),
+  ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
+]);
+if (latestPtDate !== "2026-10-09") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-09`);
+if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
+  fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
+}
+if (pacificCalendarDate(new Date("2026-10-10T08:00:00Z")) !== "2026-10-10") {
+  fail("Pacific date helper did not roll the calendar at Pacific midnight");
+}
 const board = buildNextBoard();
 const rendered = board.series.map((item) => item.labels.join("+")).join(" | ");
 const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | ");
-if (rendered !== expected || board.as_of !== NEXT_BOARD_AS_OF) {
-  fail(`next parallel ${board.as_of} ${rendered}, expected ${NEXT_BOARD_AS_OF} ${expected}`);
+if (rendered !== expected || board.as_of !== latestPtDate) {
+  fail(`next parallel ${board.as_of} ${rendered}, expected ${latestPtDate} ${expected}`);
 }
 for (const label of ["D-1", "C1-P4", "C2-P2", "C1-P5"]) {
   if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
@@ -308,56 +321,138 @@ console.log(`next parallel ${board.as_of}: ${rendered}`);
 
 for (const file of ["data/packs-timeseries.json", "data/sessions.json"]) {
   const text = fs.readFileSync(path.join(root, file), "utf8");
-  if (text.includes('"cells_ir_mohm"') || text.includes('"avg_ir_mohm"')) {
-    fail(`${file} still labels ;130; mAh as IR`);
+  if (text.includes('"cells_ir_mohm"') || text.includes('"avg_ir_mohm"') || text.includes("spread_mohm") || text.includes("_ir_mohm")) {
+    fail(`${file} still labels ;130; charge as milliohms`);
   }
 }
 
-function walk(dir, out = []) {
+function jsonFiles(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) walk(full, out);
+    if (entry.isDirectory()) jsonFiles(full, out);
+    else if (entry.name.endsWith(".json")) out.push(full);
+  }
+  return out;
+}
+
+function numbersUnder(value, out = []) {
+  if (typeof value === "number" && Number.isFinite(value)) out.push(value);
+  else if (Array.isArray(value)) value.forEach((item) => numbersUnder(item, out));
+  else if (value && typeof value === "object") Object.values(value).forEach((item) => numbersUnder(item, out));
+  return out;
+}
+
+function mohmLimit(key) {
+  return /pack|(^|_)avg|sr|s_r/i.test(key) ? 60 : 15;
+}
+
+for (const file of jsonFiles(path.join(root, "data"))) {
+  const data = JSON.parse(fs.readFileSync(file, "utf8"));
+  const walkValues = (value) => {
+    if (Array.isArray(value)) value.forEach(walkValues);
+    else if (value && typeof value === "object") {
+      for (const [key, child] of Object.entries(value)) {
+        if (key.endsWith("_mohm")) {
+          const limit = mohmLimit(key);
+          for (const number of numbersUnder(child)) {
+            if (number > limit) fail(`${path.relative(root, file)} ${key}=${number} exceeds ${limit}`);
+          }
+        } else walkValues(child);
+      }
+    }
+  };
+  walkValues(data);
+}
+
+for (const file of ["data/meta.json", "data/sessions.json"]) {
+  const data = JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
+  const metrics = file.endsWith("sessions.json") ? data.meta.metrics_available : data.metrics_available;
+  for (const name of metrics) {
+    if (String(name).includes("mohm") || String(name).includes("_ir_")) {
+      fail(`${file} metrics_available still uses a milliohm name for the charge store: ${name}`);
+    }
+  }
+}
+console.log("charge-store names and _mohm bounds passed");
+
+function walkTsx(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walkTsx(full, out);
     else if (entry.name.endsWith(".tsx")) out.push(full);
   }
   return out;
 }
 
-function unvalidatedColumns(markdown) {
-  const names = new Set();
-  for (const line of markdown.split("\n")) {
-    if (!line.startsWith("|") || line.includes("---")) continue;
-    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
-    if (cells.length < 2) continue;
-    const ground = cells[cells.length - 1].replace(/\*/g, "").trim();
-    if (!/NOT VALIDATED/i.test(ground) || /^DERIVED/i.test(ground)) continue;
-    for (const piece of cells[0].replace(/\*/g, "").split(",")) {
-      const part = piece.trim();
-      const range = part.split(/\s*(?:…|\.\.\.)\s*/);
-      if (range.length === 2) {
-        const start = range[0].match(/^(.*?)(\d+)(.*)$/);
-        const end = range[1].match(/^(.*?)(\d+)(.*)$/);
-        if (start && end) {
-          for (let n = Number(start[2]); n <= Number(end[2]); n += 1) names.add(`${start[1]}${n}${start[3]}`);
-          continue;
-        }
+function expandColumns(cell) {
+  const names = [];
+  for (const piece of cell.replace(/\*/g, "").split(",")) {
+    const part = piece.trim();
+    const range = part.split(/\s*(?:…|\.\.\.)\s*/);
+    if (range.length === 2) {
+      const start = range[0].match(/^(.*?)(\d+)(.*)$/);
+      const end = range[1].match(/^(.*?)(\d+)(.*)$/);
+      if (start && end && start[1] === end[1] && start[3] === end[3]) {
+        for (let n = Number(start[2]); n <= Number(end[2]); n += 1) names.push(`${start[1]}${n}${start[3]}`);
+        continue;
       }
-      if (part.includes("_")) names.add(part);
     }
+    if (part.includes("_")) names.push(part);
   }
   return names;
 }
 
-const banned = unvalidatedColumns(fs.readFileSync(path.join(root, "data/UNITS.md"), "utf8"));
-if (!banned.has("LR_mOhm")) fail("UNITS.md did not mark LR_mOhm unvalidated");
-const ui = walk(path.join(root, "app")).concat(walk(path.join(root, "components")));
-for (const file of ui) {
-  const text = fs.readFileSync(file, "utf8");
-  if (/\bL_R\b/.test(text) || text.includes("LR_mOhm") || /\.lr\b/.test(text)) {
-    fail(`${path.relative(root, file)} renders L_R`);
+function validationMark(text) {
+  const plain = text.replace(/\*/g, "");
+  if (/not published/i.test(plain)) return "not-published";
+  if (/not validated/i.test(plain)) return "not-validated";
+  if (/validated/i.test(plain)) return "validated";
+  if (/derived/i.test(plain)) return "derived";
+  if (/label/i.test(plain)) return "label";
+  return "other";
+}
+
+function unitsColumns(markdown) {
+  const marks = new Map();
+  for (const line of markdown.split("\n")) {
+    if (!line.startsWith("|") || line.includes("---")) continue;
+    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    if (cells.length < 2) continue;
+    const mark = validationMark(cells[cells.length - 1]);
+    for (const name of expandColumns(cells[0])) marks.set(name, mark);
   }
-  for (const name of banned) {
-    if (name.length < 4 || !name.includes("_")) continue;
-    if (text.includes(name)) fail(`${path.relative(root, file)} displays unvalidated field ${name}`);
+  return marks;
+}
+
+function findNamed(dir, name, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".preview-main" || entry.name === "out") continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) findNamed(full, name, out);
+    else if (entry.name === name) out.push(full);
+  }
+  return out;
+}
+
+const privateUnits = findNamed(root, "UNITS.md");
+if (privateUnits.length) fail(`private units file is still in the repo: ${privateUnits.map((file) => path.relative(root, file)).join(", ")}`);
+const unitsPath = path.join(root, "data/UNITS.public.md");
+if (!fs.existsSync(unitsPath)) fail("data/UNITS.public.md is missing");
+const units = unitsColumns(fs.readFileSync(unitsPath, "utf8"));
+if (units.get("LR_mOhm") !== "not-published") fail("LR_mOhm must be marked not published in data/UNITS.public.md");
+
+const ui = walkTsx(path.join(root, "app")).concat(walkTsx(path.join(root, "components")));
+const uiText = ui.map((file) => fs.readFileSync(file, "utf8")).join("\n");
+const codeText = `${uiText}\n${fs.readFileSync(path.join(root, "lib/fleet.ts"), "utf8")}`;
+if (/\bL_R\b/.test(codeText) || codeText.includes("LR_mOhm") || /\.lr\b/.test(codeText)) {
+  fail("displayed code renders L_R");
+}
+for (const [name, mark] of units) {
+  if (name.length < 4 || !name.includes("_")) continue;
+  const inPage = uiText.includes(name);
+  const usedAsIr = /mOhm$/i.test(name) && (codeText.includes(name) || (/^c\d_mOhm$/.test(name) && codeText.includes("_mOhm")));
+  if ((inPage || usedAsIr) && mark !== "validated") {
+    fail(`${name} is displayed and marked ${mark}`);
   }
 }
-console.log("units check passed (L_R is not rendered; unvalidated column names are not displayed)");
+console.log("units check passed (displayed fields are validated; L_R is not published)");
