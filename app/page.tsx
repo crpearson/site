@@ -2,10 +2,12 @@ import Link from "next/link";
 import { CellExplorer } from "@/components/CellExplorer";
 import { seriesColor } from "@/lib/color";
 import { Heatmap } from "@/components/Heatmap";
+import { IrFigure } from "@/components/IrFigure";
 import { Lamp } from "@/components/Lamp";
 import { PackTile } from "@/components/PackTile";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
+import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
@@ -40,6 +42,7 @@ export default function Home() {
   const heatMin = Math.min(...heatValues);
   const heatMax = Math.max(...heatValues);
   const measured = model.fleets.filter((fleet) => fleet.packs.length > 0);
+  const fleetIncludesProvisional = rows.some((row) => !row.excluded && row.provisional);
 
   return (
     <div className="space-y-10">
@@ -107,12 +110,14 @@ export default function Home() {
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
               <span className="num">
-                {stats.mean.toFixed(2)} {IR_UNIT}
+                {stats.mean.toFixed(2)}
+                {fleetIncludesProvisional ? <ProvisionalMark /> : null} {IR_UNIT}
               </span>
             </p>
             <p className="stat-sub">
-              {formatValue("ir", stats.mean)} {IR_UNIT} across {stats.counted} packs still in a slot.
-              Rest-test day 0 is not included.
+              <IrFigure value={stats.mean} provisional={fleetIncludesProvisional} unit /> across {stats.counted}{" "}
+              packs still in a slot. Rest-test day 0 is not included.
+              {fleetIncludesProvisional ? <ProvisionalLegend /> : null}
             </p>
           </article>
         </div>
@@ -163,6 +168,8 @@ export default function Home() {
             color: fleet.color,
             values: fleet.values,
             service: fleet.service,
+            unpublished: fleet.unpublished,
+            provisional: fleet.provisional,
           }))}
           yDomain={model.meanDomain}
           format="ir"
@@ -177,9 +184,7 @@ export default function Home() {
           <h2 id="boards-heading" className="section-title">
             Next parallel
           </h2>
-          <p className="note mt-1">
-            As of {next.as_of}. {next.note}
-          </p>
+          <p className="note mt-1">{next.note}</p>
           {next.resting.length ? (
             <p className="note mt-1">
               Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
@@ -189,7 +194,11 @@ export default function Home() {
         <div className="grid gap-3 lg:grid-cols-2">
           {next.series.map((board) => (
             <article key={board.series} className="panel" data-accent="signal">
-              <p className="eyebrow">{board.series}</p>
+              <p className="eyebrow">
+                {board.series}
+                {" · last public measurement "}
+                {blocks.find((block) => block.id === board.series)?.lastMeasured}
+              </p>
               <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {board.labels.map((label) => (
@@ -226,6 +235,7 @@ export default function Home() {
                 <PackTile key={slot.label} slot={slot} />
               ))}
             </div>
+            {block.slots.some((slot) => slot.provisional) ? <ProvisionalLegend /> : null}
           </div>
         ))}
       </section>
@@ -241,6 +251,7 @@ export default function Home() {
           </p>
         </div>
         <div className="panel" data-accent="off">
+          {rows.some((row) => row.provisional) ? <ProvisionalLegend /> : null}
           <div className="table-wrap hidden md:block" data-scroll-ok="">
             <table className="status-table">
               <thead>
@@ -283,10 +294,12 @@ export default function Home() {
                       {row.session === row.callDate ? row.callDate : `${row.callDate} · ${row.session}`}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
-                      {formatValue("ir", row.avg)}
+                      <IrFigure value={row.avg} provisional={row.provisional} />
                       <span className="mt-1 block text-[10px] text-[var(--faint)]">{row.latestSession}</span>
                     </td>
-                    <td className="font-mono text-sm">{formatValue("ir", row.spread)}</td>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={row.spread} provisional={row.provisional} />
+                    </td>
                     <td className="font-mono text-sm">{row.floor ?? "—"}</td>
                   </tr>
                 ))}
@@ -310,8 +323,10 @@ export default function Home() {
                 ) : null}
                 <p className="note mt-2 font-mono">
                   {row.parallel || row.status}
-                  {row.service ? ` · Service ${row.service}` : ""} · IR {formatValue("ir", row.avg)} {IR_UNIT} ·
-                  spread {formatValue("ir", row.spread)} {IR_UNIT} · floor {row.floor == null ? "—" : `${row.floor} mV`}
+                  {row.service ? ` · Service ${row.service}` : ""} · IR{" "}
+                  <IrFigure value={row.avg} provisional={row.provisional} unit /> · spread{" "}
+                  <IrFigure value={row.spread} provisional={row.provisional} unit /> · floor{" "}
+                  {row.floor == null ? "—" : `${row.floor} mV`}
                 </p>
               </article>
             ))}
@@ -349,6 +364,7 @@ export default function Home() {
               </Link>
             ),
             values: row.cells,
+            provisional: row.provisional,
           }))}
         />
       </Panel>
@@ -466,6 +482,7 @@ export default function Home() {
                   values: fleet.rest,
                   na: fleet.restNa,
                   service: fleet.restService,
+                  unpublished: fleet.unpublished,
                 }))}
               guides={ruleBGuides}
               bands={ruleBBands}
@@ -508,6 +525,8 @@ export default function Home() {
                 service: pack.service,
                 logged: pack.logged,
                 rest: pack.rest,
+                unpublished: pack.unpublished,
+                provisional: pack.provisional,
               })),
             )}
           />

@@ -32,6 +32,17 @@ export type ChartSeries = {
    * plotted charge. Drawn as "Rest pool", not as a skipped charge.
    */
   rest?: boolean[];
+  /**
+   * True when this line's series has no public rows that night. The date tick
+   * is hidden only when every plotted line is unpublished. A value or a real
+   * skip on any line keeps the tick.
+   */
+  unpublished?: boolean[];
+  /**
+   * True when the IR at this index comes from a row whose ir_validation is
+   * provisional. Voltage and floor series leave this unset.
+   */
+  provisional?: boolean[];
 };
 
 export type Guide = {

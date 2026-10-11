@@ -1,6 +1,7 @@
 import { lonePointIndices, missBridges, openEndIndices } from "@/lib/bridges";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
+import { PROVISIONAL_LEGEND } from "@/lib/ir-validation.mjs";
 import type { ChartSeries } from "@/lib/types";
 
 export function Sparkline({
@@ -9,12 +10,14 @@ export function Sparkline({
   service,
   logged,
   rest,
+  provisional = false,
 }: {
   values: (number | null)[];
   color: string;
   service?: (string | null)[];
   logged?: boolean[];
   rest?: boolean[];
+  provisional?: boolean;
 }) {
   const present = values.filter((value): value is number => value != null);
   if (present.length === 0) return null;
@@ -55,7 +58,9 @@ export function Sparkline({
       className="h-8 w-full"
       role="img"
       aria-label={
-        latest == null ? "IR sparkline" : `IR sparkline, latest ${formatValue("ir", latest)} ${IR_UNIT}`
+        latest == null
+          ? "IR sparkline"
+          : `IR sparkline, latest ${formatValue("ir", latest)} ${IR_UNIT}${provisional ? `, ${PROVISIONAL_LEGEND}` : ""}`
       }
     >
       {lone.map((index) => {

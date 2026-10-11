@@ -91,12 +91,12 @@
     }
   },
   "gaps": [
-    "C1 was last measured on 2026-09-27. C2 was last measured on 2026-09-30. D-1 was measured on 2026-10-09.",
+    "C1 and C2 were last measured on 2026-10-10. D-1 was measured on 2026-10-09. C2 IR that night is provisional until the charger screen check.",
     "A night that did not include every pack stays incomplete. Missing packs are not filled in.",
     "No capacity in/out series — storage runs are top-ups, not capacity tests.",
     "DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.",
     "Mapping uses the night's manifest. The usual-low-cell check is advisory only.",
     "C3 and C4 are not in service. Bake-off prices are shop prices, not purchase prices.",
-    "The second charger is not in service yet."
+    "C2 IR on 2026-10-10 is provisional until the charger screen check."
   ]
 }

@@ -1,9 +1,8 @@
 import Link from "next/link";
+import { IrFigure } from "@/components/IrFigure";
 import { Sparkline } from "@/components/Sparkline";
 import { StatusChip } from "@/components/StatusChip";
-import { formatValue } from "@/lib/format";
 import { chipTone, statusChip } from "@/lib/lamp";
-import { IR_UNIT } from "@/lib/ir";
 import { vacationFrom, type SlotTile } from "@/lib/fleet";
 
 export function PackTile({ slot }: { slot: SlotTile }) {
@@ -39,6 +38,7 @@ export function PackTile({ slot }: { slot: SlotTile }) {
         service={slot.service}
         logged={slot.logged}
         rest={slot.rest}
+        provisional={slot.provisional}
       />
       {slot.status ? (
         <span className="tile-call" title={slot.status}>
@@ -49,7 +49,7 @@ export function PackTile({ slot }: { slot: SlotTile }) {
         <span>{slot.latestSession ? slot.latestSession.slice(5) : "—"}</span>
         {slot.sr == null ? null : (
           <span className="num">
-            · S_R {formatValue("ir", slot.sr)} {IR_UNIT}
+            · S_R <IrFigure value={slot.sr} provisional={slot.provisional} unit />
           </span>
         )}
         {slot.lowGap == null ? null : <span className="num">· gap {slot.lowGap} mV</span>}
@@ -57,12 +57,14 @@ export function PackTile({ slot }: { slot: SlotTile }) {
       <span className="tile-metrics">
         <span className="tile-metric">
           <span className="metric-label">IR</span>
-          <span className="metric-value">{slot.avg == null ? "—" : `${formatValue("ir", slot.avg)} ${IR_UNIT}`}</span>
+          <span className="metric-value">
+            {slot.avg == null ? "—" : <IrFigure value={slot.avg} provisional={slot.provisional} unit />}
+          </span>
         </span>
         <span className="tile-metric">
           <span className="metric-label">Spread</span>
           <span className="metric-value">
-            {slot.spread == null ? "—" : `${formatValue("ir", slot.spread)} ${IR_UNIT}`}
+            {slot.spread == null ? "—" : <IrFigure value={slot.spread} provisional={slot.provisional} unit />}
           </span>
         </span>
         <span className="tile-metric">

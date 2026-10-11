@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
+import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
@@ -71,8 +72,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 159) {
-  console.error(`expected 159 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 168) {
+  console.error(`expected 168 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -198,7 +199,7 @@ for (const [uid, list] of byUid) {
     .filter((row) => !/^unchanged\b/i.test(row.status.trim()))
     .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date) || a.index - b.index);
   const latest = statusRows[statusRows.length - 1];
-  if (!latest || !latest.date.startsWith("2026-10-09") || !latest.status.startsWith("PARALLEL")) continue;
+  if (!latest || !latest.status.startsWith("PARALLEL")) continue;
   const history = v4
     .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
     .sort((a, b) => compareTime(a.session, b.session));
@@ -253,8 +254,8 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.893") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.893 mΩ over 11`);
+if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.828") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.828 mΩ over 11`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -285,10 +286,10 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-09-27" || c1Mean.mean.toFixed(3) !== "2.907") {
+if (c1Mean.session !== "2026-10-10" || c1Mean.mean.toFixed(3) !== "2.879") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
-if (c2Mean.session !== "2026-09-30" || c2Mean.mean.toFixed(3) !== "2.886") {
+if (c2Mean.session !== "2026-10-10" || c2Mean.mean.toFixed(3) !== "2.700") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 
@@ -297,7 +298,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-09") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-09`);
+if (latestPtDate !== "2026-10-10") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-10`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }
@@ -406,6 +407,7 @@ function validationMark(text) {
   const plain = text.replace(/\*/g, "");
   if (/not published/i.test(plain)) return "not-published";
   if (/not validated/i.test(plain)) return "not-validated";
+  if (irValidationIsProvisional(plain)) return "provisional";
   if (/validated/i.test(plain)) return "validated";
   if (/derived/i.test(plain)) return "derived";
   if (/label/i.test(plain)) return "label";
@@ -447,12 +449,35 @@ const codeText = `${uiText}\n${fs.readFileSync(path.join(root, "lib/fleet.ts"), 
 if (/\bL_R\b/.test(codeText) || codeText.includes("LR_mOhm") || /\.lr\b/.test(codeText)) {
   fail("displayed code renders L_R");
 }
+const markerSource = fs.readFileSync(path.join(root, "lib/ir-validation.mjs"), "utf8");
+const provisionalFlagged =
+  uiText.includes("<ProvisionalMark") &&
+  uiText.includes("<ProvisionalLegend") &&
+  uiText.includes("PROVISIONAL_LEGEND") &&
+  uiText.includes("PROVISIONAL_MARK") &&
+  markerSource.includes(PROVISIONAL_LEGEND) &&
+  markerSource.includes(PROVISIONAL_MARK);
+if (!fleetSource.includes("irValidationIsProvisional")) {
+  fail("provisional IR is not driven by ir_validation");
+}
+for (const row of v4) {
+  const text = String(row.ir_validation ?? "");
+  if (!text.trim()) fail(`missing ir_validation on ${row.session}/${row.pack_uid}`);
+  const provisional = irValidationIsProvisional(text);
+  if (provisional && !provisionalFlagged) {
+    fail(`provisional IR on ${row.session}/${row.pack_uid} is published without the provisional marker`);
+  }
+  if (!provisional && !/\bvalidated\b/i.test(text)) {
+    fail(`ir_validation is not validated or provisional on ${row.session}/${row.pack_uid}`);
+  }
+}
 for (const [name, mark] of units) {
   if (name.length < 4 || !name.includes("_")) continue;
   const inPage = uiText.includes(name);
   const usedAsIr = /mOhm$/i.test(name) && (codeText.includes(name) || (/^c\d_mOhm$/.test(name) && codeText.includes("_mOhm")));
-  if ((inPage || usedAsIr) && mark !== "validated") {
-    fail(`${name} is displayed and marked ${mark}`);
-  }
+  if (!(inPage || usedAsIr)) continue;
+  if (mark === "validated") continue;
+  if (mark === "provisional" && provisionalFlagged) continue;
+  fail(`${name} is displayed and marked ${mark}`);
 }
-console.log("units check passed (displayed fields are validated; L_R is not published)");
+console.log("units check passed (displayed fields are validated or flagged provisional; L_R is not published)");

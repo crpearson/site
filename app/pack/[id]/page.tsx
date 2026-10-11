@@ -3,16 +3,19 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AliasStub } from "@/components/AliasStub";
 import { Heatmap } from "@/components/Heatmap";
+import { IrFigure } from "@/components/IrFigure";
 import { StatusChip } from "@/components/StatusChip";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
+import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
-import { formatValue, volts } from "@/lib/format";
+import { volts } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
   floorGuide,
   getPack,
+  nightUnpublished,
   restTestsFor,
   packRouteIds,
   packUids,
@@ -92,6 +95,10 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
   );
   const band = ruleABand(pack.row.spread);
   const peers = packUids();
+  const showProvisional =
+    pack.row.provisional ||
+    pack.points.some((point) => point.provisional) ||
+    pack.restDays.some((point) => point.provisional);
 
   return (
     <div className="space-y-8">
@@ -154,6 +161,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <p className="note">
           Purchase {pack.purchaseDate} · price {pack.priceUsd} · vendor {pack.vendor}
         </p>
+        {showProvisional ? <ProvisionalLegend /> : null}
       </header>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -161,7 +169,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="eyebrow">Latest avg IR</p>
           <p className="stat-value">
             <span className="num">
-              {formatValue("ir", pack.row.avg)} {IR_UNIT}
+              <IrFigure value={pack.row.avg} provisional={pack.row.provisional} unit />
             </span>
           </p>
           <p className="stat-sub">{pack.row.latestSession}</p>
@@ -170,7 +178,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="eyebrow">Spread</p>
           <p className="stat-value">
             <span className="num">
-              {formatValue("ir", pack.row.spread)} {IR_UNIT}
+              <IrFigure value={pack.row.spread} provisional={pack.row.provisional} unit />
             </span>
           </p>
           <p className="stat-sub">
@@ -195,7 +203,14 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="stat-sub">
             {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
-            {pack.row.sr != null ? ` · S_R ${formatValue("ir", pack.row.sr)} ${IR_UNIT}` : ""}
+            {pack.row.sr != null ? (
+              <>
+                {" "}
+                · S_R <IrFigure value={pack.row.sr} provisional={pack.row.provisional} unit />
+              </>
+            ) : (
+              ""
+            )}
           </p>
         </article>
       </div>
@@ -224,9 +239,15 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                     <th scope="row" className="font-mono text-sm font-normal">
                       {point.session}
                     </th>
-                    <td className="font-mono text-sm">{formatValue("ir", point.avg)}</td>
-                    <td className="font-mono text-sm">{formatValue("ir", point.spread)}</td>
-                    <td className="font-mono text-sm">{point.sr == null ? "—" : formatValue("ir", point.sr)}</td>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={point.avg} provisional={point.provisional} />
+                    </td>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={point.spread} provisional={point.provisional} />
+                    </td>
+                    <td className="font-mono text-sm">
+                      {point.sr == null ? "—" : <IrFigure value={point.sr} provisional={point.provisional} />}
+                    </td>
                     <td className="font-mono text-sm">{point.floor ?? "—"}</td>
                     <td className="font-mono text-sm">{point.lowGap ?? "—"}</td>
                   </tr>
@@ -286,7 +307,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           min={Math.min(...latestCells)}
           max={Math.max(...latestCells)}
           caption="Color scale is this snapshot only."
-          rows={[{ key: pack.uid, label: pack.label, values: latestCells }]}
+          rows={[{ key: pack.uid, label: pack.label, values: latestCells, provisional: pack.row.provisional }]}
         />
       </Panel>
 
@@ -343,16 +364,23 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           min={Math.min(...historyValues)}
           max={Math.max(...historyValues)}
           caption="Each night is one line. A dash is a night this pack was not charged. Between two readings the line chart uses a faint dotted join, with no value. Before the first reading or after the last, that night is a hollow ring on the bottom edge, also with no value."
-          rows={pack.categories.map((category, index) => ({
-            key: category.id,
-            label: (
-              <span className="font-mono text-xs">
-                {category.label}
-                {category.partial ? "*" : ""}
-              </span>
-            ),
-            values: pack.cellSeries.map((series) => series.values[index] ?? null),
-          }))}
+          rows={pack.categories.flatMap((category, index) =>
+            nightUnpublished(category.id, pack.series)
+              ? []
+              : [
+                  {
+                    key: category.id,
+                    label: (
+                      <span className="font-mono text-xs">
+                        {category.label}
+                        {category.partial ? "*" : ""}
+                      </span>
+                    ),
+                    values: pack.cellSeries.map((series) => series.values[index] ?? null),
+                    provisional: pack.cellSeries[0]?.provisional?.[index],
+                  },
+                ],
+          )}
         />
       </Panel>
 
@@ -406,11 +434,15 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                     <td className="font-mono text-sm">{night.point.label}</td>
                     {night.point.cells.map((cell, index) => (
                       <td key={`${night.session}-${index}`} className="font-mono text-sm">
-                        {formatValue("ir", cell)}
+                        <IrFigure value={cell} provisional={night.point.provisional} />
                       </td>
                     ))}
-                    <td className="font-mono text-sm">{formatValue("ir", night.point.avg)}</td>
-                    <td className="font-mono text-sm">{formatValue("ir", night.point.spread)}</td>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={night.point.avg} provisional={night.point.provisional} />
+                    </td>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={night.point.spread} provisional={night.point.provisional} />
+                    </td>
                     <td className="font-mono text-sm">{night.point.floor ?? "—"}</td>
                   </tr>
                 ) : (
