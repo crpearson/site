@@ -15,11 +15,11 @@ Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A 
 | C2-P3 | CNHL-2026-009 | Go | In service |
 | C2-P4 | CNHL-2026-010 | Go | In service |
 | C2-P5 | CNHL-2026-011 | Go | In service |
-| C2-P6 | CNHL-2026-012 | Go | In service |
+| C2-P6 | CNHL-2026-012 | Go (conditional: join C2 board only if rest V within 0.30 V of board-mates; otherwise charge alone) | In service |
 
 C1-P3 is an owner override. The 2026-10-10 night was clean under that override, so the parallel call is Go and the pack is on the C1 board. The strict 60 mV gap rule is not applied, the low-cell gap stays on monitor, and Cell 4 has no rest test.
 
-C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. C1-P5 is charged individually (Rule B N/A) and stays off the board. Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel: C1, last public measurement 2026-10-10, is C1-P2, C1-P3, C1-P6. C2, last public measurement 2026-10-10, is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6. C1 Rule B for P2, P3, and P6 that night is 0.135 V, Go. C2 Rule B that night is 0.479 V, Caution.
+C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. C1-P5 is charged individually (Rule B N/A) and stays off the board. Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel: C1, last public measurement 2026-10-10, is C1-P2, C1-P3, C1-P6. C2, last public measurement 2026-10-10, is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6. C2-P6's newest 2026-10-10 call supersedes the earlier Go that night: it joins the C2 board only if its rest voltage is within 0.30 V of the board-mates, and otherwise charges alone. C1 Rule B for P2, P3, and P6 that night is 0.135 V, Go. C2 Rule B that night is 0.479 V, Caution.
 
 IR is true milliohms from `ir_store_v4` (168 rows). C2 IR on 2026-10-10 is provisional until the charger screen check; those figures are marked †. Rules v3: spread caution at 2.0 mΩ and individual at 3.0 mΩ, two nights in a row, with the low-cell gap, floor, and rest-test cuts in `data/status.json`. Rule B is unchanged: go at or under 0.30 V, caution through 0.60 V, hard stop above 0.60 V.
 
