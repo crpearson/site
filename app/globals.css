@@ -440,6 +440,10 @@ body {
   border-color: rgba(231, 215, 177, 0.45);
 }
 
+.status-chip-conditional {
+  border-style: dashed;
+}
+
 .tile-call {
   display: -webkit-box;
   overflow: hidden;
@@ -825,6 +829,14 @@ body {
 
 .legend-btn.is-off {
   opacity: 0.38;
+}
+
+.chip-condition {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
 .chip-btn.is-on,
