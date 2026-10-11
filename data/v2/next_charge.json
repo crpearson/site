@@ -1,7 +1,7 @@
 {
   "schema": "next_charge/v1",
   "as_of_session": "2026-10-10",
-  "as_of_date_pt": "2026-10-10",
+  "as_of_date_pt": "2026-10-11",
   "storage_runs": [
     {
       "charger": "DX8-1",

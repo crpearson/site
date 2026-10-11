@@ -44,6 +44,8 @@ function parseCsv(text) {
 function timeKey(token) {
   const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
   if (rest) return [1, rest[1], 2];
+  const charge = token.match(/^(\d{4}-\d{2}-\d{2})-charge$/);
+  if (charge) return [1, charge[1], 3];
   const eve = token.endsWith("-eve");
   const day = eve ? token.slice(0, -4) : token;
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
@@ -73,8 +75,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 168) {
-  console.error(`expected 168 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 170) {
+  console.error(`expected 170 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -182,7 +184,7 @@ for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
 function sessionOf(source, date) {
   const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
   const token = raw.split(/\s+/)[0] ?? "";
-  if (/^\d{4}-\d{2}-\d{2}-restday0$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}-(?:restday0|charge)$/.test(token)) return token;
   if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token) || /^S\d+$/.test(token)) return token;
   return date;
 }
@@ -202,7 +204,7 @@ for (const [uid, list] of byUid) {
   const latest = statusRows[statusRows.length - 1];
   if (!latest || !latest.status.startsWith("PARALLEL")) continue;
   const history = v4
-    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0" && row.session_type !== "charge-run")
     .sort((a, b) => compareTime(a.session, b.session));
   const pack = packs.find((row) => row.pack_uid === uid);
   const computed = parallelBucket(
@@ -249,7 +251,7 @@ const moved = new Set(events.filter((row) => row.event === "move").map((row) => 
 const slotted = packs.filter((pack) => !moved.has(pack.pack_uid) && !pack.retired.trim());
 const latestAvg = (uid) => {
   const rows = v4
-    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0" && row.session_type !== "charge-run")
     .sort((a, b) => compareTime(a.session, b.session));
   return rows[rows.length - 1];
 };
@@ -275,7 +277,7 @@ if (!d1 || d1.series_at_time !== "D") fail("D-1 2026-10-09 must belong to series
 function seriesMean(series) {
   const groups = new Map();
   for (const row of v4) {
-    if (row.series_at_time !== series || row.session_type === "rest-test-day0") continue;
+    if (row.series_at_time !== series || row.session_type === "rest-test-day0" || row.session_type === "charge-run") continue;
     const list = groups.get(row.session) ?? [];
     list.push(Number(row.avg_mOhm));
     groups.set(row.session, list);
@@ -299,7 +301,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-10") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-10`);
+if (latestPtDate !== "2026-10-11") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-11`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }

@@ -100,6 +100,8 @@ function num(value: string): number | null {
 function timeKey(token: string): [number, string, number] {
   const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
   if (rest) return [1, rest[1], 2];
+  const charge = token.match(/^(\d{4}-\d{2}-\d{2})-charge$/);
+  if (charge) return [1, charge[1], 3];
   const eve = token.endsWith("-eve");
   const day = eve ? token.slice(0, -4) : token;
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
@@ -149,7 +151,7 @@ const events: PackEvent[] = readCsv("v2/pack_events.csv").map((row) => ({
 function sessionFromSource(source: string, date: string): string {
   const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
   const token = raw.split(/\s+/)[0] ?? "";
-  if (/^\d{4}-\d{2}-\d{2}-restday0$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}-(?:restday0|charge)$/.test(token)) return token;
   if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token)) return token;
   if (/^S\d+$/.test(token)) return token;
   if (/^\d{4}-\d{2}-\d{2}(?:-eve|-restday0)?$/.test(date) || /^S\d+$/.test(date)) return date;
@@ -216,10 +218,19 @@ const measurements: Measurement[] = v4Rows.map((row) => ({
   provisional: irValidationIsProvisional(row.ir_validation),
 }));
 
-/** One-off individual rest-test baselines. Not a fleet night for packs that did not run. */
-const restBaselineSessions = new Set(
-  measurements.filter((row) => row.sessionType === "rest-test-day0").map((row) => row.session),
+/** Rest-test day 0 and charge runs are not storage nights. */
+export function isNonStorage(sessionType: string): boolean {
+  return sessionType === "rest-test-day0" || sessionType === "charge-run";
+}
+
+/** Sessions that are not storage nights. Not a fleet night for packs that did not run. */
+const nonStorageSessions = new Set(
+  measurements.filter((row) => isNonStorage(row.sessionType)).map((row) => row.session),
 );
+
+export function nonStorageSession(session: string): boolean {
+  return nonStorageSessions.has(session);
+}
 
 /**
  * The series was charged, but its rows are not in the public file. Those packs
@@ -301,7 +312,7 @@ export function latestCall(uid: string): StatusCall | undefined {
 }
 
 function ruleHistory(uid: string): Measurement[] {
-  return pointsFor(uid).filter((point) => point.sessionType !== "rest-test-day0");
+  return pointsFor(uid).filter((point) => !isNonStorage(point.sessionType));
 }
 
 function pointsFor(uid: string): Measurement[] {
@@ -313,7 +324,7 @@ function pointsFor(uid: string): Measurement[] {
 
 /** Rest-test day-0 rows stay off the latest card, the means, and Rule B. */
 function operationalPoints(uid: string): Measurement[] {
-  return pointsFor(uid).filter((point) => point.sessionType !== "rest-test-day0");
+  return pointsFor(uid).filter((point) => !isNonStorage(point.sessionType));
 }
 
 function latestOperational(uid: string): Measurement | undefined {
@@ -342,7 +353,8 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-004":
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
-  "CNHL-2026-005": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
+  "CNHL-2026-005":
+    "PARALLEL CAUTION; charged INDIVIDUALLY until one clean storage night | SERVICE Watch (unchanged)",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL CAUTION (reduced current) | SERVICE Watch (IR spread)",
   "CNHL-2026-008":
@@ -351,12 +363,12 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-012":
-    "PARALLEL GO (conditional: join C2 board only if rest V within 0.30 V of board-mates; otherwise charge alone) | SERVICE In service",
+    "PARALLEL GO (conditional per Rule B: joins C2 board only if rest V within 0.30 V) | SERVICE In service (soft note: watch Cell 4)",
 };
 
 function assertStore() {
-  if (measurements.length !== 168 || v4Rows.length !== 168) {
-    throw new Error(`Expected 168 measurements, got ${measurements.length}`);
+  if (measurements.length !== 170 || v4Rows.length !== 170) {
+    throw new Error(`Expected 170 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -378,6 +390,21 @@ function assertStore() {
   }
   if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
     throw new Error("C1-P4 and C2-P2 charge_count should be 14");
+  }
+  if (packByUid("CNHL-2026-005")?.chargeCount !== 15 || packByUid("CNHL-2026-012")?.chargeCount !== 15) {
+    throw new Error("C1-P5 and C2-P6 charge_count should be 15");
+  }
+  const chargeRuns = measurements.filter((row) => row.session === "2026-10-11-charge");
+  if (
+    chargeRuns.length !== 2 ||
+    chargeRuns.some((row) => row.sessionType !== "charge-run") ||
+    !chargeRuns.some((row) => row.uid === "CNHL-2026-012" && row.label === "C2-P6") ||
+    !chargeRuns.some((row) => row.uid === "CNHL-2026-005" && row.label === "C1-P5")
+  ) {
+    throw new Error("2026-10-11-charge should be C2-P6 and C1-P5 only");
+  }
+  if (latestOperational("CNHL-2026-012")?.session !== "2026-10-10" || latestOperational("CNHL-2026-005")?.session !== "2026-10-10") {
+    throw new Error("charge-run rows changed the latest storage reading");
   }
   if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3) {
     throw new Error("Rest tests should be the three day-0 rows, with no C1-P3 test");
@@ -507,7 +534,7 @@ function serviceSpans(uid: string): (string | null)[] {
     }
     // A rest-test baseline is in span only for the packs that ran. Everyone else
     // is out of scope, so the night draws neither a join nor a ring.
-    if (restBaselineSessions.has(category.id)) {
+    if (nonStorageSessions.has(category.id)) {
       const ran = measurements.some((row) => row.uid === uid && row.session === category.id);
       return ran ? String(span) : null;
     }
@@ -534,7 +561,7 @@ function alignUid(
   const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
     const row = map.get(category.id);
-    if (!row || row.sessionType === "rest-test-day0") return null;
+    if (!row || isNonStorage(row.sessionType)) return null;
     if (series && row.series !== series) return null;
     return pick(row);
   });
@@ -544,7 +571,7 @@ function alignProvisional(uid: string, series?: string): boolean[] {
   const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
     const row = map.get(category.id);
-    if (!row || row.sessionType === "rest-test-day0") return false;
+    if (!row || isNonStorage(row.sessionType)) return false;
     if (series && row.series !== series) return false;
     return row.provisional;
   });
@@ -555,7 +582,7 @@ function restFlags(uid: string): boolean[] {
   return categories.map((category) => {
     if (!inRestPool(uid, category.id)) return false;
     const row = map.get(category.id);
-    return !row || row.sessionType === "rest-test-day0";
+    return !row || isNonStorage(row.sessionType);
   });
 }
 
@@ -756,7 +783,7 @@ export type SeriesBlock = {
 };
 
 function lastMeasured(series: string): string {
-  const rows = measurements.filter((row) => row.series === series && row.sessionType !== "rest-test-day0");
+  const rows = measurements.filter((row) => row.series === series && !isNonStorage(row.sessionType));
   if (rows.length === 0) return "no storage rows in this series yet";
   return rows.reduce((latest, row) => (compareTime(row.session, latest) > 0 ? row.session : latest), rows[0].session);
 }
@@ -828,7 +855,7 @@ export function restDelta(session: string, series: string): number | null {
       row.session === session &&
       row.series === series &&
       board.has(row.uid) &&
-      row.sessionType !== "rest-test-day0" &&
+      !isNonStorage(row.sessionType) &&
       row.chargeMode === "parallel" &&
       row.rest != null,
   );
@@ -842,7 +869,7 @@ export function restDelta(session: string, series: string): number | null {
  * without two parallel rests means the series ran and Rule B is N/A.
  */
 export function restNight(session: string, series: string): { value: number | null; na: boolean } {
-  if (restBaselineSessions.has(session)) {
+  if (nonStorageSessions.has(session)) {
     // Day-0 rest rows are not a parallel charge and are not a Rule B night.
     return { value: null, na: false };
   }
@@ -852,7 +879,7 @@ export function restNight(session: string, series: string): { value: number | nu
       row.session === session &&
       row.series === series &&
       board.has(row.uid) &&
-      row.sessionType !== "rest-test-day0",
+      !isNonStorage(row.sessionType),
   );
   const value = restDelta(session, series);
   if (!ran) return { value: null, na: false };
@@ -930,7 +957,7 @@ function seriesPacks(series: string): PackSeries[] {
 
 function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
   return categories.map((category, index) => {
-    if (restBaselineSessions.has(category.id)) return null;
+    if (nonStorageSessions.has(category.id)) return null;
     const values = packsInSeries
       .map((pack) => pack.avg[index])
       .filter((value): value is number => value != null);
@@ -941,7 +968,7 @@ function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
 
 function meanIsProvisional(packsInSeries: PackSeries[]): boolean[] {
   return categories.map((category, index) => {
-    if (restBaselineSessions.has(category.id)) return false;
+    if (nonStorageSessions.has(category.id)) return false;
     return packsInSeries.some((pack) => pack.avg[index] != null && pack.provisional[index]);
   });
 }
@@ -962,12 +989,12 @@ function seriesOfLabel(label: string | null): string | null {
 /** Nights a series has at least one pack. Null before it exists and after it is empty. */
 function seriesInService(series: string): (string | null)[] {
   return categories.map((category) => {
-    if (restBaselineSessions.has(category.id)) return null;
+    if (nonStorageSessions.has(category.id)) return null;
     if (nightUnpublished(category.id, series)) return null;
     const members = packs.filter((pack) => seriesOfLabel(labelAsOf(pack.uid, category.id)) === series);
     if (members.length === 0) return null;
     const measured = measurements.some(
-      (row) => row.session === category.id && row.series === series && row.sessionType !== "rest-test-day0",
+      (row) => row.session === category.id && row.series === series && !isNonStorage(row.sessionType),
     );
     // Rest pool is not a skipped charge. A series whose packs are all resting,
     // with no public row, stays off the mean and Rule B lines.
@@ -1082,7 +1109,11 @@ function packNights(uid: string): PackNight[] {
   const { service, logged } = lineMeta(uid);
   const points = pointsFor(uid);
   const bySession = new Map(points.map((point) => [point.session, point]));
-  const values = categories.map((category) => bySession.get(category.id)?.avg ?? null);
+  const values = categories.map((category) => {
+    const point = bySession.get(category.id);
+    if (!point || isNonStorage(point.sessionType)) return null;
+    return point.avg;
+  });
   const nightIds = categories.map((category) => category.id);
   const bridged = new Set(
     missBridges({ id: uid, label: uid, color: "", values, service, logged }, nightIds).flatMap(
@@ -1092,7 +1123,8 @@ function packNights(uid: string): PackNight[] {
   const nights: PackNight[] = [];
   categories.forEach((category, index) => {
     const point = bySession.get(category.id);
-    if (point && point.sessionType !== "rest-test-day0") {
+    if (point && isNonStorage(point.sessionType)) return;
+    if (point) {
       nights.push({ session: category.id, partial: category.partial, kind: "measured", point });
       return;
     }
@@ -1140,6 +1172,7 @@ export type PackView = {
   row: StatusRow;
   points: Measurement[];
   restDays: Measurement[];
+  chargeRuns: Measurement[];
   categories: Category[];
   cellSeries: ChartSeries[];
   spreadSeries: ChartSeries[];
@@ -1186,6 +1219,7 @@ export function getPack(uid: string): PackView | null {
     row,
     points,
     restDays: pointsFor(uid).filter((point) => point.sessionType === "rest-test-day0"),
+    chargeRuns: pointsFor(uid).filter((point) => point.sessionType === "charge-run"),
     categories,
     cellSeries: [0, 1, 2, 3, 4, 5].map((index) => ({
       id: `c${index + 1}`,
@@ -1441,7 +1475,7 @@ function assertDerived() {
   }
   const board = nextParallel();
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
-  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-10") {
+  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-11") {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
   assertUnpublishedNight(model, heldNight);
@@ -1520,15 +1554,18 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   }
   const c2Rows = measurements.filter((row) => row.session === night && row.series === "C2");
   const c1Rows = measurements.filter((row) => row.session === night && row.series === "C1");
-  if (c2Rows.length !== 5 || c2Rows.some((row) => !row.provisional)) {
-    throw new Error("C2 2026-10-10 IR must be provisional");
+  if (c2Rows.length !== 5 || c2Rows.some((row) => row.provisional)) {
+    throw new Error("C2 2026-10-10 IR is validated and must not be marked provisional");
   }
   if (c1Rows.length !== 4 || c1Rows.some((row) => row.provisional)) {
     throw new Error("C1 2026-10-10 IR must stay validated");
   }
+  if (measurements.some((row) => row.provisional)) {
+    throw new Error("a plotted row is provisional though ir_validation does not say so");
+  }
   const c2Card = statusRows().find((row) => row.uid === "CNHL-2026-007");
   const c1Card = statusRows().find((row) => row.uid === "CNHL-2026-003");
-  if (!c2Card?.provisional || c2Card.avg.toFixed(3) !== "2.733" || c2Card.spread.toFixed(1) !== "1.2") {
+  if (!c2Card || c2Card.provisional || c2Card.avg.toFixed(3) !== "2.733" || c2Card.spread.toFixed(1) !== "1.2") {
     throw new Error(`C2-P1 card is ${c2Card?.avg} provisional=${c2Card?.provisional}`);
   }
   if (!c1Card || c1Card.provisional) throw new Error("C1-P3 card is marked provisional");
@@ -1536,9 +1573,13 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   if (!c2Mean || c2Mean.service?.[index] == null || c2Mean.values[index] == null || c2Mean.values[index].toFixed(3) !== "2.700") {
     throw new Error(`C2 mean on 2026-10-10 is ${c2Mean?.values[index]}`);
   }
-  if (!c2Mean.provisional[index]) throw new Error("C2 series mean on 2026-10-10 is not marked provisional");
+  if (c2Mean.provisional[index]) throw new Error("C2 series mean on 2026-10-10 is marked provisional");
   const c1Mean = model.mean.find((line) => line.id === "C1");
   if (!c1Mean || c1Mean.provisional[index]) throw new Error("C1 series mean on 2026-10-10 is marked provisional");
+  const chargeIndex = model.categories.findIndex((category) => category.id === "2026-10-11-charge");
+  if (chargeIndex < 0 || c1Mean.values[chargeIndex] != null || c2Mean.values[chargeIndex] != null) {
+    throw new Error("a charge-run row is in a series mean");
+  }
   if (ringNights(chartLine("C2", c2Mean.values, c2Mean.service)).includes(night)) {
     throw new Error("C2 mean has a not-charged ring on 2026-10-10");
   }
@@ -1551,8 +1592,8 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   }
   for (const uid of ["CNHL-2026-007", "CNHL-2026-009", "CNHL-2026-010", "CNHL-2026-011", "CNHL-2026-012"]) {
     const listed = packNights(uid).find((item) => item.session === night);
-    if (!listed || listed.kind !== "measured" || !listed.point.provisional) {
-      throw new Error(`${uid} is missing a provisional 2026-10-10 row`);
+    if (!listed || listed.kind !== "measured" || listed.point.provisional) {
+      throw new Error(`${uid} 2026-10-10 row is missing or still marked provisional`);
     }
     const meta = lineMeta(uid);
     if (meta.service[index] == null) throw new Error(`${uid} is out of service on 2026-10-10`);
@@ -1612,11 +1653,11 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   if (
     !c2Pack ||
     !axisNightVisible([...c2Pack.cellSeries, ...c2Pack.spreadSeries, ...c2Pack.floorSeries], index) ||
-    c2Pack.cellSeries.some((line) => !line.provisional?.[index]) ||
-    c2Pack.spreadSeries.some((line) => !line.provisional?.[index]) ||
+    c2Pack.cellSeries.some((line) => line.provisional?.[index]) ||
+    c2Pack.spreadSeries.some((line) => line.provisional?.[index]) ||
     c2Pack.floorSeries.some((line) => line.provisional?.[index])
   ) {
-    throw new Error("C2-P1 chart hid 2026-10-10 or failed to mark only its IR provisional");
+    throw new Error("C2-P1 chart hid 2026-10-10 or marked validated IR provisional");
   }
 }
 
@@ -1667,8 +1708,15 @@ function assertStatusChips() {
   ) {
     throw new Error("C2-P6 is missing the two 2026-10-10 calls");
   }
-  if (!c2p6 || c2p6.status !== c2p6Calls[1]?.status || conditionalJoinNote(c2p6.status) !== "joins only if within 0.30 V") {
-    throw new Error(`C2-P6 latest call did not supersede the earlier Go (${c2p6?.status})`);
+  const c2p6Latest = callsFor("CNHL-2026-012").filter((call) => countsAsStatus(call)).at(-1);
+  if (
+    !c2p6 ||
+    !c2p6Latest ||
+    c2p6.status !== c2p6Latest.status ||
+    !/watch Cell 4/i.test(c2p6.status) ||
+    conditionalJoinNote(c2p6.status) !== "joins only if within 0.30 V"
+  ) {
+    throw new Error(`C2-P6 latest call did not stay conditional Go with a Cell 4 watch (${c2p6?.status})`);
   }
   if (statusChip(c2p6.status, c2p6.chargeMode) !== "GO") {
     throw new Error("C2-P6 conditional Go must stay the one word GO");
@@ -1786,7 +1834,7 @@ function assertGapGeometry(model: FleetModel) {
   };
   const fromV4 = (session: string, series: string): number | null => {
     const rows = measurements.filter(
-      (row) => row.session === session && row.series === series && row.sessionType !== "rest-test-day0",
+      (row) => row.session === session && row.series === series && !isNonStorage(row.sessionType),
     );
     if (rows.length === 0) return null;
     return rows.reduce((sum, row) => sum + row.avg, 0) / rows.length;

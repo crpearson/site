@@ -613,6 +613,11 @@ body {
   max-width: 100%;
 }
 
+.chart {
+  container-type: inline-size;
+  container-name: chart;
+}
+
 .chart-body {
   display: grid;
   grid-template-columns: 4.8rem minmax(0, 1fr);
@@ -972,35 +977,19 @@ body {
   min-width: 0;
 }
 
-@media (max-width: 760px) {
-  .x-axis {
-    height: 2.8rem;
-  }
-
-  .x-label,
-  .x-label-start,
-  .x-label-end {
-    right: auto;
-    transform: translate(-8px, 0) rotate(-32deg);
-    transform-origin: top left;
-  }
-
-  .x-label-start {
-    left: 0 !important;
-    transform: translate(0, 0) rotate(-32deg);
-  }
-
-  .x-label-end {
-    left: auto !important;
-    right: 0;
-    transform: translate(-18px, 0) rotate(-32deg);
-    transform-origin: top right;
-  }
-
+@container chart (max-width: 760px) {
   .x-label-alt {
     display: none;
   }
+}
 
+@container chart (max-width: 500px) {
+  .x-label-third {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
   .header-meta {
     width: 100%;
   }

@@ -3,6 +3,7 @@ import { ChargerDiagram } from "@/components/ChargerDiagram";
 import { DontConnectList } from "@/components/DontConnectList";
 import { ChargeAlone, ParallelBoardDiagram } from "@/components/ParallelBoardDiagram";
 import { statusRows, type StatusRow } from "@/lib/fleet";
+import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
 import { seriesColor } from "@/lib/color";
 import type { CSSProperties } from "react";
@@ -24,6 +25,8 @@ export default function NextChargePage() {
   const summary = storageSummary(plan.storage_runs);
   const chargers = storageChargers(plan.storage_runs);
   const boards = layoutParallelBoards(plan.parallel_boards);
+  const anyProvisional = [...rows.values()].some((row) => row.provisional);
+  const notes = anyProvisional ? plan.notes : plan.notes.filter((note) => !irValidationIsProvisional(note));
 
   return (
     <div className="space-y-8">
@@ -130,13 +133,13 @@ export default function NextChargePage() {
         <DontConnectList items={plan.do_not_connect} resolve={resolve} />
       </section>
 
-      {plan.notes.length ? (
+      {notes.length ? (
         <section className="space-y-3" aria-labelledby="notes-heading">
           <h2 id="notes-heading" className="section-title">
             Notes
           </h2>
           <ul className="bench-notes">
-            {plan.notes.map((note) => (
+            {notes.map((note) => (
               <li key={note} className="note">
                 {note}
               </li>

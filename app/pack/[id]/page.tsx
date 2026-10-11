@@ -16,6 +16,7 @@ import {
   floorGuide,
   getPack,
   nightUnpublished,
+  nonStorageSession,
   restTestsFor,
   packRouteIds,
   packUids,
@@ -98,7 +99,8 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
   const showProvisional =
     pack.row.provisional ||
     pack.points.some((point) => point.provisional) ||
-    pack.restDays.some((point) => point.provisional);
+    pack.restDays.some((point) => point.provisional) ||
+    pack.chargeRuns.some((point) => point.provisional);
 
   return (
     <div className="space-y-8">
@@ -214,6 +216,45 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           </p>
         </article>
       </div>
+
+      {pack.chargeRuns.length ? (
+        <Panel accent="signal" eyebrow="Not a storage night" title="Charge run">
+          <p className="note mb-3">
+            This full charge is not the latest IR, not a fleet or series mean, and not a Rule B night.
+            Start voltage, floor, gap, and rest come from the charge start and are not shown here.
+          </p>
+          <div className="table-wrap" data-scroll-ok="">
+            <table className="status-table">
+              <thead>
+                <tr>
+                  <th scope="col">Session</th>
+                  <th scope="col">Avg ({IR_UNIT})</th>
+                  <th scope="col">Spread ({IR_UNIT})</th>
+                  <th scope="col">S_R ({IR_UNIT})</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pack.chargeRuns.map((point) => (
+                  <tr key={point.session}>
+                    <th scope="row" className="font-mono text-sm font-normal">
+                      {point.session}
+                    </th>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={point.avg} provisional={point.provisional} />
+                    </td>
+                    <td className="font-mono text-sm">
+                      <IrFigure value={point.spread} provisional={point.provisional} />
+                    </td>
+                    <td className="font-mono text-sm">
+                      {point.sr == null ? "—" : <IrFigure value={point.sr} provisional={point.provisional} />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      ) : null}
 
       {pack.restDays.length ? (
         <Panel accent="floor" eyebrow="Not a parallel charge" title="Rest test day 0">
@@ -368,7 +409,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           max={Math.max(...historyValues)}
           caption="Each night is one line. A dash is a night this pack was not charged. Between two readings the line chart uses a faint dotted join, with no value. Before the first reading or after the last, that night is a hollow ring on the bottom edge, also with no value."
           rows={pack.categories.flatMap((category, index) =>
-            nightUnpublished(category.id, pack.series)
+            nightUnpublished(category.id, pack.series) || nonStorageSession(category.id)
               ? []
               : [
                   {
