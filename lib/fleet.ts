@@ -3,7 +3,7 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { allNotCharged, gapPhrase, lonePointIndices, missBridges, openEndIndices, seriesNotCharged } from "@/lib/bridges";
+import { allNotCharged, axisNightVisible, gapPhrase, lonePointIndices, missBridges, openEndIndices, seriesNotCharged } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
@@ -844,6 +844,7 @@ export type PackSeries = {
   service: (string | null)[];
   logged: boolean[];
   rest: boolean[];
+  unpublished: boolean[];
 };
 
 export type FleetModel = {
@@ -853,13 +854,20 @@ export type FleetModel = {
   spreadDomain: [number, number];
   floorDomain: [number, number];
   restDomain: [number, number];
-  mean: { id: string; color: string; values: (number | null)[]; service: (string | null)[] }[];
+  mean: {
+    id: string;
+    color: string;
+    values: (number | null)[];
+    service: (string | null)[];
+    unpublished: boolean[];
+  }[];
   fleets: {
     id: string;
     packs: PackSeries[];
     rest: (number | null)[];
     restNa: boolean[];
     restService: (string | null)[];
+    unpublished: boolean[];
     individual: boolean;
   }[];
 };
@@ -884,6 +892,7 @@ function seriesPacks(series: string): PackSeries[] {
       service: membershipSpans(uid, series),
       logged: meta.logged,
       rest: restFlags(uid),
+      unpublished: unpublishedForSeries(series),
     };
   });
 }
@@ -897,6 +906,14 @@ function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
     if (values.length === 0) return null;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   });
+}
+
+function unpublishedForSeries(series: string): boolean[] {
+  return categories.map((category) => nightUnpublished(category.id, series));
+}
+
+function unpublishedForUid(uid: string): boolean[] {
+  return categories.map((category) => nightUnpublished(category.id, seriesOfLabel(labelAsOf(uid, category.id))));
 }
 
 function seriesOfLabel(label: string | null): string | null {
@@ -944,6 +961,7 @@ export function fleetModel(): FleetModel {
       rest: nights.map((night) => night.value),
       restNa: nights.map((night) => night.na),
       restService: seriesInService(series),
+      unpublished: unpublishedForSeries(series),
       individual: members.length > 0 && members.every((pack) => pack.chargeMode === "individual"),
     };
   });
@@ -967,6 +985,7 @@ export function fleetModel(): FleetModel {
       color: seriesColor(fleet.id),
       values: fleetMean(fleet.packs),
       service: seriesInService(fleet.id),
+      unpublished: unpublishedForSeries(fleet.id),
     })),
     fleets,
   };
@@ -981,6 +1000,7 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     service: row.service,
     logged: row.logged,
     rest: row.rest,
+    unpublished: row.unpublished,
   }));
 }
 
@@ -1134,6 +1154,7 @@ export function getPack(uid: string): PackView | null {
       service: meta.service,
       logged: meta.logged,
       rest,
+      unpublished: unpublishedForUid(uid),
     })),
     spreadSeries: [
       {
@@ -1144,6 +1165,7 @@ export function getPack(uid: string): PackView | null {
         service: meta.service,
         logged: meta.logged,
         rest,
+        unpublished: unpublishedForUid(uid),
       },
     ],
     floorSeries: [
@@ -1155,6 +1177,7 @@ export function getPack(uid: string): PackView | null {
         service: meta.service,
         logged: meta.logged,
         rest,
+        unpublished: unpublishedForUid(uid),
       },
     ],
     irDomain: padded(cells, 0.1),
@@ -1424,6 +1447,55 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
         throw new Error(`${line.label} ${pick} is marked not charged on 2026-10-10`);
       }
     }
+    if (axisNightVisible(lines, index)) {
+      throw new Error(`C2 ${pick} chart still shows the 2026-10-10 axis tick`);
+    }
+  }
+  const skipNight = model.categories.findIndex((category) => category.id === "2026-09-26");
+  const c2Avg = seriesOf(c2Rest.packs, "avg");
+  if (skipNight < 0 || !axisNightVisible(c2Avg, skipNight)) {
+    throw new Error("C2 pack chart hid 2026-09-26, a real not-charged night");
+  }
+  const meanLines: ChartSeries[] = model.mean.map((line) => ({
+    id: line.id,
+    label: line.id,
+    color: line.color,
+    values: line.values,
+    service: line.service,
+    unpublished: line.unpublished,
+  }));
+  if (!axisNightVisible(meanLines, index)) {
+    throw new Error("Series mean chart hid 2026-10-10 while another series still has a value");
+  }
+  const c2MeanLine = meanLines.filter((line) => line.id === "C2");
+  if (c2MeanLine.length !== 1 || axisNightVisible(c2MeanLine, index)) {
+    throw new Error("C2 mean still shows the 2026-10-10 axis tick");
+  }
+  const ruleLines: ChartSeries[] = model.fleets
+    .filter((fleet) => fleet.rest.some((value) => value != null))
+    .map((fleet) => ({
+      id: fleet.id,
+      label: fleet.id,
+      color: "#888",
+      values: fleet.rest,
+      na: fleet.restNa,
+      service: fleet.restService,
+      unpublished: fleet.unpublished,
+    }));
+  if (!axisNightVisible(ruleLines, index)) {
+    throw new Error("Rule B chart hid 2026-10-10 while another series still has a value");
+  }
+  const c2RuleLine = ruleLines.filter((line) => line.id === "C2");
+  if (c2RuleLine.length !== 1 || axisNightVisible(c2RuleLine, index)) {
+    throw new Error("C2 Rule B still shows the 2026-10-10 axis tick");
+  }
+  const c1Pack = getPack("CNHL-2026-003");
+  const c2Pack = getPack("CNHL-2026-007");
+  if (!c1Pack || !axisNightVisible(c1Pack.cellSeries, index)) {
+    throw new Error("C1-P3 chart hid the 2026-10-10 axis tick");
+  }
+  if (!c2Pack || axisNightVisible([...c2Pack.cellSeries, ...c2Pack.spreadSeries, ...c2Pack.floorSeries], index)) {
+    throw new Error("C2-P1 chart still shows the 2026-10-10 axis tick");
   }
 }
 

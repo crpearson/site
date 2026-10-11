@@ -44,6 +44,22 @@ export function seriesRest(series: ChartSeries, index: number): boolean {
   return gapKind(series, index) === "rest";
 }
 
+/**
+ * A date tick stays when any plotted line has a value or a real skip, or is
+ * simply not an unpublished night. It is hidden only when every line is
+ * unpublished that night.
+ */
+export function axisNightVisible(series: ChartSeries[], index: number): boolean {
+  if (series.length === 0) return true;
+  return series.some((item) => {
+    if (item.unpublished?.[index]) {
+      const kind = gapKind(item, index);
+      return kind === "value" || kind === "skip" || kind === "na";
+    }
+    return true;
+  });
+}
+
 /** A night drawn as a dotted join or a hollow ring, with no value. */
 export function seriesGap(series: ChartSeries, index: number): boolean {
   const kind = gapKind(series, index);

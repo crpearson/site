@@ -163,6 +163,7 @@ export default function Home() {
             color: fleet.color,
             values: fleet.values,
             service: fleet.service,
+            unpublished: fleet.unpublished,
           }))}
           yDomain={model.meanDomain}
           format="ir"
@@ -468,6 +469,7 @@ export default function Home() {
                   values: fleet.rest,
                   na: fleet.restNa,
                   service: fleet.restService,
+                  unpublished: fleet.unpublished,
                 }))}
               guides={ruleBGuides}
               bands={ruleBBands}
@@ -510,6 +512,7 @@ export default function Home() {
                 service: pack.service,
                 logged: pack.logged,
                 rest: pack.rest,
+                unpublished: pack.unpublished,
               })),
             )}
           />

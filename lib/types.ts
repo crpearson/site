@@ -32,6 +32,12 @@ export type ChartSeries = {
    * plotted charge. Drawn as "Rest pool", not as a skipped charge.
    */
   rest?: boolean[];
+  /**
+   * True when this line's series has no public rows that night. The date tick
+   * is hidden only when every plotted line is unpublished. A value or a real
+   * skip on any line keeps the tick.
+   */
+  unpublished?: boolean[];
 };
 
 export type Guide = {

@@ -731,12 +731,12 @@ body {
   cursor: pointer;
 }
 
-.x-label:first-child {
+.x-label-start {
   left: 0 !important;
   transform: none;
 }
 
-.x-label:last-child {
+.x-label-end {
   left: auto !important;
   right: 0;
   transform: none;
@@ -954,19 +954,19 @@ body {
   }
 
   .x-label,
-  .x-label:first-child,
-  .x-label:last-child {
+  .x-label-start,
+  .x-label-end {
     right: auto;
     transform: translate(-8px, 0) rotate(-32deg);
     transform-origin: top left;
   }
 
-  .x-label:first-child {
+  .x-label-start {
     left: 0 !important;
     transform: translate(0, 0) rotate(-32deg);
   }
 
-  .x-label:last-child {
+  .x-label-end {
     left: auto !important;
     right: 0;
     transform: translate(-18px, 0) rotate(-32deg);

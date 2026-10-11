@@ -3,6 +3,7 @@
 import {
   allNa,
   allNotCharged,
+  axisNightVisible,
   gapPhrase,
   legendNote,
   lonePointIndices,
@@ -367,6 +368,7 @@ export function LineChart({
           </div>
           <div className="x-axis">
             {categories.map((category, index) => {
+              if (!axisNightVisible(shown, index)) return null;
               const last = n - 1;
               const hideOnSmall =
                 index !== last &&
@@ -379,11 +381,12 @@ export function LineChart({
                 : [category.partial ? `${category.id} partial night` : category.id, columnPhrase]
                     .filter(Boolean)
                     .join(". ");
+              const place = index === 0 ? " x-label-start" : index === last ? " x-label-end" : "";
               return (
                 <button
                   key={category.id}
                   type="button"
-                  className={hideOnSmall ? "x-label x-label-alt" : "x-label"}
+                  className={`${hideOnSmall ? "x-label x-label-alt" : "x-label"}${place}`}
                   style={{ left: `${((index + 0.5) / n) * 100}%` }}
                   title={title}
                   aria-label={title}
