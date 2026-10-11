@@ -45,19 +45,53 @@ export function seriesRest(series: ChartSeries, index: number): boolean {
 }
 
 /**
- * A date tick stays when any plotted line has a value or a real skip, or is
- * simply not an unpublished night. It is hidden only when every line is
- * unpublished that night.
+ * A date tick stays when a plotted line has a value, a real skip, N/A, or a
+ * rest-pool mark. It is hidden when every line is unpublished, and when
+ * nothing is plotted (a rest-baseline column, or a night outside every line).
+ * A rest-baseline night stays hidden unless a line actually has a value there.
  */
-export function axisNightVisible(series: ChartSeries[], index: number): boolean {
+export function axisNightVisible(series: ChartSeries[], index: number, nightId?: string): boolean {
   if (series.length === 0) return true;
-  return series.some((item) => {
-    if (item.unpublished?.[index]) {
-      const kind = gapKind(item, index);
-      return kind === "value" || kind === "skip" || kind === "na";
-    }
-    return true;
+  const plotted = series.some((item) => {
+    const kind = gapKind(item, index);
+    if (item.unpublished?.[index]) return kind === "value" || kind === "skip" || kind === "na";
+    return kind === "value" || kind === "skip" || kind === "na" || kind === "rest";
   });
+  if (!plotted) return false;
+  if (nightId?.endsWith("-restday0")) {
+    return series.some((item) => gapKind(item, index) === "value");
+  }
+  return true;
+}
+
+/**
+ * A night with no span and no reading that must not split a line: the
+ * rest-baseline column, or any other in-between hole that is not an
+ * unpublished night. A real skip is not a hole. Before commission and after
+ * retirement are holes only when they sit between two readings of one span,
+ * which they do not.
+ */
+export function isSpanHole(series: ChartSeries, index: number): boolean {
+  if (series.unpublished?.[index]) return false;
+  return spanAt(series, index) == null && gapKind(series, index) === "out";
+}
+
+function isReading(series: ChartSeries, index: number): boolean {
+  return series.values[index] != null && gapKind(series, index) === "value";
+}
+
+/**
+ * The earlier reading this point joins with a solid stroke. Null nights that
+ * are only span holes stay on that stroke. A genuine miss returns -1 so the
+ * dotted join can cross it.
+ */
+export function solidFrom(series: ChartSeries, index: number): number {
+  if (!isReading(series, index)) return -1;
+  let cursor = index - 1;
+  while (cursor >= 0 && isSpanHole(series, cursor)) cursor -= 1;
+  if (cursor < 0 || !isReading(series, cursor)) return -1;
+  if (cursor < index - 1 && spanAt(series, cursor) !== spanAt(series, index)) return -1;
+  return cursor;
 }
 
 /** A night drawn as a dotted join or a hollow ring, with no value. */
@@ -66,21 +100,29 @@ export function seriesGap(series: ChartSeries, index: number): boolean {
   return kind === "skip" || kind === "na";
 }
 
-/** Dotted joins between real points in one service span. Open ends and span changes stay open. */
+/**
+ * Dotted joins between real points in one service span, across nights that
+ * genuinely have no reading. A span hole (the rest-baseline column) does not
+ * break the join and is not itself a dotted night. Open ends, span changes,
+ * and unpublished nights stay open.
+ */
 export function missBridges(series: ChartSeries, nightIds: string[]): MissBridge[] {
   const bridges: MissBridge[] = [];
   let prev = -1;
   for (let index = 0; index < series.values.length; index += 1) {
-    if (series.values[index] == null || gapKind(series, index) !== "value") continue;
+    if (!isReading(series, index)) continue;
     if (prev >= 0 && index > prev + 1) {
       const span = spanAt(series, prev);
       const between: number[] = [];
       for (let cursor = prev + 1; cursor < index; cursor += 1) between.push(cursor);
-      const sameSpan =
+      const sameSpanGap = (cursor: number) =>
+        spanAt(series, cursor) === span && seriesGap(series, cursor);
+      const crossed =
         span != null &&
         spanAt(series, index) === span &&
-        between.every((cursor) => spanAt(series, cursor) === span && seriesGap(series, cursor));
-      if (sameSpan) {
+        between.every((cursor) => isSpanHole(series, cursor) || sameSpanGap(cursor)) &&
+        between.some((cursor) => seriesGap(series, cursor));
+      if (crossed) {
         bridges.push({
           from: prev,
           to: index,
@@ -159,25 +201,49 @@ function firstSpan(series: ChartSeries): string | null {
 
 /**
  * In-service misses before the first reading or after the last, inside the
- * line's first service span. Nights with no span are before commission, after
- * retirement, or before this series existed. Nights in a later span are after
- * a move and are not marked.
+ * line's first service span. A ring is a leading end only when no earlier
+ * reading exists in that span, and a trailing end only when no later reading
+ * exists. Interior misses are dotted joins, not rings. Nights in a later span
+ * are after a move and are not marked.
  */
 export function openEndIndices(series: ChartSeries): number[] {
   const allowed = firstSpan(series);
   if (allowed == null) return [];
-  const nightIds = series.values.map((_, index) => String(index));
-  const interior = new Set<number>();
-  for (const bridge of missBridges(series, nightIds)) {
-    for (let cursor = bridge.from + 1; cursor < bridge.to; cursor += 1) interior.add(cursor);
-  }
-  const ends: number[] = [];
+  const inSpan: number[] = [];
   series.values.forEach((_, index) => {
-    if (spanAt(series, index) !== allowed) return;
-    if (!seriesGap(series, index) || interior.has(index)) return;
-    ends.push(index);
+    if (spanAt(series, index) === allowed) inSpan.push(index);
   });
+  const readings = inSpan.filter((index) => isReading(series, index));
+  const first = readings[0];
+  const last = readings[readings.length - 1];
+  const ends: number[] = [];
+  for (const index of inSpan) {
+    if (!seriesGap(series, index)) continue;
+    const leading = first == null || index < first;
+    const trailing = first == null || index > last;
+    if (leading || trailing) ends.push(index);
+  }
   return ends;
+}
+
+/**
+ * Rings that sit between two real readings of the same span. A leading ring
+ * has no earlier reading. A trailing ring has no later reading. Anything else
+ * is an interior gap and must not be a ring.
+ */
+export function interiorRingIndices(series: ChartSeries): number[] {
+  return openEndIndices(series).filter((index) => {
+    const span = spanAt(series, index);
+    if (span == null) return false;
+    let earlier = false;
+    let later = false;
+    series.values.forEach((_, cursor) => {
+      if (cursor === index || spanAt(series, cursor) !== span || !isReading(series, cursor)) return;
+      if (cursor < index) earlier = true;
+      if (cursor > index) later = true;
+    });
+    return earlier && later;
+  });
 }
 
 /**
@@ -199,6 +265,7 @@ export function lonePointIndices(series: ChartSeries): number[] {
   };
   series.values.forEach((value, index) => {
     if (value == null || gapKind(series, index) !== "value") {
+      if (isSpanHole(series, index)) return;
       flush();
       return;
     }

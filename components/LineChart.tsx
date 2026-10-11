@@ -9,6 +9,7 @@ import {
   lonePointIndices,
   missBridges,
   openEndIndices,
+  solidFrom,
   seriesGap,
   seriesNa,
   seriesNotCharged,
@@ -58,18 +59,21 @@ function yPos(value: number, domain: [number, number]): number {
   return ((domain[1] - value) / span) * 100;
 }
 
-function linePaths(values: (number | null)[], domain: [number, number]): string[] {
+function linePaths(series: ChartSeries, domain: [number, number]): string[] {
   const paths: string[] = [];
   let current = "";
-  values.forEach((value, index) => {
-    if (value == null) {
-      if (current) paths.push(current);
-      current = "";
-      return;
-    }
+  let drawn = -1;
+  series.values.forEach((value, index) => {
+    if (value == null) return;
     const x = (index + 0.5).toFixed(3);
     const y = yPos(value, domain).toFixed(3);
-    current += current ? `L${x} ${y}` : `M${x} ${y}`;
+    if (solidFrom(series, index) === drawn && current) {
+      current += `L${x} ${y}`;
+    } else {
+      if (current) paths.push(current);
+      current = `M${x} ${y}`;
+    }
+    drawn = index;
   });
   if (current) paths.push(current);
   return paths;
@@ -288,7 +292,7 @@ export function LineChart({
                 )),
               )}
               {shown.map((item) =>
-                linePaths(item.values, yDomain).map((d, pathIndex) => (
+                linePaths(item, yDomain).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-${pathIndex}`}
                     d={d}
@@ -405,7 +409,7 @@ export function LineChart({
           </div>
           <div className="x-axis">
             {categories.map((category, index) => {
-              if (!axisNightVisible(shown, index)) return null;
+              if (!axisNightVisible(shown, index, category.id)) return null;
               const last = n - 1;
               const hideOnSmall =
                 index !== last &&
