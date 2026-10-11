@@ -9,10 +9,12 @@ import {
   lonePointIndices,
   missBridges,
   openEndIndices,
+  solidFrom,
   seriesGap,
   seriesNa,
   seriesNotCharged,
   seriesRest,
+  type ChartMode,
 } from "@/lib/bridges";
 import { ProvisionalMark } from "@/components/ProvisionalMark";
 import { formatAxis, formatValue } from "@/lib/format";
@@ -58,25 +60,28 @@ function yPos(value: number, domain: [number, number]): number {
   return ((domain[1] - value) / span) * 100;
 }
 
-function linePaths(values: (number | null)[], domain: [number, number]): string[] {
+function linePaths(series: ChartSeries, domain: [number, number], mode: ChartMode): string[] {
   const paths: string[] = [];
   let current = "";
-  values.forEach((value, index) => {
-    if (value == null) {
-      if (current) paths.push(current);
-      current = "";
-      return;
-    }
+  let drawn = -1;
+  series.values.forEach((value, index) => {
+    if (value == null) return;
     const x = (index + 0.5).toFixed(3);
     const y = yPos(value, domain).toFixed(3);
-    current += current ? `L${x} ${y}` : `M${x} ${y}`;
+    if (solidFrom(series, index, mode) === drawn && current) {
+      current += `L${x} ${y}`;
+    } else {
+      if (current) paths.push(current);
+      current = `M${x} ${y}`;
+    }
+    drawn = index;
   });
   if (current) paths.push(current);
   return paths;
 }
 
-function bridgePath(series: ChartSeries, domain: [number, number], nightIds: string[]): string[] {
-  return missBridges(series, nightIds).map((bridge) => {
+function bridgePath(series: ChartSeries, domain: [number, number], nightIds: string[], mode: ChartMode): string[] {
+  return missBridges(series, nightIds, mode).map((bridge) => {
     const from = series.values[bridge.from];
     const to = series.values[bridge.to];
     if (from == null || to == null) return "";
@@ -98,6 +103,7 @@ export function LineChart({
   unit,
   height = 228,
   ariaLabel,
+  mode,
 }: {
   categories: Category[];
   series: ChartSeries[];
@@ -108,6 +114,7 @@ export function LineChart({
   unit: string;
   height?: number;
   ariaLabel: string;
+  mode: ChartMode;
 }) {
   const descId = useId();
   const [hidden, setHidden] = useState<Record<string, boolean>>({});
@@ -116,14 +123,14 @@ export function LineChart({
   const ticks = useMemo(() => axisTicks(yDomain), [yDomain]);
   const n = categories.length;
   const nightIds = categories.map((category) => category.id);
-  const note = legendNote(shown, nightIds);
+  const note = legendNote(shown, nightIds, mode);
   const missed = allNotCharged(shown, nightIds);
   const naNights = allNa(shown, nightIds);
   const phrase = hover == null ? "" : gapPhrase(shown, nightIds, hover);
   const columnGap =
     hover != null && shown.length > 0 && shown.every((item) => seriesGap(item, hover));
   const endMarks = shown.flatMap((item) =>
-    openEndIndices(item).map((index) => ({ id: item.id, color: item.color, index })),
+    openEndIndices(item, mode).map((index) => ({ id: item.id, color: item.color, index })),
   );
   const showsProvisional =
     format === "ir" &&
@@ -192,13 +199,14 @@ export function LineChart({
         ) : null}
       </div>
       <p id={descId} className="sr-only">
-        {ariaLabel} Arrow keys and the night labels move between nights. A faint dotted line joins
-        the real readings on either side of a skipped night. No value is plotted there. A skipped
-        night before the first reading or after the last is a small hollow ring on the bottom edge,
-        also with no value. Nights before the pack or series was in service, and nights after a
-        move, are not marked. A single reading is a dot. A star on the night label is a partial
-        night and is separate: a pack that was charged still has a point.
-        {missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
+        {ariaLabel} Arrow keys and the night labels move between nights.{" "}
+        {mode === "aggregate"
+          ? "A solid line joins real readings and runs straight through a night with no reading. No value is filled in there. There is no dotted join and no hollow ring."
+          : "A faint dotted line joins the real readings on either side of a night this pack was not charged. No value is plotted there. A skipped night before the first reading or after the last is a small hollow ring on the bottom edge, also with no value."}{" "}
+        Nights before the pack or series was in service, and nights after a move, are not marked. A
+        single reading is a dot. A star on the night label is a partial night and is separate: a
+        pack that was charged still has a point.
+        {mode === "pack" && missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
         {naNights.length ? ` N/A: ${naNights.join(", ")}.` : ""}
       </p>
       <div className="sr-only" aria-live="polite">
@@ -271,7 +279,7 @@ export function LineChart({
               aria-hidden="true"
             >
               {shown.map((item) =>
-                bridgePath(item, yDomain, nightIds).map((d, pathIndex) => (
+                bridgePath(item, yDomain, nightIds, mode).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-bridge-${pathIndex}`}
                     d={d}
@@ -288,7 +296,7 @@ export function LineChart({
                 )),
               )}
               {shown.map((item) =>
-                linePaths(item.values, yDomain).map((d, pathIndex) => (
+                linePaths(item, yDomain, mode).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-${pathIndex}`}
                     d={d}
@@ -340,7 +348,7 @@ export function LineChart({
               />
             ) : null}
             {shown.map((item) => {
-              const lone = new Set(lonePointIndices(item));
+              const lone = new Set(lonePointIndices(item, mode));
               return item.values.map((value, index) => {
                 if (value == null || (hover !== index && !lone.has(index))) return null;
                 return (
@@ -405,7 +413,7 @@ export function LineChart({
           </div>
           <div className="x-axis">
             {categories.map((category, index) => {
-              if (!axisNightVisible(shown, index)) return null;
+              if (!axisNightVisible(shown, index, category.id)) return null;
               const last = n - 1;
               const hideOnSmall =
                 index !== last &&

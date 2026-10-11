@@ -102,10 +102,8 @@ export default function BakeoffPage() {
           <div className="mt-4">
             <p className="eyebrow">Measured IR by series</p>
             <p className="note mt-1">
-              A night that series was in service and was not measured is a faint dotted join, or a
-              hollow ring on the bottom edge before the first reading or after the last. Nights
-              before that series existed are not marked. A single reading is a dot. No value is
-              filled in.
+              The line is solid through a night that series was not measured. No value is filled in
+              there. Nights before that series existed are not marked. A single reading is a dot.
             </p>
             <div className="mt-2">
               <LineChart
@@ -115,6 +113,7 @@ export default function BakeoffPage() {
                 format="ir"
                 unit={IR_UNIT}
                 height={180}
+                mode="aggregate"
                 ariaLabel="Mean internal resistance by series, true milliohms"
               />
             </div>

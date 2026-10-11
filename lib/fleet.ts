@@ -3,7 +3,7 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { allNotCharged, axisNightVisible, gapPhrase, lonePointIndices, missBridges, openEndIndices, seriesNotCharged } from "@/lib/bridges";
+import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lonePointIndices, missBridges, openEndIndices, seriesNotCharged, solidFrom } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
@@ -216,8 +216,10 @@ const restBaselineSessions = new Set(
 /**
  * The series was charged, but its rows are not in the public file. Those packs
  * are out of span for that night: no value, no dotted join, no hollow ring, and
- * no "not charged" caption. The date tick is hidden only when every plotted
- * line is unpublished. Empty while every measured series-night is published.
+ * no "not charged" caption. The date tick is hidden when every plotted line
+ * is unpublished, and when nothing is plotted. A rest-baseline column is a
+ * tick only when a value is drawn there. Empty while every measured
+ * series-night is published.
  * A series that truly did not run stays "not charged".
  */
 const UNPUBLISHED_SERIES_NIGHTS: { session: string; series: string }[] = [];
@@ -1436,6 +1438,7 @@ function assertDerived() {
   assertUnpublishedNight(model, heldNight);
   assertStatusChips();
   assertRingWindows(model);
+  assertGapGeometry(model);
 }
 
 function assertAxisMechanism() {
@@ -1462,6 +1465,34 @@ function assertAxisMechanism() {
   }
   if (!axisNightVisible([held("out"), held("published", { values: [1], service: ["0"], unpublished: [false] })], 0)) {
     throw new Error("a published line must keep the axis tick");
+  }
+  const nothingPlotted: ChartSeries = {
+    id: "hole",
+    label: "hole",
+    color: "#888",
+    values: [null],
+    service: [null],
+    unpublished: [false],
+  };
+  if (axisNightVisible([nothingPlotted], 0, "2026-10-09-restday0")) {
+    throw new Error("a rest-baseline column with nothing plotted must hide the axis tick");
+  }
+  const restOnly: ChartSeries = {
+    id: "rest",
+    label: "rest",
+    color: "#888",
+    values: [null],
+    service: ["0"],
+    rest: [true],
+  };
+  if (!axisNightVisible([restOnly], 0, "2026-10-10")) {
+    throw new Error("a rest-pool night must keep its axis tick");
+  }
+  if (axisNightVisible([restOnly], 0, "2026-10-09-restday0")) {
+    throw new Error("a rest-baseline column must hide its tick when no value is plotted");
+  }
+  if (!axisNightVisible([{ ...nothingPlotted, values: [1], service: ["0"] }], 0, "2026-10-09-restday0")) {
+    throw new Error("a value on the rest-baseline column must keep the axis tick");
   }
 }
 
@@ -1635,6 +1666,213 @@ function ringNights(series: ChartSeries): string[] {
   return openEndIndices(series).map((index) => categories[index].id);
 }
 
+function assertNoInteriorRing(series: ChartSeries, label: string) {
+  const bad = interiorRingIndices(series, "pack");
+  if (bad.length === 0) return;
+  const nights = bad.map((index) => categories[index]?.id ?? String(index)).join(", ");
+  throw new Error(`${label} ring on ${nights} sits before a later real point in the same span`);
+}
+
+function assertAggregateQuiet(series: ChartSeries, nightIds: string[], label: string) {
+  const dotted = missBridges(series, nightIds, "aggregate");
+  if (dotted.length !== 0) {
+    throw new Error(`${label} has a dotted join in aggregate mode`);
+  }
+  const rings = openEndIndices(series, "aggregate");
+  if (rings.length !== 0) {
+    throw new Error(`${label} has a ring in aggregate mode`);
+  }
+}
+
+function assertGapGeometry(model: FleetModel) {
+  const sample: ChartSeries = {
+    id: "sample",
+    label: "sample",
+    color: "#888",
+    values: [null, 1, null, null, 2, null],
+    service: ["0", "0", "0", null, "0", "0"],
+  };
+  const sampleRings = openEndIndices(sample);
+  if (sampleRings.includes(2)) {
+    throw new Error("interior skip was ringed before a later real point");
+  }
+  if (!sampleRings.includes(0) || !sampleRings.includes(5)) {
+    throw new Error("a leading or trailing ring is missing");
+  }
+  if (interiorRingIndices(sample).length !== 0) {
+    throw new Error("leading and trailing rings were treated as interior");
+  }
+  const sampleBridge = missBridges(sample, ["a", "b", "c", "d", "e", "f"]);
+  if (sampleBridge.length !== 1 || sampleBridge[0].from !== 1 || sampleBridge[0].to !== 4) {
+    throw new Error("dotted join did not cross a genuine skip and a span hole");
+  }
+  if (solidFrom(sample, 4, "pack") !== -1) throw new Error("a pack line crossed a night with no reading");
+  if (solidFrom(sample, 4, "aggregate") !== 1) {
+    throw new Error("an aggregate line did not run solid through a skipped night");
+  }
+  if (missBridges(sample, ["a", "b", "c", "d", "e", "f"], "aggregate").length !== 0) {
+    throw new Error("an aggregate line drew a dotted join");
+  }
+  if (openEndIndices(sample, "aggregate").length !== 0) {
+    throw new Error("an aggregate line drew a ring");
+  }
+  const movedSpan: ChartSeries = {
+    id: "moved",
+    label: "moved",
+    color: "#888",
+    values: [1, null, 2],
+    service: ["0", "0", "1"],
+  };
+  if (solidFrom(movedSpan, 2, "aggregate") !== -1 || missBridges(movedSpan, ["a", "b", "c"], "aggregate").length !== 0) {
+    throw new Error("an aggregate line crossed a move");
+  }
+  const holeOnly: ChartSeries = {
+    id: "hole",
+    label: "hole",
+    color: "#888",
+    values: [1, null, 2],
+    service: ["0", null, "0"],
+  };
+  if (solidFrom(holeOnly, 2) !== 0) throw new Error("a solid line broke across a span hole");
+  if (missBridges(holeOnly, ["a", "b", "c"]).length !== 0) {
+    throw new Error("a span hole with readings on both sides was drawn dotted");
+  }
+  const held: ChartSeries = {
+    id: "held",
+    label: "held",
+    color: "#888",
+    values: [1, null, 2],
+    service: ["0", null, "0"],
+    unpublished: [false, true, false],
+  };
+  if (
+    missBridges(held, ["a", "b", "c"], "pack").length !== 0 ||
+    solidFrom(held, 2, "pack") !== -1 ||
+    missBridges(held, ["a", "b", "c"], "aggregate").length !== 0 ||
+    solidFrom(held, 2, "aggregate") !== -1
+  ) {
+    throw new Error("an unpublished night was joined");
+  }
+
+  const nightIds = model.categories.map((category) => category.id);
+  const indexOf = (id: string) => {
+    const index = nightIds.indexOf(id);
+    if (index < 0) throw new Error(`missing night ${id}`);
+    return index;
+  };
+  const fromV4 = (session: string, series: string): number | null => {
+    const rows = measurements.filter(
+      (row) => row.session === session && row.series === series && row.sessionType !== "rest-test-day0",
+    );
+    if (rows.length === 0) return null;
+    return rows.reduce((sum, row) => sum + row.avg, 0) / rows.length;
+  };
+  const meanLine = (id: string): ChartSeries => {
+    const line = model.mean.find((item) => item.id === id);
+    if (!line) throw new Error(`missing ${id} series mean`);
+    return {
+      id,
+      label: id,
+      color: line.color,
+      values: line.values,
+      service: line.service,
+      unpublished: line.unpublished,
+    };
+  };
+  for (const series of ["C1", "C2", "D"]) {
+    const line = meanLine(series);
+    nightIds.forEach((night, index) => {
+      const expected = fromV4(night, series);
+      const actual = line.values[index];
+      if (expected == null) {
+        if (actual != null) throw new Error(`${series} mean plotted ${actual} on ${night}, which has no v4 reading`);
+        return;
+      }
+      if (actual == null || Math.abs(actual - expected) > 0.0005) {
+        throw new Error(`${series} mean on ${night} is ${actual}, v4 mean is ${expected}`);
+      }
+    });
+    assertAggregateQuiet(line, nightIds, `${series} mean`);
+  }
+
+  const c1 = meanLine("C1");
+  const c2 = meanLine("C2");
+  const packJoined = (series: ChartSeries, from: string, to: string) =>
+    missBridges(series, nightIds, "pack").some((bridge) => nightIds[bridge.from] === from && nightIds[bridge.to] === to);
+  if (solidFrom(c1, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-09-27")) {
+    throw new Error("C1 mean does not solid-join 2026-09-27 to 2026-10-10");
+  }
+  if (solidFrom(c2, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-09-30")) {
+    throw new Error("C2 mean does not solid-join 2026-09-30 to 2026-10-10");
+  }
+  if (solidFrom(c2, indexOf("2026-09-30"), "aggregate") !== indexOf("2026-09-27")) {
+    throw new Error("C2 mean must solid-join 2026-09-27 to 2026-09-30");
+  }
+  if (packJoined(c1, "2026-09-27", "2026-10-10") && solidFrom(c1, indexOf("2026-10-10"), "pack") !== -1) {
+    throw new Error("pack mode solid-joined a genuine skip on the C1 mean shape");
+  }
+  if (!packJoined(c1, "2026-09-27", "2026-10-10") || solidFrom(c1, indexOf("2026-10-10"), "pack") !== -1) {
+    throw new Error("pack mode lost the dotted join across a genuine skip");
+  }
+  for (const line of [c1, c2]) {
+    if (lonePointIndices(line, "aggregate").includes(indexOf("2026-10-10"))) {
+      throw new Error(`${line.id} mean draws 2026-10-10 as an isolated dot`);
+    }
+  }
+  const meanLegend = legendNote([c1, c2], nightIds, "aggregate");
+  if (meanLegend != null && /not charged/i.test(meanLegend)) {
+    throw new Error("aggregate legend still says not charged");
+  }
+
+  const meanLines = ["C1", "C2", "D"].map((id) => meanLine(id));
+  const restIndex = indexOf("2026-10-09-restday0");
+  if (axisNightVisible(meanLines, restIndex, "2026-10-09-restday0")) {
+    throw new Error("10-09r is an axis tick on the series mean chart");
+  }
+  if (!axisNightVisible(meanLines, indexOf("2026-10-09"), "2026-10-09")) {
+    throw new Error("2026-10-09 lost its axis tick on the series mean chart");
+  }
+  if (!axisNightVisible(meanLines, indexOf("2026-10-10"), "2026-10-10")) {
+    throw new Error("2026-10-10 lost its axis tick on the series mean chart");
+  }
+
+  for (const fleet of model.fleets) {
+    const rule = chartLine(fleet.id, fleet.rest, fleet.restService, undefined, undefined, fleet.restNa);
+    assertAggregateQuiet(rule, nightIds, `${fleet.id} Rule B`);
+    if (axisNightVisible([rule], restIndex, "2026-10-09-restday0")) {
+      throw new Error(`${fleet.id} Rule B shows a 10-09r axis tick`);
+    }
+    const ruleLegend = legendNote([rule], nightIds, "aggregate");
+    if (ruleLegend != null && /not charged/i.test(ruleLegend)) {
+      throw new Error(`${fleet.id} Rule B legend says not charged`);
+    }
+    for (const pack of fleet.packs) {
+      for (const values of [pack.avg, pack.spread, pack.floor, ...pack.cells]) {
+        const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
+        assertAggregateQuiet(chart, nightIds, `${fleet.id} ${pack.uid} fleet chart`);
+        assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
+      }
+    }
+  }
+  const c1p2 = getPack("CNHL-2026-002");
+  const c2p1 = getPack("CNHL-2026-007");
+  if (!c1p2 || !c2p1) throw new Error("missing C1-P2 or C2-P1 pack chart");
+  const c1PackLine = c1p2.cellSeries[0];
+  const c2PackLine = c2p1.cellSeries[0];
+  if (!c1PackLine || !packJoined(c1PackLine, "2026-09-27", "2026-10-10")) {
+    throw new Error("C1-P2 pack chart lost the dotted join from 2026-09-27 to 2026-10-10");
+  }
+  if (!c2PackLine || !packJoined(c2PackLine, "2026-09-30", "2026-10-10")) {
+    throw new Error("C2-P1 pack chart lost the dotted join from 2026-09-30 to 2026-10-10");
+  }
+  if (solidFrom(c1PackLine, indexOf("2026-10-10"), "pack") !== -1) {
+    throw new Error("C1-P2 pack chart solid-joined a night it was not charged");
+  }
+  for (const line of [...c1p2.cellSeries, ...c1p2.spreadSeries, ...c1p2.floorSeries, ...c2p1.cellSeries, ...c2p1.spreadSeries, ...c2p1.floorSeries]) {
+    assertNoInteriorRing(line, line.id);
+  }
+}
+
 /** Rings stay inside the first in-service span: not before that date, and not after a move. */
 function assertRingWindows(model: FleetModel) {
   const member = (series: string, night: string) =>
@@ -1651,6 +1889,7 @@ function assertRingWindows(model: FleetModel) {
         throw new Error(`${line.id} mean ring on ${night} is before that series or after its packs moved out`);
       }
     }
+    assertNoInteriorRing(chart, `${line.id} mean`);
   }
 
   const dMean = model.mean.find((line) => line.id === "D");
@@ -1670,10 +1909,12 @@ function assertRingWindows(model: FleetModel) {
         throw new Error(`${fleet.id} Rule B ring on ${night} is outside that series`);
       }
     }
+    assertNoInteriorRing(restChart, `${fleet.id} Rule B`);
     for (const pack of fleet.packs) {
       const lines = [pack.avg, pack.spread, pack.floor, ...pack.cells];
       for (const values of lines) {
         const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
+        assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
         for (const night of ringNights(chart)) {
           if (seriesOfLabel(labelAsOf(pack.uid, night)) !== fleet.id) {
             throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before that series or after the move`);
@@ -1704,7 +1945,9 @@ function assertRingWindows(model: FleetModel) {
       alignUid(pack.uid, (row) => row.cells[0] ?? null),
     ];
     for (const values of lines) {
-      for (const night of ringNights(chartLine(pack.uid, values, meta.service, meta.logged, rest))) {
+      const chart = chartLine(pack.uid, values, meta.service, meta.logged, rest);
+      assertNoInteriorRing(chart, pack.uid);
+      for (const night of ringNights(chart)) {
         const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
         if (!commission || compareTime(night, commission.date) < 0) {
           throw new Error(`${pack.uid} ring on ${night} is before it was in service`);

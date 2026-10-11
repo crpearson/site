@@ -34,8 +34,9 @@ export type ChartSeries = {
   rest?: boolean[];
   /**
    * True when this line's series has no public rows that night. The date tick
-   * is hidden only when every plotted line is unpublished. A value or a real
-   * skip on any line keeps the tick.
+   * is hidden when every plotted line is unpublished, and when nothing is
+   * plotted. A value, a real skip, N/A, or a rest-pool mark keeps the tick.
+   * A rest-baseline column keeps a tick only when a value is plotted there.
    */
   unpublished?: boolean[];
   /**

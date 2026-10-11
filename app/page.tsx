@@ -51,13 +51,13 @@ export default function Home() {
           <p className="eyebrow">{blocks.map((block) => block.id).join(" · ")} · CNHL Black Series V2</p>
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
-            Each series has its own as-of date. The calls below are the latest status. Charts follow
-            a pack through every measured night, including nights under an earlier label. On every
-            line, a skipped night between two readings is a faint dotted line, with no value. A
-            skipped night before the first reading or after the last, while that line was in service,
-            is a small hollow ring on the bottom edge, also with no value. Nights before the pack or
-            series existed, and nights after a move, are not marked. A single reading is a dot.
-            Nothing is filled in.
+            Each series has its own as-of date. The calls below are the latest status. Fleet charts
+            follow a pack through every measured night, including nights under an earlier label. A
+            solid line runs straight through a night with no reading. No value is filled in, and
+            those charts have no dotted join and no hollow ring. Nights before the pack or series
+            existed, and nights after a move, are not marked. A single reading is a dot. A pack's
+            own page, and the sparkline on its tile, still use a dotted join for a night that pack
+            was not charged, and a hollow ring only at a true start or end.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
@@ -153,10 +153,9 @@ export default function Home() {
         title="Series mean IR"
         action={
           <span className="note">
-            {IR_UNIT} · one reading is a dot. A night that series was in service and was not measured
-            is a faint dotted join, or a hollow ring before the first reading or after the last.
-            Nights before that series existed are not marked. Rest-test day 0 is left off this mean.
-            D-1 on 10-09 stays on series D.
+            {IR_UNIT} · one reading is a dot. The line is solid through a night that series was not
+            measured. No value is filled in there. Nights before that series existed are not marked.
+            Rest-test day 0 is left off this mean. D-1 on 10-09 stays on series D.
           </span>
         }
       >
@@ -175,6 +174,7 @@ export default function Home() {
           format="ir"
           unit={IR_UNIT}
           height={200}
+          mode="aggregate"
           ariaLabel="Mean pack IR by series across nights, true milliohms"
         />
       </Panel>
@@ -376,13 +376,11 @@ export default function Home() {
           </h2>
           <p className="note mt-1">
             A star marks a partial night: that night did not include every pack, and it is left
-            incomplete. On every line, a faint dotted join means that pack or series was not charged
-            between two readings, with no value on the skipped night. A skipped night before the
-            first reading or after the last, while that line was in service, is a hollow ring on the
-            bottom edge, with no value. Nights before the series existed are not marked. A single
-            reading is a dot. A partial night the pack or series was charged is still a normal point.
-            A pack that changed labels stays on the series it was measured in. The line is not joined
-            across a move, and nights after the move are not marked.
+            incomplete. On these fleet charts a solid line runs through a night with no reading. No
+            value is filled in, and there is no dotted join or hollow ring. Nights before the series
+            existed are not marked. A single reading is a dot. A partial night with a reading is
+            still a normal point. A pack that changed labels stays on the series it was measured in.
+            The line is not joined across a move, and nights after the move are not marked.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
@@ -394,6 +392,7 @@ export default function Home() {
                 yDomain={model.irDomain}
                 format="ir"
                 unit={IR_UNIT}
+                mode="aggregate"
                 ariaLabel={`${fleet.id} pack average internal resistance, true milliohms`}
               />
             </Panel>
@@ -422,6 +421,7 @@ export default function Home() {
                 yDomain={model.spreadDomain}
                 format="ir"
                 unit={IR_UNIT}
+                mode="aggregate"
                 ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with Rules v3 caution and individual guides`}
               />
             </Panel>
@@ -443,6 +443,7 @@ export default function Home() {
                 yDomain={model.floorDomain}
                 format="int"
                 unit="mV"
+                mode="aggregate"
                 ariaLabel={`${fleet.id} start floor voltage with a 3600 millivolt watch line`}
               />
             </Panel>
@@ -463,9 +464,8 @@ export default function Home() {
             }
           >
             <p className="note mb-3">
-              One line per series. A night that series was in service and did not run is a faint
-              dotted join, or a hollow ring on the bottom edge before the first reading or after the
-              last, with no value. Nights before that series existed are not marked. Rule B needs two
+              One line per series. The line is solid through a night that series did not run. No
+              value is filled in there. Nights before that series existed are not marked. Rule B needs two
               packs that charged in parallel. A night the series did run,
               but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
               The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
@@ -489,6 +489,7 @@ export default function Home() {
               yDomain={model.restDomain}
               format="volt"
               unit="V"
+              mode="aggregate"
               ariaLabel="Inter-pack rest voltage delta by series with Rule B guides"
             />
             <ul className="note mt-3 space-y-1">
@@ -516,6 +517,7 @@ export default function Home() {
         <Panel accent="signal" eyebrow="Six cells" title="Per-cell IR">
           <CellExplorer
             categories={model.categories}
+            mode="aggregate"
             domain={model.irDomain}
               packs={measured.flatMap((fleet) =>
               fleet.packs.map((pack) => ({

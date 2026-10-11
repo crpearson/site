@@ -1,6 +1,7 @@
 "use client";
 
 import { LineChart } from "@/components/LineChart";
+import type { ChartMode } from "@/lib/bridges";
 import { CELL_COLORS } from "@/lib/color";
 import { IR_UNIT } from "@/lib/ir";
 import type { LampTone } from "@/lib/lamp";
@@ -11,8 +12,10 @@ export function CellExplorer({
   categories,
   packs,
   domain,
+  mode,
 }: {
   categories: Category[];
+  mode: ChartMode;
   packs: {
     id: string;
     tone: LampTone;
@@ -62,6 +65,7 @@ export function CellExplorer({
         format="ir"
         unit={IR_UNIT}
         height={240}
+        mode={mode}
         ariaLabel={`Per-cell internal resistance for ${pack.id} across measured nights, milliohms`}
       />
     </div>

@@ -151,20 +151,20 @@ export default function AboutPage() {
         </article>
       </div>
 
-      <Panel accent="signal" eyebrow="Charts" title="A night not charged">
+      <Panel accent="signal" eyebrow="Charts" title="A night with no reading">
         <p className="note">
-          On every line chart, a night the pack or series was in service but was not charged is
-          never given a made-up value. When readings sit on both sides, a faint dotted line joins
-          those real readings, and the skipped night has no value. A skipped night before the first
-          reading or after the last, while that line was in service, is a small hollow ring on the
-          bottom edge of the graph instead, also with no value. Nights before the pack or series
-          existed, and nights after a move, are not marked, and the line is not joined across that
-          move. A series line, such as the series mean or Rule B rest-Δ, uses the same marks only
-          while that series has a pack. A single reading is a dot.
-          If the series did run and the metric does not apply, the tooltip says N/A for that night.
-          A star on the night label is a different mark: a partial night, one that did not include
-          every pack. A pack or series that was charged on a partial night still has a solid point.
-          The legend reads: dotted = not charged · ○ = not charged (start/end).
+          No chart is given a made-up value. Fleet charts — the series mean, the pack trends, Rule
+          B, and the bake-off — draw a solid line straight through a night with no reading. Those
+          charts have no dotted join and no hollow ring. A pack page, and the sparkline on a pack
+          tile, still marks a night that pack was not charged: a faint dotted line joins the real
+          readings on either side, and a skipped night before the first reading or after the last
+          is a small hollow ring on the bottom edge, also with no value. Nights before the pack or
+          series existed, and nights after a move, are not marked, and the line is not joined
+          across that move. A single reading is a dot. If the series did run and the metric does
+          not apply, the tooltip says N/A for that night. A star on the night label is a different
+          mark: a partial night, one that did not include every pack. A pack or series that was
+          charged on a partial night still has a solid point. On a pack chart the legend reads:
+          dotted = not charged · ○ = not charged (start/end).
         </p>
       </Panel>
 
@@ -209,7 +209,7 @@ export default function AboutPage() {
             A charger is limited to one series only when that limit is turned on. DX8-1 and DX8-2
             are not limited. An existing night and pack is never overwritten. A partial night is
             kept as measured. On the charts that partial night stays starred on the night label,
-            which is separate from a dotted join or a hollow ring for a pack that was not charged.
+            which is separate from a dotted join or a hollow ring on a pack chart for a night that pack was not charged.
             The rest-voltage comparison uses
             only packs that charged in parallel
             that night, and only when at least two of them did.

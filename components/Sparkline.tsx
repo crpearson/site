@@ -1,4 +1,4 @@
-import { lonePointIndices, missBridges, openEndIndices } from "@/lib/bridges";
+import { lonePointIndices, missBridges, openEndIndices, solidFrom } from "@/lib/bridges";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { PROVISIONAL_LEGEND } from "@/lib/ir-validation.mjs";
@@ -32,17 +32,19 @@ export function Sparkline({
     const y = height - ((value - min) / span) * (height - 4) - 2;
     return `${x.toFixed(2)} ${y.toFixed(2)}`;
   };
+  const series: ChartSeries = { id: "spark", label: "", color, values, service, logged, rest };
   let path = "";
+  let drawn = -1;
   values.forEach((value, index) => {
     if (value == null) return;
-    const command = index > 0 && values[index - 1] != null ? "L" : "M";
+    const command = solidFrom(series, index, "pack") === drawn && path ? "L" : "M";
     path += `${command}${xy(index, value)}`;
+    drawn = index;
   });
-  const series: ChartSeries = { id: "spark", label: "", color, values, service, logged, rest };
   const latest = [...values].reverse().find((value) => value != null);
-  const ends = openEndIndices(series);
-  const lone = lonePointIndices(series);
-  const dash = missBridges(series, values.map((_, index) => String(index)))
+  const ends = openEndIndices(series, "pack");
+  const lone = lonePointIndices(series, "pack");
+  const dash = missBridges(series, values.map((_, index) => String(index)), "pack")
     .map((bridge) => {
       const from = values[bridge.from];
       const to = values[bridge.to];
