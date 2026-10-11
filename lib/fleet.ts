@@ -9,7 +9,15 @@ import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
-import { lampTone, splitCall, statusChip, STATUS_CHIPS, type LampTone, type StatusChipName } from "@/lib/lamp";
+import {
+  conditionalJoinNote,
+  lampTone,
+  splitCall,
+  statusChip,
+  STATUS_CHIPS,
+  type LampTone,
+  type StatusChipName,
+} from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
@@ -342,7 +350,8 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-012": "PARALLEL GO | SERVICE In service",
+  "CNHL-2026-012":
+    "PARALLEL GO (conditional: join C2 board only if rest V within 0.30 V of board-mates; otherwise charge alone) | SERVICE In service",
 };
 
 function assertStore() {
@@ -1648,6 +1657,21 @@ function assertStatusChips() {
   }
   if (statusChip("PARALLEL OFF (Rest pool) | SERVICE D pool (Watch)", "individual") !== "REST") {
     throw new Error("Rest pool must outrank D pool and charging alone");
+  }
+  const c2p6 = rows.find((row) => row.label === "C2-P6");
+  const c2p6Calls = callsFor("CNHL-2026-012").filter((call) => call.date === "2026-10-10");
+  if (
+    c2p6Calls.length !== 2 ||
+    c2p6Calls[0]?.status !== "PARALLEL GO | SERVICE In service" ||
+    !c2p6Calls[1]?.status.startsWith("PARALLEL GO (conditional:")
+  ) {
+    throw new Error("C2-P6 is missing the two 2026-10-10 calls");
+  }
+  if (!c2p6 || c2p6.status !== c2p6Calls[1]?.status || conditionalJoinNote(c2p6.status) !== "joins only if within 0.30 V") {
+    throw new Error(`C2-P6 latest call did not supersede the earlier Go (${c2p6?.status})`);
+  }
+  if (statusChip(c2p6.status, c2p6.chargeMode) !== "GO") {
+    throw new Error("C2-P6 conditional Go must stay the one word GO");
   }
 }
 

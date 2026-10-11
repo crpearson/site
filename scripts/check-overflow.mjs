@@ -13,6 +13,9 @@ import { fileURLToPath } from "node:url";
  * readers, so its scrollWidth is the hidden sentence, not a visible overflow.
  * Case-alias pages that only meta-refresh to the canonical URL are skipped;
  * the canonical page is checked.
+ *
+ * After the layout pass, every exported HTML file is scanned for
+ * 2603022837|cliff|pearson|chad. /next-charge/ is part of that scan.
  */
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "out");
@@ -23,13 +26,42 @@ const chromeCandidates = [
   "/usr/bin/chromium",
 ].filter(Boolean);
 const chrome = chromeCandidates.find((candidate) => existsSync(candidate));
-if (!chrome) {
-  console.log("overflow check skipped (no Chrome)");
-  process.exit(0);
+
+function checkIdentity() {
+  const identity = /2603022837|cliff|pearson|chad/i;
+  const identityHits = [];
+  function scanIdentity(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) scanIdentity(full);
+      else if (entry.name.endsWith(".html")) {
+        const text = readFileSync(full, "utf8");
+        if (identity.test(text)) identityHits.push(path.relative(outDir, full));
+      }
+    }
+  }
+  const nextChargeHtml = path.join(outDir, "next-charge", "index.html");
+  if (!existsSync(nextChargeHtml)) {
+    console.error("identity grep needs out/next-charge/index.html");
+    process.exit(1);
+  }
+  scanIdentity(outDir);
+  if (identityHits.length) {
+    console.error(`identity grep ${identityHits.length} (2603022837|cliff|pearson|chad)`);
+    console.error(identityHits.join("\n"));
+    process.exit(1);
+  }
+  console.log("identity grep 0 (2603022837|cliff|pearson|chad), including /next-charge/");
 }
+
 if (!existsSync(path.join(outDir, "index.html"))) {
   console.error("overflow check needs out/index.html");
   process.exit(1);
+}
+if (!chrome) {
+  checkIdentity();
+  console.log("overflow check skipped (no Chrome)");
+  process.exit(0);
 }
 
 function pages(dir, found = []) {
@@ -42,7 +74,7 @@ function pages(dir, found = []) {
       if (/http-equiv="refresh"/i.test(html)) continue;
       const rel = path.relative(outDir, dir).split(path.sep).join("/");
       const route = `/${rel ? `${rel}/` : ""}`;
-      if (route === "/" || /^\/(bakeoff|about|methodology|pack|slot)(\/|$)/.test(route)) found.push(route);
+      if (route === "/" || /^\/(bakeoff|about|methodology|next-charge|pack|slot)(\/|$)/.test(route)) found.push(route);
     }
   }
   return found;
@@ -220,3 +252,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(`overflow check passed for ${routes.length} pages at 1280 and 390`);
+checkIdentity();

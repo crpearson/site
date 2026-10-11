@@ -8,6 +8,8 @@ import { PackTile } from "@/components/PackTile";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
+import { StatusChip } from "@/components/StatusChip";
+import { conditionalJoinNote } from "@/lib/lamp";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
@@ -201,11 +203,21 @@ export default function Home() {
               </p>
               <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {board.labels.map((label) => (
-                  <Link key={label} href={`/slot/${label}`} className="chip-btn">
-                    {label}
-                  </Link>
-                ))}
+                {board.labels.map((label) => {
+                  const row = rows.find((item) => item.label === label);
+                  const condition = row ? conditionalJoinNote(row.status) : null;
+                  return (
+                    <Link key={label} href={`/slot/${label}`} className="chip-btn">
+                      <span>{label}</span>
+                      {condition && row ? (
+                        <>
+                          <StatusChip status={row.status} chargeMode={row.chargeMode} />
+                          <span className="chip-condition">{condition}</span>
+                        </>
+                      ) : null}
+                    </Link>
+                  );
+                })}
               </div>
             </article>
           ))}

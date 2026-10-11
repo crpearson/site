@@ -38,6 +38,18 @@ export function statusChip(status: string, chargeMode?: string | null): StatusCh
   throw new Error(`No status chip for call: ${status}`);
 }
 
+/**
+ * A Go call can still be conditional. The chip stays the one word GO.
+ * The note is the rest-voltage limit written in the call, when it has one.
+ */
+export function conditionalJoinNote(status: string): string | null {
+  const parallel = splitCall(status).parallel;
+  if (!/\bconditional\b/i.test(parallel)) return null;
+  const volts = parallel.match(/within\s+(\d+(?:\.\d+)?)\s*V/i);
+  if (!volts) return null;
+  return `joins only if within ${volts[1]} V`;
+}
+
 export function chipTone(chip: StatusChipName): LampTone {
   if (chip === "GO") return "ok";
   if (chip === "CAUTION") return "caution";
