@@ -37,14 +37,14 @@ export function Sparkline({
   let drawn = -1;
   values.forEach((value, index) => {
     if (value == null) return;
-    const command = solidFrom(series, index) === drawn && path ? "L" : "M";
+    const command = solidFrom(series, index, "pack") === drawn && path ? "L" : "M";
     path += `${command}${xy(index, value)}`;
     drawn = index;
   });
   const latest = [...values].reverse().find((value) => value != null);
-  const ends = openEndIndices(series);
-  const lone = lonePointIndices(series);
-  const dash = missBridges(series, values.map((_, index) => String(index)))
+  const ends = openEndIndices(series, "pack");
+  const lone = lonePointIndices(series, "pack");
+  const dash = missBridges(series, values.map((_, index) => String(index)), "pack")
     .map((bridge) => {
       const from = values[bridge.from];
       const to = values[bridge.to];

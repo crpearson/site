@@ -327,6 +327,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           format="ir"
           unit={IR_UNIT}
           height={260}
+          mode="pack"
           ariaLabel={`${pack.uid} per-cell internal resistance, milliohms`}
         />
       </Panel>
@@ -341,6 +342,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             yDomain={pack.spreadDomain}
             format="ir"
             unit={IR_UNIT}
+            mode="pack"
             ariaLabel={`${pack.uid} intra-pack spread with Rules v3 caution and individual guides, milliohms`}
           />
         </Panel>
@@ -353,6 +355,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             yDomain={pack.floorDomain}
             format="int"
             unit="mV"
+            mode="pack"
             ariaLabel={`${pack.uid} start floor with a 3600 millivolt watch line`}
           />
         </Panel>

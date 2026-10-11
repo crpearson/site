@@ -3,7 +3,7 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, lonePointIndices, missBridges, openEndIndices, seriesNotCharged, solidFrom } from "@/lib/bridges";
+import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lonePointIndices, missBridges, openEndIndices, seriesNotCharged, solidFrom } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
@@ -1667,10 +1667,21 @@ function ringNights(series: ChartSeries): string[] {
 }
 
 function assertNoInteriorRing(series: ChartSeries, label: string) {
-  const bad = interiorRingIndices(series);
+  const bad = interiorRingIndices(series, "pack");
   if (bad.length === 0) return;
   const nights = bad.map((index) => categories[index]?.id ?? String(index)).join(", ");
   throw new Error(`${label} ring on ${nights} sits before a later real point in the same span`);
+}
+
+function assertAggregateQuiet(series: ChartSeries, nightIds: string[], label: string) {
+  const dotted = missBridges(series, nightIds, "aggregate");
+  if (dotted.length !== 0) {
+    throw new Error(`${label} has a dotted join in aggregate mode`);
+  }
+  const rings = openEndIndices(series, "aggregate");
+  if (rings.length !== 0) {
+    throw new Error(`${label} has a ring in aggregate mode`);
+  }
 }
 
 function assertGapGeometry(model: FleetModel) {
@@ -1695,7 +1706,26 @@ function assertGapGeometry(model: FleetModel) {
   if (sampleBridge.length !== 1 || sampleBridge[0].from !== 1 || sampleBridge[0].to !== 4) {
     throw new Error("dotted join did not cross a genuine skip and a span hole");
   }
-  if (solidFrom(sample, 4) !== -1) throw new Error("a solid line crossed a night with no reading");
+  if (solidFrom(sample, 4, "pack") !== -1) throw new Error("a pack line crossed a night with no reading");
+  if (solidFrom(sample, 4, "aggregate") !== 1) {
+    throw new Error("an aggregate line did not run solid through a skipped night");
+  }
+  if (missBridges(sample, ["a", "b", "c", "d", "e", "f"], "aggregate").length !== 0) {
+    throw new Error("an aggregate line drew a dotted join");
+  }
+  if (openEndIndices(sample, "aggregate").length !== 0) {
+    throw new Error("an aggregate line drew a ring");
+  }
+  const movedSpan: ChartSeries = {
+    id: "moved",
+    label: "moved",
+    color: "#888",
+    values: [1, null, 2],
+    service: ["0", "0", "1"],
+  };
+  if (solidFrom(movedSpan, 2, "aggregate") !== -1 || missBridges(movedSpan, ["a", "b", "c"], "aggregate").length !== 0) {
+    throw new Error("an aggregate line crossed a move");
+  }
   const holeOnly: ChartSeries = {
     id: "hole",
     label: "hole",
@@ -1715,7 +1745,12 @@ function assertGapGeometry(model: FleetModel) {
     service: ["0", null, "0"],
     unpublished: [false, true, false],
   };
-  if (missBridges(held, ["a", "b", "c"]).length !== 0 || solidFrom(held, 2) !== -1) {
+  if (
+    missBridges(held, ["a", "b", "c"], "pack").length !== 0 ||
+    solidFrom(held, 2, "pack") !== -1 ||
+    missBridges(held, ["a", "b", "c"], "aggregate").length !== 0 ||
+    solidFrom(held, 2, "aggregate") !== -1
+  ) {
     throw new Error("an unpublished night was joined");
   }
 
@@ -1757,33 +1792,36 @@ function assertGapGeometry(model: FleetModel) {
         throw new Error(`${series} mean on ${night} is ${actual}, v4 mean is ${expected}`);
       }
     });
-    assertNoInteriorRing(line, `${series} mean`);
+    assertAggregateQuiet(line, nightIds, `${series} mean`);
   }
 
   const c1 = meanLine("C1");
   const c2 = meanLine("C2");
-  const joined = (series: ChartSeries, from: string, to: string) =>
-    missBridges(series, nightIds).some((bridge) => nightIds[bridge.from] === from && nightIds[bridge.to] === to);
-  if (!joined(c1, "2026-09-27", "2026-10-10")) {
-    throw new Error("C1 mean does not dotted-join 2026-09-27 to 2026-10-10");
+  const packJoined = (series: ChartSeries, from: string, to: string) =>
+    missBridges(series, nightIds, "pack").some((bridge) => nightIds[bridge.from] === from && nightIds[bridge.to] === to);
+  if (solidFrom(c1, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-09-27")) {
+    throw new Error("C1 mean does not solid-join 2026-09-27 to 2026-10-10");
   }
-  if (!joined(c2, "2026-09-30", "2026-10-10")) {
-    throw new Error("C2 mean does not dotted-join 2026-09-30 to 2026-10-10");
+  if (solidFrom(c2, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-09-30")) {
+    throw new Error("C2 mean does not solid-join 2026-09-30 to 2026-10-10");
   }
-  if (joined(c2, "2026-09-27", "2026-09-30") || solidFrom(c2, indexOf("2026-09-30")) !== indexOf("2026-09-27")) {
+  if (solidFrom(c2, indexOf("2026-09-30"), "aggregate") !== indexOf("2026-09-27")) {
     throw new Error("C2 mean must solid-join 2026-09-27 to 2026-09-30");
   }
-  if (solidFrom(c1, indexOf("2026-10-10")) !== -1 || solidFrom(c2, indexOf("2026-10-10")) !== -1) {
-    throw new Error("10-10 was solid-joined across a night with no reading");
+  if (packJoined(c1, "2026-09-27", "2026-10-10") && solidFrom(c1, indexOf("2026-10-10"), "pack") !== -1) {
+    throw new Error("pack mode solid-joined a genuine skip on the C1 mean shape");
+  }
+  if (!packJoined(c1, "2026-09-27", "2026-10-10") || solidFrom(c1, indexOf("2026-10-10"), "pack") !== -1) {
+    throw new Error("pack mode lost the dotted join across a genuine skip");
   }
   for (const line of [c1, c2]) {
-    const rings = new Set(ringNights(line));
-    for (const night of ["2026-09-30", "2026-10-09", "2026-10-09-restday0", "2026-10-10"]) {
-      if (rings.has(night)) throw new Error(`${line.id} mean has a ring on ${night}`);
-    }
-    if (lonePointIndices(line).includes(indexOf("2026-10-10"))) {
+    if (lonePointIndices(line, "aggregate").includes(indexOf("2026-10-10"))) {
       throw new Error(`${line.id} mean draws 2026-10-10 as an isolated dot`);
     }
+  }
+  const meanLegend = legendNote([c1, c2], nightIds, "aggregate");
+  if (meanLegend != null && /not charged/i.test(meanLegend)) {
+    throw new Error("aggregate legend still says not charged");
   }
 
   const meanLines = ["C1", "C2", "D"].map((id) => meanLine(id));
@@ -1800,10 +1838,38 @@ function assertGapGeometry(model: FleetModel) {
 
   for (const fleet of model.fleets) {
     const rule = chartLine(fleet.id, fleet.rest, fleet.restService, undefined, undefined, fleet.restNa);
-    assertNoInteriorRing(rule, `${fleet.id} Rule B`);
+    assertAggregateQuiet(rule, nightIds, `${fleet.id} Rule B`);
     if (axisNightVisible([rule], restIndex, "2026-10-09-restday0")) {
       throw new Error(`${fleet.id} Rule B shows a 10-09r axis tick`);
     }
+    const ruleLegend = legendNote([rule], nightIds, "aggregate");
+    if (ruleLegend != null && /not charged/i.test(ruleLegend)) {
+      throw new Error(`${fleet.id} Rule B legend says not charged`);
+    }
+    for (const pack of fleet.packs) {
+      for (const values of [pack.avg, pack.spread, pack.floor, ...pack.cells]) {
+        const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
+        assertAggregateQuiet(chart, nightIds, `${fleet.id} ${pack.uid} fleet chart`);
+        assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
+      }
+    }
+  }
+  const c1p2 = getPack("CNHL-2026-002");
+  const c2p1 = getPack("CNHL-2026-007");
+  if (!c1p2 || !c2p1) throw new Error("missing C1-P2 or C2-P1 pack chart");
+  const c1PackLine = c1p2.cellSeries[0];
+  const c2PackLine = c2p1.cellSeries[0];
+  if (!c1PackLine || !packJoined(c1PackLine, "2026-09-27", "2026-10-10")) {
+    throw new Error("C1-P2 pack chart lost the dotted join from 2026-09-27 to 2026-10-10");
+  }
+  if (!c2PackLine || !packJoined(c2PackLine, "2026-09-30", "2026-10-10")) {
+    throw new Error("C2-P1 pack chart lost the dotted join from 2026-09-30 to 2026-10-10");
+  }
+  if (solidFrom(c1PackLine, indexOf("2026-10-10"), "pack") !== -1) {
+    throw new Error("C1-P2 pack chart solid-joined a night it was not charged");
+  }
+  for (const line of [...c1p2.cellSeries, ...c1p2.spreadSeries, ...c1p2.floorSeries, ...c2p1.cellSeries, ...c2p1.spreadSeries, ...c2p1.floorSeries]) {
+    assertNoInteriorRing(line, line.id);
   }
 }
 

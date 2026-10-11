@@ -8,6 +8,9 @@ export type MissBridge = {
 
 export type GapKind = "value" | "skip" | "na" | "out" | "rest";
 
+/** Pack charts mark skips. Aggregate charts draw a solid line through them. */
+export type ChartMode = "aggregate" | "pack";
+
 export const SKIP_LEGEND = "dotted = not charged · ○ = not charged (start/end)";
 
 /** Span while the line is in scope. Omitted service means the whole axis is in scope. */
@@ -81,14 +84,24 @@ function isReading(series: ChartSeries, index: number): boolean {
 }
 
 /**
- * The earlier reading this point joins with a solid stroke. Null nights that
- * are only span holes stay on that stroke. A genuine miss returns -1 so the
- * dotted join can cross it.
+ * A night the solid stroke may cross. Every mode crosses a span hole such as
+ * the rest-baseline column. Aggregate charts also cross a real skip or N/A.
+ * An unpublished night never continues the stroke.
  */
-export function solidFrom(series: ChartSeries, index: number): number {
+function continuesSolid(series: ChartSeries, index: number, mode: ChartMode): boolean {
+  if (isSpanHole(series, index)) return true;
+  return mode === "aggregate" && seriesGap(series, index);
+}
+
+/**
+ * The earlier reading this point joins with a solid stroke. In pack mode a
+ * genuine miss returns -1 so a dotted join can cross it. In aggregate mode
+ * that miss stays on the solid stroke. A span change still breaks the stroke.
+ */
+export function solidFrom(series: ChartSeries, index: number, mode: ChartMode = "pack"): number {
   if (!isReading(series, index)) return -1;
   let cursor = index - 1;
-  while (cursor >= 0 && isSpanHole(series, cursor)) cursor -= 1;
+  while (cursor >= 0 && continuesSolid(series, cursor, mode)) cursor -= 1;
   if (cursor < 0 || !isReading(series, cursor)) return -1;
   if (cursor < index - 1 && spanAt(series, cursor) !== spanAt(series, index)) return -1;
   return cursor;
@@ -106,7 +119,8 @@ export function seriesGap(series: ChartSeries, index: number): boolean {
  * break the join and is not itself a dotted night. Open ends, span changes,
  * and unpublished nights stay open.
  */
-export function missBridges(series: ChartSeries, nightIds: string[]): MissBridge[] {
+export function missBridges(series: ChartSeries, nightIds: string[], mode: ChartMode = "pack"): MissBridge[] {
+  if (mode === "aggregate") return [];
   const bridges: MissBridge[] = [];
   let prev = -1;
   for (let index = 0; index < series.values.length; index += 1) {
@@ -135,8 +149,8 @@ export function missBridges(series: ChartSeries, nightIds: string[]): MissBridge
   return bridges;
 }
 
-export function hasMissBridge(series: ChartSeries[], nightIds: string[]): boolean {
-  return series.some((item) => missBridges(item, nightIds).length > 0);
+export function hasMissBridge(series: ChartSeries[], nightIds: string[], mode: ChartMode = "pack"): boolean {
+  return series.some((item) => missBridges(item, nightIds, mode).length > 0);
 }
 
 function nightsForGap(series: ChartSeries, nightIds: string[], index: number): string[] {
@@ -206,7 +220,8 @@ function firstSpan(series: ChartSeries): string | null {
  * exists. Interior misses are dotted joins, not rings. Nights in a later span
  * are after a move and are not marked.
  */
-export function openEndIndices(series: ChartSeries): number[] {
+export function openEndIndices(series: ChartSeries, mode: ChartMode = "pack"): number[] {
+  if (mode === "aggregate") return [];
   const allowed = firstSpan(series);
   if (allowed == null) return [];
   const inSpan: number[] = [];
@@ -231,8 +246,8 @@ export function openEndIndices(series: ChartSeries): number[] {
  * has no earlier reading. A trailing ring has no later reading. Anything else
  * is an interior gap and must not be a ring.
  */
-export function interiorRingIndices(series: ChartSeries): number[] {
-  return openEndIndices(series).filter((index) => {
+export function interiorRingIndices(series: ChartSeries, mode: ChartMode = "pack"): number[] {
+  return openEndIndices(series, mode).filter((index) => {
     const span = spanAt(series, index);
     if (span == null) return false;
     let earlier = false;
@@ -250,10 +265,10 @@ export function interiorRingIndices(series: ChartSeries): number[] {
  * A real reading whose solid path is only a moveto, and which is not an end of
  * a dotted join. A one-point line has no stroke, so the chart draws a dot.
  */
-export function lonePointIndices(series: ChartSeries): number[] {
+export function lonePointIndices(series: ChartSeries, mode: ChartMode = "pack"): number[] {
   const nightIds = series.values.map((_, index) => String(index));
   const bridged = new Set<number>();
-  for (const bridge of missBridges(series, nightIds)) {
+  for (const bridge of missBridges(series, nightIds, mode)) {
     bridged.add(bridge.from);
     bridged.add(bridge.to);
   }
@@ -265,7 +280,7 @@ export function lonePointIndices(series: ChartSeries): number[] {
   };
   series.values.forEach((value, index) => {
     if (value == null || gapKind(series, index) !== "value") {
-      if (isSpanHole(series, index)) return;
+      if (continuesSolid(series, index, mode)) return;
       flush();
       return;
     }
@@ -275,12 +290,13 @@ export function lonePointIndices(series: ChartSeries): number[] {
   return lone;
 }
 
-export function hasOpenEnd(series: ChartSeries[]): boolean {
-  return series.some((item) => openEndIndices(item).length > 0);
+export function hasOpenEnd(series: ChartSeries[], mode: ChartMode = "pack"): boolean {
+  return series.some((item) => openEndIndices(item, mode).length > 0);
 }
 
-export function legendNote(series: ChartSeries[], nightIds: string[]): string | null {
-  if (!hasMissBridge(series, nightIds) && !hasOpenEnd(series)) return null;
+export function legendNote(series: ChartSeries[], nightIds: string[], mode: ChartMode = "pack"): string | null {
   const usesNa = series.some((item) => item.values.some((_, index) => seriesNa(item, index)));
+  if (mode === "aggregate") return usesNa ? "N/A = ran, metric does not apply" : null;
+  if (!hasMissBridge(series, nightIds, mode) && !hasOpenEnd(series, mode)) return null;
   return usesNa ? `${SKIP_LEGEND} · N/A = ran, metric does not apply` : SKIP_LEGEND;
 }
