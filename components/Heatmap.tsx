@@ -1,6 +1,9 @@
 import { heatGradient, heatStyle } from "@/lib/color";
+import { IrFigure } from "@/components/IrFigure";
+import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
+import { PROVISIONAL_LEGEND } from "@/lib/ir-validation.mjs";
 import type { ReactNode } from "react";
 
 export function Heatmap({
@@ -15,6 +18,7 @@ export function Heatmap({
     key: string;
     label: ReactNode;
     values: (number | null)[];
+    provisional?: boolean;
   }[];
   min: number;
   max: number;
@@ -38,6 +42,7 @@ export function Heatmap({
       {caption ? (
         <p className="mb-3 text-xs leading-relaxed text-[var(--muted)]">{caption}</p>
       ) : null}
+      {rows.some((row) => row.provisional) ? <ProvisionalLegend /> : null}
       <div className="overflow-x-auto" data-scroll-ok="">
         <div
           className="grid min-w-[36rem] gap-1"
@@ -75,10 +80,10 @@ export function Heatmap({
                     key={`${row.key}-${columnLabels[index]}`}
                     className="grid h-11 place-items-center rounded-md font-mono text-[12px] font-medium"
                     style={style}
-                    title={`${columnLabels[index]} ${formatValue("ir", value)} ${IR_UNIT}`}
+                    title={`${columnLabels[index]} ${formatValue("ir", value)} ${IR_UNIT}${row.provisional ? `, ${PROVISIONAL_LEGEND}` : ""}`}
                   >
                     <span>
-                      {formatValue("ir", value)}
+                      <IrFigure value={value} provisional={row.provisional} />
                       <span className="mt-0.5 block text-[9px] font-normal">{IR_UNIT}</span>
                     </span>
                   </div>

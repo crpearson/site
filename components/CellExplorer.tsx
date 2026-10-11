@@ -21,6 +21,7 @@ export function CellExplorer({
     logged?: boolean[];
     rest?: boolean[];
     unpublished?: boolean[];
+    provisional?: boolean[];
   }[];
   domain: [number, number];
 }) {
@@ -55,6 +56,7 @@ export function CellExplorer({
           logged: pack.logged,
           rest: pack.rest,
           unpublished: pack.unpublished,
+          provisional: pack.provisional,
         }))}
         yDomain={domain}
         format="ir"

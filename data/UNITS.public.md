@@ -4,6 +4,7 @@ This covers every column in the public CSVs. Validation means the value was comp
 
 **Validation key**
 - **Validated**: validated 2026-10-09 against a DX8 screen photo (pack D-1, 2026-10-09: cell IR 3.2 / 2.9 / 2.5 / 2.2 / 3.0 / 2.8 mΩ and pack S_R 16.6 mΩ both match the data row exactly).
+- **Provisional (DX8-2 rows)**: rows from the second charger (DX8-2) use the same IR field, but have not yet been compared with that charger's screen. They are published provisionally (approved 2026-10-10) and will be corrected if the check disagrees. See the `ir_validation` column.
 - **Not validated**: not yet compared with a screen photo or meter. Use it for trends only.
 - **Derived**: computed from other columns. It is only as reliable as its inputs.
 - **Label**: an identifier, date or text. No physical unit.
@@ -20,7 +21,7 @@ This covers every column in the public CSVs. Validation means the value was comp
 | pack, label_at_time, series_at_time, pack_uid | — | slot label at the time / permanent pack ID | Label |
 | charger_alias, channel, file_nnn | — | charger alias (DX8-1 / DX8-2), channel, log file number | Label |
 | charge_mode_at_time, session_type | — | parallel / individual; night type (`rest-test-day0` = rest-test baseline, not a regular night) | Label |
-| c1_mOhm … c6_mOhm | mΩ, cell IR | `;128;` cell fields, median over the run | **Validated** (DX8 IR is best used for relative/trend comparison) |
+| c1_mOhm … c6_mOhm | mΩ, cell IR | `;128;` cell fields, median over the run | **Validated** (DX8 IR is best used for relative/trend comparison) | DX8-2 rows: provisional.
 | avg_mOhm | mΩ | mean of the six cell IRs | Derived from validated |
 | spread_mOhm | mΩ | highest minus lowest cell IR | Derived from validated |
 | pack_SR_mOhm | mΩ, whole-pack IR | `;128;` S_R field, median over the run | **Validated** |
@@ -35,6 +36,7 @@ This covers every column in the public CSVs. Validation means the value was comp
 | cap_c1_mAh … cap_c6_mAh | **mAh, charge taken per cell** | `;130;` line | Not validated. **Not IR** |
 | cap_diff_mAh | mAh | `;130;` difference field (highest minus lowest) | Not validated. **Not IR** |
 | cap_note | text | label for the mAh columns | Label |
+| ir_validation | text | validation status of the IR columns for this row | validated 2026-10-09 vs DX8-1 screen photo / provisionally validated (owner-approved 2026-10-10), DX8-2 screen check pending |
 | duration_s | seconds | run length | Not validated |
 | v4_note | text | processing note | Label |
 

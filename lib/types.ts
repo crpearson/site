@@ -38,6 +38,11 @@ export type ChartSeries = {
    * skip on any line keeps the tick.
    */
   unpublished?: boolean[];
+  /**
+   * True when the IR at this index comes from a row whose ir_validation is
+   * provisional. Voltage and floor series leave this unset.
+   */
+  provisional?: boolean[];
 };
 
 export type Guide = {

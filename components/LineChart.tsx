@@ -14,7 +14,9 @@ import {
   seriesNotCharged,
   seriesRest,
 } from "@/lib/bridges";
+import { ProvisionalMark } from "@/components/ProvisionalMark";
 import { formatAxis, formatValue } from "@/lib/format";
+import { PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "@/lib/ir-validation.mjs";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
 import { useId, useMemo, useState } from "react";
 
@@ -38,6 +40,17 @@ function axisTicks(domain: [number, number]): number[] {
     if (value >= min - step * 1e-6) ticks.push(Number(value.toPrecision(10)));
   }
   return ticks.length >= 2 ? ticks : [min, max];
+}
+
+function provisionalAt(item: ChartSeries, index: number, format: ValueFormat): boolean {
+  return format === "ir" && Boolean(item.provisional?.[index]) && item.values[index] != null;
+}
+
+function latestValueIndex(values: (number | null)[]): number {
+  for (let index = values.length - 1; index >= 0; index -= 1) {
+    if (values[index] != null) return index;
+  }
+  return -1;
 }
 
 function yPos(value: number, domain: [number, number]): number {
@@ -112,6 +125,9 @@ export function LineChart({
   const endMarks = shown.flatMap((item) =>
     openEndIndices(item).map((index) => ({ id: item.id, color: item.color, index })),
   );
+  const showsProvisional =
+    format === "ir" &&
+    shown.some((item) => item.values.some((value, index) => value != null && item.provisional?.[index]));
 
   const live =
     hover == null
@@ -124,7 +140,8 @@ export function LineChart({
             .map((item) => {
               const value = item.values[hover];
               if (value != null && !seriesGap(item, hover)) {
-                return `${item.label} ${formatValue(format, value)} ${unit}`;
+                const mark = provisionalAt(item, hover, format) ? ` ${PROVISIONAL_MARK}` : "";
+                return `${item.label} ${formatValue(format, value)}${mark} ${unit}`;
               }
               if (seriesRest(item, hover)) return `${item.label} Rest pool`;
               if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
@@ -138,7 +155,9 @@ export function LineChart({
       <div className="legend" role="group" aria-label="Series">
         {series.map((item) => {
           const on = !hidden[item.id];
-          const latest = [...item.values].reverse().find((value) => value != null);
+          const latestIndex = latestValueIndex(item.values);
+          const latest = latestIndex < 0 ? null : item.values[latestIndex];
+          const latestProvisional = latestIndex >= 0 && provisionalAt(item, latestIndex, format);
           return (
             <button
               key={item.id}
@@ -152,12 +171,25 @@ export function LineChart({
               <span className="swatch" style={{ background: item.color }} aria-hidden="true" />
               <span>{item.label}</span>
               <span className="font-mono text-[var(--muted)]">
-                {latest == null ? "—" : `${formatValue(format, latest)} ${unit}`}
+                {latest == null ? (
+                  "—"
+                ) : (
+                  <>
+                    {formatValue(format, latest)}
+                    {latestProvisional ? <ProvisionalMark /> : null} {unit}
+                  </>
+                )}
               </span>
             </button>
           );
         })}
         {note ? <p className="legend-note">{note}</p> : null}
+        {showsProvisional ? (
+          <p className="legend-note">
+            <span aria-hidden="true">{PROVISIONAL_MARK} </span>
+            {PROVISIONAL_LEGEND}
+          </p>
+        ) : null}
       </div>
       <p id={descId} className="sr-only">
         {ariaLabel} Arrow keys and the night labels move between nights. A faint dotted line joins
@@ -350,13 +382,18 @@ export function LineChart({
                           <span className="swatch" style={{ background: item.color }} />
                           <span>{item.label}</span>
                           <span className="font-mono">
-                            {value != null && !missedNight && !naNight
-                              ? `${formatValue(format, value)} ${unit}`
-                              : missedNight
-                                ? "not charged"
-                                : naNight
-                                  ? "N/A"
-                                  : "—"}
+                            {value != null && !missedNight && !naNight ? (
+                              <>
+                                {formatValue(format, value)}
+                                {provisionalAt(item, hover, format) ? <ProvisionalMark /> : null} {unit}
+                              </>
+                            ) : missedNight ? (
+                              "not charged"
+                            ) : naNight ? (
+                              "N/A"
+                            ) : (
+                              "—"
+                            )}
                           </span>
                         </li>
                       );

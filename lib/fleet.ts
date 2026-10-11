@@ -8,6 +8,7 @@ import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
+import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { lampTone, splitCall, statusChip, STATUS_CHIPS, type LampTone, type StatusChipName } from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
@@ -32,6 +33,7 @@ type Measurement = {
   chargeMode: string;
   sessionType: string;
   note: string;
+  provisional: boolean;
 };
 
 type PackRec = {
@@ -203,6 +205,7 @@ const measurements: Measurement[] = v4Rows.map((row) => ({
   chargeMode: row.charge_mode_at_time,
   sessionType: row.session_type,
   note: row.v4_note,
+  provisional: irValidationIsProvisional(row.ir_validation),
 }));
 
 /** One-off individual rest-test baselines. Not a fleet night for packs that did not run. */
@@ -213,11 +216,11 @@ const restBaselineSessions = new Set(
 /**
  * The series was charged, but its rows are not in the public file. Those packs
  * are out of span for that night: no value, no dotted join, no hollow ring, and
- * no "not charged" caption. A series that truly did not run stays "not charged".
+ * no "not charged" caption. The date tick is hidden only when every plotted
+ * line is unpublished. Empty while every measured series-night is published.
+ * A series that truly did not run stays "not charged".
  */
-const UNPUBLISHED_SERIES_NIGHTS: { session: string; series: string }[] = [
-  { session: "2026-10-10", series: "C2" },
-];
+const UNPUBLISHED_SERIES_NIGHTS: { session: string; series: string }[] = [];
 
 export function nightUnpublished(session: string, series: string | null): boolean {
   if (!series) return false;
@@ -331,7 +334,7 @@ const EXPECTED_LATEST: Record<string, string> = {
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-005": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
+  "CNHL-2026-007": "PARALLEL CAUTION (reduced current) | SERVICE Watch (IR spread)",
   "CNHL-2026-008":
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-008-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
@@ -341,8 +344,8 @@ const EXPECTED_LATEST: Record<string, string> = {
 };
 
 function assertStore() {
-  if (measurements.length !== 163 || v4Rows.length !== 163) {
-    throw new Error(`Expected 163 measurements, got ${measurements.length}`);
+  if (measurements.length !== 168 || v4Rows.length !== 168) {
+    throw new Error(`Expected 168 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -526,6 +529,16 @@ function alignUid(
   });
 }
 
+function alignProvisional(uid: string, series?: string): boolean[] {
+  const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
+  return categories.map((category) => {
+    const row = map.get(category.id);
+    if (!row || row.sessionType === "rest-test-day0") return false;
+    if (series && row.series !== series) return false;
+    return row.provisional;
+  });
+}
+
 function restFlags(uid: string): boolean[] {
   const map = new Map(pointsFor(uid).map((row) => [row.session, row]));
   return categories.map((category) => {
@@ -622,6 +635,7 @@ export type StatusRow = {
   restPool: boolean;
   restDay0: string | null;
   restDue: string | null;
+  provisional: boolean;
 };
 
 export function statusRows(): StatusRow[] {
@@ -664,6 +678,7 @@ export function statusRows(): StatusRow[] {
       restPool: pack.pool === "Rest",
       restDay0: pack.pool === "Rest" ? restTest?.readingDate || restTest?.start || pack.poolSince : null,
       restDue: pack.pool === "Rest" ? restTest?.due || null : null,
+      provisional: latest.provisional,
     };
   });
 }
@@ -718,6 +733,7 @@ export type SlotTile = {
   restDay0: string | null;
   restDue: string | null;
   chargeMode: string | null;
+  provisional: boolean;
 };
 
 export type SeriesBlock = {
@@ -776,6 +792,7 @@ export function seriesBlocks(): SeriesBlock[] {
         restDay0: row?.restDay0 ?? null,
         restDue: row?.restDue ?? null,
         chargeMode: pack?.chargeMode ?? null,
+        provisional: row?.provisional ?? false,
       };
     });
     return {
@@ -845,6 +862,7 @@ export type PackSeries = {
   logged: boolean[];
   rest: boolean[];
   unpublished: boolean[];
+  provisional: boolean[];
 };
 
 export type FleetModel = {
@@ -860,6 +878,7 @@ export type FleetModel = {
     values: (number | null)[];
     service: (string | null)[];
     unpublished: boolean[];
+    provisional: boolean[];
   }[];
   fleets: {
     id: string;
@@ -893,6 +912,7 @@ function seriesPacks(series: string): PackSeries[] {
       logged: meta.logged,
       rest: restFlags(uid),
       unpublished: unpublishedForSeries(series),
+      provisional: alignProvisional(uid, series),
     };
   });
 }
@@ -905,6 +925,13 @@ function fleetMean(packsInSeries: PackSeries[]): (number | null)[] {
       .filter((value): value is number => value != null);
     if (values.length === 0) return null;
     return values.reduce((sum, value) => sum + value, 0) / values.length;
+  });
+}
+
+function meanIsProvisional(packsInSeries: PackSeries[]): boolean[] {
+  return categories.map((category, index) => {
+    if (restBaselineSessions.has(category.id)) return false;
+    return packsInSeries.some((pack) => pack.avg[index] != null && pack.provisional[index]);
   });
 }
 
@@ -986,6 +1013,7 @@ export function fleetModel(): FleetModel {
       values: fleetMean(fleet.packs),
       service: seriesInService(fleet.id),
       unpublished: unpublishedForSeries(fleet.id),
+      provisional: meanIsProvisional(fleet.packs),
     })),
     fleets,
   };
@@ -1001,6 +1029,7 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     logged: row.logged,
     rest: row.rest,
     unpublished: row.unpublished,
+    provisional: pick === "floor" ? undefined : row.provisional,
   }));
 }
 
@@ -1117,6 +1146,7 @@ export function getPack(uid: string): PackView | null {
   const points = operationalPoints(uid);
   const meta = lineMeta(uid);
   const rest = restFlags(uid);
+  const provisional = alignProvisional(uid);
   const cells = points.flatMap((point) => point.cells);
   const spreads = points.map((point) => point.spread);
   const floors = points.map((point) => point.floor).filter((value): value is number => value != null);
@@ -1155,6 +1185,7 @@ export function getPack(uid: string): PackView | null {
       logged: meta.logged,
       rest,
       unpublished: unpublishedForUid(uid),
+      provisional,
     })),
     spreadSeries: [
       {
@@ -1166,6 +1197,7 @@ export function getPack(uid: string): PackView | null {
         logged: meta.logged,
         rest,
         unpublished: unpublishedForUid(uid),
+        provisional,
       },
     ],
     floorSeries: [
@@ -1350,8 +1382,8 @@ export function ruleBNote(series: string): string | null {
 
 function assertDerived() {
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.883" || stats.counted !== 11) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.883 mΩ over 11 slotted packs`);
+  if (stats.mean.toFixed(3) !== "2.828" || stats.counted !== 11) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.828 mΩ over 11 slotted packs`);
   }
   const c1p4 = statusRows().find((row) => row.label === "C1-P4");
   if (
@@ -1377,7 +1409,7 @@ function assertDerived() {
   const c1Last = lastOf("C1");
   const c2Last = lastOf("C2");
   if (c1Last == null || c1Last.toFixed(3) !== "2.879") throw new Error(`C1 series mean last is ${c1Last}`);
-  if (c2Last == null || c2Last.toFixed(3) !== "2.886") throw new Error(`C2 series mean last is ${c2Last}`);
+  if (c2Last == null || c2Last.toFixed(3) !== "2.700") throw new Error(`C2 series mean last is ${c2Last}`);
   const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
   const day = model.categories.findIndex((category) => category.id === "2026-10-09");
   const restNightIndex = model.categories.findIndex((category) => category.id === "2026-10-09-restday0");
@@ -1391,7 +1423,7 @@ function assertDerived() {
   const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
   const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
   if (c1Rule == null || Math.abs(c1Rule - 0.135) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
-  if (c2Rule == null || Math.abs(c2Rule - 0.147) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  if (c2Rule == null || Math.abs(c2Rule - 0.479) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
   const heldNight = model.categories.findIndex((category) => category.id === "2026-10-10");
   if (heldNight < 0 || c1Fleet?.rest[heldNight] == null || Math.abs(c1Fleet.rest[heldNight] - 0.135) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-10 is ${c1Fleet?.rest[heldNight]}`);
@@ -1406,49 +1438,99 @@ function assertDerived() {
   assertRingWindows(model);
 }
 
+function assertAxisMechanism() {
+  const held = (id: string, extra: Partial<ChartSeries> = {}): ChartSeries => ({
+    id,
+    label: id,
+    color: "#888",
+    values: [null],
+    service: [null],
+    unpublished: [true],
+    ...extra,
+  });
+  if (axisNightVisible([held("out"), held("rest", { rest: [true] })], 0)) {
+    throw new Error("axis tick stayed visible when every line was unpublished");
+  }
+  if (!axisNightVisible([held("value", { values: [1], service: ["0"] })], 0)) {
+    throw new Error("a value on an unpublished line must keep the axis tick");
+  }
+  if (!axisNightVisible([held("skip", { service: ["0"], logged: [false] })], 0)) {
+    throw new Error("a real skip on an unpublished line must keep the axis tick");
+  }
+  if (!axisNightVisible([held("na", { service: ["0"], na: [true] })], 0)) {
+    throw new Error("N/A on an unpublished line must keep the axis tick");
+  }
+  if (!axisNightVisible([held("out"), held("published", { values: [1], service: ["0"], unpublished: [false] })], 0)) {
+    throw new Error("a published line must keep the axis tick");
+  }
+}
+
 function assertUnpublishedNight(model: FleetModel, index: number) {
   const night = "2026-10-10";
-  if (measurements.some((row) => row.session === night && (row.series === "C2" || row.label.startsWith("C2")))) {
-    throw new Error("C2 2026-10-10 must stay out of the public store");
+  assertAxisMechanism();
+  if (UNPUBLISHED_SERIES_NIGHTS.length !== 0 || nightUnpublished(night, "C2") || nightUnpublished(night, "C1")) {
+    throw new Error("2026-10-10 is published for C1 and C2");
   }
+  for (let rowIndex = 0; rowIndex < v4Rows.length; rowIndex += 1) {
+    const row = v4Rows[rowIndex];
+    const measurement = measurements[rowIndex];
+    if (!measurement || measurement.provisional !== irValidationIsProvisional(row.ir_validation)) {
+      throw new Error(`provisional flag does not follow ir_validation on ${row.session}/${row.pack_uid}`);
+    }
+  }
+  const c2Rows = measurements.filter((row) => row.session === night && row.series === "C2");
+  const c1Rows = measurements.filter((row) => row.session === night && row.series === "C1");
+  if (c2Rows.length !== 5 || c2Rows.some((row) => !row.provisional)) {
+    throw new Error("C2 2026-10-10 IR must be provisional");
+  }
+  if (c1Rows.length !== 4 || c1Rows.some((row) => row.provisional)) {
+    throw new Error("C1 2026-10-10 IR must stay validated");
+  }
+  const c2Card = statusRows().find((row) => row.uid === "CNHL-2026-007");
+  const c1Card = statusRows().find((row) => row.uid === "CNHL-2026-003");
+  if (!c2Card?.provisional || c2Card.avg.toFixed(3) !== "2.733" || c2Card.spread.toFixed(1) !== "1.2") {
+    throw new Error(`C2-P1 card is ${c2Card?.avg} provisional=${c2Card?.provisional}`);
+  }
+  if (!c1Card || c1Card.provisional) throw new Error("C1-P3 card is marked provisional");
   const c2Mean = model.mean.find((line) => line.id === "C2");
-  if (!c2Mean || c2Mean.service?.[index] != null || c2Mean.values[index] != null) {
-    throw new Error("C2 mean is in scope on 2026-10-10");
+  if (!c2Mean || c2Mean.service?.[index] == null || c2Mean.values[index] == null || c2Mean.values[index].toFixed(3) !== "2.700") {
+    throw new Error(`C2 mean on 2026-10-10 is ${c2Mean?.values[index]}`);
   }
+  if (!c2Mean.provisional[index]) throw new Error("C2 series mean on 2026-10-10 is not marked provisional");
+  const c1Mean = model.mean.find((line) => line.id === "C1");
+  if (!c1Mean || c1Mean.provisional[index]) throw new Error("C1 series mean on 2026-10-10 is marked provisional");
   if (ringNights(chartLine("C2", c2Mean.values, c2Mean.service)).includes(night)) {
     throw new Error("C2 mean has a not-charged ring on 2026-10-10");
   }
   const c2Rest = model.fleets.find((fleet) => fleet.id === "C2");
-  if (!c2Rest || c2Rest.restService[index] != null || c2Rest.rest[index] != null) {
-    throw new Error("C2 Rule B is in scope on 2026-10-10");
+  if (!c2Rest || c2Rest.restService[index] == null || c2Rest.rest[index] == null || Math.abs(c2Rest.rest[index] - 0.479) > 0.0005) {
+    throw new Error(`C2 Rule B on 2026-10-10 is ${c2Rest?.rest[index]}`);
   }
   if (ringNights(chartLine("C2", c2Rest.rest, c2Rest.restService, undefined, undefined, c2Rest.restNa)).includes(night)) {
     throw new Error("C2 Rule B has a not-charged ring on 2026-10-10");
   }
   for (const uid of ["CNHL-2026-007", "CNHL-2026-009", "CNHL-2026-010", "CNHL-2026-011", "CNHL-2026-012"]) {
-    if (packNights(uid).some((item) => item.session === night)) {
-      throw new Error(`${uid} lists 2026-10-10`);
+    const listed = packNights(uid).find((item) => item.session === night);
+    if (!listed || listed.kind !== "measured" || !listed.point.provisional) {
+      throw new Error(`${uid} is missing a provisional 2026-10-10 row`);
     }
     const meta = lineMeta(uid);
-    if (meta.service[index] != null) throw new Error(`${uid} is in service on 2026-10-10`);
+    if (meta.service[index] == null) throw new Error(`${uid} is out of service on 2026-10-10`);
     const chart = chartLine(uid, alignUid(uid, (row) => row.avg), meta.service, meta.logged, restFlags(uid));
     if (ringNights(chart).includes(night) || seriesNotCharged(chart, index)) {
       throw new Error(`${uid} is marked not charged on 2026-10-10`);
     }
   }
+  const resting = packNights("CNHL-2026-008").find((item) => item.session === night);
+  if (!resting || resting.kind !== "rest-pool") throw new Error("C2-P2 2026-10-10 should stay Rest pool");
   const nightIds = model.categories.map((category) => category.id);
   for (const pick of ["avg", "spread", "floor"] as const) {
     const lines = seriesOf(c2Rest.packs, pick);
     if (allNotCharged(lines, nightIds).includes(night) || gapPhrase(lines, nightIds, index).includes("Not charged")) {
       throw new Error(`C2 ${pick} chart calls 2026-10-10 not charged`);
     }
-    for (const line of lines) {
-      if (ringNights(line).includes(night) || seriesNotCharged(line, index)) {
-        throw new Error(`${line.label} ${pick} is marked not charged on 2026-10-10`);
-      }
-    }
-    if (axisNightVisible(lines, index)) {
-      throw new Error(`C2 ${pick} chart still shows the 2026-10-10 axis tick`);
+    if (!axisNightVisible(lines, index)) {
+      throw new Error(`C2 ${pick} chart hid the published 2026-10-10 axis tick`);
     }
   }
   const skipNight = model.categories.findIndex((category) => category.id === "2026-09-26");
@@ -1463,13 +1545,10 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
     values: line.values,
     service: line.service,
     unpublished: line.unpublished,
+    provisional: line.provisional,
   }));
-  if (!axisNightVisible(meanLines, index)) {
-    throw new Error("Series mean chart hid 2026-10-10 while another series still has a value");
-  }
-  const c2MeanLine = meanLines.filter((line) => line.id === "C2");
-  if (c2MeanLine.length !== 1 || axisNightVisible(c2MeanLine, index)) {
-    throw new Error("C2 mean still shows the 2026-10-10 axis tick");
+  if (!axisNightVisible(meanLines, index) || !axisNightVisible(meanLines.filter((line) => line.id === "C2"), index)) {
+    throw new Error("2026-10-10 axis tick is hidden on a chart that has C2's published mean");
   }
   const ruleLines: ChartSeries[] = model.fleets
     .filter((fleet) => fleet.rest.some((value) => value != null))
@@ -1482,20 +1561,22 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
       service: fleet.restService,
       unpublished: fleet.unpublished,
     }));
-  if (!axisNightVisible(ruleLines, index)) {
-    throw new Error("Rule B chart hid 2026-10-10 while another series still has a value");
-  }
-  const c2RuleLine = ruleLines.filter((line) => line.id === "C2");
-  if (c2RuleLine.length !== 1 || axisNightVisible(c2RuleLine, index)) {
-    throw new Error("C2 Rule B still shows the 2026-10-10 axis tick");
+  if (!axisNightVisible(ruleLines, index) || !axisNightVisible(ruleLines.filter((line) => line.id === "C2"), index)) {
+    throw new Error("2026-10-10 axis tick is hidden on a chart that has C2 Rule B");
   }
   const c1Pack = getPack("CNHL-2026-003");
   const c2Pack = getPack("CNHL-2026-007");
-  if (!c1Pack || !axisNightVisible(c1Pack.cellSeries, index)) {
-    throw new Error("C1-P3 chart hid the 2026-10-10 axis tick");
+  if (!c1Pack || !axisNightVisible(c1Pack.cellSeries, index) || c1Pack.cellSeries.some((line) => line.provisional?.[index])) {
+    throw new Error("C1-P3 chart hid 2026-10-10 or marked validated IR provisional");
   }
-  if (!c2Pack || axisNightVisible([...c2Pack.cellSeries, ...c2Pack.spreadSeries, ...c2Pack.floorSeries], index)) {
-    throw new Error("C2-P1 chart still shows the 2026-10-10 axis tick");
+  if (
+    !c2Pack ||
+    !axisNightVisible([...c2Pack.cellSeries, ...c2Pack.spreadSeries, ...c2Pack.floorSeries], index) ||
+    c2Pack.cellSeries.some((line) => !line.provisional?.[index]) ||
+    c2Pack.spreadSeries.some((line) => !line.provisional?.[index]) ||
+    c2Pack.floorSeries.some((line) => line.provisional?.[index])
+  ) {
+    throw new Error("C2-P1 chart hid 2026-10-10 or failed to mark only its IR provisional");
   }
 }
 
@@ -1505,7 +1586,7 @@ const EXPECTED_CHIPS: Record<string, StatusChipName> = {
   "C1-P4": "REST",
   "C1-P5": "ALONE",
   "C1-P6": "GO",
-  "C2-P1": "GO",
+  "C2-P1": "CAUTION",
   "C2-P2": "REST",
   "C2-P3": "GO",
   "C2-P4": "GO",
