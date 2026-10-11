@@ -41,10 +41,6 @@ export default function NextChargePage() {
             <dt>Session</dt>
             <dd>{plan.as_of_session}</dd>
           </div>
-          <div>
-            <dt>Schema</dt>
-            <dd>{plan.schema}</dd>
-          </div>
         </dl>
       </header>
 
