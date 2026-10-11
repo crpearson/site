@@ -1,0 +1,104 @@
+{
+  "as_of": "2026-10-10",
+  "based_on_session": "2026-10-10",
+  "status_calls_link": "/#calls-heading",
+  "storage": {
+    "chargers": [
+      {
+        "name": "DX8-1",
+        "channels": [
+          {
+            "name": "CH1",
+            "runs": [
+              {
+                "run": 1,
+                "packs": ["C1-P2", "C1-P3"]
+              }
+            ]
+          },
+          {
+            "name": "CH2",
+            "runs": [
+              {
+                "run": 1,
+                "packs": ["C1-P5", "C1-P6"]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "DX8-2",
+        "channels": [
+          {
+            "name": "CH1",
+            "runs": [
+              {
+                "run": 1,
+                "packs": ["C2-P1", "C2-P3"]
+              }
+            ]
+          },
+          {
+            "name": "CH2",
+            "runs": [
+              {
+                "run": 1,
+                "packs": ["C2-P4", "C2-P5", "C2-P6"]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "parallel": {
+    "boards": [
+      {
+        "name": "Board A",
+        "series": "C1",
+        "ports": [
+          { "pack": "C1-P2" },
+          { "pack": "C1-P3" },
+          { "pack": "C1-P6" }
+        ],
+        "notes": []
+      },
+      {
+        "name": "Board B",
+        "series": "C2",
+        "ports": [
+          { "pack": "C2-P1", "note": "Reduced current" },
+          { "pack": "C2-P3" },
+          { "pack": "C2-P4" },
+          { "pack": "C2-P5" },
+          { "pack": "C2-P6", "note": "Joins only if within 0.30 V" }
+        ],
+        "notes": []
+      }
+    ],
+    "charge_alone": [
+      {
+        "pack": "C1-P5",
+        "reason": "Charged alone"
+      }
+    ]
+  },
+  "dont_connect": [
+    {
+      "pack": "D-1",
+      "reason": "Rest pool 7-day rest test",
+      "returns": "2026-10-16"
+    },
+    {
+      "pack": "C1-P4",
+      "reason": "Rest pool 7-day rest test",
+      "returns": "2026-10-16"
+    },
+    {
+      "pack": "C2-P2",
+      "reason": "Rest pool 7-day rest test",
+      "returns": "2026-10-16"
+    }
+  ]
+}
