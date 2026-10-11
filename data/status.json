@@ -91,7 +91,7 @@
     }
   },
   "gaps": [
-    "C1 was last measured on 2026-09-27. C2 was last measured on 2026-09-30. D-1 was measured on 2026-10-09.",
+    "C1 was last measured on 2026-10-10. C2 was last measured on 2026-09-30. D-1 was measured on 2026-10-09.",
     "A night that did not include every pack stays incomplete. Missing packs are not filled in.",
     "No capacity in/out series — storage runs are top-ups, not capacity tests.",
     "DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.",

@@ -3,7 +3,7 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { lonePointIndices, missBridges, openEndIndices } from "@/lib/bridges";
+import { allNotCharged, gapPhrase, lonePointIndices, missBridges, openEndIndices, seriesNotCharged } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, shortSession } from "@/lib/format";
@@ -210,6 +210,20 @@ const restBaselineSessions = new Set(
   measurements.filter((row) => row.sessionType === "rest-test-day0").map((row) => row.session),
 );
 
+/**
+ * The series was charged, but its rows are not in the public file. Those packs
+ * are out of span for that night: no value, no dotted join, no hollow ring, and
+ * no "not charged" caption. A series that truly did not run stays "not charged".
+ */
+const UNPUBLISHED_SERIES_NIGHTS: { session: string; series: string }[] = [
+  { session: "2026-10-10", series: "C2" },
+];
+
+export function nightUnpublished(session: string, series: string | null): boolean {
+  if (!series) return false;
+  return UNPUBLISHED_SERIES_NIGHTS.some((item) => item.session === session && item.series === series);
+}
+
 const listedSessions = metaDoc.sessions as string[];
 const sessionOrder = [
   ...listedSessions,
@@ -312,7 +326,7 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-001":
     "PARALLEL OFF (Rest pool) | SERVICE D pool (Watch); rest test RT-001-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-003": "PARALLEL CAUTION; GO after one clean night | SERVICE In service",
+  "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-004":
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-005": "PARALLEL CAUTION; charged INDIVIDUALLY until one clean night, then GO | SERVICE Watch",
@@ -327,8 +341,8 @@ const EXPECTED_LATEST: Record<string, string> = {
 };
 
 function assertStore() {
-  if (measurements.length !== 159 || v4Rows.length !== 159) {
-    throw new Error(`Expected 159 measurements, got ${measurements.length}`);
+  if (measurements.length !== 163 || v4Rows.length !== 163) {
+    throw new Error(`Expected 163 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -483,6 +497,8 @@ function serviceSpans(uid: string): (string | null)[] {
       const ran = measurements.some((row) => row.uid === uid && row.session === category.id);
       return ran ? String(span) : null;
     }
+    // Unpublished series rows are not a skipped charge. The night stays off the line.
+    if (nightUnpublished(category.id, seriesOfLabel(labelAsOf(uid, category.id)))) return null;
     return String(span);
   });
 }
@@ -892,8 +908,16 @@ function seriesOfLabel(label: string | null): string | null {
 function seriesInService(series: string): (string | null)[] {
   return categories.map((category) => {
     if (restBaselineSessions.has(category.id)) return null;
-    const live = packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, category.id)) === series);
-    return live ? "0" : null;
+    if (nightUnpublished(category.id, series)) return null;
+    const members = packs.filter((pack) => seriesOfLabel(labelAsOf(pack.uid, category.id)) === series);
+    if (members.length === 0) return null;
+    const measured = measurements.some(
+      (row) => row.session === category.id && row.series === series && row.sessionType !== "rest-test-day0",
+    );
+    // Rest pool is not a skipped charge. A series whose packs are all resting,
+    // with no public row, stays off the mean and Rule B lines.
+    if (!measured && members.every((pack) => inRestPool(pack.uid, category.id))) return null;
+    return "0";
   });
 }
 
@@ -1303,8 +1327,8 @@ export function ruleBNote(series: string): string | null {
 
 function assertDerived() {
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.893" || stats.counted !== 11) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.893 mΩ over 11 slotted packs`);
+  if (stats.mean.toFixed(3) !== "2.883" || stats.counted !== 11) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.883 mΩ over 11 slotted packs`);
   }
   const c1p4 = statusRows().find((row) => row.label === "C1-P4");
   if (
@@ -1329,7 +1353,7 @@ function assertDerived() {
   };
   const c1Last = lastOf("C1");
   const c2Last = lastOf("C2");
-  if (c1Last == null || c1Last.toFixed(3) !== "2.907") throw new Error(`C1 series mean last is ${c1Last}`);
+  if (c1Last == null || c1Last.toFixed(3) !== "2.879") throw new Error(`C1 series mean last is ${c1Last}`);
   if (c2Last == null || c2Last.toFixed(3) !== "2.886") throw new Error(`C2 series mean last is ${c2Last}`);
   const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
   const day = model.categories.findIndex((category) => category.id === "2026-10-09");
@@ -1343,20 +1367,69 @@ function assertDerived() {
   if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
   const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
   const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
-  if (c1Rule == null || Math.abs(c1Rule - 0.13) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
+  if (c1Rule == null || Math.abs(c1Rule - 0.135) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
   if (c2Rule == null || Math.abs(c2Rule - 0.147) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  const heldNight = model.categories.findIndex((category) => category.id === "2026-10-10");
+  if (heldNight < 0 || c1Fleet?.rest[heldNight] == null || Math.abs(c1Fleet.rest[heldNight] - 0.135) > 0.0005) {
+    throw new Error(`C1 Rule B on 2026-10-10 is ${c1Fleet?.rest[heldNight]}`);
+  }
   const board = nextParallel();
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
-  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-09") {
+  if (rendered !== "C1:C1-P2+C1-P3+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-10") {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
+  assertUnpublishedNight(model, heldNight);
   assertStatusChips();
   assertRingWindows(model);
 }
 
+function assertUnpublishedNight(model: FleetModel, index: number) {
+  const night = "2026-10-10";
+  if (measurements.some((row) => row.session === night && (row.series === "C2" || row.label.startsWith("C2")))) {
+    throw new Error("C2 2026-10-10 must stay out of the public store");
+  }
+  const c2Mean = model.mean.find((line) => line.id === "C2");
+  if (!c2Mean || c2Mean.service?.[index] != null || c2Mean.values[index] != null) {
+    throw new Error("C2 mean is in scope on 2026-10-10");
+  }
+  if (ringNights(chartLine("C2", c2Mean.values, c2Mean.service)).includes(night)) {
+    throw new Error("C2 mean has a not-charged ring on 2026-10-10");
+  }
+  const c2Rest = model.fleets.find((fleet) => fleet.id === "C2");
+  if (!c2Rest || c2Rest.restService[index] != null || c2Rest.rest[index] != null) {
+    throw new Error("C2 Rule B is in scope on 2026-10-10");
+  }
+  if (ringNights(chartLine("C2", c2Rest.rest, c2Rest.restService, undefined, undefined, c2Rest.restNa)).includes(night)) {
+    throw new Error("C2 Rule B has a not-charged ring on 2026-10-10");
+  }
+  for (const uid of ["CNHL-2026-007", "CNHL-2026-009", "CNHL-2026-010", "CNHL-2026-011", "CNHL-2026-012"]) {
+    if (packNights(uid).some((item) => item.session === night)) {
+      throw new Error(`${uid} lists 2026-10-10`);
+    }
+    const meta = lineMeta(uid);
+    if (meta.service[index] != null) throw new Error(`${uid} is in service on 2026-10-10`);
+    const chart = chartLine(uid, alignUid(uid, (row) => row.avg), meta.service, meta.logged, restFlags(uid));
+    if (ringNights(chart).includes(night) || seriesNotCharged(chart, index)) {
+      throw new Error(`${uid} is marked not charged on 2026-10-10`);
+    }
+  }
+  const nightIds = model.categories.map((category) => category.id);
+  for (const pick of ["avg", "spread", "floor"] as const) {
+    const lines = seriesOf(c2Rest.packs, pick);
+    if (allNotCharged(lines, nightIds).includes(night) || gapPhrase(lines, nightIds, index).includes("Not charged")) {
+      throw new Error(`C2 ${pick} chart calls 2026-10-10 not charged`);
+    }
+    for (const line of lines) {
+      if (ringNights(line).includes(night) || seriesNotCharged(line, index)) {
+        throw new Error(`${line.label} ${pick} is marked not charged on 2026-10-10`);
+      }
+    }
+  }
+}
+
 const EXPECTED_CHIPS: Record<string, StatusChipName> = {
   "C1-P2": "GO",
-  "C1-P3": "CAUTION",
+  "C1-P3": "GO",
   "C1-P4": "REST",
   "C1-P5": "ALONE",
   "C1-P6": "GO",

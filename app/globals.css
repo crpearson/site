@@ -957,18 +957,19 @@ body {
   .x-label:first-child,
   .x-label:last-child {
     right: auto;
-    transform: translate(0, 0) rotate(-32deg);
+    transform: translate(-8px, 0) rotate(-32deg);
     transform-origin: top left;
   }
 
   .x-label:first-child {
     left: 0 !important;
+    transform: translate(0, 0) rotate(-32deg);
   }
 
   .x-label:last-child {
     left: auto !important;
     right: 0;
-    transform: translate(-10px, 0) rotate(-32deg);
+    transform: translate(-18px, 0) rotate(-32deg);
     transform-origin: top right;
   }
 

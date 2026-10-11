@@ -177,9 +177,7 @@ export default function Home() {
           <h2 id="boards-heading" className="section-title">
             Next parallel
           </h2>
-          <p className="note mt-1">
-            As of {next.as_of}. {next.note}
-          </p>
+          <p className="note mt-1">{next.note}</p>
           {next.resting.length ? (
             <p className="note mt-1">
               Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
@@ -189,7 +187,11 @@ export default function Home() {
         <div className="grid gap-3 lg:grid-cols-2">
           {next.series.map((board) => (
             <article key={board.series} className="panel" data-accent="signal">
-              <p className="eyebrow">{board.series}</p>
+              <p className="eyebrow">
+                {board.series}
+                {" · last public measurement "}
+                {blocks.find((block) => block.id === board.series)?.lastMeasured}
+              </p>
               <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {board.labels.map((label) => (

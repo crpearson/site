@@ -71,8 +71,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 159) {
-  console.error(`expected 159 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 163) {
+  console.error(`expected 163 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -198,7 +198,7 @@ for (const [uid, list] of byUid) {
     .filter((row) => !/^unchanged\b/i.test(row.status.trim()))
     .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date) || a.index - b.index);
   const latest = statusRows[statusRows.length - 1];
-  if (!latest || !latest.date.startsWith("2026-10-09") || !latest.status.startsWith("PARALLEL")) continue;
+  if (!latest || !latest.status.startsWith("PARALLEL")) continue;
   const history = v4
     .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
     .sort((a, b) => compareTime(a.session, b.session));
@@ -253,8 +253,8 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.893") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.893 mΩ over 11`);
+if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.883") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.883 mΩ over 11`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -285,7 +285,7 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-09-27" || c1Mean.mean.toFixed(3) !== "2.907") {
+if (c1Mean.session !== "2026-10-10" || c1Mean.mean.toFixed(3) !== "2.879") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
 if (c2Mean.session !== "2026-09-30" || c2Mean.mean.toFixed(3) !== "2.886") {
@@ -297,7 +297,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-09") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-09`);
+if (latestPtDate !== "2026-10-10") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-10`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }

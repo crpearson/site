@@ -13,6 +13,7 @@ import {
   floorBands,
   floorGuide,
   getPack,
+  nightUnpublished,
   restTestsFor,
   packRouteIds,
   packUids,
@@ -343,16 +344,22 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           min={Math.min(...historyValues)}
           max={Math.max(...historyValues)}
           caption="Each night is one line. A dash is a night this pack was not charged. Between two readings the line chart uses a faint dotted join, with no value. Before the first reading or after the last, that night is a hollow ring on the bottom edge, also with no value."
-          rows={pack.categories.map((category, index) => ({
-            key: category.id,
-            label: (
-              <span className="font-mono text-xs">
-                {category.label}
-                {category.partial ? "*" : ""}
-              </span>
-            ),
-            values: pack.cellSeries.map((series) => series.values[index] ?? null),
-          }))}
+          rows={pack.categories.flatMap((category, index) =>
+            nightUnpublished(category.id, pack.series)
+              ? []
+              : [
+                  {
+                    key: category.id,
+                    label: (
+                      <span className="font-mono text-xs">
+                        {category.label}
+                        {category.partial ? "*" : ""}
+                      </span>
+                    ),
+                    values: pack.cellSeries.map((series) => series.values[index] ?? null),
+                  },
+                ],
+          )}
         />
       </Panel>
 
