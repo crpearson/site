@@ -1,5 +1,5 @@
 import { BenchPack, type BenchPackRow } from "@/components/BenchPack";
-import type { NextChargeHold } from "@/lib/next-charge.mjs";
+import type { DoNotConnectItem } from "@/lib/next-charge.mjs";
 
 function BlockedJack() {
   return (
@@ -18,19 +18,21 @@ export function DontConnectList({
   items,
   resolve,
 }: {
-  items: NextChargeHold[];
+  items: DoNotConnectItem[];
   resolve: (label: string) => BenchPackRow;
 }) {
   if (items.length === 0) return null;
   return (
     <ul className="bench-hold-list">
       {items.map((item) => (
-        <li key={item.pack} className="panel bench-hold" data-accent="off">
+        <li key={item.label} className="panel bench-hold" data-accent="off">
           <BlockedJack />
           <div className="min-w-0">
-            <BenchPack pack={resolve(item.pack)} />
+            <BenchPack pack={resolve(item.label)} />
+            <p className="bench-field">{item.uid}</p>
             <p className="note mt-2">{item.reason}</p>
-            <p className="bench-return">Returns {item.returns}</p>
+            <p className="bench-return">Pool {item.pool}</p>
+            <p className="bench-return">Returns {item.return_date}</p>
           </div>
         </li>
       ))}

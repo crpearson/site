@@ -1,68 +1,77 @@
-export type NextChargeRun = {
-  run: number;
-  packs: string[];
-  note?: string;
-};
+export const BOARD_PORT_IDS: readonly string[];
+export const BOARD_NAMES: readonly string[];
 
-export type NextChargeChannel = {
-  name: string;
-  runs: NextChargeRun[];
-};
-
-export type NextChargeCharger = {
-  name: string;
-  channels: NextChargeChannel[];
-};
-
-export type NextChargePort = {
-  pack: string;
-  /** L1, L2, L3, R1, R2, or R3. Omitted ports fill that order. */
-  port?: string;
-  note?: string;
-};
-
-export type NextChargeBoard = {
-  series: string;
-  /** Board A through Board D. Optional. At most four boards. */
-  name?: string;
-  ports: NextChargePort[];
+export type NextChargeDocument = {
+  schema: "next_charge/v1";
+  as_of_session: string;
+  as_of_date_pt: string;
+  storage_runs: StorageRun[];
+  parallel_boards: ParallelBoard[];
+  charge_alone: ChargeAloneItem[];
+  do_not_connect: DoNotConnectItem[];
   notes: string[];
 };
 
-export type AssignedPort = {
-  id: "L1" | "L2" | "L3" | "R1" | "R2" | "R3";
-  pack?: string;
-  note?: string;
+export type StorageRun = {
+  charger: string;
+  channel: string;
+  order: string[];
 };
 
-export type NextChargeAlone = {
-  pack: string;
+export type ParallelBoard = {
+  series: string;
+  packs: string[];
+  current: "normal" | "reduced";
+  conditions: string[];
+  last_rule_b_V: number;
+  last_rule_b_call: string;
+  last_rule_b_session: string;
+};
+
+export type ChargeAloneItem = {
+  label: string;
+  uid: string;
   reason: string;
+  until: string;
 };
 
-export type NextChargeHold = {
-  pack: string;
+export type DoNotConnectItem = {
+  label: string;
+  uid: string;
+  pool: string;
   reason: string;
-  returns: string;
+  return_date: string;
 };
 
-export type NextChargePlan = {
-  as_of: string;
-  based_on_session: string;
-  status_calls_link: string;
-  storage: { chargers: NextChargeCharger[] };
-  parallel: { boards: NextChargeBoard[]; charge_alone: NextChargeAlone[] };
-  dont_connect: NextChargeHold[];
+export type StorageSummaryLine = {
+  run: number;
+  line: string;
 };
 
-export const BOARD_PORT_IDS: readonly ["L1", "L2", "L3", "R1", "R2", "R3"];
-export const BOARD_NAMES: readonly ["Board A", "Board B", "Board C", "Board D"];
-export function assignPorts(ports: NextChargePort[], where: string): AssignedPort[];
-export function readRunAtOnce(root?: string): number;
+export type StorageChargerView = {
+  charger: string;
+  channels: {
+    channel: string;
+    runs: { run: number; label: string }[];
+  }[];
+};
+
+export type LaidPort = {
+  id: string;
+  label?: string;
+};
+
+export type LaidSeries = ParallelBoard & {
+  boards: { name: string; ports: LaidPort[] }[];
+};
+
+export function storageSummary(runs: StorageRun[]): StorageSummaryLine[];
+export function storageChargers(runs: StorageRun[]): StorageChargerView[];
+export function assignPorts(labels: string[]): LaidPort[];
+export function layoutParallelBoards(boards: ParallelBoard[]): LaidSeries[];
 export function validateNextCharge(
-  doc: unknown,
-  packs: ReadonlyMap<string, string>,
-  runAtOnce: number,
-): void;
-export function loadNextCharge(root?: string): NextChargePlan;
-export function checkNextCharge(root?: string): NextChargePlan;
+  doc: NextChargeDocument,
+  packs: Map<string, { uid: string; series: string }>,
+): NextChargeDocument;
+export function loadNextCharge(root?: string): NextChargeDocument;
+export function checkNextCharge(root?: string): NextChargeDocument;

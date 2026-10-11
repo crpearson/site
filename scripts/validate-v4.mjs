@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
 import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
-import { checkNextCharge, readRunAtOnce } from "../lib/next-charge.mjs";
+import { checkNextCharge } from "../lib/next-charge.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
@@ -483,5 +483,5 @@ for (const [name, mark] of units) {
 }
 console.log("units check passed (displayed fields are validated or flagged provisional; L_R is not published)");
 
-checkNextCharge(root);
-console.log(`next charge validated (run-at-once ${readRunAtOnce(root)})`);
+const nextCharge = checkNextCharge(root);
+console.log(`next charge validated (${nextCharge.schema})`);

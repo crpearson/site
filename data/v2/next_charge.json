@@ -1,104 +1,118 @@
 {
-  "as_of": "2026-10-10",
-  "based_on_session": "2026-10-10",
-  "status_calls_link": "/#calls-heading",
-  "storage": {
-    "chargers": [
-      {
-        "name": "DX8-1",
-        "channels": [
-          {
-            "name": "CH1",
-            "runs": [
-              {
-                "run": 1,
-                "packs": ["C1-P2", "C1-P3"]
-              }
-            ]
-          },
-          {
-            "name": "CH2",
-            "runs": [
-              {
-                "run": 1,
-                "packs": ["C1-P5", "C1-P6"]
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "DX8-2",
-        "channels": [
-          {
-            "name": "CH1",
-            "runs": [
-              {
-                "run": 1,
-                "packs": ["C2-P1", "C2-P3"]
-              }
-            ]
-          },
-          {
-            "name": "CH2",
-            "runs": [
-              {
-                "run": 1,
-                "packs": ["C2-P4", "C2-P5", "C2-P6"]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  "parallel": {
-    "boards": [
-      {
-        "name": "Board A",
-        "series": "C1",
-        "ports": [
-          { "pack": "C1-P2" },
-          { "pack": "C1-P3" },
-          { "pack": "C1-P6" }
-        ],
-        "notes": []
-      },
-      {
-        "name": "Board B",
-        "series": "C2",
-        "ports": [
-          { "pack": "C2-P1", "note": "Reduced current" },
-          { "pack": "C2-P3" },
-          { "pack": "C2-P4" },
-          { "pack": "C2-P5" },
-          { "pack": "C2-P6", "note": "Joins only if within 0.30 V" }
-        ],
-        "notes": []
-      }
-    ],
-    "charge_alone": [
-      {
-        "pack": "C1-P5",
-        "reason": "Charged alone"
-      }
-    ]
-  },
-  "dont_connect": [
+  "schema": "next_charge/v1",
+  "as_of_session": "2026-10-10",
+  "as_of_date_pt": "2026-10-10",
+  "storage_runs": [
     {
-      "pack": "D-1",
-      "reason": "Rest pool 7-day rest test",
-      "returns": "2026-10-16"
+      "charger": "DX8-1",
+      "channel": "CH1",
+      "order": [
+        "C1-P2",
+        "C1-P3"
+      ]
     },
     {
-      "pack": "C1-P4",
-      "reason": "Rest pool 7-day rest test",
-      "returns": "2026-10-16"
+      "charger": "DX8-1",
+      "channel": "CH2",
+      "order": [
+        "C1-P5",
+        "C1-P6"
+      ]
     },
     {
-      "pack": "C2-P2",
-      "reason": "Rest pool 7-day rest test",
-      "returns": "2026-10-16"
+      "charger": "DX8-2",
+      "channel": "CH1",
+      "order": [
+        "C2-P1",
+        "C2-P3"
+      ]
+    },
+    {
+      "charger": "DX8-2",
+      "channel": "CH2",
+      "order": [
+        "C2-P4",
+        "C2-P5",
+        "C2-P6"
+      ]
     }
+  ],
+  "parallel_boards": [
+    {
+      "series": "C1",
+      "packs": [
+        "C1-P2",
+        "C1-P3",
+        "C1-P6"
+      ],
+      "current": "normal",
+      "conditions": [
+        "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO)."
+      ],
+      "last_rule_b_V": 0.135,
+      "last_rule_b_call": "GO",
+      "last_rule_b_session": "2026-10-10"
+    },
+    {
+      "series": "C2",
+      "packs": [
+        "C2-P1",
+        "C2-P3",
+        "C2-P4",
+        "C2-P5"
+      ],
+      "current": "reduced",
+      "conditions": [
+        "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
+        "C2-P1 is CAUTION: run the whole board at reduced current.",
+        "C2-P6 joins only if its rest V is within 0.30 V of the others; otherwise it charges alone."
+      ],
+      "last_rule_b_V": 0.479,
+      "last_rule_b_call": "CAUTION",
+      "last_rule_b_session": "2026-10-10"
+    }
+  ],
+  "charge_alone": [
+    {
+      "label": "C1-P5",
+      "uid": "CNHL-2026-005",
+      "reason": "CAUTION; charged INDIVIDUALLY until one clean night, then GO; last night floor 3594 mV Cell4, low-cell gap 77 mV",
+      "until": "one clean night"
+    },
+    {
+      "label": "C2-P6",
+      "uid": "CNHL-2026-012",
+      "reason": "last night rest V 22.359 V was the C2 Rule B outlier (board delta 0.479 V)",
+      "until": "conditional: joins the board if within 0.30 V tonight"
+    }
+  ],
+  "do_not_connect": [
+    {
+      "label": "D-1",
+      "uid": "CNHL-2026-001",
+      "pool": "Rest",
+      "reason": "7-day rest test (left at storage, untouched)",
+      "return_date": "2026-10-16"
+    },
+    {
+      "label": "C1-P4",
+      "uid": "CNHL-2026-004",
+      "pool": "Rest",
+      "reason": "7-day rest test (left at storage, untouched)",
+      "return_date": "2026-10-16"
+    },
+    {
+      "label": "C2-P2",
+      "uid": "CNHL-2026-008",
+      "pool": "Rest",
+      "reason": "7-day rest test (left at storage, untouched)",
+      "return_date": "2026-10-16"
+    }
+  ],
+  "notes": [
+    "Add days since last flight/charge to the upload note.",
+    "One pack per channel per run, in the order listed; keep each log file.",
+    "Rule B: rest V spread across a board <=0.30 V GO, 0.30-0.60 V CAUTION (reduced current), >0.60 V do not parallel.",
+    "DX8-2 IR values are provisional until a DX8-2 screen photo is checked."
   ]
 }

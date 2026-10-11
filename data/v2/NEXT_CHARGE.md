@@ -2,110 +2,91 @@
 
 `data/v2/next_charge.json` is the only source for the Next charge page. After each night, replace this file. The page reads it at build time and does not keep its own pack list, charger names, notes, or dates.
 
-Pack labels are the current `label` values in `data/v2/packs.csv`. Each chip links to `/pack/<pack_uid>/`. The word on the chip (GO, CAUTION, ALONE, REST, WATCH) is the same chip as the Packs grid, from that pack's latest status call, when the call maps to one.
+The published file uses schema `next_charge/v1`. Any other `schema` value fails the build. Keys below are the v1 names. Do not rename them in the file.
 
-`as_of` is a Pacific Time calendar date (`YYYY-MM-DD`). `based_on_session` is the night this layout is based on (a PT date or a session id such as `S413`). `status_calls_link` is a path on this site, usually `/#calls-heading`.
+## Document
 
-## Shape
-
-```json
-{
-  "as_of": "2026-10-10",
-  "based_on_session": "2026-10-10",
-  "status_calls_link": "/#calls-heading",
-  "storage": {
-    "chargers": [
-      {
-        "name": "DX8-1",
-        "channels": [
-          {
-            "name": "CH1",
-            "runs": [{ "run": 1, "packs": ["C1-P2", "C1-P3"], "note": "optional" }]
-          }
-        ]
-      }
-    ]
-  },
-  "parallel": {
-    "boards": [
-      {
-        "name": "Board A",
-        "series": "C1",
-        "ports": [{ "pack": "C1-P2", "port": "L1", "note": "optional" }],
-        "notes": ["optional board note"]
-      }
-    ],
-    "charge_alone": [{ "pack": "C1-P5", "reason": "Charged alone" }]
-  },
-  "dont_connect": [
-    { "pack": "D-1", "reason": "Rest pool 7-day rest test", "returns": "2026-10-16" }
-  ]
-}
-```
-
-| Field | Required | Meaning |
-| --- | --- | --- |
-| `as_of` | yes | PT date the sheet was written |
-| `based_on_session` | yes | Night the sheet is based on |
-| `status_calls_link` | yes | Site path for the status-call link in the header |
-| `storage.chargers[].name` | yes | Charger label drawn on that charger |
-| `storage.chargers[].channels[].name` | yes | Port label, such as `CH1` |
-| `storage.chargers[].channels[].runs[].run` | yes | `1`, then `2`, then `3`, with no gaps |
-| `storage.chargers[].channels[].runs[].packs` | yes | Pack labels in connect order for that run |
-| `storage.chargers[].channels[].runs[].note` | no | Short note under that run |
-| `parallel.boards[].name` | no | Physical board: `Board A`, `Board B`, `Board C`, or `Board D`. At most four boards |
-| `parallel.boards[].series` | yes | Series id. Every pack on the board must be that series |
-| `parallel.boards[].ports[].pack` | yes | Pack plugged into a port |
-| `parallel.boards[].ports[].port` | no | `L1`, `L2`, `L3`, `R1`, `R2`, or `R3`. If omitted, packs fill that order |
-| `parallel.boards[].ports[].note` | no | Note on that pack |
-| `parallel.boards[].notes` | yes | Board notes. Use `[]` when there are none |
-| `parallel.charge_alone[].pack` | yes | Pack charged on its own, not on a board |
-| `parallel.charge_alone[].reason` | yes | Why it stays off the board |
-| `dont_connect[].pack` | yes | Pack that must not be connected |
-| `dont_connect[].reason` | yes | Why it stays off |
-| `dont_connect[].returns` | yes | PT date it can come back, `YYYY-MM-DD` |
-
-Unknown fields are rejected. The same pack may appear in storage and again on a pre-flight board or in `charge_alone`. Those are two steps. It may not appear twice inside storage, twice inside the parallel section, or twice in `dont_connect`.
-
-## Runs
-
-A DX8 channel's default assignment is three packs. That list is `DEFAULT_SLOTS` in `scripts/ingest.py` (the methodology says each channel handles three packs). The build reads those lists and uses their length as **run-at-once**. Today that number is 3.
-
-Write packs in connect order.
-
-- When the channel has run-at-once packs or fewer, use one run. The page does not print "Run 1".
-- When the channel has more, split them into runs of at most run-at-once, numbered 1, 2, 3 in that order. The page prints Run 1, Run 2, Run 3.
-
-A channel that fits in one run and is split anyway fails the build. A run with more than run-at-once packs fails the build.
-
-## What the build rejects
-
-`npm run build` runs `lib/next-charge.mjs` before the site is exported. The build fails when:
-
-- a pack label is not a current label in `data/v2/packs.csv`
-- a pack is listed twice in storage, twice in the parallel section (board ports and charge-alone), or twice in don't connect
-- a pack is in a connect slot (a storage run, a board port, or charge-alone) and also in don't connect
-- a run is larger than run-at-once, or a channel that fits in one run is split
-- run numbers are not 1, 2, 3 in order
-- a board port's series does not match `packs.csv`
-- a board name is not Board A–D, a name is repeated, or there are more than four boards
-- a port is not L1–L3 or R1–R3, a port is used twice, or a board lists more than six packs
-- a date is not `YYYY-MM-DD`, or a required field is missing or unknown
-
-## Parallel boards
-
-There are four identical 6-port boards. A file may name up to four of them `Board A` through `Board D`. Each drawn board has six ports:
-
-| Left | Right |
+| Key | Meaning |
 | --- | --- |
-| L1 | R1 |
-| L2 | R2 |
-| L3 | R3 |
+| `schema` | Must be the string `next_charge/v1`. |
+| `as_of_session` | Session the sheet is based on. A date or a session id. |
+| `as_of_date_pt` | Pacific calendar date, `YYYY-MM-DD`. |
+| `storage_runs` | One object per charger channel. See below. |
+| `parallel_boards` | One object per series board. See below. |
+| `charge_alone` | Packs that charge on their own before flight. |
+| `do_not_connect` | Packs that stay off every lead. |
+| `notes` | Strings printed at the bottom of the page. |
 
-Give `port` when a pack does not sit in that default sequence. When `port` is omitted, the pack takes the next free id in the order L1, L2, L3, R1, R2, R3. A port id used twice, a port outside that list, or a seventh pack fails the build.
+## `storage_runs`
 
-## How it is drawn
+Each object is one channel's queue, not one timed run.
 
-The page draws one charger for each `storage.chargers` entry, with one port for each channel, and the packs of each run in order.
+| Key | Meaning |
+| --- | --- |
+| `charger` | Charger alias, such as `DX8-1`. |
+| `channel` | Channel name, such as `CH1`. |
+| `order` | Pack labels in the order they will be storage-charged on that channel. |
 
-Each parallel entry is a stylized 6-port board: three ports down the left, three down the right, a fuse for each port in the center, a balance header on each outer edge, an input pair with a 3-digit meter and a discharge block along the top, and the main lead and balance lead along the bottom. Pack chips sit on the ports that have a pack. Empty ports stay numbered and blank. The drawing is not a picture of a product and has no brand name. Charge-alone packs are drawn off the board. Don't-connect rows show the reason and the return date.
+A DX8 storage-charges one pack on a channel at a time. The page turns `order` into runs:
+
+- `order[0]` is Run 1, `order[1]` is Run 2, and so on.
+- Each run shows that one pack.
+- Above the chargers, Run *n* lists every channel that still has an *n*th pack, in file order. The charger name is printed when it changes: `DX8-1 CH1 C1-P2 · CH2 C1-P5 · DX8-2 CH1 C2-P1 · CH2 C2-P4`.
+
+The same charger and channel cannot appear twice. A pack label cannot appear on two storage channels. Every label must exist in `data/v2/packs.csv`.
+
+A pack may be in `storage_runs` and also on a parallel board or in `charge_alone`. Storage happens first. The pre-flight step is separate.
+
+## `parallel_boards`
+
+| Key | Meaning |
+| --- | --- |
+| `series` | Series name. Every pack in `packs` must be that series in `packs.csv`. |
+| `packs` | Labels in port order. |
+| `current` | `normal` or `reduced`. This is the charge current for the whole board. |
+| `conditions` | Strings. Limits and exceptions for this board. |
+| `last_rule_b_V` | Last Rule B board spread, in volts. A number. |
+| `last_rule_b_call` | Call recorded with that Rule B check. |
+| `last_rule_b_session` | Session of that Rule B check. |
+
+The bench uses 6-port boards. Ports are `L1`, `L2`, `L3`, `R1`, `R2`, `R3`, in that order. `packs[0]` is L1 and `packs[5]` is R3. Empty ports stay blank.
+
+A series with more than 6 packs continues on the next board: pack 7 is L1 on the next letter. Letters are assigned in file order, `Board A` through `Board D`. A series with no packs still takes one board so its current and Rule B line have a drawing. More than 4 boards fails the build.
+
+`current`, `conditions`, and the three `last_rule_b_*` fields are printed once for the series, above its board drawing or drawings.
+
+## `charge_alone`
+
+| Key | Meaning |
+| --- | --- |
+| `label` | Pack label in `packs.csv`. |
+| `uid` | That label's `pack_uid`. A mismatch fails the build. |
+| `reason` | Why it charges alone. |
+| `until` | When it can join a board again. Free text, not necessarily a date. |
+
+## `do_not_connect`
+
+| Key | Meaning |
+| --- | --- |
+| `label` | Pack label in `packs.csv`. |
+| `uid` | That label's `pack_uid`. A mismatch fails the build. |
+| `pool` | Pool name, such as `Rest`. |
+| `reason` | Why it stays disconnected. |
+| `return_date` | Pacific date it can return, `YYYY-MM-DD`. |
+
+A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_boards`, or `charge_alone`.
+
+## What the build checks
+
+`npm run build` runs `scripts/validate-v4.mjs`, which checks this file.
+
+- `schema` is exactly `next_charge/v1`.
+- The keys are the ones in this note, with no extras and no missing required keys.
+- Every pack label exists in `packs.csv`.
+- Each `uid` matches that label.
+- A parallel pack's series matches the board `series`.
+- Storage puts one pack on each run, taken from `order`.
+- Parallel packs land on L1 through R3, then the next board letter, and stop at 4 boards.
+- A disconnected pack is not also given a lead.
+
+Status chips on the page are not stored in this file. They come from the latest status call for that pack, the same way the home page does.

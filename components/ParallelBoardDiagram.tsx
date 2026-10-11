@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { BenchPack, type BenchPackRow } from "@/components/BenchPack";
 import { seriesColor } from "@/lib/color";
-import { assignPorts, type AssignedPort, type NextChargeAlone, type NextChargeBoard } from "@/lib/next-charge.mjs";
+import type { ChargeAloneItem, LaidPort } from "@/lib/next-charge.mjs";
 
 function BoardTop() {
   return (
@@ -78,7 +78,7 @@ function PortSlot({
   color,
   resolve,
 }: {
-  slot: AssignedPort;
+  slot: LaidPort;
   color: string;
   resolve: (label: string) => BenchPackRow;
 }) {
@@ -86,34 +86,38 @@ function PortSlot({
     <div className="six-slot">
       <div className="six-plug">
         <span className="six-id">{slot.id}</span>
-        <PortPlugs color={color} filled={Boolean(slot.pack)} />
+        <PortPlugs color={color} filled={Boolean(slot.label)} />
       </div>
-      {slot.pack ? <BenchPack pack={resolve(slot.pack)} note={slot.note} /> : null}
+      {slot.label ? <BenchPack pack={resolve(slot.label)} /> : null}
     </div>
   );
 }
 
 export function ParallelBoardDiagram({
-  board,
+  name,
+  series,
+  ports,
   resolve,
 }: {
-  board: NextChargeBoard;
+  name: string;
+  series: string;
+  ports: LaidPort[];
   resolve: (label: string) => BenchPackRow;
 }) {
-  const color = seriesColor(board.series);
-  const slots = assignPorts(board.ports, board.series);
+  const color = seriesColor(series);
   const rows = [0, 1, 2].map((index) => ({
-    left: slots[index],
-    right: slots[index + 3],
+    left: ports[index],
+    right: ports[index + 3],
   }));
-  const title = board.name ? `${board.name} · ${board.series}` : board.series;
 
   return (
     <article className="panel" style={{ "--accent": color } as CSSProperties}>
       <header className="bench-charger-head">
         <div className="min-w-0">
           <p className="eyebrow">6-port parallel</p>
-          <h3 className="panel-title">{title}</h3>
+          <h3 className="panel-title">
+            {name} · {series}
+          </h3>
         </div>
       </header>
       <div className="six-board">
@@ -134,15 +138,6 @@ export function ParallelBoardDiagram({
         </div>
         <BoardLeads />
       </div>
-      {board.notes.length ? (
-        <ul className="bench-notes">
-          {board.notes.map((note, index) => (
-            <li key={`${index}-${note}`} className="note">
-              {note}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </article>
   );
 }
@@ -151,7 +146,7 @@ export function ChargeAlone({
   items,
   resolve,
 }: {
-  items: NextChargeAlone[];
+  items: ChargeAloneItem[];
   resolve: (label: string) => BenchPackRow;
 }) {
   if (items.length === 0) return null;
@@ -160,11 +155,13 @@ export function ChargeAlone({
       <h3 className="panel-title">Charge alone</h3>
       <ul className="bench-ports mt-3">
         {items.map((item) => (
-          <li key={item.pack} className="bench-alone-row">
+          <li key={item.label} className="bench-alone-row">
             <PortPlugs color="#f5b942" filled />
             <div className="min-w-0">
-              <BenchPack pack={resolve(item.pack)} />
+              <BenchPack pack={resolve(item.label)} />
+              <p className="bench-field">{item.uid}</p>
               <p className="note mt-1">{item.reason}</p>
+              <p className="bench-return">Until {item.until}</p>
             </div>
           </li>
         ))}

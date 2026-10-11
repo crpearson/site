@@ -1,5 +1,5 @@
 import { BenchPack, type BenchPackRow } from "@/components/BenchPack";
-import type { NextChargeCharger } from "@/lib/next-charge.mjs";
+import type { StorageChargerView } from "@/lib/next-charge.mjs";
 
 function ChargerFace() {
   return (
@@ -62,7 +62,7 @@ export function ChargerDiagram({
   charger,
   resolve,
 }: {
-  charger: NextChargeCharger;
+  charger: StorageChargerView;
   resolve: (label: string) => BenchPackRow;
 }) {
   return (
@@ -71,24 +71,17 @@ export function ChargerDiagram({
         <ChargerFace />
         <div className="min-w-0">
           <p className="eyebrow">Storage charger</p>
-          <h3 className="panel-title">{charger.name}</h3>
+          <h3 className="panel-title">{charger.charger}</h3>
         </div>
       </header>
       <div className="bench-bays">
         {charger.channels.map((channel) => (
-          <section key={channel.name} className="bench-bay" aria-label={`${charger.name} ${channel.name}`}>
-            <ChannelPort name={channel.name} />
+          <section key={channel.channel} className="bench-bay" aria-label={`${charger.charger} ${channel.channel}`}>
+            <ChannelPort name={channel.channel} />
             {channel.runs.map((run) => (
               <div key={run.run} className="bench-run">
-                {channel.runs.length > 1 ? <p className="eyebrow">Run {run.run}</p> : null}
-                <ul className="bench-pack-list">
-                  {run.packs.map((label) => (
-                    <li key={label}>
-                      <BenchPack pack={resolve(label)} />
-                    </li>
-                  ))}
-                </ul>
-                {run.note ? <p className="note mt-2">{run.note}</p> : null}
+                <p className="eyebrow">Run {run.run}</p>
+                <BenchPack pack={resolve(run.label)} />
               </div>
             ))}
           </section>
