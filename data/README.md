@@ -1,6 +1,6 @@
 # Data
 
-`store.csv` is the retired `;130;` archive. Its numbers are charge taken per cell in mAh, not IR. The site does not read it. `npm run build` runs `scripts/validate-v4.mjs` and checks all 170 rows of `v2/ir_store_v4.public.csv`, which is already true milliohms. Two of those rows are the 2026-10-11 charge run and are not storage nights.
+`store.csv` is the retired `;130;` archive. Its numbers are charge taken per cell in mAh, not IR. The site does not read it. `npm run build` runs `scripts/validate-v4.mjs` and checks all 179 rows of `v2/ir_store_v4.public.csv`, which is already true milliohms. Nine rows are the 2026-10-11 storage night. Two are the 2026-10-11 charge run and are not storage nights.
 
 `v2/` is the registry the site reads:
 

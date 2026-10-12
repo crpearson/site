@@ -88,18 +88,6 @@ export default function NextChargePage() {
                     <dt>Current</dt>
                     <dd>{board.current}</dd>
                   </div>
-                  <div>
-                    <dt>Last Rule B</dt>
-                    <dd>{board.last_rule_b_V} V</dd>
-                  </div>
-                  <div>
-                    <dt>Rule B call</dt>
-                    <dd>{board.last_rule_b_call}</dd>
-                  </div>
-                  <div>
-                    <dt>Rule B session</dt>
-                    <dd>{board.last_rule_b_session}</dd>
-                  </div>
                 </dl>
                 {board.conditions.length ? (
                   <ul className="bench-notes">

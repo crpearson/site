@@ -44,8 +44,9 @@ function parseCsv(text) {
 function timeKey(token) {
   const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
   if (rest) return [1, rest[1], 2];
+  // A charge run is earlier the same calendar day than that day's storage night.
   const charge = token.match(/^(\d{4}-\d{2}-\d{2})-charge$/);
-  if (charge) return [1, charge[1], 3];
+  if (charge) return [1, charge[1], -1];
   const eve = token.endsWith("-eve");
   const day = eve ? token.slice(0, -4) : token;
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
@@ -75,8 +76,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 170) {
-  console.error(`expected 170 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 179) {
+  console.error(`expected 179 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -257,8 +258,8 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.828") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.828 mΩ over 11`);
+if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.866") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.866 mΩ over 11`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -289,10 +290,10 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-10-10" || c1Mean.mean.toFixed(3) !== "2.879") {
+if (c1Mean.session !== "2026-10-11" || c1Mean.mean.toFixed(3) !== "2.733") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
-if (c2Mean.session !== "2026-10-10" || c2Mean.mean.toFixed(3) !== "2.700") {
+if (c2Mean.session !== "2026-10-11" || c2Mean.mean.toFixed(3) !== "2.900") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 
@@ -314,8 +315,12 @@ const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | "
 if (rendered !== expected || board.as_of !== latestPtDate) {
   fail(`next parallel ${board.as_of} ${rendered}, expected ${latestPtDate} ${expected}`);
 }
-for (const label of ["D-1", "C1-P4", "C2-P2", "C1-P5"]) {
+for (const label of ["D-1", "C1-P4", "C2-P2"]) {
   if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
+}
+const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
+if (nextChargePage.includes("last_rule_b")) {
+  fail("the next charge page renders last_rule_b");
 }
 const nextFile = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next.json"), "utf8"));
 if (JSON.stringify(nextFile) !== JSON.stringify(board)) {

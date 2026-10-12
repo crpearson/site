@@ -53,7 +53,7 @@ The bench uses 6-port boards. Ports are `L1`, `L2`, `L3`, `R1`, `R2`, `R3`, in t
 
 A series with more than 6 packs continues on the next board: pack 7 is L1 on the next letter. Letters are assigned in file order, `Board A` through `Board D`. A series with no packs still takes one board so its current and Rule B line have a drawing. More than 4 boards fails the build.
 
-`current`, `conditions`, and the three `last_rule_b_*` fields are printed once for the series, above its board drawing or drawings.
+`current` and `conditions` are printed once for the series, above its board drawing or drawings. The three `last_rule_b_*` fields stay in the file for the schema check and are not shown. The page's Rule B figure is the one computed from the storage-night rests.
 
 ## `charge_alone`
 

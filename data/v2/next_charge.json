@@ -1,6 +1,6 @@
 {
   "schema": "next_charge/v1",
-  "as_of_session": "2026-10-10",
+  "as_of_session": "2026-10-11",
   "as_of_date_pt": "2026-10-11",
   "storage_runs": [
     {
@@ -47,11 +47,12 @@
       ],
       "current": "normal",
       "conditions": [
-        "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO)."
+        "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
+        "C1-P5 joins only if its rest V is within 0.30 V of the others; otherwise it charges alone."
       ],
-      "last_rule_b_V": 0.135,
-      "last_rule_b_call": "GO",
-      "last_rule_b_session": "2026-10-10"
+      "last_rule_b_V": 0.384,
+      "last_rule_b_call": "CAUTION",
+      "last_rule_b_session": "2026-10-11"
     },
     {
       "series": "C2",
@@ -61,28 +62,27 @@
         "C2-P4",
         "C2-P5"
       ],
-      "current": "reduced",
+      "current": "normal",
       "conditions": [
         "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
-        "C2-P1 is CAUTION: run the whole board at reduced current.",
         "C2-P6 joins only if its rest V is within 0.30 V of the others; otherwise it charges alone."
       ],
-      "last_rule_b_V": 0.479,
+      "last_rule_b_V": 0.425,
       "last_rule_b_call": "CAUTION",
-      "last_rule_b_session": "2026-10-10"
+      "last_rule_b_session": "2026-10-11"
     }
   ],
   "charge_alone": [
     {
       "label": "C1-P5",
       "uid": "CNHL-2026-005",
-      "reason": "CAUTION; charged INDIVIDUALLY until one clean night, then GO; last night floor 3594 mV Cell4, low-cell gap 77 mV",
-      "until": "one clean night"
+      "reason": "last night rest V 21.963 V was the C1 Rule B outlier (board delta 0.384 V)",
+      "until": "conditional: joins the board if within 0.30 V tonight"
     },
     {
       "label": "C2-P6",
       "uid": "CNHL-2026-012",
-      "reason": "last night rest V 22.359 V was the C2 Rule B outlier (board delta 0.479 V)",
+      "reason": "last night rest V 22.397 V was the C2 Rule B outlier (board delta 0.425 V)",
       "until": "conditional: joins the board if within 0.30 V tonight"
     }
   ],
