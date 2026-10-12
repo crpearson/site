@@ -61,7 +61,7 @@ export function axisNightVisible(series: ChartSeries[], index: number, nightId?:
     return kind === "value" || kind === "skip" || kind === "na" || kind === "rest";
   });
   if (!plotted) return false;
-  if (nightId?.endsWith("-restday0")) {
+  if (nightId?.endsWith("-restday0") || nightId?.endsWith("-charge")) {
     return series.some((item) => gapKind(item, index) === "value");
   }
   return true;

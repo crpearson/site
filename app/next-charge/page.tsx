@@ -3,15 +3,25 @@ import { ChargerDiagram } from "@/components/ChargerDiagram";
 import { DontConnectList } from "@/components/DontConnectList";
 import { ChargeAlone, ParallelBoardDiagram } from "@/components/ParallelBoardDiagram";
 import { statusRows, type StatusRow } from "@/lib/fleet";
+import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
 import { seriesColor } from "@/lib/color";
 import type { CSSProperties } from "react";
+import type { ParallelBoard } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
   title: "Next charge",
   description:
     "Storage channels, pre-flight parallel boards, and packs to leave disconnected for the next session.",
 };
+
+function ruleBLine(board: ParallelBoard): string | null {
+  const covered = board.last_rule_b_over;
+  if (!covered?.length) return null;
+  const packs =
+    covered.length === 1 ? covered[0] : `${covered.slice(0, -1).join(", ")} and ${covered[covered.length - 1]}`;
+  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packs} · ${board.last_rule_b_session}`;
+}
 
 export default function NextChargePage() {
   const plan = loadNextCharge();
@@ -24,6 +34,8 @@ export default function NextChargePage() {
   const summary = storageSummary(plan.storage_runs);
   const chargers = storageChargers(plan.storage_runs);
   const boards = layoutParallelBoards(plan.parallel_boards);
+  const anyProvisional = [...rows.values()].some((row) => row.provisional);
+  const notes = anyProvisional ? plan.notes : plan.notes.filter((note) => !irValidationIsProvisional(note));
 
   return (
     <div className="space-y-8">
@@ -72,7 +84,9 @@ export default function NextChargePage() {
           Pre-flight parallel
         </h2>
         <div className="bench-stack">
-          {boards.map((board) => (
+          {boards.map((board) => {
+            const ruleB = ruleBLine(board);
+            return (
             <div key={board.series} className="bench-series">
               <article
                 className="panel"
@@ -85,18 +99,12 @@ export default function NextChargePage() {
                     <dt>Current</dt>
                     <dd>{board.current}</dd>
                   </div>
-                  <div>
-                    <dt>Last Rule B</dt>
-                    <dd>{board.last_rule_b_V} V</dd>
-                  </div>
-                  <div>
-                    <dt>Rule B call</dt>
-                    <dd>{board.last_rule_b_call}</dd>
-                  </div>
-                  <div>
-                    <dt>Rule B session</dt>
-                    <dd>{board.last_rule_b_session}</dd>
-                  </div>
+                  {ruleB ? (
+                    <div>
+                      <dt>Last Rule B</dt>
+                      <dd>{ruleB}</dd>
+                    </div>
+                  ) : null}
                 </dl>
                 {board.conditions.length ? (
                   <ul className="bench-notes">
@@ -118,7 +126,8 @@ export default function NextChargePage() {
                 />
               ))}
             </div>
-          ))}
+            );
+          })}
         </div>
         <ChargeAlone items={plan.charge_alone} resolve={resolve} />
       </section>
@@ -130,13 +139,13 @@ export default function NextChargePage() {
         <DontConnectList items={plan.do_not_connect} resolve={resolve} />
       </section>
 
-      {plan.notes.length ? (
+      {notes.length ? (
         <section className="space-y-3" aria-labelledby="notes-heading">
           <h2 id="notes-heading" className="section-title">
             Notes
           </h2>
           <ul className="bench-notes">
-            {plan.notes.map((note) => (
+            {notes.map((note) => (
               <li key={note} className="note">
                 {note}
               </li>

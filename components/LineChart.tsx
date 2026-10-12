@@ -414,10 +414,12 @@ export function LineChart({
           <div className="x-axis">
             {categories.map((category, index) => {
               if (!axisNightVisible(shown, index, category.id)) return null;
-              const last = n - 1;
-              const hideOnSmall =
-                index !== last &&
-                (index % 2 === 1 || (index === last - 1 && last % 2 === 1));
+              const visible = categories.flatMap((item, itemIndex) =>
+                axisNightVisible(shown, itemIndex, item.id) ? [itemIndex] : [],
+              );
+              const firstTick = visible[0];
+              const lastTick = visible[visible.length - 1];
+              const edge = index === firstTick || index === lastTick;
               const columnPhrase = gapPhrase(shown, nightIds, index);
               const columnMissed =
                 shown.length > 0 && shown.every((item) => seriesGap(item, index));
@@ -426,12 +428,14 @@ export function LineChart({
                 : [category.partial ? `${category.id} partial night` : category.id, columnPhrase]
                     .filter(Boolean)
                     .join(". ");
-              const place = index === 0 ? " x-label-start" : index === last ? " x-label-end" : "";
+              const place =
+                index === firstTick ? " x-label-start" : index === lastTick ? " x-label-end" : "";
+              const thin = edge ? "" : `${index % 2 === 1 ? " x-label-alt" : ""}${index % 3 !== 0 ? " x-label-third" : ""}`;
               return (
                 <button
                   key={category.id}
                   type="button"
-                  className={`${hideOnSmall ? "x-label x-label-alt" : "x-label"}${place}`}
+                  className={`x-label${thin}${place}`}
                   style={{ left: `${((index + 0.5) / n) * 100}%` }}
                   title={title}
                   aria-label={title}

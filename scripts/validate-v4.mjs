@@ -4,7 +4,7 @@ import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
 import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
 import { checkNextCharge } from "../lib/next-charge.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
-import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
+import { isOwnerOverride, laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
 function parseCsv(text) {
   const rows = [];
@@ -44,6 +44,9 @@ function parseCsv(text) {
 function timeKey(token) {
   const rest = token.match(/^(\d{4}-\d{2}-\d{2})-restday0$/);
   if (rest) return [1, rest[1], 2];
+  // A charge run is earlier the same calendar day than that day's storage night.
+  const charge = token.match(/^(\d{4}-\d{2}-\d{2})-charge$/);
+  if (charge) return [1, charge[1], -1];
   const eve = token.endsWith("-eve");
   const day = eve ? token.slice(0, -4) : token;
   if (/^\d{4}-\d{2}-\d{2}$/.test(day)) return [1, day, eve ? 1 : 0];
@@ -73,8 +76,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 168) {
-  console.error(`expected 168 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 179) {
+  console.error(`expected 179 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -182,7 +185,7 @@ for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
 function sessionOf(source, date) {
   const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
   const token = raw.split(/\s+/)[0] ?? "";
-  if (/^\d{4}-\d{2}-\d{2}-restday0$/.test(token)) return token;
+  if (/^\d{4}-\d{2}-\d{2}-(?:restday0|charge)$/.test(token)) return token;
   if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token) || /^S\d+$/.test(token)) return token;
   return date;
 }
@@ -202,7 +205,7 @@ for (const [uid, list] of byUid) {
   const latest = statusRows[statusRows.length - 1];
   if (!latest || !latest.status.startsWith("PARALLEL")) continue;
   const history = v4
-    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0" && row.session_type !== "charge-run")
     .sort((a, b) => compareTime(a.session, b.session));
   const pack = packs.find((row) => row.pack_uid === uid);
   const computed = parallelBucket(
@@ -223,15 +226,21 @@ for (const [uid, list] of byUid) {
   const recorded = laryParallelBucket(latest.status);
   if (/REST POOL/i.test(latest.status)) {
     console.log(`rest pool ${uid} (${latest.label_at_time}): recorded OFF, not a parallel-call disagreement`);
-  } else if (/OWNER OVERRIDE/i.test(latest.reason)) {
+  } else if (isOwnerOverride(latest.reason)) {
+    const monitor = /no rest test/i.test(latest.reason)
+      ? " Low-cell gap stays on monitor. Cell 4 has no rest test."
+      : "";
     console.log(
-      `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
+      `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement.${monitor}`,
     );
   } else if (computed.call !== recorded) {
     disagreements.push(`${uid}: computed ${computed.call}, recorded ${recorded}`);
   }
 }
 
+if (disagreements.some((line) => line.startsWith("CNHL-2026-005"))) {
+  fail("C1-P5 owner exception was overridden by the computed call");
+}
 if (disagreements.length) {
   console.log(`parallel call disagreements (${disagreements.length}), Lary's text left unchanged:`);
   for (const line of disagreements) console.log(line);
@@ -249,14 +258,14 @@ const moved = new Set(events.filter((row) => row.event === "move").map((row) => 
 const slotted = packs.filter((pack) => !moved.has(pack.pack_uid) && !pack.retired.trim());
 const latestAvg = (uid) => {
   const rows = v4
-    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0")
+    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0" && row.session_type !== "charge-run")
     .sort((a, b) => compareTime(a.session, b.session));
   return rows[rows.length - 1];
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.828") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.828 mΩ over 11`);
+if (slotted.length !== 11 || fleetMean.toFixed(3) !== "2.866") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.866 mΩ over 11`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -275,7 +284,7 @@ if (!d1 || d1.series_at_time !== "D") fail("D-1 2026-10-09 must belong to series
 function seriesMean(series) {
   const groups = new Map();
   for (const row of v4) {
-    if (row.series_at_time !== series || row.session_type === "rest-test-day0") continue;
+    if (row.series_at_time !== series || row.session_type === "rest-test-day0" || row.session_type === "charge-run") continue;
     const list = groups.get(row.session) ?? [];
     list.push(Number(row.avg_mOhm));
     groups.set(row.session, list);
@@ -287,10 +296,10 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-10-10" || c1Mean.mean.toFixed(3) !== "2.879") {
+if (c1Mean.session !== "2026-10-11" || c1Mean.mean.toFixed(3) !== "2.733") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
-if (c2Mean.session !== "2026-10-10" || c2Mean.mean.toFixed(3) !== "2.700") {
+if (c2Mean.session !== "2026-10-11" || c2Mean.mean.toFixed(3) !== "2.900") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 
@@ -299,7 +308,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-10") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-10`);
+if (latestPtDate !== "2026-10-11") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-11`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }
@@ -312,8 +321,16 @@ const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | "
 if (rendered !== expected || board.as_of !== latestPtDate) {
   fail(`next parallel ${board.as_of} ${rendered}, expected ${latestPtDate} ${expected}`);
 }
-for (const label of ["D-1", "C1-P4", "C2-P2", "C1-P5"]) {
+for (const label of ["D-1", "C1-P4", "C2-P2"]) {
   if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
+}
+const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
+const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");
+if (!nextChargePage.includes("last_rule_b_over") || !nextChargePage.includes(" V")) {
+  fail("the next charge page must label which packs last Rule B covers, with the V unit");
+}
+if (!chargeAlone.includes("last_offset_max_V") || !chargeAlone.includes(" V")) {
+  fail("charge-alone offsets must be shown in volts");
 }
 const nextFile = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next.json"), "utf8"));
 if (JSON.stringify(nextFile) !== JSON.stringify(board)) {

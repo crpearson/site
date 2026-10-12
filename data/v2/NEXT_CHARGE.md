@@ -48,12 +48,13 @@ A pack may be in `storage_runs` and also on a parallel board or in `charge_alone
 | `last_rule_b_V` | Last Rule B board spread, in volts. A number. |
 | `last_rule_b_call` | Call recorded with that Rule B check. |
 | `last_rule_b_session` | Session of that Rule B check. |
+| `last_rule_b_over` | Optional on v1. Pack labels this Rule B figure covers. Each label is one of this board's `packs`. |
 
 The bench uses 6-port boards. Ports are `L1`, `L2`, `L3`, `R1`, `R2`, `R3`, in that order. `packs[0]` is L1 and `packs[5]` is R3. Empty ports stay blank.
 
 A series with more than 6 packs continues on the next board: pack 7 is L1 on the next letter. Letters are assigned in file order, `Board A` through `Board D`. A series with no packs still takes one board so its current and Rule B line have a drawing. More than 4 boards fails the build.
 
-`current`, `conditions`, and the three `last_rule_b_*` fields are printed once for the series, above its board drawing or drawings.
+`current` and `conditions` are printed once for the series, above its board drawing or drawings. When `last_rule_b_over` is present, the page prints Last Rule B as the voltage, the call, and those pack labels, with the V unit. The home chart still draws Rule B from the storage-night rests.
 
 ## `charge_alone`
 
@@ -63,6 +64,8 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 | `uid` | That label's `pack_uid`. A mismatch fails the build. |
 | `reason` | Why it charges alone. |
 | `until` | When it can join a board again. Free text, not necessarily a date. |
+| `last_offset_max_V` | Optional on v1. Largest rest offset from that pack's board, in volts. Present only with `last_offset_side`. |
+| `last_offset_side` | Optional on v1. `below` or `above`. |
 
 ## `do_not_connect`
 
@@ -81,7 +84,7 @@ A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_board
 `npm run build` runs `scripts/validate-v4.mjs`, which checks this file.
 
 - `schema` is exactly `next_charge/v1`.
-- The keys are the ones in this note, with no extras and no missing required keys.
+- The keys are the ones in this note. `last_rule_b_over`, `last_offset_max_V`, and `last_offset_side` are optional. Any other extra key fails the build.
 - Every pack label exists in `packs.csv`.
 - Each `uid` matches that label.
 - A parallel pack's series matches the board `series`.

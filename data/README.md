@@ -1,6 +1,6 @@
 # Data
 
-`store.csv` is the retired `;130;` archive. Its numbers are charge taken per cell in mAh, not IR. The site does not read it. `npm run build` runs `scripts/validate-v4.mjs` and checks all 168 rows of `v2/ir_store_v4.public.csv`, which is already true milliohms.
+`store.csv` is the retired `;130;` archive. Its numbers are charge taken per cell in mAh, not IR. The site does not read it. `npm run build` runs `scripts/validate-v4.mjs` and checks all 179 rows of `v2/ir_store_v4.public.csv`, which is already true milliohms. Nine rows are the 2026-10-11 storage night. Two are the 2026-10-11 charge run and are not storage nights.
 
 `v2/` is the registry the site reads:
 
@@ -11,7 +11,7 @@
 - `ir_store_v4.public.csv` — true cell IR in milliohms and pack S_R. Line resistance is in the file and is not shown.
 - `ir_store_v2.public.csv` — legacy `;130;` rows, not shown as IR
 - `rest_tests.csv` — 7-day rest tests. Placeholder rows marked `FILLED-SEE-DAY0-ROW` are not shown
-- `next.json` — next parallel boards. `as_of` is 2026-10-10, the latest Pacific date in the calls and IR store. The page dates each board by that series' last public measurement. Rest pool packs are off the boards. `packs-timeseries.json` stores the retired `;130;` charge line as `cells_chg_mah`, `avg_chg_mah`, and `spread_chg_mah`, not as IR. The site does not render that file.
+- `next.json` — next parallel boards. `as_of` is 2026-10-11, the latest Pacific date in the calls and IR store. The page dates each board by that series' last public measurement. Rest pool packs are off the boards. `packs-timeseries.json` stores the retired `;130;` charge line as `cells_chg_mah`, `avg_chg_mah`, and `spread_chg_mah`, not as IR. The site does not render that file.
 - `UNITS.public.md` — public column units. The private units file is not in this repo.
 
 `archive/v1-20261008/ir_store.csv` is the previous shorter export. `sessions.json`, `packs-timeseries.json`, and `meta.json` can still be rebuilt from the store by `scripts/ingest.py`. The site uses the JSON for session order, thresholds, and gaps. `status.json` holds those thresholds. `pack-registry.json` is chargers and brand catalog prices. Do not treat a registry pack price as a purchase price. `legacy-manifest.csv` maps renamed logs that have no NNN in the filename.

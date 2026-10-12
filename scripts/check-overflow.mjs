@@ -186,6 +186,30 @@ function measure() {
     const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 48);
     problems.push(`${name} is ${sw}px in a ${cw}px box${text ? ` (${text})` : ""}`);
   }
+  for (const axis of document.querySelectorAll(".x-axis")) {
+    const labels = [...axis.querySelectorAll(".x-label")].filter((el) => {
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 1 && rect.height > 1;
+    });
+    const shown = labels.map((el) => ({ el, rect: el.getBoundingClientRect(), text: (el.textContent || "").trim() }));
+    for (let i = 0; i < shown.length; i += 1) {
+      for (let j = i + 1; j < shown.length; j += 1) {
+        const a = shown[i].rect;
+        const b = shown[j].rect;
+        const overlap =
+          a.left < b.right - 0.5 &&
+          b.left < a.right - 0.5 &&
+          a.top < b.bottom - 0.5 &&
+          b.top < a.bottom - 0.5;
+        if (!overlap) continue;
+        const chart = axis.closest(".chart");
+        const name = chart?.querySelector(".plot")?.getAttribute("aria-label") || "chart";
+        problems.push(`x-label collision ${shown[i].text} / ${shown[j].text} (${name.slice(0, 48)})`);
+      }
+    }
+  }
   for (const card of document.querySelectorAll(".tile, .stat, .panel")) {
     if (card.closest("[data-scroll-ok]")) continue;
     const box = card.getBoundingClientRect();
