@@ -457,6 +457,12 @@ body {
   color: var(--muted);
 }
 
+.tile-call.is-full {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
 .call-full {
   max-width: 100%;
   margin: 0;

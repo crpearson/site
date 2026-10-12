@@ -3,6 +3,7 @@ import { IrFigure } from "@/components/IrFigure";
 import { Sparkline } from "@/components/Sparkline";
 import { StatusChip } from "@/components/StatusChip";
 import { chipTone, statusChip } from "@/lib/lamp";
+import { isOwnerOverride } from "@/lib/parallel-rules.mjs";
 import { vacationFrom, type SlotTile } from "@/lib/fleet";
 
 export function PackTile({ slot }: { slot: SlotTile }) {
@@ -41,10 +42,11 @@ export function PackTile({ slot }: { slot: SlotTile }) {
         provisional={slot.provisional}
       />
       {slot.status ? (
-        <span className="tile-call" title={slot.status}>
+        <span className={slot.reason && isOwnerOverride(slot.reason) ? "tile-call is-full" : "tile-call"} title={slot.status}>
           {slot.status}
         </span>
       ) : null}
+      {slot.reason && isOwnerOverride(slot.reason) ? <span className="note">{slot.reason}</span> : null}
       <span className="note">
         <span>{slot.latestSession ? slot.latestSession.slice(5) : "—"}</span>
         {slot.sr == null ? null : (

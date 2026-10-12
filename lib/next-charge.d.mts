@@ -26,6 +26,8 @@ export type ParallelBoard = {
   last_rule_b_V: number;
   last_rule_b_call: string;
   last_rule_b_session: string;
+  /** Packs this Rule B figure covers. Optional on v1; when present, each label is on this board. */
+  last_rule_b_over?: string[];
 };
 
 export type ChargeAloneItem = {
@@ -33,6 +35,10 @@ export type ChargeAloneItem = {
   uid: string;
   reason: string;
   until: string;
+  /** Largest rest offset from that pack's board, in volts. Optional on v1. */
+  last_offset_max_V?: number;
+  /** Which side of the board that offset sits on. */
+  last_offset_side?: "below" | "above";
 };
 
 export type DoNotConnectItem = {

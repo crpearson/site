@@ -4,7 +4,7 @@ import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
 import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
 import { checkNextCharge } from "../lib/next-charge.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
-import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
+import { isOwnerOverride, laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
 function parseCsv(text) {
   const rows = [];
@@ -226,15 +226,21 @@ for (const [uid, list] of byUid) {
   const recorded = laryParallelBucket(latest.status);
   if (/REST POOL/i.test(latest.status)) {
     console.log(`rest pool ${uid} (${latest.label_at_time}): recorded OFF, not a parallel-call disagreement`);
-  } else if (/OWNER OVERRIDE/i.test(latest.reason)) {
+  } else if (isOwnerOverride(latest.reason)) {
+    const monitor = /no rest test/i.test(latest.reason)
+      ? " Low-cell gap stays on monitor. Cell 4 has no rest test."
+      : "";
     console.log(
-      `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
+      `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement.${monitor}`,
     );
   } else if (computed.call !== recorded) {
     disagreements.push(`${uid}: computed ${computed.call}, recorded ${recorded}`);
   }
 }
 
+if (disagreements.some((line) => line.startsWith("CNHL-2026-005"))) {
+  fail("C1-P5 owner exception was overridden by the computed call");
+}
 if (disagreements.length) {
   console.log(`parallel call disagreements (${disagreements.length}), Lary's text left unchanged:`);
   for (const line of disagreements) console.log(line);
@@ -319,8 +325,12 @@ for (const label of ["D-1", "C1-P4", "C2-P2"]) {
   if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
-if (nextChargePage.includes("last_rule_b")) {
-  fail("the next charge page renders last_rule_b");
+const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");
+if (!nextChargePage.includes("last_rule_b_over") || !nextChargePage.includes(" V")) {
+  fail("the next charge page must label which packs last Rule B covers, with the V unit");
+}
+if (!chargeAlone.includes("last_offset_max_V") || !chargeAlone.includes(" V")) {
+  fail("charge-alone offsets must be shown in volts");
 }
 const nextFile = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next.json"), "utf8"));
 if (JSON.stringify(nextFile) !== JSON.stringify(board)) {

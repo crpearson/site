@@ -7,12 +7,21 @@ import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
 import { seriesColor } from "@/lib/color";
 import type { CSSProperties } from "react";
+import type { ParallelBoard } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
   title: "Next charge",
   description:
     "Storage channels, pre-flight parallel boards, and packs to leave disconnected for the next session.",
 };
+
+function ruleBLine(board: ParallelBoard): string | null {
+  const covered = board.last_rule_b_over;
+  if (!covered?.length) return null;
+  const packs =
+    covered.length === 1 ? covered[0] : `${covered.slice(0, -1).join(", ")} and ${covered[covered.length - 1]}`;
+  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packs} · ${board.last_rule_b_session}`;
+}
 
 export default function NextChargePage() {
   const plan = loadNextCharge();
@@ -75,7 +84,9 @@ export default function NextChargePage() {
           Pre-flight parallel
         </h2>
         <div className="bench-stack">
-          {boards.map((board) => (
+          {boards.map((board) => {
+            const ruleB = ruleBLine(board);
+            return (
             <div key={board.series} className="bench-series">
               <article
                 className="panel"
@@ -88,6 +99,12 @@ export default function NextChargePage() {
                     <dt>Current</dt>
                     <dd>{board.current}</dd>
                   </div>
+                  {ruleB ? (
+                    <div>
+                      <dt>Last Rule B</dt>
+                      <dd>{ruleB}</dd>
+                    </div>
+                  ) : null}
                 </dl>
                 {board.conditions.length ? (
                   <ul className="bench-notes">
@@ -109,7 +126,8 @@ export default function NextChargePage() {
                 />
               ))}
             </div>
-          ))}
+            );
+          })}
         </div>
         <ChargeAlone items={plan.charge_alone} resolve={resolve} />
       </section>

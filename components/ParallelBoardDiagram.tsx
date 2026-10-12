@@ -161,6 +161,12 @@ export function ChargeAlone({
               <BenchPack pack={resolve(item.label)} />
               <p className="bench-field">{item.uid}</p>
               <p className="note mt-1">{item.reason}</p>
+              {item.last_offset_max_V != null && item.last_offset_side ? (
+                <p className="note mt-1">
+                  Last night it was up to {item.last_offset_max_V.toFixed(3)} V {item.last_offset_side} the{" "}
+                  {resolve(item.label).series} board.
+                </p>
+              ) : null}
               <p className="bench-return">Until {item.until}</p>
             </div>
           </li>

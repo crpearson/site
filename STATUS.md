@@ -8,7 +8,7 @@ Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A 
 | C1-P2 | CNHL-2026-002 | Go | In service |
 | C1-P3 | CNHL-2026-003 | Go | In service |
 | C1-P4 | CNHL-2026-004 | Off (Rest pool) | Watch; rest test RT-004-1 due 2026-10-16 |
-| C1-P5 | CNHL-2026-005 | Go (rejoins C1 board; conditional on Rule B) | Watch |
+| C1-P5 | CNHL-2026-005 | Go (owner-approved exception; conditional on Rule B) | Watch |
 | C1-P6 | CNHL-2026-006 | Go | In service |
 | C2-P1 | CNHL-2026-007 | Go | Watch (IR spread) |
 | C2-P2 | CNHL-2026-008 | Off (Rest pool) | Watch; rest test RT-008-1 due 2026-10-16 |
@@ -18,6 +18,8 @@ Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A 
 | C2-P6 | CNHL-2026-012 | Go (conditional per Rule B) | In service |
 
 C1-P3 is an owner override. The 2026-10-10 night was clean under that override, so the parallel call is Go and the pack is on the C1 board. The strict 60 mV gap rule is not applied, the low-cell gap stays on monitor, and Cell 4 has no rest test.
+
+C1-P5's Go is an owner-approved exception of the same kind. The 2026-10-11 storage night was the clean night in that approval: floor 3620 mV on Cell 4 and a 50 mV gap. The recorded call stays Go, with Watch, and it stays conditional on Rule B. The strict gap rule would still read Caution from the 61 mV and 77 mV nights in the last three.
 
 C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel, last public measurement 2026-10-11: C1 is C1-P2, C1-P3, C1-P5, C1-P6. C2 is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6. C1-P5 and C2-P6 are conditional on Rule B. On 2026-10-11 they charged individually, so that night's Rule B is C1 P2, P3, and P6 at 0.186 V, Go, and C2 P1, P3, P4, and P5 at 0.230 V, Go. The 2026-10-10 C1 Rule B for P2, P3, and P6 stays 0.135 V, Go. C2 that night stays 0.479 V, Caution.
 

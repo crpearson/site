@@ -48,11 +48,16 @@
       "current": "normal",
       "conditions": [
         "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
-        "C1-P5 joins only if its rest V is within 0.30 V of the others; otherwise it charges alone."
+        "C1-P5 joins only if its rest V is within 0.30 V of every board pack; otherwise it charges alone."
       ],
-      "last_rule_b_V": 0.384,
-      "last_rule_b_call": "CAUTION",
-      "last_rule_b_session": "2026-10-11"
+      "last_rule_b_V": 0.186,
+      "last_rule_b_call": "GO",
+      "last_rule_b_session": "2026-10-11",
+      "last_rule_b_over": [
+        "C1-P2",
+        "C1-P3",
+        "C1-P6"
+      ]
     },
     {
       "series": "C2",
@@ -65,25 +70,35 @@
       "current": "normal",
       "conditions": [
         "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
-        "C2-P6 joins only if its rest V is within 0.30 V of the others; otherwise it charges alone."
+        "C2-P6 joins only if its rest V is within 0.30 V of every board pack; otherwise it charges alone."
       ],
-      "last_rule_b_V": 0.425,
-      "last_rule_b_call": "CAUTION",
-      "last_rule_b_session": "2026-10-11"
+      "last_rule_b_V": 0.23,
+      "last_rule_b_call": "GO",
+      "last_rule_b_session": "2026-10-11",
+      "last_rule_b_over": [
+        "C2-P1",
+        "C2-P3",
+        "C2-P4",
+        "C2-P5"
+      ]
     }
   ],
   "charge_alone": [
     {
       "label": "C1-P5",
       "uid": "CNHL-2026-005",
-      "reason": "last night rest V 21.963 V was the C1 Rule B outlier (board delta 0.384 V)",
-      "until": "conditional: joins the board if within 0.30 V tonight"
+      "reason": "charges alone unless its rest V is within 0.30 V of its C1 board-mates; last night (2026-10-11) rest V 21.963 V was 0.198-0.384 V below the C1 board packs (max offset 0.384 V)",
+      "until": "conditional: joins the board if within 0.30 V tonight",
+      "last_offset_max_V": 0.384,
+      "last_offset_side": "below"
     },
     {
       "label": "C2-P6",
       "uid": "CNHL-2026-012",
-      "reason": "last night rest V 22.397 V was the C2 Rule B outlier (board delta 0.425 V)",
-      "until": "conditional: joins the board if within 0.30 V tonight"
+      "reason": "charges alone unless its rest V is within 0.30 V of its C2 board-mates; last night (2026-10-11) rest V 22.397 V was 0.195-0.425 V above the C2 board packs (max offset 0.425 V)",
+      "until": "conditional: joins the board if within 0.30 V tonight",
+      "last_offset_max_V": 0.425,
+      "last_offset_side": "above"
     }
   ],
   "do_not_connect": [

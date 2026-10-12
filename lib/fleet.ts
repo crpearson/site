@@ -19,7 +19,7 @@ import {
 } from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
-import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
+import { isOwnerOverride, laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
 type Measurement = {
@@ -354,7 +354,7 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-004":
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-005":
-    "PARALLEL GO (rejoins C1 board; conditional on Rule B) | SERVICE Watch",
+    "PARALLEL GO (owner-approved rule exception; conditional on Rule B) | SERVICE Watch",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
   "CNHL-2026-008":
@@ -448,11 +448,17 @@ function assertStore() {
     const recorded = laryParallelBucket(call.status);
     if (/REST POOL/i.test(call.status)) {
       console.log(`rest pool ${uid}: recorded OFF, not a parallel-call disagreement`);
-    } else if (/OWNER OVERRIDE/i.test(call.reason)) {
+    } else if (isOwnerOverride(call.reason)) {
+      const monitor = /no rest test/i.test(call.reason)
+        ? " Low-cell gap stays on monitor. Cell 4 has no rest test."
+        : "";
       console.warn(
-        `owner override ${uid}: recorded ${recorded}; computed ${computed.call}; not a disagreement. Low-cell gap stays on monitor. Cell 4 has no rest test.`,
+        `owner override ${uid}: recorded ${recorded}; computed ${computed.call}; not a disagreement.${monitor}`,
       );
     } else if (computed.call !== recorded) {
+      if (uid === "CNHL-2026-005") {
+        throw new Error("C1-P5 owner exception was overridden by the computed call");
+      }
       console.warn(`parallel call disagreement ${uid}: computed ${computed.call}, recorded ${recorded}`);
     }
   }
@@ -784,6 +790,7 @@ export type SlotTile = {
   restDue: string | null;
   chargeMode: string | null;
   provisional: boolean;
+  reason: string | null;
 };
 
 export type SeriesBlock = {
@@ -843,6 +850,7 @@ export function seriesBlocks(): SeriesBlock[] {
         restDue: row?.restDue ?? null,
         chargeMode: pack?.chargeMode ?? null,
         provisional: row?.provisional ?? false,
+        reason: row?.reason ?? null,
       };
     });
     return {
@@ -1740,6 +1748,20 @@ function assertStatusChips() {
   }
   if (statusChip(c2p6.status, c2p6.chargeMode) !== "GO") {
     throw new Error("C2-P6 conditional Go must stay the one word GO");
+  }
+  const c1p5 = rows.find((row) => row.label === "C1-P5");
+  const c1p5Tile = seriesBlocks()
+    .flatMap((block) => block.slots)
+    .find((slot) => slot.label === "C1-P5");
+  if (
+    !c1p5 ||
+    !c1p5Tile ||
+    !isOwnerOverride(c1p5.reason) ||
+    c1p5Tile.reason !== c1p5.reason ||
+    !c1p5.status.startsWith("PARALLEL GO (owner-approved rule exception") ||
+    !c1p5.reason.includes("this GO is an owner-approved rule exception")
+  ) {
+    throw new Error("C1-P5 card must show the recorded GO and the owner-exception text");
   }
 }
 
