@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Lamp } from "@/components/Lamp";
 import { getPack, getSlot, latestCall, restTestsFor } from "@/lib/fleet";
+import { goNewText, watchRecheckText } from "@/lib/lamp";
 
 export function SlotDetail({ label }: { label: string }) {
   const slot = getSlot(label);
@@ -57,6 +58,10 @@ export function SlotDetail({ label }: { label: string }) {
           <p className="note mt-2 font-mono">{current.uid}</p>
           {current.lineage ? <p className="mt-2">{current.lineage}</p> : null}
           <p className="mt-3 leading-relaxed">{call.reason}</p>
+          {watchRecheckText(call.status, call.reason) ? (
+            <p className="note mt-2">Go (watch). {watchRecheckText(call.status, call.reason)}</p>
+          ) : null}
+          {goNewText(call.status) ? <p className="note mt-2">{goNewText(call.status)}</p> : null}
           {restTestsFor(current.uid).map((test) => (
             <p key={test.id} className="note mt-2">
               Rest pool · day 0 {test.readingDate || test.start} · 7-day reading due {test.due}

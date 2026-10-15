@@ -4,7 +4,7 @@ import { DontConnectList } from "@/components/DontConnectList";
 import { ChargeAlone, ParallelBoardDiagram } from "@/components/ParallelBoardDiagram";
 import { statusRows, type StatusRow } from "@/lib/fleet";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
-import { watchRecheckText } from "@/lib/lamp";
+import { goNewText, watchRecheckText } from "@/lib/lamp";
 import { layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
 import { seriesColor } from "@/lib/color";
 import type { CSSProperties } from "react";
@@ -152,10 +152,11 @@ export default function NextChargePage() {
             {plan.new_series_join_status.map((item) => {
               const row = resolve(item.label);
               const recheck = watchRecheckText(row.status, row.reason);
+              const fresh = goNewText(row.status);
               return (
                 <li key={item.label} className="note">
                   {item.label}: night {item.clean_nights_in_a_row} of 2
-                  {recheck ? ` · Go (watch) · ${recheck}` : " · New · charges alone"}
+                  {recheck ? ` · Go (watch) · ${recheck}` : fresh ? ` · ${fresh}` : ""}
                 </li>
               );
             })}

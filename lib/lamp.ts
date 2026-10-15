@@ -23,8 +23,8 @@ export function statusChip(status: string, chargeMode?: string | null): StatusCh
   const parallel = splitCall(status).parallel.toUpperCase();
   const service = splitCall(status).service.toUpperCase();
   if (text.includes("REST POOL")) return "REST";
-  // Go (watch) is the recorded call. Charging alone is not a demotion for that pack.
-  if (isGoWatch(status)) return "GO";
+  // Go (watch) and Go (new) are the recorded calls. Charging alone is not a demotion.
+  if (isGoWatch(status) || isGoNew(status)) return "GO";
   if (
     parallel.includes("INDIVIDUAL") ||
     text.includes("INDIVIDUALLY") ||
@@ -66,6 +66,20 @@ export function isGoWatch(status: string): boolean {
   return /\bgo\s*\(\s*watch\s*\)/i.test(splitCall(status).parallel);
 }
 
+/** Recorded Go (new). The words are Lary's status, shown in full. */
+export const GO_NEW_STATUS =
+  "Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14";
+
+export function isGoNew(status: string): boolean {
+  return /\bgo\s*\(\s*new\s*\)/i.test(splitCall(status).parallel);
+}
+
+export function goNewText(status: string): string | null {
+  if (!isGoNew(status)) return null;
+  const parallel = splitCall(status).parallel;
+  return parallel.toLowerCase().includes(GO_NEW_STATUS.toLowerCase()) ? GO_NEW_STATUS : parallel;
+}
+
 export const WATCH_RECHECK = "watch, recheck next storage night";
 
 export function watchRecheckText(status: string, reason = ""): string | null {
@@ -84,7 +98,7 @@ export function splitCall(status: string): { parallel: string; service: string }
 export function parallelTone(status: string): LampTone {
   const parallel = splitCall(status).parallel.toUpperCase();
   if (parallel.includes("REST POOL")) return "rest";
-  if (/\bGO\s*\(\s*WATCH\s*\)/.test(parallel)) return "ok";
+  if (/\bGO\s*\(\s*WATCH\s*\)/.test(parallel) || /\bGO\s*\(\s*NEW\s*\)/.test(parallel)) return "ok";
   if (parallel.includes("INDIVIDUAL-ONLY") || parallel.includes("DO NOT PARALLEL")) return "off";
   if (parallel.includes("INDIVIDUAL")) return "pool";
   if (/\bOFF\b/.test(parallel) || /\bPULL\b/.test(parallel)) return "off";

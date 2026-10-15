@@ -90,11 +90,11 @@ export default function BakeoffPage() {
               <article key={block.id} className="rounded-xl border border-[var(--line)] p-3">
                 <p className="eyebrow">{block.id}</p>
                 <p className="mt-2 font-mono text-sm">
-                  {block.id === "C3" || block.id === "C4"
-                    ? `6 packs · New · charge alone · night 1 of 2${
-                        block.id === "C4" ? " · C4-P2 and C4-P4 are Go (watch)" : ""
-                      }`
-                    : `${countFor(block.id, "ok")} packs Go · ${countFor(block.id, "caution")} packs Caution · ${countFor(block.id, "off")} packs individual only`}
+                  {block.id === "C3"
+                    ? "Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14"
+                    : block.id === "C4"
+                      ? "C4-P1, C4-P3, C4-P5, and C4-P6 are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch)."
+                      : `${countFor(block.id, "ok")} packs Go · ${countFor(block.id, "caution")} packs Caution · ${countFor(block.id, "off")} packs individual only`}
                 </p>
                 <p className="stat-sub">
                   Status as of {block.asOf}

@@ -97,8 +97,8 @@ export default function AboutPage() {
           <p className="note">
             Arrival imbalance is the gap between the highest and lowest cell voltage at the start
             of the charge, in millivolts. A low-cell gap is that lowest cell against the median of
-            the other five. A 7-day rest test watches the weak cell after storage. Pending tests
-            stay pending until the due date. A failed rest test takes the pack off the parallel board.
+            the other five. A 7-day rest test watches the weak cell after storage. A test with no
+            reading yet stays open until the due date. A failed rest test takes the pack off the parallel board.
           </p>
         </Panel>
         <Panel accent="muted" eyebrow="Glossary" title="What is not here">

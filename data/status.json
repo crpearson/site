@@ -96,7 +96,7 @@
     "No capacity in/out series — storage runs are top-ups, not capacity tests.",
     "DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.",
     "Mapping uses the night's manifest. The usual-low-cell check is advisory only.",
-    "C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14). Bake-off prices are shop prices, not purchase prices.",
+    "C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14). Ten packs are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch). Bake-off prices are shop prices, not purchase prices.",
     "DX8-2 IR is validated against the charger screen. A row is marked provisional only when its ir_validation says so."
   ]
 }

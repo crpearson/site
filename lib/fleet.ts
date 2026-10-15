@@ -366,29 +366,29 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-012": "PARALLEL GO (conditional per Rule B) | SERVICE In service",
   "CNHL-2026-013":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-014":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-015":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-016":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-017":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-018":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-019":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-020":
     "PARALLEL Go (watch) — INDIVIDUAL until the 2-night join rule completes, same as the other new packs | SERVICE New (watch)",
   "CNHL-2026-021":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-022":
     "PARALLEL Go (watch) — INDIVIDUAL until the 2-night join rule completes, same as the other new packs | SERVICE New (watch)",
   "CNHL-2026-023":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
   "CNHL-2026-024":
-    "PARALLEL INDIVIDUAL (new pack; charge-alone, clean night 1 of 2 - GO-pending) | SERVICE New",
+    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
 };
 
 function assertStore() {
@@ -1767,18 +1767,18 @@ const EXPECTED_CHIPS: Record<string, StatusChipName> = {
   "C2-P5": "GO",
   "C2-P6": "GO",
   "D-1": "REST",
-  "C3-P1": "ALONE",
-  "C3-P2": "ALONE",
-  "C3-P3": "ALONE",
-  "C3-P4": "ALONE",
-  "C3-P5": "ALONE",
-  "C3-P6": "ALONE",
-  "C4-P1": "ALONE",
+  "C3-P1": "GO",
+  "C3-P2": "GO",
+  "C3-P3": "GO",
+  "C3-P4": "GO",
+  "C3-P5": "GO",
+  "C3-P6": "GO",
+  "C4-P1": "GO",
   "C4-P2": "GO",
-  "C4-P3": "ALONE",
+  "C4-P3": "GO",
   "C4-P4": "GO",
-  "C4-P5": "ALONE",
-  "C4-P6": "ALONE",
+  "C4-P5": "GO",
+  "C4-P6": "GO",
 };
 
 function assertStatusChips() {
@@ -1853,9 +1853,19 @@ function assertStatusChips() {
       throw new Error(`${label} must stay Go (watch), recheck next storage night`);
     }
   }
-  const newAlone = rows.filter((row) => row.series === "C3" || (row.series === "C4" && row.label !== "C4-P2" && row.label !== "C4-P4"));
-  if (newAlone.length !== 10 || newAlone.some((row) => row.tone !== "pool" || !row.service.startsWith("New"))) {
-    throw new Error("the other new packs should stay New and off the rules-penalty lamp");
+  const goNew = "Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14";
+  const newPacks = rows.filter((row) => row.series === "C3" || (row.series === "C4" && row.label !== "C4-P2" && row.label !== "C4-P4"));
+  if (
+    newPacks.length !== 10 ||
+    newPacks.some(
+      (row) =>
+        !row.status.includes(goNew) ||
+        row.service !== "In rotation (new)" ||
+        row.tone !== "ok" ||
+        statusChip(row.status, row.chargeMode) !== "GO",
+    )
+  ) {
+    throw new Error("the ten new packs must show Go (new) verbatim and stay off the rules-penalty lamp");
   }
   if (
     statusChip("PARALLEL Go (watch) — INDIVIDUAL until the join rule completes | SERVICE New (watch)", "individual") !== "GO"

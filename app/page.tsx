@@ -348,7 +348,7 @@ export default function Home() {
 
       <Panel accent="floor" eyebrow="7-day rest" title="Rest tests">
         <p className="note mb-3">
-          Day-0 baselines are recorded. The 7-day reading stays pending until the due date. C1-P3 has
+          Day-0 baselines are recorded. The 7-day reading is not in yet. C1-P3 has
           no rest test.
         </p>
         <ul className="space-y-2 text-sm">
@@ -356,7 +356,7 @@ export default function Home() {
             <li key={`${test.id}-${test.uid}`}>
               <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
               day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
-              {test.result === "pending" ? "pending" : test.result}
+              {test.result === "pending" ? "not read yet" : test.result}
             </li>
           ))}
         </ul>

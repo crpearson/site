@@ -10,7 +10,7 @@ import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
 import { volts } from "@/lib/format";
-import { watchRecheckText } from "@/lib/lamp";
+import { goNewText, watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
@@ -29,6 +29,9 @@ import {
 } from "@/lib/fleet";
 
 function historyNote(event: { event: string; to: string; date: string; reason: string }) {
+  if (event.event === "rest_pool_enter") {
+    return "Off every board until the 7-day reading on 2026-10-16.";
+  }
   if (event.event !== "commission") return event.reason;
   const replacement = /replacement/i.test(event.reason);
   const base = `Commissioned into ${event.to} at ${event.date}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
@@ -142,6 +145,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         {watchRecheckText(pack.call.status, pack.call.reason) ? (
           <p className="note">Go (watch). {watchRecheckText(pack.call.status, pack.call.reason)}</p>
         ) : null}
+        {goNewText(pack.call.status) ? <p className="note">{goNewText(pack.call.status)}</p> : null}
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
@@ -328,7 +332,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {restTestsFor(pack.uid).map((test) => (
               <li key={`${test.id}-${test.uid}`}>
                 Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
-                7-day reading due {test.due}. {test.result === "pending" ? "Pending." : test.result}
+                7-day reading due {test.due}. {test.result === "pending" ? "Not read yet." : test.result}
               </li>
             ))}
           </ul>

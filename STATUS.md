@@ -16,20 +16,20 @@ Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A 
 | C2-P4 | CNHL-2026-010 | Go | In service |
 | C2-P5 | CNHL-2026-011 | Go | In service |
 | C2-P6 | CNHL-2026-012 | Go (conditional per Rule B) | In service |
-| C3-P1 | CNHL-2026-013 | Individual, night 1 of 2 | New |
-| C3-P2 | CNHL-2026-014 | Individual, night 1 of 2 | New |
-| C3-P3 | CNHL-2026-015 | Individual, night 1 of 2 | New |
-| C3-P4 | CNHL-2026-016 | Individual, night 1 of 2 | New |
-| C3-P5 | CNHL-2026-017 | Individual, night 1 of 2 | New |
-| C3-P6 | CNHL-2026-018 | Individual, night 1 of 2 | New |
-| C4-P1 | CNHL-2026-019 | Individual, night 1 of 2 | New |
+| C3-P1 | CNHL-2026-013 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C3-P2 | CNHL-2026-014 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C3-P3 | CNHL-2026-015 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C3-P4 | CNHL-2026-016 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C3-P5 | CNHL-2026-017 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C3-P6 | CNHL-2026-018 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C4-P1 | CNHL-2026-019 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
 | C4-P2 | CNHL-2026-020 | Go (watch) | New (watch) |
-| C4-P3 | CNHL-2026-021 | Individual, night 1 of 2 | New |
+| C4-P3 | CNHL-2026-021 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
 | C4-P4 | CNHL-2026-022 | Go (watch) | New (watch) |
-| C4-P5 | CNHL-2026-023 | Individual, night 1 of 2 | New |
-| C4-P6 | CNHL-2026-024 | Individual, night 1 of 2 | New |
+| C4-P5 | CNHL-2026-023 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C4-P6 | CNHL-2026-024 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
 
-C3 and C4 are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14. All 12 charge alone and are on night 1 of 2 clean nights. C4-P2 and C4-P4 are Go (watch): watch, recheck next storage night. There is no C3 or C4 board, so there is no Rule B for them. C3 and C4 do not share a board with each other or with C1 or C2. C1 and C2 latest values stay the 2026-10-11 storage night.
+C3 and C4 are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14. Ten packs are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch): watch, recheck next storage night. There is no C3 or C4 board, so there is no Rule B for them. C3 and C4 do not share a board with each other or with C1 or C2. C1 and C2 latest values stay the 2026-10-11 storage night.
 
 C1-P3 is an owner override. The 2026-10-10 night was clean under that override, so the parallel call is Go and the pack is on the C1 board. The strict 60 mV gap rule is not applied, the low-cell gap stays on monitor, and Cell 4 has no rest test.
 
@@ -47,4 +47,4 @@ IR is true milliohms from `ir_store_v4` (203 rows, including the 2026-10-11 stor
 - No capacity in/out series — storage runs are top-ups, not capacity tests.
 - DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.
 - Mapping uses the night's manifest. The usual-low-cell check is advisory only.
-- C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14). They charge alone, night 1 of 2. C4-P2 and C4-P4 are Go (watch): watch, recheck next storage night. No C3 or C4 board, so no Rule B for them. DX8-2 IR is validated against the charger screen.
+- C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14). Ten packs are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch): watch, recheck next storage night. No C3 or C4 board, so no Rule B for them. DX8-2 IR is validated against the charger screen.
