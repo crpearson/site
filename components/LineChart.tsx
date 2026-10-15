@@ -430,7 +430,10 @@ export function LineChart({
                     .join(". ");
               const place =
                 index === firstTick ? " x-label-start" : index === lastTick ? " x-label-end" : "";
-              const thin = edge ? "" : `${index % 2 === 1 ? " x-label-alt" : ""}${index % 3 !== 0 ? " x-label-third" : ""}`;
+              const nearEnd = !edge && lastTick - index <= 2;
+              const thin = edge
+                ? ""
+                : `${index % 2 === 1 ? " x-label-alt" : ""}${index % 3 !== 0 ? " x-label-third" : ""}${nearEnd ? " x-label-tail" : ""}`;
               return (
                 <button
                   key={category.id}

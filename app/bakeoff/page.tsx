@@ -62,7 +62,8 @@ export default function BakeoffPage() {
         <p className="page-intro mt-4">
           Owned series are the ones in service. Catalog prices are shop prices, not what was paid
           for a pack. Purchase date, price, and vendor are blank until they are supplied. C3 and C4
-          are not commissioned, so they are not listed as packs. Bars share one scale. Cost per
+          are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage
+          night 1 on 2026-10-14. Charts stay one series at a time. Bars share one scale. Cost per
           cycle is omitted: there is no cycle count yet.
         </p>
       </header>
@@ -89,8 +90,11 @@ export default function BakeoffPage() {
               <article key={block.id} className="rounded-xl border border-[var(--line)] p-3">
                 <p className="eyebrow">{block.id}</p>
                 <p className="mt-2 font-mono text-sm">
-                  {countFor(block.id, "ok")} packs Go · {countFor(block.id, "caution")} packs Caution ·{" "}
-                  {countFor(block.id, "off")} packs individual only
+                  {block.id === "C3" || block.id === "C4"
+                    ? `6 packs · New · charge alone · night 1 of 2${
+                        block.id === "C4" ? " · C4-P2 and C4-P4 are Go (watch)" : ""
+                      }`
+                    : `${countFor(block.id, "ok")} packs Go · ${countFor(block.id, "caution")} packs Caution · ${countFor(block.id, "off")} packs individual only`}
                 </p>
                 <p className="stat-sub">
                   Status as of {block.asOf}
@@ -158,12 +162,6 @@ export default function BakeoffPage() {
         ))}
       </div>
 
-      <article className="future-slot">
-        <p className="eyebrow">Future fleet</p>
-        <h2 className="mt-2 font-mono text-3xl tracking-tight">C3</h2>
-        <p className="mt-3 max-w-xl text-lg">Empty slot for when Ovonic is added as C3.</p>
-        <p className="note mt-2">No packs and no nights yet. The Ovonic cards above stay candidates.</p>
-      </article>
     </div>
   );
 }

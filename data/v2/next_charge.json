@@ -1,7 +1,7 @@
 {
   "schema": "next_charge/v1",
-  "as_of_session": "2026-10-11",
-  "as_of_date_pt": "2026-10-11",
+  "as_of_session": "2026-10-14",
+  "as_of_date_pt": "2026-10-14",
   "storage_runs": [
     {
       "charger": "DX8-1",
@@ -83,6 +83,148 @@
       ]
     }
   ],
+  "new_series_runs": [
+    {
+      "charger": "DX8-1",
+      "channel": "CH1",
+      "order": [
+        "C3-P1",
+        "C3-P2",
+        "C3-P3"
+      ],
+      "mode": "individual, one pack per run, sequential in this order"
+    },
+    {
+      "charger": "DX8-1",
+      "channel": "CH2",
+      "order": [
+        "C3-P4",
+        "C3-P5",
+        "C3-P6"
+      ],
+      "mode": "individual, one pack per run, sequential in this order"
+    },
+    {
+      "charger": "DX8-2",
+      "channel": "CH1",
+      "order": [
+        "C4-P1",
+        "C4-P2",
+        "C4-P3"
+      ],
+      "mode": "individual, one pack per run, sequential in this order"
+    },
+    {
+      "charger": "DX8-2",
+      "channel": "CH2",
+      "order": [
+        "C4-P4",
+        "C4-P5",
+        "C4-P6"
+      ],
+      "mode": "individual, one pack per run, sequential in this order"
+    }
+  ],
+  "new_series_join_status": [
+    {
+      "label": "C3-P1",
+      "uid": "CNHL-2026-013",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C3-P2",
+      "uid": "CNHL-2026-014",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C3-P3",
+      "uid": "CNHL-2026-015",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C3-P4",
+      "uid": "CNHL-2026-016",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C3-P5",
+      "uid": "CNHL-2026-017",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C3-P6",
+      "uid": "CNHL-2026-018",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C4-P1",
+      "uid": "CNHL-2026-019",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C4-P2",
+      "uid": "CNHL-2026-020",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "note": "owner override 2026-10-14",
+      "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C4-P3",
+      "uid": "CNHL-2026-021",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C4-P4",
+      "uid": "CNHL-2026-022",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "note": "owner override 2026-10-14",
+      "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C4-P5",
+      "uid": "CNHL-2026-023",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    },
+    {
+      "label": "C4-P6",
+      "uid": "CNHL-2026-024",
+      "storage_nights": 1,
+      "clean_nights_in_a_row": 1,
+      "joins_board": false,
+      "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
+    }
+  ],
   "charge_alone": [
     {
       "label": "C1-P5",
@@ -128,6 +270,6 @@
     "Add days since last flight/charge to the upload note.",
     "One pack per channel per run, in the order listed; keep each log file.",
     "Rule B: rest V spread across a board <=0.30 V GO, 0.30-0.60 V CAUTION (reduced current), >0.60 V do not parallel.",
-    "DX8-2 IR values are provisional until a DX8-2 screen photo is checked."
+    "New series C3/C4 charge individually (new_series_runs) on a separate night from C1/C2 to keep mapping clean; never mix series on a board."
   ]
 }

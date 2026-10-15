@@ -16,6 +16,8 @@ The published file uses schema `next_charge/v1`. Any other `schema` value fails 
 | `charge_alone` | Packs that charge on their own before flight. |
 | `do_not_connect` | Packs that stay off every lead. |
 | `notes` | Strings printed at the bottom of the page. |
+| `new_series_runs` | Optional on v1. Individual queues for a series that has no board yet. Same shape as `storage_runs`, plus an optional `mode` string. |
+| `new_series_join_status` | Optional on v1. One object per pack in those queues. |
 
 ## `storage_runs`
 
@@ -79,12 +81,28 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 
 A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_boards`, or `charge_alone`.
 
+## `new_series_runs` and `new_series_join_status`
+
+These two keys travel together. They list series that charge alone and are not on a parallel board. C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14). Each run is one series only. A pack in `new_series_runs` is not also in `storage_runs` or on a `parallel_boards` list. A series that already has a parallel board is not also in `new_series_runs`.
+
+`new_series_join_status` objects:
+
+| Key | Meaning |
+| --- | --- |
+| `label` | Pack label in `packs.csv`. |
+| `uid` | That label's `pack_uid`. |
+| `storage_nights` | Storage nights so far. A number. Charge runs do not count. |
+| `clean_nights_in_a_row` | Clean storage nights in a row. A number. |
+| `joins_board` | `true` or `false`. It must match whether that pack is on a parallel board. |
+| `rule` | The recorded join rule, in the file's own words. |
+| `note` | Optional. A short recorded note, such as an owner override. |
+
 ## What the build checks
 
 `npm run build` runs `scripts/validate-v4.mjs`, which checks this file.
 
 - `schema` is exactly `next_charge/v1`.
-- The keys are the ones in this note. `last_rule_b_over`, `last_offset_max_V`, and `last_offset_side` are optional. Any other extra key fails the build.
+- The keys are the ones in this note. `last_rule_b_over`, `last_offset_max_V`, `last_offset_side`, `new_series_runs`, and `new_series_join_status` are optional. Any other extra key fails the build.
 - Every pack label exists in `packs.csv`.
 - Each `uid` matches that label.
 - A parallel pack's series matches the board `series`.

@@ -10,12 +10,30 @@ export type NextChargeDocument = {
   charge_alone: ChargeAloneItem[];
   do_not_connect: DoNotConnectItem[];
   notes: string[];
+  /** Optional on v1. Series that charge alone and have no board yet. */
+  new_series_runs?: NewSeriesRun[];
+  /** Optional on v1. Night count and join rule for those packs. */
+  new_series_join_status?: NewSeriesJoin[];
 };
 
 export type StorageRun = {
   charger: string;
   channel: string;
   order: string[];
+};
+
+export type NewSeriesRun = StorageRun & {
+  mode?: string;
+};
+
+export type NewSeriesJoin = {
+  label: string;
+  uid: string;
+  storage_nights: number;
+  clean_nights_in_a_row: number;
+  joins_board: boolean;
+  rule: string;
+  note?: string;
 };
 
 export type ParallelBoard = {

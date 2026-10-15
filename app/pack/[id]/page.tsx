@@ -10,6 +10,7 @@ import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
 import { volts } from "@/lib/format";
+import { watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
@@ -138,6 +139,9 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
         <p className="call-full">{pack.call.status}</p>
+        {watchRecheckText(pack.call.status, pack.call.reason) ? (
+          <p className="note">Go (watch). {watchRecheckText(pack.call.status, pack.call.reason)}</p>
+        ) : null}
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
@@ -199,6 +203,24 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               : `Floor watch ${thresholds.floor_eye_mv} mV`}
           </p>
         </article>
+        {pack.series === "C3" || pack.series === "C4" ? (
+        <article className="stat" data-tone="signal">
+          <p className="eyebrow">Storage night</p>
+          <p className="stat-value text-[1.15rem]">Night 1 of 2</p>
+          <p className="stat-sub">
+            {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
+            {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
+            {pack.row.sr != null ? (
+              <>
+                {" "}
+                · S_R <IrFigure value={pack.row.sr} provisional={pack.row.provisional} unit />
+              </>
+            ) : (
+              ""
+            )}
+          </p>
+        </article>
+        ) : (
         <article className="stat" data-tone="ruleb">
           <p className="eyebrow">Rule B · rest</p>
           <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
@@ -215,6 +237,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             )}
           </p>
         </article>
+        )}
       </div>
 
       {pack.chargeRuns.length ? (

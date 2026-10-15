@@ -990,7 +990,8 @@ body {
 }
 
 @container chart (max-width: 500px) {
-  .x-label-third {
+  .x-label-third,
+  .x-label-tail {
     display: none;
   }
 }

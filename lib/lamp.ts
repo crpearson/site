@@ -9,12 +9,13 @@ export const STATUS_CHIPS: readonly StatusChipName[] = ["GO", "CAUTION", "ALONE"
  *
  * 1. REST — the call says Rest pool. That pack is off every board, even when the
  *    service half also says D pool or Watch, and even when it is charged alone.
- * 2. ALONE — Individual only, or charged individually (the call, or charge mode).
+ * 2. GO (watch) — the parallel half says Go (watch). Charging alone does not replace it.
+ * 3. ALONE — Individual only, or charged individually (the call, or charge mode).
  *    This outranks Caution and Watch, so a pack charged on its own stays ALONE.
- * 3. CAUTION — the parallel half says Caution.
- * 4. GO — the parallel half says Go. A service Watch note does not replace a
+ * 4. CAUTION — the parallel half says Caution.
+ * 5. GO — the parallel half says Go. A service Watch note does not replace a
  *    parallel Go; the Watch words stay in the full call under the chip.
- * 5. WATCH — D pool or Watch, when the parallel half is not already Rest, Alone,
+ * 6. WATCH — D pool or Watch, when the parallel half is not already Rest, Alone,
  *    Caution, or Go.
  */
 export function statusChip(status: string, chargeMode?: string | null): StatusChipName {
@@ -22,6 +23,8 @@ export function statusChip(status: string, chargeMode?: string | null): StatusCh
   const parallel = splitCall(status).parallel.toUpperCase();
   const service = splitCall(status).service.toUpperCase();
   if (text.includes("REST POOL")) return "REST";
+  // Go (watch) is the recorded call. Charging alone is not a demotion for that pack.
+  if (isGoWatch(status)) return "GO";
   if (
     parallel.includes("INDIVIDUAL") ||
     text.includes("INDIVIDUALLY") ||
@@ -58,6 +61,19 @@ export function chipTone(chip: StatusChipName): LampTone {
   return "pool";
 }
 
+/** Recorded Go (watch). The chip stays Go; the recheck sentence stays with it. */
+export function isGoWatch(status: string): boolean {
+  return /\bgo\s*\(\s*watch\s*\)/i.test(splitCall(status).parallel);
+}
+
+export const WATCH_RECHECK = "watch, recheck next storage night";
+
+export function watchRecheckText(status: string, reason = ""): string | null {
+  if (!isGoWatch(status)) return null;
+  const haystack = `${status}\n${reason}`.toLowerCase();
+  return haystack.includes(WATCH_RECHECK) ? WATCH_RECHECK : null;
+}
+
 export function splitCall(status: string): { parallel: string; service: string } {
   const match = status.match(/^PARALLEL\s+([\s\S]+?)\s+\|\s+SERVICE\s+([\s\S]+)$/i);
   if (!match) return { parallel: status.trim(), service: "" };
@@ -68,7 +84,9 @@ export function splitCall(status: string): { parallel: string; service: string }
 export function parallelTone(status: string): LampTone {
   const parallel = splitCall(status).parallel.toUpperCase();
   if (parallel.includes("REST POOL")) return "rest";
+  if (/\bGO\s*\(\s*WATCH\s*\)/.test(parallel)) return "ok";
   if (parallel.includes("INDIVIDUAL-ONLY") || parallel.includes("DO NOT PARALLEL")) return "off";
+  if (parallel.includes("INDIVIDUAL")) return "pool";
   if (/\bOFF\b/.test(parallel) || /\bPULL\b/.test(parallel)) return "off";
   if (parallel.includes("CAUTION") || parallel.includes("EYE")) return "caution";
   if (/\bGO\b/.test(parallel) || /\bOK\b/.test(parallel)) return "ok";

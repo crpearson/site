@@ -27,7 +27,9 @@ export default function AboutPage() {
           comes from the start of each storage charge. Rules v3 and Rule B use the limits shown
           below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and not a
           series mean. D-1, C1-P4, and C2-P2 are in the Rest pool until 2026-10-16. A Rest pool night
-          is labeled Rest pool. D-1's 2026-10-09 run stays on series D.
+          is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in rotation:
+          CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on
+          2026-10-14. They charge alone and have no board yet.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">

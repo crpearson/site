@@ -482,6 +482,7 @@ export default function Home() {
               but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
               The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
               pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
+              C3 and C4 have no board yet, so they are not on this chart.
             </p>
             <LineChart
               categories={model.categories}
@@ -506,6 +507,7 @@ export default function Home() {
             />
             <ul className="note mt-3 space-y-1">
               {model.fleets
+                .filter((fleet) => fleet.id !== "C3" && fleet.id !== "C4")
                 .filter((fleet) => fleet.individual || fleet.rest.every((value) => value == null))
                 .map((fleet) => (
                   <li key={fleet.id}>
