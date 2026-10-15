@@ -10,6 +10,7 @@ import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
 import { volts } from "@/lib/format";
+import { goNewText, watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
@@ -28,6 +29,9 @@ import {
 } from "@/lib/fleet";
 
 function historyNote(event: { event: string; to: string; date: string; reason: string }) {
+  if (event.event === "rest_pool_enter") {
+    return "Off every board until the 7-day reading on 2026-10-16.";
+  }
   if (event.event !== "commission") return event.reason;
   const replacement = /replacement/i.test(event.reason);
   const base = `Commissioned into ${event.to} at ${event.date}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
@@ -138,6 +142,10 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
         <p className="call-full">{pack.call.status}</p>
+        {watchRecheckText(pack.call.status, pack.call.reason) ? (
+          <p className="note">Go (watch). {watchRecheckText(pack.call.status, pack.call.reason)}</p>
+        ) : null}
+        {goNewText(pack.call.status) ? <p className="note">{goNewText(pack.call.status)}</p> : null}
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
@@ -199,6 +207,24 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               : `Floor watch ${thresholds.floor_eye_mv} mV`}
           </p>
         </article>
+        {pack.series === "C3" || pack.series === "C4" ? (
+        <article className="stat" data-tone="signal">
+          <p className="eyebrow">Storage night</p>
+          <p className="stat-value text-[1.15rem]">Night 1 of 2</p>
+          <p className="stat-sub">
+            {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
+            {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
+            {pack.row.sr != null ? (
+              <>
+                {" "}
+                · S_R <IrFigure value={pack.row.sr} provisional={pack.row.provisional} unit />
+              </>
+            ) : (
+              ""
+            )}
+          </p>
+        </article>
+        ) : (
         <article className="stat" data-tone="ruleb">
           <p className="eyebrow">Rule B · rest</p>
           <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
@@ -215,6 +241,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             )}
           </p>
         </article>
+        )}
       </div>
 
       {pack.chargeRuns.length ? (
@@ -305,7 +332,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {restTestsFor(pack.uid).map((test) => (
               <li key={`${test.id}-${test.uid}`}>
                 Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
-                7-day reading due {test.due}. {test.result === "pending" ? "Pending." : test.result}
+                7-day reading due {test.due}. {test.result === "unread" ? "Not read yet." : test.result}
               </li>
             ))}
           </ul>

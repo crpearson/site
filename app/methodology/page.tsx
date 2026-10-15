@@ -33,6 +33,10 @@ export default function MethodologyPage() {
           {doc.title}
         </h1>
         <div className="page-intro mt-4" dangerouslySetInnerHTML={{ __html: doc.introHtml }} />
+        <p className="note mt-4">
+          C3 and C4 are in rotation. Ten packs are Go (new): charges alone until 2 clean storage
+          nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch).
+        </p>
       </header>
       {doc.sections.map((section, index) => (
         <Panel

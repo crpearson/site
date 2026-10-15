@@ -4,6 +4,7 @@ import { DontConnectList } from "@/components/DontConnectList";
 import { ChargeAlone, ParallelBoardDiagram } from "@/components/ParallelBoardDiagram";
 import { statusRows, type StatusRow } from "@/lib/fleet";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
+import { goNewText, watchRecheckText } from "@/lib/lamp";
 import { layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
 import { seriesColor } from "@/lib/color";
 import type { CSSProperties } from "react";
@@ -131,6 +132,37 @@ export default function NextChargePage() {
         </div>
         <ChargeAlone items={plan.charge_alone} resolve={resolve} />
       </section>
+
+      {plan.new_series_runs?.length && plan.new_series_join_status ? (
+        <section className="space-y-3" aria-labelledby="new-series-heading">
+          <h2 id="new-series-heading" className="section-title">
+            C3 and C4
+          </h2>
+          <p className="note">
+            In rotation. CNHL V2 6S 1300 Black, purchased 2026-10-13. First full charge and storage
+            night 1 on 2026-10-14. Each series charges alone, one pack per run, on its own night.
+            C3 and C4 do not share a board with each other or with C1 or C2. No board yet.
+          </p>
+          <div className="bench-stack">
+            {storageChargers(plan.new_series_runs).map((charger) => (
+              <ChargerDiagram key={`new-${charger.charger}`} charger={charger} resolve={resolve} />
+            ))}
+          </div>
+          <ul className="bench-notes">
+            {plan.new_series_join_status.map((item) => {
+              const row = resolve(item.label);
+              const recheck = watchRecheckText(row.status, row.reason);
+              const fresh = goNewText(row.status);
+              return (
+                <li key={item.label} className="note">
+                  {item.label}: night {item.clean_nights_in_a_row} of 2
+                  {recheck ? ` · Go (watch) · ${recheck}` : fresh ? ` · ${fresh}` : ""}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="space-y-3" aria-labelledby="hold-heading">
         <h2 id="hold-heading" className="section-title">
