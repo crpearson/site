@@ -356,7 +356,7 @@ export default function Home() {
             <li key={`${test.id}-${test.uid}`}>
               <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
               day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
-              {test.result === "pending" ? "not read yet" : test.result}
+              {test.result === "unread" ? "not read yet" : test.result}
             </li>
           ))}
         </ul>

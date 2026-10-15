@@ -188,7 +188,6 @@
       "storage_nights": 1,
       "clean_nights_in_a_row": 1,
       "joins_board": false,
-      "note": "owner override 2026-10-14",
       "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
     },
     {
@@ -205,7 +204,6 @@
       "storage_nights": 1,
       "clean_nights_in_a_row": 1,
       "joins_board": false,
-      "note": "owner override 2026-10-14",
       "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
     },
     {

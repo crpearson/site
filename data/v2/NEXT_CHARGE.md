@@ -95,7 +95,7 @@ These two keys travel together. They list series that charge alone and are not o
 | `clean_nights_in_a_row` | Clean storage nights in a row. A number. |
 | `joins_board` | `true` or `false`. It must match whether that pack is on a parallel board. |
 | `rule` | The recorded join rule, in the file's own words. |
-| `note` | Optional. A short recorded note, such as an owner override. |
+| `note` | Optional. A short recorded note. |
 
 ## What the build checks
 

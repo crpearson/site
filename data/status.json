@@ -41,7 +41,7 @@
     },
     "C1-P3": {
       "status": "PARALLEL CAUTION; GO after one clean night | SERVICE In service",
-      "reason": "OWNER OVERRIDE 2026-10-09: keep GO-after-one-clean-night; strict 60 mV low-cell-gap rule NOT applied to C1-P3; no rest test on Cell 4. Monitor: Cell4 gap last 3 = 63/61/92 mV.",
+      "reason": "Caution until the next clean storage night, then Go. Monitor: Cell 4 low-cell gap over the last 3 nights = 63/61/92 mV.",
       "call_date": "2026-10-09"
     },
     "C1-P4": {

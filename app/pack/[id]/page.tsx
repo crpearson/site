@@ -332,7 +332,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {restTestsFor(pack.uid).map((test) => (
               <li key={`${test.id}-${test.uid}`}>
                 Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
-                7-day reading due {test.due}. {test.result === "pending" ? "Not read yet." : test.result}
+                7-day reading due {test.due}. {test.result === "unread" ? "Not read yet." : test.result}
               </li>
             ))}
           </ul>

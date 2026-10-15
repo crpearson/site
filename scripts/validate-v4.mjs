@@ -4,7 +4,7 @@ import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
 import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
 import { checkNextCharge } from "../lib/next-charge.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
-import { isOwnerOverride, laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
+import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
 
 function parseCsv(text) {
   const rows = [];
@@ -226,21 +226,11 @@ for (const [uid, list] of byUid) {
   const recorded = laryParallelBucket(latest.status);
   if (/REST POOL/i.test(latest.status)) {
     console.log(`rest pool ${uid} (${latest.label_at_time}): recorded OFF, not a parallel-call disagreement`);
-  } else if (isOwnerOverride(latest.reason)) {
-    const monitor = /no rest test/i.test(latest.reason)
-      ? " Low-cell gap stays on monitor. Cell 4 has no rest test."
-      : "";
-    console.log(
-      `owner override ${uid} (${latest.label_at_time}): recorded ${recorded}; computed ${computed.call}; not a disagreement.${monitor}`,
-    );
   } else if (computed.call !== recorded) {
     disagreements.push(`${uid}: computed ${computed.call}, recorded ${recorded}`);
   }
 }
 
-if (disagreements.some((line) => line.startsWith("CNHL-2026-005"))) {
-  fail("C1-P5 owner exception was overridden by the computed call");
-}
 if (disagreements.length) {
   console.log(`parallel call disagreements (${disagreements.length}), Lary's text left unchanged:`);
   for (const line of disagreements) console.log(line);

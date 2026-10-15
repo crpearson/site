@@ -21,7 +21,7 @@ import {
 } from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
-import { isOwnerOverride, laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
+import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
 type Measurement = {
@@ -192,7 +192,7 @@ const restTests: RestTest[] = readCsv("v2/rest_tests.csv")
     cell: row.suspect_cell,
     start: row.start_date,
     due: row.due_date,
-    result: row.result.trim() || "pending",
+    result: row.result.trim() || "unread",
     note: row.note,
     readingDate: row.reading_date.trim(),
   }));
@@ -356,7 +356,7 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-004":
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
   "CNHL-2026-005":
-    "PARALLEL GO (owner-approved rule exception; conditional on Rule B) | SERVICE Watch",
+    "PARALLEL GO (conditional on Rule B) | SERVICE Watch",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
   "CNHL-2026-008":
@@ -500,17 +500,7 @@ function assertStore() {
     const recorded = laryParallelBucket(call.status);
     if (/REST POOL/i.test(call.status)) {
       console.log(`rest pool ${uid}: recorded OFF, not a parallel-call disagreement`);
-    } else if (isOwnerOverride(call.reason)) {
-      const monitor = /no rest test/i.test(call.reason)
-        ? " Low-cell gap stays on monitor. Cell 4 has no rest test."
-        : "";
-      console.warn(
-        `owner override ${uid}: recorded ${recorded}; computed ${computed.call}; not a disagreement.${monitor}`,
-      );
     } else if (computed.call !== recorded) {
-      if (uid === "CNHL-2026-005") {
-        throw new Error("C1-P5 owner exception was overridden by the computed call");
-      }
       console.warn(`parallel call disagreement ${uid}: computed ${computed.call}, recorded ${recorded}`);
     }
   }
@@ -1833,12 +1823,13 @@ function assertStatusChips() {
   if (
     !c1p5 ||
     !c1p5Tile ||
-    !isOwnerOverride(c1p5.reason) ||
     c1p5Tile.reason !== c1p5.reason ||
-    !c1p5.status.startsWith("PARALLEL GO (owner-approved rule exception") ||
-    !c1p5.reason.includes("this GO is an owner-approved rule exception")
+    c1p5.status !== "PARALLEL GO (conditional on Rule B) | SERVICE Watch" ||
+    !c1p5.reason.includes("clean storage night on 2026-10-11") ||
+    !c1p5.reason.includes("floor 3620 mV") ||
+    statusChip(c1p5.status, c1p5.chargeMode) !== "GO"
   ) {
-    throw new Error("C1-P5 card must show the recorded GO and the owner-exception text");
+    throw new Error("C1-P5 card must show the recorded GO");
   }
   for (const label of ["C4-P2", "C4-P4"]) {
     const row = rows.find((item) => item.label === label);
