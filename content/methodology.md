@@ -10,7 +10,7 @@
 
 | Item | What's used |
 | --- | --- |
-| Packs | CNHL V2 6S ~1300 mAh (Black). 12 packs in two series of six (**C1** and **C2**), plus a **D** pool for packs that are only charged individually. Two more CNHL V2 6S ~1300 series, **C3** and **C4**, are planned |
+| Packs | CNHL V2 6S ~1300 mAh (Black). Four series of six in rotation (**C1**, **C2**, **C3** and **C4**), plus a **D** pool for packs that are only charged individually. C3 and C4 were added 2026-10-14 (purchased 2026-10-13) |
 | Chargers | Two Junsi iCharger DX8s, **DX8-1** and **DX8-2**. For storage logs each charger channel handles three packs (see *Mapping logs to packs*) |
 | Power supply | Chargery S1500, usually set to 28 V |
 | Parallel boards | HGLRC Thor 6-port, fused |
@@ -23,7 +23,7 @@ A pack is only ever parallel-charged with its own series. Series are never mixed
 ## Pack identity
 
 - Every physical pack has a **permanent ID** in the form `{brand}-{year}-{number}`, e.g. `CNHL-2026-001`. The year is the year the ID was assigned. IDs are never reused and don't include the slot.
-- The **label** (e.g. `C1-P4`) is the pack's current slot in a series. Series slots are `C1-P1…P6`, `C2-P1…P6`, and later `C3-P1…`, `C4-P1…`. Packs in the D pool are labeled `D-1`, `D-2`, and so on.
+- The **label** (e.g. `C1-P4`) is the pack's current slot in a series. Series slots are `C1-P1…P6`, `C2-P1…P6`, `C3-P1…P6` and `C4-P1…P6`. Packs in the D pool are labeled `D-1`, `D-2`, and so on.
 - When a pack moves (for example from a series to the D pool), its ID and full history go with it. When a new pack takes over a slot, it gets a new ID, and the old pack's history stays under its own ID.
 - Every move, replacement, and retirement is logged as a dated event, and every status call is kept as a dated history.
 
@@ -174,11 +174,12 @@ Rest pool: packs under a 7-day rest test sit here at storage voltage, off every 
 - Caution is a signal to watch, not a reason to panic, and OFF is a signal to act.
 - These are one hobbyist's rules for one fleet. Follow your manufacturer's guidance and your own judgment.
 
-## Planned changes
+## New packs
 
-- **DX8-2 back online:** the four-way storage split above starts with DX8-2's first logged night. File numbers stay separate per charger.
-- **Two new series, C3 and C4:** six packs each, **CNHL V2 6S ~1300 (Black)**, the same as C1 and C2. Each gets its own series board and is never mixed with another series. They'll get the next permanent IDs when they arrive, and where they charge is declared in each night's manifest.
-- **Replacing questionable packs:** packs that are OFF or have repeat Cautions may be moved to the D pool or retired, and a new pack can take the freed slot under a new permanent ID.
+- A new pack gets the next permanent ID and a commission entry. Its first full charge is recorded as a baseline (the arrival cell voltages are that charge's start cells).
+- After that it charges alone, one pack per run, until it has **2 clean storage nights** in a row: no low cell 60 mV or more below its siblings, floor at least 3600 mV, IR spread under 2.0 mΩ, and no cell at 1.5× the pack median or more.
+- Then it joins its own series board, subject to Rule B. Series never mix on a board.
+- Packs that are OFF or have repeat Cautions may move to the D pool or retire. A new pack can take a freed slot under a new permanent ID.
 
 ---
 *Fleet owner: LostPennyFPV. Data and status calls are updated after each Storage night.*
