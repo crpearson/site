@@ -136,7 +136,7 @@ export default function Home() {
         </h2>
         <p className="note mt-2">
           Day 0 {stats.rest[0]?.restDay0 ?? "2026-10-09"}. 7-day reading due {stats.rest[0]?.restDue ?? "2026-10-16"}.
-          These packs are not charged during the test. D-1 stays in series D. C1-P4 and C2-P2 keep their slots.
+          These packs are not charged during the test. C1-P4 and C2-P2 keep their slots.
         </p>
         <ul className="mt-3 space-y-2 text-sm">
           {stats.rest.map((row) => (
@@ -352,7 +352,7 @@ export default function Home() {
 
       <Panel accent="floor" eyebrow="7-day rest" title="Rest tests">
         <p className="note mb-3">
-          Day-0 baselines are recorded. The 7-day reading is not in yet. C1-P3 has
+          Day-0 baselines are recorded. Each test shows its result once the 7-day reading is in. C1-P3 has
           no rest test.
         </p>
         <ul className="space-y-2 text-sm">
@@ -360,7 +360,7 @@ export default function Home() {
             <li key={`${test.id}-${test.uid}`}>
               <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
               day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
-              {test.result === "unread" ? "not read yet" : test.result}
+              {test.result === "unread" ? "not read yet" : `read ${test.readDate} · ${test.result}`}
             </li>
           ))}
         </ul>

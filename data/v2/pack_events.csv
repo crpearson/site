@@ -30,3 +30,4 @@ S263,CNHL-2026-012,commission,,C2-P6,commission at earliest row-backed session S
 2026-10-14,CNHL-2026-022,commission,,C4-P4,new pack commissioned; first full charge 2026-10-14-charge (DX8-2 CH2 NNN 15); CNHL V2 6S 1300 Black
 2026-10-14,CNHL-2026-023,commission,,C4-P5,new pack commissioned; first full charge 2026-10-14-charge (DX8-2 CH2 NNN 17); CNHL V2 6S 1300 Black
 2026-10-14,CNHL-2026-024,commission,,C4-P6,new pack commissioned; first full charge 2026-10-14-charge (DX8-2 CH2 NNN 19); CNHL V2 6S 1300 Black
+2026-10-17,CNHL-2026-001,rest_pool_exit,D-1,D-1,"Left the Rest pool: rest test RT-001-1 passed (Cell 6 dropped 13 mV against a middle value of 11 mV for the other cells, so 2 mV extra, within the 10 mV limit). Back to the D pool: charged on its own, never on a parallel board. This is pass 1 of the 3 in a row it needs to leave the D pool, followed by 3 GO nights on a parallel board."

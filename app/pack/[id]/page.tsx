@@ -45,6 +45,7 @@ function historyVerb(event: string) {
   if (event === "move") return "Moved";
   if (event === "rest_test_start") return "Rest test started";
   if (event === "rest_pool_enter") return "Entered Rest pool";
+  if (event === "rest_pool_exit") return "Left Rest pool";
   return event;
 }
 
@@ -334,7 +335,8 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {restTestsFor(pack.uid).map((test) => (
               <li key={`${test.id}-${test.uid}`}>
                 Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
-                7-day reading due {test.due}. {test.result === "unread" ? "Not read yet." : test.result}
+                7-day reading due {test.due}.{" "}
+                {test.result === "unread" ? "Not read yet." : `Read ${test.readDate}: ${test.result}${test.excessMv ? ` (${test.excessMv} mV extra drop)` : ""}.`}
               </li>
             ))}
           </ul>

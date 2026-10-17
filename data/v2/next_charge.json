@@ -845,13 +845,6 @@
   },
   "do_not_connect": [
     {
-      "label": "D-1",
-      "uid": "CNHL-2026-001",
-      "pool": "Rest",
-      "reason": "7-day rest test (left at storage, untouched)",
-      "return_date": "2026-10-16"
-    },
-    {
       "label": "C1-P4",
       "uid": "CNHL-2026-004",
       "pool": "Rest",

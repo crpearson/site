@@ -64,7 +64,9 @@ export function SlotDetail({ label }: { label: string }) {
           {goNewText(call.status) ? <p className="note mt-2">{goNewText(call.status)}</p> : null}
           {restTestsFor(current.uid).map((test) => (
             <p key={test.id} className="note mt-2">
-              Rest pool · day 0 {test.readingDate || test.start} · 7-day reading due {test.due}
+              {test.result === "unread"
+                ? `Rest pool · day 0 ${test.readingDate || test.start} · 7-day reading due ${test.due}`
+                : `Rest test · day 0 ${test.readingDate || test.start} · read ${test.readDate} · ${test.result}`}
             </p>
           ))}
           <p className="note mt-2">

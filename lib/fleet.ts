@@ -180,22 +180,43 @@ type RestTest = {
   due: string;
   result: string;
   note: string;
+  /** Day-0 baseline date (the storage_end row). */
   readingDate: string;
+  /** 7-day reading date, or "" while unread. */
+  readDate: string;
+  excessMv: string;
 };
 
-const restTests: RestTest[] = readCsv("v2/rest_tests.csv")
-  .filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW")
-  .map((row) => ({
-    id: row.test_id,
-    uid: row.pack_uid,
-    label: row.label,
-    cell: row.suspect_cell,
-    start: row.start_date,
-    due: row.due_date,
-    result: row.result.trim() || "unread",
-    note: row.note,
-    readingDate: row.reading_date.trim(),
-  }));
+// One entry per test: the storage_end row is day 0; a later reading row (e.g. 7day) adds the result.
+const restTests: RestTest[] = (() => {
+  const byId = new Map<string, RestTest>();
+  for (const row of readCsv("v2/rest_tests.csv").filter((item) => item.result.trim() !== "FILLED-SEE-DAY0-ROW")) {
+    const key = `${row.test_id}|${row.pack_uid}`;
+    if (row.reading === "storage_end") {
+      byId.set(key, {
+        id: row.test_id,
+        uid: row.pack_uid,
+        label: row.label,
+        cell: row.suspect_cell,
+        start: row.start_date,
+        due: row.due_date,
+        result: "unread",
+        note: row.note,
+        readingDate: row.reading_date.trim(),
+        readDate: "",
+        excessMv: "",
+      });
+    } else {
+      const test = byId.get(key);
+      if (!test) throw new Error(`${row.test_id} ${row.reading} reading has no day-0 row`);
+      test.result = row.result.trim() || "unread";
+      test.readDate = row.reading_date.trim();
+      test.excessMv = row.excess_mV.trim();
+      test.note = row.note;
+    }
+  }
+  return [...byId.values()];
+})();
 
 const v4Rows = readCsv("v2/ir_store_v4.public.csv");
 
@@ -350,7 +371,7 @@ function inRestPool(uid: string, session: string): boolean {
 
 const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-001":
-    "PARALLEL OFF (Rest pool) | SERVICE D pool (Watch); rest test RT-001-1, 7-day reading due 2026-10-16; not charged during test",
+    "PARALLEL INDIVIDUAL (D pool) | SERVICE D pool (Watch); rest test RT-001-1 PASS 2026-10-17 (pass 1 of 3)",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-004":
@@ -434,8 +455,9 @@ function assertStore() {
   if (operationalPoints("CNHL-2026-012").some((row) => row.session === "2026-10-11-charge")) {
     throw new Error("the charge run is still in the latest readings");
   }
-  if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3) {
-    throw new Error("Rest tests should be the three day-0 rows, with no C1-P3 test");
+  const d1Pass = restTests.filter((test) => test.id === "RT-001-1" && test.result === "PASS" && test.readDate === "2026-10-17" && test.readingDate === "2026-10-09");
+  if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3 || d1Pass.length !== 1) {
+    throw new Error("Rest tests should be the three tests (day 0 2026-10-09) with RT-001-1 read PASS on 2026-10-17, and no C1-P3 test");
   }
   const freshCharge = measurements.filter((row) => row.session === "2026-10-14-charge");
   const freshStorage = measurements.filter((row) => row.session === "2026-10-14");
@@ -1797,7 +1819,7 @@ const EXPECTED_CHIPS: Record<string, StatusChipName> = {
   "C2-P4": "GO",
   "C2-P5": "GO",
   "C2-P6": "GO",
-  "D-1": "REST",
+  "D-1": "ALONE",
   "C3-P1": "GO",
   "C3-P2": "GO",
   "C3-P3": "GO",

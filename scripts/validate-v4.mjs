@@ -208,8 +208,17 @@ console.log(`plausibility passed ${v4.length}/${v4.length} (no real-data row out
 
 const calls = parseCsv(fs.readFileSync(path.join(root, "data/v2/status_calls.csv"), "utf8"));
 const visibleRests = rests.filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW");
-if (visibleRests.length !== 3 || visibleRests.some((row) => row.pack_uid === "CNHL-2026-003")) {
-  console.error("rest tests should show three day-0 rows and no C1-P3 test");
+const day0Rests = visibleRests.filter((row) => row.reading === "storage_end");
+const d1Seven = visibleRests.filter((row) => row.test_id === "RT-001-1" && row.reading === "7day");
+if (
+  day0Rests.length !== 3 ||
+  visibleRests.length !== 4 ||
+  d1Seven.length !== 1 ||
+  d1Seven[0].result !== "PASS" ||
+  d1Seven[0].excess_mV !== "2" ||
+  visibleRests.some((row) => row.pack_uid === "CNHL-2026-003")
+) {
+  console.error("rest tests should show three day-0 rows, the RT-001-1 7-day PASS, and no C1-P3 test");
   process.exit(1);
 }
 for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
