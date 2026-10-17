@@ -1,4 +1,4 @@
-# Live fleet status (2026-10-14)
+# Live fleet status (2026-10-16)
 
 Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A later row marked `unchanged (factual measurement)` records the rest-test baseline and does not replace the parallel call. The wording is the recorded text. Lamp colour uses the parallel half.
 
@@ -16,28 +16,28 @@ Calls below are the latest status row per pack in `data/v2/status_calls.csv`. A 
 | C2-P4 | CNHL-2026-010 | Go | In service |
 | C2-P5 | CNHL-2026-011 | Go | In service |
 | C2-P6 | CNHL-2026-012 | Go (conditional per Rule B) | In service |
-| C3-P1 | CNHL-2026-013 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C3-P2 | CNHL-2026-014 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C3-P3 | CNHL-2026-015 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C3-P4 | CNHL-2026-016 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C3-P5 | CNHL-2026-017 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C3-P6 | CNHL-2026-018 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C4-P1 | CNHL-2026-019 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C4-P2 | CNHL-2026-020 | Go (watch) | New (watch) |
-| C4-P3 | CNHL-2026-021 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C4-P4 | CNHL-2026-022 | Go (watch) | New (watch) |
-| C4-P5 | CNHL-2026-023 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
-| C4-P6 | CNHL-2026-024 | Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | In rotation (new) |
+| C3-P1 | CNHL-2026-013 | Go: joins the C3 board | In service |
+| C3-P2 | CNHL-2026-014 | Go (joins the C3 board if its rest V is within 0.30 V; otherwise charges alone) | In service |
+| C3-P3 | CNHL-2026-015 | Go: joins the C3 board | In service |
+| C3-P4 | CNHL-2026-016 | Go: joins the C3 board | In service |
+| C3-P5 | CNHL-2026-017 | Go (watch): charges alone | New (watch) |
+| C3-P6 | CNHL-2026-018 | Go (watch): charges alone | New (watch) |
+| C4-P1 | CNHL-2026-019 | Go: joins the C4 board | In service |
+| C4-P2 | CNHL-2026-020 | Go (watch): charges alone | New (watch) |
+| C4-P3 | CNHL-2026-021 | Go: joins the C4 board | In service |
+| C4-P4 | CNHL-2026-022 | Go: joins the C4 board | In service |
+| C4-P5 | CNHL-2026-023 | Go: joins the C4 board | In service |
+| C4-P6 | CNHL-2026-024 | Go: joins the C4 board | In service |
 
-C3 and C4 are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14. Ten packs are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch): watch, recheck next storage night. There is no C3 or C4 board, so there is no Rule B for them. C3 and C4 do not share a board with each other or with C1 or C2. C1 and C2 latest values stay the 2026-10-11 storage night.
+C3 and C4 are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16. C3-P1, C3-P3, and C3-P4 are on the C3 board. C3-P2 joins that board only if its rest V is within 0.30 V. C3-P5 and C3-P6 are Go (watch) and charge alone. C4-P1, C4-P3, C4-P4, C4-P5, and C4-P6 are on the C4 board. C4-P2 is Go (watch): on 2026-10-16 Cell 6 started 58 mV below the other cells (175 mV on 2026-10-14); lowest cell 3645 mV. One cell read 1.5x the pack's median IR (3.0 vs 2.0 mOhm). It charges alone for now. C4-P4's recheck passed and it joined the C4 board. Rule B on 2026-10-16 is 0.223 V over C3-P1, C3-P3, and C3-P4, and 0.249 V over C4-P1, C4-P3, C4-P4, C4-P5, and C4-P6. C3 and C4 do not share a board with each other or with C1 or C2. C1 and C2 latest values stay the 2026-10-11 storage night.
 
 C1-P3 is Go. The 2026-10-10 storage night was clean (floor 3636 mV on Cell 4), so the pack is back on the C1 board. Cell 4 low-cell gap stays on monitor (61/92/65 mV over the last 3 nights), and Cell 4 has no rest test.
 
 C1-P5 is Go, with Watch, and stays conditional on Rule B. The 2026-10-11 storage night was clean: floor 3620 mV on Cell 4 and a 50 mV gap. It is back on the C1 board if its rest V is within 0.30 V of the other board packs, otherwise it charges alone. Last 3 storage-night gaps: 61 (2026-09-27), 77 (2026-10-10), 50 (2026-10-11) mV.
 
-C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel, last public measurement 2026-10-11: C1 is C1-P2, C1-P3, C1-P5, C1-P6. C2 is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6. C1-P5 and C2-P6 are conditional on Rule B. On 2026-10-11 they charged individually, so that night's Rule B is C1 P2, P3, and P6 at 0.186 V, Go, and C2 P1, P3, P4, and P5 at 0.230 V, Go. The 2026-10-10 C1 Rule B for P2, P3, and P6 stays 0.135 V, Go. C2 that night stays 0.479 V, Caution.
+C1-P1 is empty. CNHL-2026-001 moved to D-1 on 2026-10-08. Rest pool, day 0 2026-10-09, due 2026-10-16: D-1, C1-P4, and C2-P2. They keep their labels and are off every board. Next parallel, as of 2026-10-16: C1 is C1-P2, C1-P3, C1-P5, C1-P6 (last measured 2026-10-11). C2 is C2-P1, C2-P3, C2-P4, C2-P5, C2-P6 (last measured 2026-10-11). C3 is C3-P1, C3-P2, C3-P3, C3-P4. C4 is C4-P1, C4-P3, C4-P4, C4-P5, C4-P6. C1-P5 and C2-P6 stay conditional on Rule B. C3-P2 joins only if its rest V is within 0.30 V. C3-P5, C3-P6, and C4-P2 charge alone. On 2026-10-11 they charged individually, so that night's Rule B is C1 P2, P3, and P6 at 0.186 V, Go, and C2 P1, P3, P4, and P5 at 0.230 V, Go. The 2026-10-10 C1 Rule B for P2, P3, and P6 stays 0.135 V, Go. C2 that night stays 0.479 V, Caution.
 
-IR is true milliohms from `ir_store_v4` (203 rows, including the 2026-10-11 storage night, two 2026-10-11 charge-run rows, and 24 C3/C4 rows from 2026-10-14). The 2026-10-14 charge run is not a storage night. The 2026-10-14 storage rows are. DX8-2 IR is validated; a figure is marked provisional only when its `ir_validation` says so. Rules v3: spread caution at 2.0 mΩ and individual at 3.0 mΩ, two nights in a row, with the low-cell gap, floor, and rest-test cuts in `data/status.json`. Rule B is unchanged: go at or under 0.30 V, caution through 0.60 V, hard stop above 0.60 V.
+IR is true milliohms from `ir_store_v4` (215 rows, including the 2026-10-11 storage night, two 2026-10-11 charge-run rows, 24 C3/C4 rows from 2026-10-14, and 12 storage rows from 2026-10-16). The 2026-10-14 charge run is not a storage night. The 2026-10-14 and 2026-10-16 storage rows are. DX8-2 IR is validated; a figure is marked provisional only when its `ir_validation` says so. Rules v3: spread caution at 2.0 mΩ and individual at 3.0 mΩ, two nights in a row, with the low-cell gap, floor, and rest-test cuts in `data/status.json`. Rule B is unchanged: go at or under 0.30 V, caution through 0.60 V, hard stop above 0.60 V.
 
 `2026-10-09-restday0` is an individual rest-test baseline: DX8-1 channel 1 is C2-P2, channel 2 is C1-P4. Those rows are not latest IR, not a series or fleet mean, and not Rule B. The chart marks a Rest pool night as Rest pool. D-1's 2026-10-09 run is series D only. Day 0 is 2026-10-09. The 7-day reading is due 2026-10-16 and has not been read. Superseded placeholder rows are not shown. Line resistance is not shown.
 
@@ -47,4 +47,4 @@ IR is true milliohms from `ir_store_v4` (203 rows, including the 2026-10-11 stor
 - No capacity in/out series — storage runs are top-ups, not capacity tests.
 - DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.
 - Mapping uses the night's manifest. The usual-low-cell check is advisory only.
-- C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage night 1 on 2026-10-14). Ten packs are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch): watch, recheck next storage night. No C3 or C4 board, so no Rule B for them. DX8-2 IR is validated against the charger screen.
+- C3 and C4 storage night 2 was 2026-10-16. C3-P1, C3-P3, and C3-P4 are on the C3 board. C3-P2 joins only if its rest V is within 0.30 V. C4-P1, C4-P3, C4-P4, C4-P5, and C4-P6 are on the C4 board. C3-P5, C3-P6, and C4-P2 are Go (watch) and charge alone. Rule B on 2026-10-16 is 0.223 V for C3 and 0.249 V for C4. C3 and C4 do not share a board with each other or with C1 or C2. DX8-2 IR is validated against the charger screen.

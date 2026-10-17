@@ -34,8 +34,8 @@ export default function MethodologyPage() {
         </h1>
         <div className="page-intro mt-4" dangerouslySetInnerHTML={{ __html: doc.introHtml }} />
         <p className="note mt-4">
-          C3 and C4 are in rotation. Ten packs are Go (new): charges alone until 2 clean storage
-          nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch).
+          C3 and C4 finished storage night 2 on 2026-10-16. Each series has its own board.
+          C3-P5, C3-P6, and C4-P2 are Go (watch) and charge alone. C4-P4 joined the C4 board.
         </p>
       </header>
       {doc.sections.map((section, index) => (

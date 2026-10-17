@@ -482,7 +482,9 @@ export default function Home() {
               but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
               The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
               pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
-              C3 and C4 have no board yet, so they are not on this chart.
+              C3 and C4 are separate lines. On 2026-10-16, Rule B uses the packs on each board. A
+              pack that charged alone that night is not in the spread. C3 and C4 do not share a
+              board with each other or with C1 or C2.
             </p>
             <LineChart
               categories={model.categories}

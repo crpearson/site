@@ -15,11 +15,11 @@ import {
   isGoWatch,
   statusChip,
   STATUS_CHIPS,
-  watchRecheckText,
   type LampTone,
   type StatusChipName,
 } from "@/lib/lamp";
 import { buildNextBoard } from "@/lib/next-board.mjs";
+import { loadNextCharge } from "@/lib/next-charge.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
 import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
@@ -365,35 +365,24 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-012": "PARALLEL GO (conditional per Rule B) | SERVICE In service",
-  "CNHL-2026-013":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
+  "CNHL-2026-013": "PARALLEL GO: joins the C3 board | SERVICE In service",
   "CNHL-2026-014":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-015":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-016":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-017":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-018":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-019":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-020":
-    "PARALLEL Go (watch) — INDIVIDUAL until the 2-night join rule completes, same as the other new packs | SERVICE New (watch)",
-  "CNHL-2026-021":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-022":
-    "PARALLEL Go (watch) — INDIVIDUAL until the 2-night join rule completes, same as the other new packs | SERVICE New (watch)",
-  "CNHL-2026-023":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
-  "CNHL-2026-024":
-    "PARALLEL Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14 | SERVICE In rotation (new)",
+    "PARALLEL GO (joins the C3 board if its rest V is within 0.30 V; otherwise charges alone) | SERVICE In service",
+  "CNHL-2026-015": "PARALLEL GO: joins the C3 board | SERVICE In service",
+  "CNHL-2026-016": "PARALLEL GO: joins the C3 board | SERVICE In service",
+  "CNHL-2026-017": "PARALLEL Go (watch): charges alone | SERVICE New (watch)",
+  "CNHL-2026-018": "PARALLEL Go (watch): charges alone | SERVICE New (watch)",
+  "CNHL-2026-019": "PARALLEL GO: joins the C4 board | SERVICE In service",
+  "CNHL-2026-020": "PARALLEL Go (watch): charges alone | SERVICE New (watch)",
+  "CNHL-2026-021": "PARALLEL GO: joins the C4 board | SERVICE In service",
+  "CNHL-2026-022": "PARALLEL GO: joins the C4 board | SERVICE In service",
+  "CNHL-2026-023": "PARALLEL GO: joins the C4 board | SERVICE In service",
+  "CNHL-2026-024": "PARALLEL GO: joins the C4 board | SERVICE In service",
 };
 
 function assertStore() {
-  if (measurements.length !== 203 || v4Rows.length !== 203) {
-    throw new Error(`Expected 203 measurements, got ${measurements.length}`);
+  if (measurements.length !== 215 || v4Rows.length !== 215) {
+    throw new Error(`Expected 215 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -461,12 +450,18 @@ function assertStore() {
   ) {
     throw new Error("2026-10-14 charge run or storage night is missing");
   }
+  const aloneLabels = new Set(["C3-P5", "C3-P6", "C4-P2"]);
+  const night2 = measurements.filter((row) => row.session === "2026-10-16");
+  if (night2.length !== 12 || night2.some((row) => isNonStorage(row.sessionType) || row.series !== row.label.slice(0, 2))) {
+    throw new Error("2026-10-16 storage night is missing");
+  }
   for (const label of freshLabels) {
     const pack = packs.find((item) => item.label === label);
-    if (!pack || pack.chargeCount !== 2 || pack.chargeMode !== "individual" || pack.purchaseDate !== "2026-10-13") {
-      throw new Error(`${label} should be a new pack, charge count 2, purchased 2026-10-13`);
+    const mode = aloneLabels.has(label) ? "individual" : "parallel";
+    if (!pack || pack.chargeCount !== 3 || pack.chargeMode !== mode || pack.purchaseDate !== "2026-10-13") {
+      throw new Error(`${label} should be charge count 3, ${mode}, purchased 2026-10-13`);
     }
-    if (latestOperational(pack.uid)?.session !== "2026-10-14") {
+    if (latestOperational(pack.uid)?.session !== "2026-10-16") {
       throw new Error(`${label} latest storage night is ${latestOperational(pack.uid)?.session}`);
     }
     if (operationalPoints(pack.uid).some((row) => row.session === "2026-10-14-charge")) {
@@ -475,6 +470,9 @@ function assertStore() {
   }
   if (freshStorage.some((row) => row.series === "C1" || row.series === "C2" || row.series === "D")) {
     throw new Error("2026-10-14 storage mixed C3 or C4 with an older series");
+  }
+  if (night2.some((row) => row.series === "C1" || row.series === "C2" || row.series === "D")) {
+    throw new Error("2026-10-16 storage mixed C3 or C4 with an older series");
   }
   for (const [uid, status] of Object.entries(EXPECTED_LATEST)) {
     const call = latestCall(uid);
@@ -905,12 +903,38 @@ export function seriesBlocks(): SeriesBlock[] {
   });
 }
 
+function recordedBoard(session: string, series: string) {
+  const doc = loadNextCharge();
+  for (const set of Object.values(doc.sets)) {
+    const board = set.parallel_boards.find(
+      (item) => item.series === series && item.last_rule_b_session === session,
+    );
+    if (board) return board;
+  }
+  return null;
+}
+
 function parallelBoardUids(): Set<string> {
   const labels = new Set(buildNextBoard().series.flatMap((board: { labels: string[] }) => board.labels));
   return new Set(packs.filter((pack) => labels.has(pack.label)).map((pack) => pack.uid));
 }
 
 export function restDelta(session: string, series: string): number | null {
+  const recorded = recordedBoard(session, series);
+  if (recorded) {
+    const labels = new Set(recorded.last_rule_b_over ?? recorded.packs);
+    const rows = measurements.filter(
+      (row) =>
+        row.session === session &&
+        row.series === series &&
+        labels.has(row.label) &&
+        !isNonStorage(row.sessionType) &&
+        row.rest != null,
+    );
+    if (rows.length < 2) return null;
+    const rests = rows.map((row) => row.rest as number);
+    return Math.round((Math.max(...rests) - Math.min(...rests)) * 1000) / 1000;
+  }
   const board = parallelBoardUids();
   const rows = measurements.filter(
     (row) =>
@@ -935,14 +959,23 @@ export function restNight(session: string, series: string): { value: number | nu
     // Day-0 rest rows are not a parallel charge and are not a Rule B night.
     return { value: null, na: false };
   }
+  const recorded = recordedBoard(session, series);
   const board = parallelBoardUids();
-  const ran = measurements.some(
-    (row) =>
-      row.session === session &&
-      row.series === series &&
-      board.has(row.uid) &&
-      !isNonStorage(row.sessionType),
-  );
+  const ran = recorded
+    ? measurements.some(
+        (row) =>
+          row.session === session &&
+          row.series === series &&
+          (recorded.last_rule_b_over ?? recorded.packs).includes(row.label) &&
+          !isNonStorage(row.sessionType),
+      )
+    : measurements.some(
+        (row) =>
+          row.session === session &&
+          row.series === series &&
+          board.has(row.uid) &&
+          !isNonStorage(row.sessionType),
+      );
   const value = restDelta(session, series);
   if (!ran) return { value: null, na: false };
   if (value == null) return { value: null, na: true };
@@ -1489,8 +1522,8 @@ export function ruleBNote(series: string): string | null {
 
 function assertDerived() {
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.847" || stats.counted !== 23) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.847 mΩ over 23 slotted packs`);
+  if (stats.mean.toFixed(3) !== "2.754" || stats.counted !== 23) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.754 mΩ over 23 slotted packs`);
   }
   const c1p4 = statusRows().find((row) => row.label === "C1-P4");
   if (
@@ -1519,13 +1552,26 @@ function assertDerived() {
   if (c2Last == null || c2Last.toFixed(3) !== "2.900") throw new Error(`C2 series mean last is ${c2Last}`);
   const c3Last = lastOf("C3");
   const c4Last = lastOf("C4");
-  if (c3Last == null || c3Last.toFixed(3) !== "2.883") throw new Error(`C3 series mean last is ${c3Last}`);
-  if (c4Last == null || c4Last.toFixed(3) !== "2.778") throw new Error(`C4 series mean last is ${c4Last}`);
-  for (const id of ["C3", "C4"]) {
-    const fleet = model.fleets.find((item) => item.id === id);
-    if (!fleet || fleet.rest.some((value) => value != null)) {
-      throw new Error(`${id} has a Rule B value`);
-    }
+  if (c3Last == null || c3Last.toFixed(3) !== "2.780") throw new Error(`C3 series mean last is ${c3Last}`);
+  if (c4Last == null || c4Last.toFixed(3) !== "2.522") throw new Error(`C4 series mean last is ${c4Last}`);
+  const night1 = model.categories.findIndex((category) => category.id === "2026-10-14");
+  const night2 = model.categories.findIndex((category) => category.id === "2026-10-16");
+  const c3Fleet = model.fleets.find((item) => item.id === "C3");
+  const c4Fleet = model.fleets.find((item) => item.id === "C4");
+  if (night1 < 0 || c3Fleet?.rest[night1] != null || c4Fleet?.rest[night1] != null) {
+    throw new Error("C3 or C4 has a Rule B value on the first storage night");
+  }
+  if (night2 < 0 || c3Fleet?.rest[night2] == null || Math.abs(c3Fleet.rest[night2] - 0.223) > 0.0005) {
+    throw new Error(`C3 Rule B on 2026-10-16 is ${c3Fleet?.rest[night2]}`);
+  }
+  if (c4Fleet?.rest[night2] == null || Math.abs(c4Fleet.rest[night2] - 0.249) > 0.0005) {
+    throw new Error(`C4 Rule B on 2026-10-16 is ${c4Fleet?.rest[night2]}`);
+  }
+  const charge14 = model.categories.findIndex((category) => category.id === "2026-10-14-charge");
+  const c3MeanLine = model.mean.find((line) => line.id === "C3");
+  const c4MeanLine = model.mean.find((line) => line.id === "C4");
+  if (charge14 < 0 || c3MeanLine?.values[charge14] != null || c4MeanLine?.values[charge14] != null) {
+    throw new Error("a 2026-10-14 charge-run row is in a C3 or C4 series mean");
   }
   const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
   const day = model.categories.findIndex((category) => category.id === "2026-10-09");
@@ -1555,11 +1601,15 @@ function assertDerived() {
   }
   const board = nextParallel();
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
-  if (rendered !== "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6" || board.as_of !== "2026-10-14") {
+  if (
+    rendered !==
+      "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4 | C4:C4-P1+C4-P3+C4-P4+C4-P5+C4-P6" ||
+    board.as_of !== "2026-10-16"
+  ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
-  if (board.series.some((item) => item.series === "C3" || item.series === "C4" || item.labels.some((label) => label.startsWith("C3") || label.startsWith("C4")))) {
-    throw new Error("C3 or C4 is on a next parallel board");
+  for (const label of ["C3-P5", "C3-P6", "C4-P2", "D-1", "C1-P4", "C2-P2"]) {
+    if (board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is on a next parallel board`);
   }
   assertUnpublishedNight(model, heldNight);
   assertStatusChips();
@@ -1831,32 +1881,33 @@ function assertStatusChips() {
   ) {
     throw new Error("C1-P5 card must show the recorded GO");
   }
-  for (const label of ["C4-P2", "C4-P4"]) {
-    const row = rows.find((item) => item.label === label);
-    if (
-      !row ||
-      !isGoWatch(row.status) ||
-      watchRecheckText(row.status, row.reason) !== "watch, recheck next storage night" ||
-      statusChip(row.status, row.chargeMode) !== "GO" ||
-      row.tone !== "ok" ||
-      /demot|rest test|penalty/i.test(`${row.status} ${row.reason}`)
-    ) {
-      throw new Error(`${label} must stay Go (watch), recheck next storage night`);
-    }
-  }
-  const goNew = "Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14";
-  const newPacks = rows.filter((row) => row.series === "C3" || (row.series === "C4" && row.label !== "C4-P2" && row.label !== "C4-P4"));
+  const c4p2 = rows.find((item) => item.label === "C4-P2");
   if (
-    newPacks.length !== 10 ||
-    newPacks.some(
-      (row) =>
-        !row.status.includes(goNew) ||
-        row.service !== "In rotation (new)" ||
-        row.tone !== "ok" ||
-        statusChip(row.status, row.chargeMode) !== "GO",
-    )
+    !c4p2 ||
+    c4p2.status !== "PARALLEL Go (watch): charges alone | SERVICE New (watch)" ||
+    c4p2.reason !==
+      "Go (watch). On 2026-10-16 Cell 6 started 58 mV below the other cells (175 mV on 2026-10-14); lowest cell 3645 mV. One cell read 1.5x the pack's median IR (3.0 vs 2.0 mOhm). Charges alone for now; recheck next storage night." ||
+    c4p2.session !== "2026-10-16" ||
+    !isGoWatch(c4p2.status) ||
+    statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {
-    throw new Error("the ten new packs must show Go (new) verbatim and stay off the rules-penalty lamp");
+    throw new Error(`C4-P2 call is ${c4p2?.session} ${c4p2?.status}`);
+  }
+  const c4p4 = rows.find((item) => item.label === "C4-P4");
+  if (
+    !c4p4 ||
+    c4p4.status !== "PARALLEL GO: joins the C4 board | SERVICE In service" ||
+    !c4p4.reason.startsWith("Go: recheck passed on 2026-10-16.") ||
+    c4p4.session !== "2026-10-16" ||
+    statusChip(c4p4.status, c4p4.chargeMode) !== "GO"
+  ) {
+    throw new Error(`C4-P4 call is ${c4p4?.session} ${c4p4?.status}`);
+  }
+  for (const label of ["C3-P5", "C3-P6"]) {
+    const row = rows.find((item) => item.label === label);
+    if (!row || !isGoWatch(row.status) || row.session !== "2026-10-16" || statusChip(row.status, row.chargeMode) !== "GO") {
+      throw new Error(`${label} should stay Go (watch) and charge alone`);
+    }
   }
   if (
     statusChip("PARALLEL Go (watch) — INDIVIDUAL until the join rule completes | SERVICE New (watch)", "individual") !== "GO"

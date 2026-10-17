@@ -4,6 +4,7 @@ import { Panel } from "@/components/Panel";
 import { usd } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { brandCards, fleetModel, headline, seriesBlocks } from "@/lib/fleet";
+import { splitCall } from "@/lib/lamp";
 
 export const metadata: Metadata = {
   title: "Brand bake-off",
@@ -62,8 +63,8 @@ export default function BakeoffPage() {
         <p className="page-intro mt-4">
           Owned series are the ones in service. Catalog prices are shop prices, not what was paid
           for a pack. Purchase date, price, and vendor are blank until they are supplied. C3 and C4
-          are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, first full charge and storage
-          night 1 on 2026-10-14. Charts stay one series at a time. Bars share one scale. Cost per
+          are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, storage night 2 on
+          2026-10-16. Charts stay one series at a time. Bars share one scale. Cost per
           cycle is omitted: there is no cycle count yet.
         </p>
       </header>
@@ -89,13 +90,22 @@ export default function BakeoffPage() {
             {blocks.map((block) => (
               <article key={block.id} className="rounded-xl border border-[var(--line)] p-3">
                 <p className="eyebrow">{block.id}</p>
-                <p className="mt-2 font-mono text-sm">
-                  {block.id === "C3"
-                    ? "Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14"
-                    : block.id === "C4"
-                      ? "C4-P1, C4-P3, C4-P5, and C4-P6 are Go (new): charges alone until 2 clean storage nights, night 1 of 2 on 2026-10-14. C4-P2 and C4-P4 are Go (watch)."
-                      : `${countFor(block.id, "ok")} packs Go · ${countFor(block.id, "caution")} packs Caution · ${countFor(block.id, "off")} packs individual only`}
-                </p>
+                {block.id === "C3" || block.id === "C4" ? (
+                  <ul className="mt-2 space-y-1 font-mono text-sm">
+                    {block.slots
+                      .filter((slot) => slot.status)
+                      .map((slot) => (
+                        <li key={slot.label}>
+                          {slot.label}: {splitCall(slot.status ?? "").parallel}
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p className="mt-2 font-mono text-sm">
+                    {countFor(block.id, "ok")} packs Go · {countFor(block.id, "caution")} packs Caution ·{" "}
+                    {countFor(block.id, "off")} packs individual only
+                  </p>
+                )}
                 <p className="stat-sub">
                   Status as of {block.asOf}
                   {block.individual ? " · individual, not parallel" : ""}

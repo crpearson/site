@@ -8,7 +8,7 @@ import { statusRows, type StatusRow } from "@/lib/fleet";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { seriesColor } from "@/lib/color";
 import { chargeSetId, layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
-import type { ChargeSet, ParallelBoard } from "@/lib/next-charge.mjs";
+import type { ChargeSet, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
   title: "Next charge",
@@ -23,6 +23,25 @@ function ruleBLine(board: ParallelBoard): string | null {
   return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packs} · ${board.last_rule_b_session}`;
 }
 
+/** A repeated channel starts the next queue. Charge-alone packs are listed before board packs. */
+function storagePhases(runs: StorageRun[]): StorageRun[][] {
+  const phases: StorageRun[][] = [];
+  let current: StorageRun[] = [];
+  const seen = new Set<string>();
+  for (const run of runs) {
+    const key = `${run.charger}\0${run.channel}`;
+    if (seen.has(key) && current.length) {
+      phases.push(current);
+      current = [];
+      seen.clear();
+    }
+    seen.add(key);
+    current.push(run);
+  }
+  if (current.length) phases.push(current);
+  return phases;
+}
+
 function SetPlan({
   name,
   set,
@@ -34,10 +53,8 @@ function SetPlan({
   setId: string;
   resolve: (label: string) => StatusRow;
 }) {
-  const summary = storageSummary(set.storage_runs);
-  const chargers = storageChargers(set.storage_runs);
   const boards = set.parallel_boards.length ? layoutParallelBoards(set.parallel_boards) : [];
-  const modes = [...new Set(set.storage_runs.flatMap((run) => (run.mode ? [run.mode] : [])))];
+  const phases = storagePhases(set.storage_runs);
   return (
     <div className="min-w-0 space-y-8">
       <section className="space-y-3" aria-labelledby={`${setId}-storage-heading`}>
@@ -45,28 +62,41 @@ function SetPlan({
           {name}
         </h2>
         <p className="note">Last storage session {set.last_storage_session}</p>
-        {modes.map((mode) => (
-          <p key={mode} className="note">
-            {mode}
-          </p>
-        ))}
-        <div className="bench-stack">
-          <article className="panel" data-accent="signal">
-            <h3 className="panel-title">One pack per channel</h3>
-            <ul className="bench-run-summary">
-              {summary.map((item) => (
-                <li key={item.run}>
-                  <p className="bench-run-line">
-                    <span className="bench-run-kicker">Run {item.run}:</span> {item.line}
-                  </p>
-                </li>
+        {phases.map((phase, phaseIndex) => {
+          const summary = storageSummary(phase);
+          const chargers = storageChargers(phase);
+          const modes = [...new Set(phase.flatMap((run) => (run.mode ? [run.mode] : [])))];
+          return (
+            <div key={`${setId}-phase-${phaseIndex}`} className="space-y-3">
+              {modes.map((mode) => (
+                <p key={mode} className="note">
+                  {mode}
+                </p>
               ))}
-            </ul>
-          </article>
-          {chargers.map((charger) => (
-            <ChargerDiagram key={`${setId}-${charger.charger}`} charger={charger} resolve={resolve} />
-          ))}
-        </div>
+              <div className="bench-stack">
+                <article className="panel" data-accent="signal">
+                  <h3 className="panel-title">One pack per channel</h3>
+                  <ul className="bench-run-summary">
+                    {summary.map((item) => (
+                      <li key={item.run}>
+                        <p className="bench-run-line">
+                          <span className="bench-run-kicker">Run {item.run}:</span> {item.line}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                {chargers.map((charger) => (
+                  <ChargerDiagram
+                    key={`${setId}-${phaseIndex}-${charger.charger}`}
+                    charger={charger}
+                    resolve={resolve}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </section>
 
       {boards.length ? (
@@ -197,7 +227,7 @@ export default function NextChargePage() {
           </div>
         </dl>
         <p className="note">{plan.active_set_reason}</p>
-        <p className="note">{plan.locked_reason}</p>
+        {plan.locked_reason ? <p className="note">{plan.locked_reason}</p> : null}
       </header>
 
       <SetSwitcher

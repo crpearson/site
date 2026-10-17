@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-14",
-  "note": "C1-P5 rejoins the C1 board and stays conditional on Rule B. Rest pool packs are off every board until the 7-day reading. C3 and C4 are in rotation and charge alone. They have no board yet.",
+  "as_of": "2026-10-16",
+  "note": "C1-P5 rejoins the C1 board and stays conditional on Rule B. C3-P2 joins the C3 board only if its rest V is within 0.30 V. Rest pool packs are off every board until the 7-day reading. C3-P5, C3-P6, and C4-P2 charge alone. C3 and C4 do not share a board with each other or with C1 or C2.",
   "series": [
     {
       "series": "C1",
@@ -19,6 +19,25 @@
         "C2-P4",
         "C2-P5",
         "C2-P6"
+      ]
+    },
+    {
+      "series": "C3",
+      "labels": [
+        "C3-P1",
+        "C3-P2",
+        "C3-P3",
+        "C3-P4"
+      ]
+    },
+    {
+      "series": "C4",
+      "labels": [
+        "C4-P1",
+        "C4-P3",
+        "C4-P4",
+        "C4-P5",
+        "C4-P6"
       ]
     }
   ],

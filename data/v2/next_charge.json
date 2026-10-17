@@ -1,141 +1,110 @@
 {
   "schema": "next_charge/v2",
-  "as_of_session": "2026-10-14",
-  "as_of_date_pt": "2026-10-15",
-  "active_set": "C3+C4",
-  "locked": true,
-  "locked_reason": "owner confirmed 2026-10-15: set B (C3+C4) next",
-  "active_set_reason": "chosen by owner",
-  "alternate_set": "C1+C2",
+  "as_of_session": "2026-10-16",
+  "as_of_date_pt": "2026-10-16",
+  "active_set": "C1+C2",
+  "active_set_reason": "rotation: set A (C1+C2) is the least recently charged set (last storage night 2026-10-11); set B ran 2026-10-14 and 2026-10-16",
+  "alternate_set": "C3+C4",
   "storage_runs": [
     {
       "charger": "DX8-1",
       "channel": "CH1",
       "order": [
-        "C3-P1",
-        "C3-P2",
-        "C3-P3"
-      ],
-      "mode": "individual: one pack per run, sequential in this order"
+        "C1-P2",
+        "C1-P3"
+      ]
     },
     {
       "charger": "DX8-1",
       "channel": "CH2",
       "order": [
-        "C3-P4",
-        "C3-P5",
-        "C3-P6"
-      ],
-      "mode": "individual: one pack per run, sequential in this order"
+        "C1-P5",
+        "C1-P6"
+      ]
     },
     {
       "charger": "DX8-2",
       "channel": "CH1",
       "order": [
-        "C4-P1",
-        "C4-P2",
-        "C4-P3"
-      ],
-      "mode": "individual: one pack per run, sequential in this order"
+        "C2-P1",
+        "C2-P3"
+      ]
     },
     {
       "charger": "DX8-2",
       "channel": "CH2",
       "order": [
-        "C4-P4",
-        "C4-P5",
-        "C4-P6"
-      ],
-      "mode": "individual: one pack per run, sequential in this order"
+        "C2-P4",
+        "C2-P5",
+        "C2-P6"
+      ]
     }
   ],
-  "parallel_boards": [],
+  "parallel_boards": [
+    {
+      "series": "C1",
+      "packs": [
+        "C1-P2",
+        "C1-P3",
+        "C1-P6"
+      ],
+      "current": "normal",
+      "conditions": [
+        "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
+        "C1-P5 joins only if its rest V is within 0.30 V of every board pack; otherwise it charges alone."
+      ],
+      "last_rule_b_V": 0.186,
+      "last_rule_b_call": "GO",
+      "last_rule_b_session": "2026-10-11",
+      "last_rule_b_over": [
+        "C1-P2",
+        "C1-P3",
+        "C1-P6"
+      ]
+    },
+    {
+      "series": "C2",
+      "packs": [
+        "C2-P1",
+        "C2-P3",
+        "C2-P4",
+        "C2-P5"
+      ],
+      "current": "normal",
+      "conditions": [
+        "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
+        "C2-P6 joins only if its rest V is within 0.30 V of every board pack; otherwise it charges alone."
+      ],
+      "last_rule_b_V": 0.23,
+      "last_rule_b_call": "GO",
+      "last_rule_b_session": "2026-10-11",
+      "last_rule_b_over": [
+        "C2-P1",
+        "C2-P3",
+        "C2-P4",
+        "C2-P5"
+      ]
+    }
+  ],
   "charge_alone": [
     {
-      "label": "C3-P1",
-      "uid": "CNHL-2026-013",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
+      "label": "C1-P5",
+      "uid": "CNHL-2026-005",
+      "reason": "charges alone unless its rest V is within 0.30 V of its C1 board-mates; last night (2026-10-11) rest V 21.963 V was 0.198-0.384 V below the C1 board packs (max offset 0.384 V)",
+      "until": "conditional: joins the board if within 0.30 V tonight",
+      "last_offset_max_V": 0.384,
+      "last_offset_side": "below"
     },
     {
-      "label": "C3-P2",
-      "uid": "CNHL-2026-014",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C3-P3",
-      "uid": "CNHL-2026-015",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C3-P4",
-      "uid": "CNHL-2026-016",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C3-P5",
-      "uid": "CNHL-2026-017",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C3-P6",
-      "uid": "CNHL-2026-018",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C4-P1",
-      "uid": "CNHL-2026-019",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C4-P2",
-      "uid": "CNHL-2026-020",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C4-P3",
-      "uid": "CNHL-2026-021",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C4-P4",
-      "uid": "CNHL-2026-022",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C4-P5",
-      "uid": "CNHL-2026-023",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
-    },
-    {
-      "label": "C4-P6",
-      "uid": "CNHL-2026-024",
-      "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-      "until": "2 clean storage nights"
+      "label": "C2-P6",
+      "uid": "CNHL-2026-012",
+      "reason": "charges alone unless its rest V is within 0.30 V of its C2 board-mates; last night (2026-10-11) rest V 22.397 V was 0.195-0.425 V above the C2 board packs (max offset 0.425 V)",
+      "until": "conditional: joins the board if within 0.30 V tonight",
+      "last_offset_max_V": 0.425,
+      "last_offset_side": "above"
     }
   ],
-  "watch": [
-    {
-      "label": "C4-P2",
-      "uid": "CNHL-2026-020",
-      "note": "Go (watch): recheck this storage night. Last storage night (2026-10-14): lowest cell 3508 mV (Cell 6), low-cell gap 175 mV."
-    },
-    {
-      "label": "C4-P4",
-      "uid": "CNHL-2026-022",
-      "note": "Go (watch): recheck this storage night. Last storage night (2026-10-14): lowest cell 3590 mV (Cell 5), low-cell gap 31 mV."
-    }
-  ],
+  "watch": [],
   "sets": {
     "C1_C2": {
       "series": [
@@ -249,23 +218,12 @@
         "C3",
         "C4"
       ],
-      "last_storage_session": "2026-10-14",
+      "last_storage_session": "2026-10-16",
       "storage_runs": [
-        {
-          "charger": "DX8-1",
-          "channel": "CH1",
-          "order": [
-            "C3-P1",
-            "C3-P2",
-            "C3-P3"
-          ],
-          "mode": "individual: one pack per run, sequential in this order"
-        },
         {
           "charger": "DX8-1",
           "channel": "CH2",
           "order": [
-            "C3-P4",
             "C3-P5",
             "C3-P6"
           ],
@@ -275,11 +233,36 @@
           "charger": "DX8-2",
           "channel": "CH1",
           "order": [
-            "C4-P1",
-            "C4-P2",
-            "C4-P3"
+            "C4-P2"
           ],
           "mode": "individual: one pack per run, sequential in this order"
+        },
+        {
+          "charger": "DX8-1",
+          "channel": "CH1",
+          "order": [
+            "C3-P1",
+            "C3-P2",
+            "C3-P3"
+          ],
+          "mode": "one pack per run, in this order (board packs)"
+        },
+        {
+          "charger": "DX8-1",
+          "channel": "CH2",
+          "order": [
+            "C3-P4"
+          ],
+          "mode": "one pack per run, in this order (board packs)"
+        },
+        {
+          "charger": "DX8-2",
+          "channel": "CH1",
+          "order": [
+            "C4-P1",
+            "C4-P3"
+          ],
+          "mode": "one pack per run, in this order (board packs)"
         },
         {
           "charger": "DX8-2",
@@ -289,165 +272,170 @@
             "C4-P5",
             "C4-P6"
           ],
-          "mode": "individual: one pack per run, sequential in this order"
+          "mode": "one pack per run, in this order (board packs)"
         }
       ],
-      "parallel_boards": [],
-      "charge_alone": [
+      "parallel_boards": [
         {
-          "label": "C3-P1",
-          "uid": "CNHL-2026-013",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
+          "series": "C3",
+          "packs": [
+            "C3-P1",
+            "C3-P3",
+            "C3-P4"
+          ],
+          "current": "normal",
+          "conditions": [
+            "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO).",
+            "C3-P2 joins only if its rest V is within 0.30 V of every board pack; otherwise it charges alone."
+          ],
+          "last_rule_b_V": 0.223,
+          "last_rule_b_call": "GO",
+          "last_rule_b_session": "2026-10-16",
+          "last_rule_b_over": [
+            "C3-P1",
+            "C3-P3",
+            "C3-P4"
+          ]
         },
+        {
+          "series": "C4",
+          "packs": [
+            "C4-P1",
+            "C4-P3",
+            "C4-P4",
+            "C4-P5",
+            "C4-P6"
+          ],
+          "current": "normal",
+          "conditions": [
+            "Check each pack's rest V before connecting; all packs on the board within 0.30 V (Rule B GO)."
+          ],
+          "last_rule_b_V": 0.249,
+          "last_rule_b_call": "GO",
+          "last_rule_b_session": "2026-10-16",
+          "last_rule_b_over": [
+            "C4-P1",
+            "C4-P3",
+            "C4-P4",
+            "C4-P5",
+            "C4-P6"
+          ]
+        }
+      ],
+      "charge_alone": [
         {
           "label": "C3-P2",
           "uid": "CNHL-2026-014",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C3-P3",
-          "uid": "CNHL-2026-015",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C3-P4",
-          "uid": "CNHL-2026-016",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
+          "reason": "charges alone unless its rest V is within 0.30 V of its C3 board-mates; last night (2026-10-16) rest V 22.225 V was 0.207-0.430 V above the C3 board packs (max offset 0.430 V)",
+          "until": "conditional: joins the board if within 0.30 V tonight",
+          "last_offset_max_V": 0.43,
+          "last_offset_side": "above"
         },
         {
           "label": "C3-P5",
           "uid": "CNHL-2026-017",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
+          "reason": "new pack: charges alone until 2 clean storage nights in a row; last storage night (2026-10-16) did not count toward the board; recheck next storage night",
           "until": "2 clean storage nights"
         },
         {
           "label": "C3-P6",
           "uid": "CNHL-2026-018",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C4-P1",
-          "uid": "CNHL-2026-019",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
+          "reason": "new pack: charges alone until 2 clean storage nights in a row; last storage night (2026-10-16) did not count toward the board; recheck next storage night",
           "until": "2 clean storage nights"
         },
         {
           "label": "C4-P2",
           "uid": "CNHL-2026-020",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C4-P3",
-          "uid": "CNHL-2026-021",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C4-P4",
-          "uid": "CNHL-2026-022",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C4-P5",
-          "uid": "CNHL-2026-023",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
-          "until": "2 clean storage nights"
-        },
-        {
-          "label": "C4-P6",
-          "uid": "CNHL-2026-024",
-          "reason": "new pack: charges alone until 2 clean storage nights; next is night 2 of 2",
+          "reason": "new pack: charges alone until 2 clean storage nights in a row; last storage night (2026-10-16) did not count toward the board; recheck next storage night",
           "until": "2 clean storage nights"
         }
       ],
       "watch": [
         {
-          "label": "C4-P2",
-          "uid": "CNHL-2026-020",
-          "note": "Go (watch): recheck this storage night. Last storage night (2026-10-14): lowest cell 3508 mV (Cell 6), low-cell gap 175 mV."
+          "label": "C3-P5",
+          "uid": "CNHL-2026-017",
+          "note": "Go (watch): recheck this storage night. Last storage night (2026-10-16): lowest cell 3592 mV (Cell 1), low-cell gap 7 mV."
         },
         {
-          "label": "C4-P4",
-          "uid": "CNHL-2026-022",
-          "note": "Go (watch): recheck this storage night. Last storage night (2026-10-14): lowest cell 3590 mV (Cell 5), low-cell gap 31 mV."
+          "label": "C3-P6",
+          "uid": "CNHL-2026-018",
+          "note": "Go (watch): recheck this storage night. Last storage night (2026-10-16): lowest cell 3571 mV (Cell 6), low-cell gap 128 mV."
+        },
+        {
+          "label": "C4-P2",
+          "uid": "CNHL-2026-020",
+          "note": "Go (watch): recheck this storage night. Last storage night (2026-10-16): lowest cell 3645 mV (Cell 6), low-cell gap 58 mV."
         }
       ],
       "join_status": [
         {
           "label": "C3-P1",
           "uid": "CNHL-2026-013",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C3-P2",
           "uid": "CNHL-2026-014",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C3-P3",
           "uid": "CNHL-2026-015",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C3-P4",
           "uid": "CNHL-2026-016",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C3-P5",
           "uid": "CNHL-2026-017",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 0,
           "joins_board": false,
-          "status": "Go (new)",
+          "status": "Go (watch)",
           "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C3-P6",
           "uid": "CNHL-2026-018",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 0,
           "joins_board": false,
-          "status": "Go (new)",
+          "status": "Go (watch)",
           "rule": "joins its own C3 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C4-P1",
           "uid": "CNHL-2026-019",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C4-P2",
           "uid": "CNHL-2026-020",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 0,
           "joins_board": false,
           "status": "Go (watch)",
           "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
@@ -455,37 +443,37 @@
         {
           "label": "C4-P3",
           "uid": "CNHL-2026-021",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C4-P4",
           "uid": "CNHL-2026-022",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (watch)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C4-P5",
           "uid": "CNHL-2026-023",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         },
         {
           "label": "C4-P6",
           "uid": "CNHL-2026-024",
-          "storage_nights": 1,
-          "clean_nights_in_a_row": 1,
-          "joins_board": false,
-          "status": "Go (new)",
+          "storage_nights": 2,
+          "clean_nights_in_a_row": 2,
+          "joins_board": true,
+          "status": "Go",
           "rule": "joins its own C4 board after 2 clean storage nights in a row (gap <60 mV, floor >=3600 mV, IR spread <2.0 mOhm, no cell >=1.5x pack median), then Rule B; charge runs do not count"
         }
       ]

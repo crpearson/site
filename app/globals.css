@@ -983,6 +983,10 @@ body {
   min-width: 0;
 }
 
+.x-label-before-end {
+  display: none;
+}
+
 @container chart (max-width: 760px) {
   .x-label-alt {
     display: none;

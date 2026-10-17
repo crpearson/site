@@ -6,8 +6,9 @@ export type NextChargeDocument = {
   as_of_session: string;
   as_of_date_pt: string;
   active_set: string;
-  locked: boolean;
-  locked_reason: string;
+  /** Present when the sheet is locked to this active set. */
+  locked?: boolean;
+  locked_reason?: string;
   active_set_reason: string;
   alternate_set: string;
   storage_runs: StorageRun[];
