@@ -15,9 +15,10 @@ export type ChartSeries = {
   values: (number | null)[];
   /**
    * Service span per night, aligned with values. Null means the line was not
-   * in service: before commission, after retirement, or before this series had
-   * a pack. A move starts a new span so a dotted join never crosses it, and
-   * hollow rings stay in the first span. Omit only when every night is in scope.
+   * in service: before commission, after retirement, or a non-storage column.
+   * A move does not change the span. The stroke joins recorded readings across
+   * a null night and does not draw a marker there. Omit only when every night
+   * is in scope.
    */
   service?: (string | null)[];
   /** True when a measurement row exists that night. Omit to treat a value as the row. */

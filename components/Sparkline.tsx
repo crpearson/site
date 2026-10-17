@@ -1,4 +1,4 @@
-import { lonePointIndices, missBridges, openEndIndices, solidFrom } from "@/lib/bridges";
+import { lonePointIndices, missBridges, solidFrom } from "@/lib/bridges";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { PROVISIONAL_LEGEND } from "@/lib/ir-validation.mjs";
@@ -42,7 +42,6 @@ export function Sparkline({
     drawn = index;
   });
   const latest = [...values].reverse().find((value) => value != null);
-  const ends = openEndIndices(series, "pack");
   const lone = lonePointIndices(series, "pack");
   const dash = missBridges(series, values.map((_, index) => String(index)), "pack")
     .map((bridge) => {
@@ -58,6 +57,7 @@ export function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="none"
       className="h-8 w-full"
+      data-chart="sparkline"
       role="img"
       aria-label={
         latest == null
@@ -69,22 +69,12 @@ export function Sparkline({
         const value = values[index];
         if (value == null) return null;
         const [x, y] = xy(index, value).split(" ");
-        return <circle key={`dot-${index}`} cx={x} cy={y} r={2.2} fill={color} />;
+        return <circle key={`dot-${index}`} data-series="ir" cx={x} cy={y} r={2.2} fill={color} />;
       })}
-      {ends.map((index) => (
-        <circle
-          key={index}
-          cx={index * step}
-          cy={height - 3}
-          r={2.1}
-          fill="none"
-          stroke={color}
-          strokeOpacity={0.45}
-          strokeWidth={1.2}
-        />
-      ))}
       {dash ? (
         <path
+          data-series="ir"
+          data-join="dotted"
           d={dash}
           fill="none"
           stroke={color}
@@ -98,6 +88,8 @@ export function Sparkline({
         />
       ) : null}
       <path
+        data-series="ir"
+        data-join="solid"
         d={path}
         fill="none"
         stroke={color}

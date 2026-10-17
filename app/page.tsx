@@ -56,12 +56,11 @@ export default function Home() {
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
             Each series has its own as-of date. The calls below are the latest status. Fleet charts
-            follow a pack through every measured night, including nights under an earlier label. A
-            solid line runs straight through a night with no reading. No value is filled in, and
-            those charts have no dotted join and no hollow ring. Nights before the pack or series
-            existed, and nights after a move, are not marked. A single reading is a dot. A pack's
-            own page, and the sparkline on its tile, still use a dotted join for a night that pack
-            was not charged, and a hollow ring only at a true start or end.
+            follow a pack by serial through every measured night, including nights under an earlier
+            label. A solid line joins those readings and runs straight through a night with no
+            reading. No value is filled in. A series mean with only one reading is a single point.
+            A pack's own page, and the sparkline on its tile, use a dotted join for a night that
+            pack was not charged. Nothing is drawn before the first reading or after the last.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
@@ -159,9 +158,10 @@ export default function Home() {
         title="Series mean IR"
         action={
           <span className="note">
-            {IR_UNIT} · one reading is a dot. The line is solid through a night that series was not
-            measured. No value is filled in there. Nights before that series existed are not marked.
-            Rest-test day 0 is left off this mean. D-1 on 10-09 stays on series D.
+            {IR_UNIT} · a series with one reading is a single point. Later readings are a solid
+            line through a night that series was not measured. No value is filled in there. The
+            mean averages only packs measured in that series that night. Rest-test day 0 is left
+            off this mean. D-1 on 10-09 stays in the series D mean.
           </span>
         }
       >
@@ -396,11 +396,11 @@ export default function Home() {
           </h2>
           <p className="note mt-1">
             A star marks a partial night: that night did not include every pack, and it is left
-            incomplete. On these fleet charts a solid line runs through a night with no reading. No
-            value is filled in, and there is no dotted join or hollow ring. Nights before the series
-            existed are not marked. A single reading is a dot. A partial night with a reading is
-            still a normal point. A pack that changed labels stays on the series it was measured in.
-            The line is not joined across a move, and nights after the move are not marked.
+            incomplete. On these fleet charts a solid line joins every recorded reading for a pack,
+            including nights under an earlier label, and runs through a night with no reading. No
+            value is filled in. A pack with only its first reading is a single point. A partial
+            night with a reading is still a normal point. The series mean still averages only the
+            packs measured in that series that night.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
@@ -541,7 +541,7 @@ export default function Home() {
               fleet.packs.map((pack) => ({
                 id: pack.id,
                 tone: pack.tone,
-                cells: pack.cells,
+                cells: pack.historyCells,
                 service: pack.service,
                 logged: pack.logged,
                 rest: pack.rest,

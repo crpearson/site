@@ -394,12 +394,12 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
 
       <Panel accent="signal" eyebrow="Every night for this pack" title="Cell IR across nights">
         <p className="note mb-3">
-          The line follows this pack under whatever label it had that night. A night it was not
-          charged, between two readings, is a faint dotted line with no value on that night. A
-          skipped night before the first reading or after the last is a small hollow ring on the
-          bottom edge, also with no value. A star on the night label is a partial night and is
-          separate. Nights after a move to another slot are not marked, and the line is not joined
-          across that move.
+          The line follows this pack under whatever label it had that night, keyed by serial. Every
+          recorded reading is joined to the next one, including D-pool nights, charge-alone nights,
+          and nights from before a move. A night it was not charged, between two readings, is a faint
+          dotted line with no value on that night. Nothing is drawn before the first reading or after
+          the last. A pack with only its first reading is a single point. A star on the night label
+          is a partial night and is separate.
         </p>
         <LineChart
           categories={pack.categories}
@@ -447,7 +447,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...historyValues)}
           max={Math.max(...historyValues)}
-          caption="Each night is one line. A dash is a night this pack was not charged. Between two readings the line chart uses a faint dotted join, with no value. Before the first reading or after the last, that night is a hollow ring on the bottom edge, also with no value."
+          caption="Each night is one row. A dash is a night this pack was not charged. On the line chart, a faint dotted join connects the readings on either side, with no value filled in. Nothing is drawn before the first reading or after the last."
           rows={pack.categories.flatMap((category, index) =>
             nightUnpublished(category.id, pack.series) || nonStorageSession(category.id)
               ? []
@@ -473,11 +473,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         <p className="note mt-3">
           Cell, average, and spread figures are {IR_UNIT}. A Rest pool night is labeled Rest
           pool: the pack is off every board and is not charged. Not charged means this pack was in
-          service and was not logged that night. On the charts, a
-          faint dotted line joins the readings on either side when both exist, and that night has no
-          value. A skipped night before the first reading or after the last is a hollow ring on the
-          bottom edge, also with no value. A star is a partial night, which is different. Nights
-          before this pack was commissioned, and nights after it moved slots, are not marked.
+          service and was not logged that night. On the charts, a faint dotted line joins the
+          readings on either side of that night, and that night has no value. Nothing is drawn
+          before the first reading or after the last. A star is a partial night, which is different.
+          Nights before this pack was commissioned are not marked. Readings from before a move stay
+          on this line.
         </p>
         <div className="table-wrap mt-3" data-scroll-ok="">
           <table className="status-table">

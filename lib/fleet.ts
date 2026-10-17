@@ -3,7 +3,7 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lonePointIndices, missBridges, openEndIndices, seriesNotCharged, solidFrom } from "@/lib/bridges";
+import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lineSegments, lonePointIndices, missBridges, openEndIndices, readingIndices, seriesNotCharged, solidFrom, type ChartMode } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
 import { formatValue, occupancyLabel, publicProse, publicSession, shortSession, shownWhen } from "@/lib/format";
@@ -256,12 +256,12 @@ export function nonStorageSession(session: string): boolean {
 }
 
 /**
- * The series was charged, but its rows are not in the public file. Those packs
- * are out of span for that night: no value, no dotted join, no hollow ring, and
- * no "not charged" caption. The date tick is hidden when every plotted line
- * is unpublished, and when nothing is plotted. A rest-baseline column is a
- * tick only when a value is drawn there. Empty while every measured
- * series-night is published.
+ * The series was charged, but its rows are not in the public file. That night
+ * is not labeled "not charged". A recorded reading on either side still joins
+ * through it, and no value is invented for the unpublished night. The date tick
+ * is hidden when every plotted line is unpublished, and when nothing is plotted.
+ * A rest-baseline column is a tick only when a value is drawn there. Empty while
+ * every measured series-night is published.
  * A series that truly did not run stays "not charged".
  */
 const UNPUBLISHED_SERIES_NIGHTS: { session: string; series: string }[] = [];
@@ -591,29 +591,24 @@ export const categories: Category[] = sessionOrder.map((id) => ({
 }));
 
 /**
- * Span id while the pack is in service. Null before commission and from a
- * retirement date onward. Each move starts the next span, so a dotted join
- * stays inside one label and does not cross the move.
+ * Span id while this uid is in service. Null before commission and from a
+ * retirement date onward. A move does not start a new span: the pack is one
+ * serial, and its readings stay on one line through every label.
  */
 function serviceSpans(uid: string): (string | null)[] {
   const pack = packByUid(uid);
   const list = eventsFor(uid);
   const commission = list.find((event) => event.event === "commission");
-  const moves = list.filter((event) => event.event === "move");
   const retired = pack?.retired.trim() ?? "";
   return categories.map((category) => {
     if (!commission || compareTime(category.id, commission.date) < 0) return null;
     if (retired && compareTime(category.id, retired) >= 0) return null;
-    let span = 0;
-    for (const move of moves) {
-      if (compareTime(category.id, move.date) >= 0) span += 1;
-    }
     // Rest-test day 0 and charge runs are not storage nights. The column is a
     // hole, so a later storage reading still joins the earlier one.
     if (nonStorageSessions.has(category.id)) return null;
-    // Unpublished series rows are not a skipped charge. The night stays off the line.
+    // Unpublished series rows are not a skipped charge. Readings on either side still join.
     if (nightUnpublished(category.id, seriesOfLabel(labelAsOf(uid, category.id)))) return null;
-    return String(span);
+    return "0";
   });
 }
 
@@ -994,10 +989,16 @@ export type PackSeries = {
   uid: string;
   color: string;
   tone: LampTone;
+  /** Series-local readings. The series mean uses these and ignores other labels. */
   avg: (number | null)[];
   spread: (number | null)[];
   floor: (number | null)[];
   cells: (number | null)[][];
+  /** Every storage reading for this uid, including nights under an earlier label. */
+  historyAvg: (number | null)[];
+  historySpread: (number | null)[];
+  historyFloor: (number | null)[];
+  historyCells: (number | null)[][];
   service: (string | null)[];
   logged: boolean[];
   rest: boolean[];
@@ -1048,11 +1049,15 @@ function seriesPacks(series: string): PackSeries[] {
       spread: alignUid(uid, (row) => row.spread, series),
       floor: alignUid(uid, (row) => row.floor, series),
       cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null, series)),
-      service: membershipSpans(uid, series),
+      historyAvg: alignUid(uid, (row) => row.avg),
+      historySpread: alignUid(uid, (row) => row.spread),
+      historyFloor: alignUid(uid, (row) => row.floor),
+      historyCells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null)),
+      service: meta.service,
       logged: meta.logged,
       rest: restFlags(uid),
       unpublished: unpublishedForSeries(series),
-      provisional: alignProvisional(uid, series),
+      provisional: alignProvisional(uid),
     };
   });
 }
@@ -1105,19 +1110,6 @@ function seriesInService(series: string): (string | null)[] {
   });
 }
 
-/**
- * Pack span only while that pack's label is in this series. Nights before the
- * move into the series, and nights after the move out, are out of span.
- */
-function membershipSpans(uid: string, series: string): (string | null)[] {
-  const spans = serviceSpans(uid);
-  return categories.map((category, index) => {
-    if (spans[index] == null) return null;
-    if (seriesOfLabel(labelAsOf(uid, category.id)) !== series) return null;
-    return spans[index];
-  });
-}
-
 export function fleetModel(): FleetModel {
   const fleets = seriesIds().map((series) => {
     const members = packs.filter((pack) => pack.series === series);
@@ -1133,9 +1125,11 @@ export function fleetModel(): FleetModel {
     };
   });
   const measured = fleets.filter((fleet) => fleet.packs.length > 0);
-  const allIr = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => [...pack.avg, ...pack.cells.flat()]));
-  const allSpread = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.spread));
-  const allFloor = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.floor));
+  const allIr = measured.flatMap((fleet) =>
+    fleet.packs.flatMap((pack) => [...pack.historyAvg, ...pack.historyCells.flat()]),
+  );
+  const allSpread = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.historySpread));
+  const allFloor = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.historyFloor));
   const allRest = measured.flatMap((fleet) => fleet.rest);
   const meanValues = measured.flatMap((fleet) => fleetMean(fleet.packs));
   const restNums = nums(allRest);
@@ -1164,7 +1158,7 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     id: row.uid,
     label: row.id,
     color: row.color,
-    values: row[pick],
+    values: pick === "avg" ? row.historyAvg : pick === "spread" ? row.historySpread : row.historyFloor,
     service: row.service,
     logged: row.logged,
     rest: row.rest,
@@ -1951,6 +1945,29 @@ function ringNights(series: ChartSeries): string[] {
   return openEndIndices(series).map((index) => categories[index].id);
 }
 
+function assertJoined(series: ChartSeries, mode: ChartMode, label: string) {
+  const readings = readingIndices(series);
+  const segments = lineSegments(series, mode);
+  if (segments.length !== Math.max(0, readings.length - 1)) {
+    throw new Error(`${label} has ${readings.length} readings and ${segments.length} segments`);
+  }
+  if (openEndIndices(series, mode).length !== 0) {
+    throw new Error(`${label} still draws a hollow ring`);
+  }
+  const lone = lonePointIndices(series, mode);
+  if (readings.length <= 1) {
+    if (lone.length !== readings.length) throw new Error(`${label} lone marker does not match its single reading`);
+    return;
+  }
+  if (lone.length !== 0) throw new Error(`${label} draws a lone dot beside a line`);
+  for (let index = 1; index < readings.length; index += 1) {
+    const segment = segments[index - 1];
+    if (!segment || segment.from !== readings[index - 1] || segment.to !== readings[index]) {
+      throw new Error(`${label} broke between readings ${readings[index - 1]} and ${readings[index]}`);
+    }
+  }
+}
+
 function assertNoInteriorRing(series: ChartSeries, label: string) {
   const bad = interiorRingIndices(series, "pack");
   if (bad.length === 0) return;
@@ -1978,14 +1995,8 @@ function assertGapGeometry(model: FleetModel) {
     service: ["0", "0", "0", null, "0", "0"],
   };
   const sampleRings = openEndIndices(sample);
-  if (sampleRings.includes(2)) {
-    throw new Error("interior skip was ringed before a later real point");
-  }
-  if (!sampleRings.includes(0) || !sampleRings.includes(5)) {
-    throw new Error("a leading or trailing ring is missing");
-  }
-  if (interiorRingIndices(sample).length !== 0) {
-    throw new Error("leading and trailing rings were treated as interior");
+  if (sampleRings.length !== 0 || interiorRingIndices(sample).length !== 0) {
+    throw new Error("a skipped night before the first reading or after the last was ringed");
   }
   const sampleBridge = missBridges(sample, ["a", "b", "c", "d", "e", "f"]);
   if (sampleBridge.length !== 1 || sampleBridge[0].from !== 1 || sampleBridge[0].to !== 4) {
@@ -2008,8 +2019,11 @@ function assertGapGeometry(model: FleetModel) {
     values: [1, null, 2],
     service: ["0", "0", "1"],
   };
-  if (solidFrom(movedSpan, 2, "aggregate") !== -1 || missBridges(movedSpan, ["a", "b", "c"], "aggregate").length !== 0) {
-    throw new Error("an aggregate line crossed a move");
+  if (solidFrom(movedSpan, 2, "aggregate") !== 0 || missBridges(movedSpan, ["a", "b", "c"], "aggregate").length !== 0) {
+    throw new Error("an aggregate line broke across a move");
+  }
+  if (solidFrom(movedSpan, 2, "pack") !== -1 || missBridges(movedSpan, ["a", "b", "c"], "pack").length !== 1) {
+    throw new Error("a pack line did not draw a dotted join across a move when the night between was not charged");
   }
   const holeOnly: ChartSeries = {
     id: "hole",
@@ -2031,12 +2045,12 @@ function assertGapGeometry(model: FleetModel) {
     unpublished: [false, true, false],
   };
   if (
+    solidFrom(held, 2, "pack") !== 0 ||
+    solidFrom(held, 2, "aggregate") !== 0 ||
     missBridges(held, ["a", "b", "c"], "pack").length !== 0 ||
-    solidFrom(held, 2, "pack") !== -1 ||
-    missBridges(held, ["a", "b", "c"], "aggregate").length !== 0 ||
-    solidFrom(held, 2, "aggregate") !== -1
+    missBridges(held, ["a", "b", "c"], "aggregate").length !== 0
   ) {
-    throw new Error("an unpublished night was joined");
+    throw new Error("an unpublished night broke the line between two readings");
   }
 
   const nightIds = model.categories.map((category) => category.id);
@@ -2132,10 +2146,11 @@ function assertGapGeometry(model: FleetModel) {
       throw new Error(`${fleet.id} Rule B legend says not charged`);
     }
     for (const pack of fleet.packs) {
-      for (const values of [pack.avg, pack.spread, pack.floor, ...pack.cells]) {
+      for (const values of [pack.historyAvg, pack.historySpread, pack.historyFloor, ...pack.historyCells]) {
         const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
         assertAggregateQuiet(chart, nightIds, `${fleet.id} ${pack.uid} fleet chart`);
         assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
+        assertJoined(chart, "aggregate", `${fleet.id} ${pack.uid} fleet chart`);
       }
     }
   }
@@ -2155,26 +2170,41 @@ function assertGapGeometry(model: FleetModel) {
   }
   for (const line of [...c1p2.cellSeries, ...c1p2.spreadSeries, ...c1p2.floorSeries, ...c2p1.cellSeries, ...c2p1.spreadSeries, ...c2p1.floorSeries]) {
     assertNoInteriorRing(line, line.id);
+    assertJoined(line, "pack", line.id);
+  }
+  const d1 = getPack("CNHL-2026-001");
+  if (!d1) throw new Error("missing D-1 pack chart");
+  for (const line of [...d1.cellSeries, ...d1.spreadSeries, ...d1.floorSeries]) {
+    assertJoined(line, "pack", `D-1 ${line.label}`);
+    const intoD = lineSegments(line, "pack").find((segment) => segment.to === indexOf("2026-10-09"));
+    if (!intoD || intoD.from !== indexOf("2026-09-27") || intoD.style !== "dotted") {
+      throw new Error(`D-1 ${line.label} does not dot-join 2026-09-27 to 2026-10-09`);
+    }
+    if (!readingIndices(line).includes(indexOf("2026-09-26"))) {
+      throw new Error(`D-1 ${line.label} dropped a C1-P1 reading`);
+    }
+  }
+  const dFleetPack = model.fleets.find((fleet) => fleet.id === "D")?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  const c1FleetPack = model.fleets.find((fleet) => fleet.id === "C1")?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  if (!dFleetPack || !c1FleetPack) throw new Error("D-1 is missing from a series chart");
+  if (c1FleetPack.avg[indexOf("2026-10-09")] != null) throw new Error("D-1 2026-10-09 is in the C1 mean");
+  for (const pack of [dFleetPack, c1FleetPack]) {
+    const trend = chartLine(pack.uid, pack.historyAvg, pack.service, pack.logged, pack.rest);
+    assertJoined(trend, "aggregate", `${pack.uid} series trend`);
+    const intoD = lineSegments(trend, "aggregate").find((segment) => segment.to === indexOf("2026-10-09"));
+    if (!intoD || intoD.from !== indexOf("2026-09-27") || intoD.style !== "solid") {
+      throw new Error("series chart did not draw a solid line from D-1's C1-P1 era into 2026-10-09");
+    }
   }
 }
 
-/** Rings stay inside the first in-service span: not before that date, and not after a move. */
+/** Every plotted line joins its recorded readings. Hollow rings are not drawn. */
 function assertRingWindows(model: FleetModel) {
-  const member = (series: string, night: string) =>
-    packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, night)) === series);
-
   for (const line of model.mean) {
     const chart = chartLine(line.id, line.values, line.service);
-    const nights = ringNights(chart);
-    if (line.id === "D" && nights.length > 0) {
-      throw new Error(`Series D mean has a ring on ${nights.join(", ")}`);
-    }
-    for (const night of nights) {
-      if (!member(line.id, night)) {
-        throw new Error(`${line.id} mean ring on ${night} is before that series or after its packs moved out`);
-      }
-    }
+    assertJoined(chart, "aggregate", `${line.id} mean`);
     assertNoInteriorRing(chart, `${line.id} mean`);
+    if (ringNights(chart).length !== 0) throw new Error(`${line.id} mean still draws a hollow ring`);
   }
 
   const dMean = model.mean.find((line) => line.id === "D");
@@ -2189,32 +2219,15 @@ function assertRingWindows(model: FleetModel) {
 
   for (const fleet of model.fleets) {
     const restChart = chartLine(fleet.id, fleet.rest, fleet.restService, undefined, undefined, fleet.restNa);
-    for (const night of ringNights(restChart)) {
-      if (!member(fleet.id, night)) {
-        throw new Error(`${fleet.id} Rule B ring on ${night} is outside that series`);
-      }
-    }
+    assertJoined(restChart, "aggregate", `${fleet.id} Rule B`);
     assertNoInteriorRing(restChart, `${fleet.id} Rule B`);
     for (const pack of fleet.packs) {
-      const lines = [pack.avg, pack.spread, pack.floor, ...pack.cells];
+      const lines = [pack.historyAvg, pack.historySpread, pack.historyFloor, ...pack.historyCells];
       for (const values of lines) {
         const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
-        assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
-        for (const night of ringNights(chart)) {
-          if (seriesOfLabel(labelAsOf(pack.uid, night)) !== fleet.id) {
-            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before that series or after the move`);
-          }
-          const move = movedEvent(pack.uid);
-          if (move && seriesOfLabel(move.from) === fleet.id && compareTime(night, move.date) >= 0) {
-            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is after the move`);
-          }
-          if (move && seriesOfLabel(move.to) === fleet.id && compareTime(night, move.date) < 0) {
-            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before the move into ${fleet.id}`);
-          }
-          const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
-          if (!commission || compareTime(night, commission.date) < 0) {
-            throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
-          }
+        assertJoined(chart, "aggregate", `${fleet.id} ${pack.uid}`);
+        if (ringNights(chart).length !== 0) {
+          throw new Error(`${fleet.id} ${pack.uid} still draws a hollow ring`);
         }
       }
     }
@@ -2231,20 +2244,8 @@ function assertRingWindows(model: FleetModel) {
     ];
     for (const values of lines) {
       const chart = chartLine(pack.uid, values, meta.service, meta.logged, rest);
-      assertNoInteriorRing(chart, pack.uid);
-      for (const night of ringNights(chart)) {
-        const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
-        if (!commission || compareTime(night, commission.date) < 0) {
-          throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
-        }
-        const move = movedEvent(pack.uid);
-        if (move && compareTime(night, move.date) >= 0) {
-          throw new Error(`${pack.uid} ring on ${night} is after its move`);
-        }
-        if (pack.retired && compareTime(night, pack.retired) >= 0) {
-          throw new Error(`${pack.uid} ring on ${night} is after retirement`);
-        }
-      }
+      assertJoined(chart, "pack", pack.uid);
+      if (ringNights(chart).length !== 0) throw new Error(`${pack.uid} still draws a hollow ring`);
     }
   }
   const vacated = getSlot("C1-P1");

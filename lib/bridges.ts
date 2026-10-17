@@ -11,7 +11,7 @@ export type GapKind = "value" | "skip" | "na" | "out" | "rest";
 /** Pack charts mark skips. Aggregate charts draw a solid line through them. */
 export type ChartMode = "aggregate" | "pack";
 
-export const SKIP_LEGEND = "dotted = not charged · ○ = not charged (start/end)";
+export const SKIP_LEGEND = "dotted = not charged";
 
 /** Span while the line is in scope. Omitted service means the whole axis is in scope. */
 export function spanAt(series: ChartSeries, index: number): string | null {
@@ -25,14 +25,16 @@ export function spanAt(series: ChartSeries, index: number): string | null {
  * a logged night whose metric is empty and is not a skip.
  */
 export function gapKind(series: ChartSeries, index: number): GapKind {
-  if (series.rest?.[index] && series.values[index] == null) return "rest";
+  // A recorded value is always a point. Span, label, and publish state do not hide it.
+  if (series.values[index] != null) return "value";
+  if (series.rest?.[index]) return "rest";
   if (spanAt(series, index) == null) return "out";
   if (series.na?.[index]) return "na";
   if (series.logged) {
     if (!series.logged[index]) return "skip";
-    return series.values[index] != null ? "value" : "out";
+    return "out";
   }
-  return series.values[index] != null ? "value" : "skip";
+  return "skip";
 }
 
 export function seriesNotCharged(series: ChartSeries, index: number): boolean {
@@ -67,86 +69,73 @@ export function axisNightVisible(series: ChartSeries[], index: number, nightId?:
   return true;
 }
 
-/**
- * A night with no span and no reading that must not split a line: the
- * rest-baseline column, or any other in-between hole that is not an
- * unpublished night. A real skip is not a hole. Before commission and after
- * retirement are holes only when they sit between two readings of one span,
- * which they do not.
- */
-export function isSpanHole(series: ChartSeries, index: number): boolean {
-  if (series.unpublished?.[index]) return false;
-  return spanAt(series, index) == null && gapKind(series, index) === "out";
-}
-
 function isReading(series: ChartSeries, index: number): boolean {
   return series.values[index] != null && gapKind(series, index) === "value";
 }
 
-/**
- * A night the solid stroke may cross. Every mode crosses a span hole such as
- * the rest-baseline column. Aggregate charts also cross a real skip or N/A.
- * An unpublished night never continues the stroke.
- */
-function continuesSolid(series: ChartSeries, index: number, mode: ChartMode): boolean {
-  if (isSpanHole(series, index)) return true;
-  return mode === "aggregate" && seriesGap(series, index);
+export function readingIndices(series: ChartSeries): number[] {
+  const indices: number[] = [];
+  series.values.forEach((_, index) => {
+    if (isReading(series, index)) indices.push(index);
+  });
+  return indices;
 }
 
+/** A night between two readings where the pack was not charged, or the metric is N/A. */
+function unchargedBetween(series: ChartSeries, from: number, to: number): boolean {
+  for (let cursor = from + 1; cursor < to; cursor += 1) {
+    const kind = gapKind(series, cursor);
+    if (kind === "skip" || kind === "na" || kind === "rest") return true;
+  }
+  return false;
+}
+
+export type LineSegment = {
+  from: number;
+  to: number;
+  style: "solid" | "dotted";
+};
+
 /**
- * The earlier reading this point joins with a solid stroke. In pack mode a
- * genuine miss returns -1 so a dotted join can cross it. In aggregate mode
- * that miss stays on the solid stroke. A span change still breaks the stroke.
+ * One segment between each successive recorded reading. Pack charts dot that
+ * segment when a night between the readings was not charged. Aggregate charts
+ * stay solid through those nights. Empty nights are not given a value.
+ * A move, a rest-test column, or an unpublished night does not break the line.
  */
+export function lineSegments(series: ChartSeries, mode: ChartMode = "pack"): LineSegment[] {
+  const readings = readingIndices(series);
+  const segments: LineSegment[] = [];
+  for (let index = 1; index < readings.length; index += 1) {
+    const from = readings[index - 1];
+    const to = readings[index];
+    const dotted = mode === "pack" && unchargedBetween(series, from, to);
+    segments.push({ from, to, style: dotted ? "dotted" : "solid" });
+  }
+  return segments;
+}
+
+/** The earlier reading this point joins with a solid stroke, or -1 when that join is dotted. */
 export function solidFrom(series: ChartSeries, index: number, mode: ChartMode = "pack"): number {
-  if (!isReading(series, index)) return -1;
-  let cursor = index - 1;
-  while (cursor >= 0 && continuesSolid(series, cursor, mode)) cursor -= 1;
-  if (cursor < 0 || !isReading(series, cursor)) return -1;
-  if (cursor < index - 1 && spanAt(series, cursor) !== spanAt(series, index)) return -1;
-  return cursor;
+  const segment = lineSegments(series, mode).find((item) => item.to === index && item.style === "solid");
+  return segment ? segment.from : -1;
 }
 
-/** A night drawn as a dotted join or a hollow ring, with no value. */
+/** A night with no value because the pack was not charged, or the metric does not apply. */
 export function seriesGap(series: ChartSeries, index: number): boolean {
   const kind = gapKind(series, index);
   return kind === "skip" || kind === "na";
 }
 
-/**
- * Dotted joins between real points in one service span, across nights that
- * genuinely have no reading. A span hole (the rest-baseline column) does not
- * break the join and is not itself a dotted night. Open ends, span changes,
- * and unpublished nights stay open.
- */
+/** Dotted joins on a pack chart. Aggregate charts have none; their stroke stays solid. */
 export function missBridges(series: ChartSeries, nightIds: string[], mode: ChartMode = "pack"): MissBridge[] {
   if (mode === "aggregate") return [];
-  const bridges: MissBridge[] = [];
-  let prev = -1;
-  for (let index = 0; index < series.values.length; index += 1) {
-    if (!isReading(series, index)) continue;
-    if (prev >= 0 && index > prev + 1) {
-      const span = spanAt(series, prev);
-      const between: number[] = [];
-      for (let cursor = prev + 1; cursor < index; cursor += 1) between.push(cursor);
-      const sameSpanGap = (cursor: number) =>
-        spanAt(series, cursor) === span && seriesGap(series, cursor);
-      const crossed =
-        span != null &&
-        spanAt(series, index) === span &&
-        between.every((cursor) => isSpanHole(series, cursor) || sameSpanGap(cursor)) &&
-        between.some((cursor) => seriesGap(series, cursor));
-      if (crossed) {
-        bridges.push({
-          from: prev,
-          to: index,
-          nights: between.map((cursor) => nightIds[cursor]),
-        });
-      }
-    }
-    prev = index;
-  }
-  return bridges;
+  return lineSegments(series, mode)
+    .filter((segment) => segment.style === "dotted")
+    .map((segment) => ({
+      from: segment.from,
+      to: segment.to,
+      nights: nightIds.slice(segment.from + 1, segment.to),
+    }));
 }
 
 export function hasMissBridge(series: ChartSeries[], nightIds: string[], mode: ChartMode = "pack"): boolean {
@@ -205,40 +194,13 @@ export function allNa(series: ChartSeries[], nightIds: string[]): string[] {
 }
 
 /**
- * The span a line is first in service. Omitted service means the whole axis
- * is span "0". A later span is a move, and those nights are not ringed.
- */
-function firstSpan(series: ChartSeries): string | null {
-  if (!series.service) return "0";
-  return series.service.find((span) => span != null) ?? null;
-}
-
-/**
- * In-service misses before the first reading or after the last, inside the
- * line's first service span. A ring is a leading end only when no earlier
- * reading exists in that span, and a trailing end only when no later reading
- * exists. Interior misses are dotted joins, not rings. Nights in a later span
- * are after a move and are not marked.
+ * Hollow edge rings are not drawn. A skipped night before the first reading
+ * or after the last has no marker. The line only exists between real readings.
  */
 export function openEndIndices(series: ChartSeries, mode: ChartMode = "pack"): number[] {
-  if (mode === "aggregate") return [];
-  const allowed = firstSpan(series);
-  if (allowed == null) return [];
-  const inSpan: number[] = [];
-  series.values.forEach((_, index) => {
-    if (spanAt(series, index) === allowed) inSpan.push(index);
-  });
-  const readings = inSpan.filter((index) => isReading(series, index));
-  const first = readings[0];
-  const last = readings[readings.length - 1];
-  const ends: number[] = [];
-  for (const index of inSpan) {
-    if (!seriesGap(series, index)) continue;
-    const leading = first == null || index < first;
-    const trailing = first == null || index > last;
-    if (leading || trailing) ends.push(index);
-  }
-  return ends;
+  void series;
+  void mode;
+  return [];
 }
 
 /**
@@ -262,32 +224,13 @@ export function interiorRingIndices(series: ChartSeries, mode: ChartMode = "pack
 }
 
 /**
- * A real reading whose solid path is only a moveto, and which is not an end of
- * a dotted join. A one-point line has no stroke, so the chart draws a dot.
+ * The only lone marker is a series with exactly one recorded reading: a pack's
+ * first point, before it has a second reading to join.
  */
 export function lonePointIndices(series: ChartSeries, mode: ChartMode = "pack"): number[] {
-  const nightIds = series.values.map((_, index) => String(index));
-  const bridged = new Set<number>();
-  for (const bridge of missBridges(series, nightIds, mode)) {
-    bridged.add(bridge.from);
-    bridged.add(bridge.to);
-  }
-  const lone: number[] = [];
-  let run: number[] = [];
-  const flush = () => {
-    if (run.length === 1 && !bridged.has(run[0])) lone.push(run[0]);
-    run = [];
-  };
-  series.values.forEach((value, index) => {
-    if (value == null || gapKind(series, index) !== "value") {
-      if (continuesSolid(series, index, mode)) return;
-      flush();
-      return;
-    }
-    run.push(index);
-  });
-  flush();
-  return lone;
+  void mode;
+  const readings = readingIndices(series);
+  return readings.length === 1 ? readings : [];
 }
 
 export function hasOpenEnd(series: ChartSeries[], mode: ChartMode = "pack"): boolean {

@@ -201,11 +201,10 @@ export function LineChart({
       <p id={descId} className="sr-only">
         {ariaLabel} Arrow keys and the night labels move between nights.{" "}
         {mode === "aggregate"
-          ? "A solid line joins real readings and runs straight through a night with no reading. No value is filled in there. There is no dotted join and no hollow ring."
-          : "A faint dotted line joins the real readings on either side of a night this pack was not charged. No value is plotted there. A skipped night before the first reading or after the last is a small hollow ring on the bottom edge, also with no value."}{" "}
-        Nights before the pack or series was in service, and nights after a move, are not marked. A
-        single reading is a dot. A star on the night label is a partial night and is separate: a
-        pack that was charged still has a point.
+          ? "A solid line joins every recorded reading and runs straight through a night with no reading, including a night under an earlier label. No value is filled in there."
+          : "A line joins every recorded reading for this pack, including nights under an earlier label. A faint dotted line joins the real readings on either side of a night this pack was not charged. No value is plotted there. Nothing is drawn before the first reading or after the last."}{" "}
+        A pack with only its first reading is a single point. A star on the night label is a partial
+        night and is separate: a pack that was charged still has a point.
         {mode === "pack" && missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
         {naNights.length ? ` N/A: ${naNights.join(", ")}.` : ""}
       </p>
@@ -274,6 +273,7 @@ export function LineChart({
             })}
             <svg
               className="plot-svg"
+              data-chart={ariaLabel}
               viewBox={`0 0 ${n} 100`}
               preserveAspectRatio="none"
               aria-hidden="true"
@@ -282,6 +282,8 @@ export function LineChart({
                 bridgePath(item, yDomain, nightIds, mode).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-bridge-${pathIndex}`}
+                    data-series={item.id}
+                    data-join="dotted"
                     d={d}
                     fill="none"
                     stroke={item.color}
@@ -299,6 +301,8 @@ export function LineChart({
                 linePaths(item, yDomain, mode).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-${pathIndex}`}
+                    data-series={item.id}
+                    data-join="solid"
                     d={d}
                     fill="none"
                     stroke={item.color}

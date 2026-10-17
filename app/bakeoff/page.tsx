@@ -117,7 +117,7 @@ export default function BakeoffPage() {
             <p className="eyebrow">Measured IR by series</p>
             <p className="note mt-1">
               The line is solid through a night that series was not measured. No value is filled in
-              there. Nights before that series existed are not marked. A single reading is a dot.
+              there. A series with one reading is a single point. Later readings stay on one line.
             </p>
             <div className="mt-2">
               <LineChart
