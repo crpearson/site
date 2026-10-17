@@ -23,6 +23,7 @@ The published file uses schema `next_charge/v2` under charge rules `v5`. Any oth
 | `watch` | Tonight's recheck notes. These match the active set. |
 | `sets` | Both plans. The object keys are the set names with `+` written as `_`: `C3+C4` is `C3_C4`. |
 | `do_not_connect` | Packs that stay off every lead, on either set. |
+| `individual` | D pool packs that charge on their own. Top level only, not tied to a set. An empty list when there are none. |
 | `notes` | Strings printed at the bottom of the page. |
 
 `storage_runs`, `parallel_boards`, `charge_alone`, and `watch` at the top of the file are the same JSON as those arrays on the active set. A difference fails the build.
@@ -186,9 +187,23 @@ Rules v4 sheets leave this out. If present it is still checked as below.
 | `uid` | That label's `pack_uid`. A mismatch fails the build. |
 | `pool` | Pool name, such as `Rest`. |
 | `reason` | Why it stays disconnected. |
-| `return_date` | Pacific date it can return, `YYYY-MM-DD`. |
+| `return_date` | Pacific date the 7-day reading was due, `YYYY-MM-DD`. It is not a promise of return: the pack stays here until the reading is in, and `reason` says whether it is in yet (for example `Rest pool, 7-day reading due 2026-10-16, not in yet.`). |
 
 A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_boards`, or `charge_alone` on the top-level plan or on either set.
+
+## Charges on its own (D pool)
+
+`individual` lists the D pool packs that are not in the Rest pool. Each one charges on its own and is never connected in parallel. The list sits at the top level only, because a D pool pack is not tied to one storage set. An empty list means there are none.
+
+| Key | Meaning |
+| --- | --- |
+| `label` | Pack label in `packs.csv`, such as `D-1`. |
+| `uid` | That label's `pack_uid`. A mismatch fails the build. |
+| `pool` | `D`. |
+| `status` | Current service status from the latest status call, such as `Watch`. |
+| `note` | Printed as written, such as `Charges on its own (D pool); rest test pass 1 of 3.` |
+
+A pack in `individual` is never also on a parallel board, in `charge_alone`, in a storage run, or in `do_not_connect`, on the top-level plan or on either set.
 
 ## What the build checks
 
@@ -196,7 +211,7 @@ A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_board
 
 - `schema` is exactly `next_charge/v2`, and `rules` is exactly `v5`.
 - The file bytes stay the published sheet. A different hash fails the build.
-- The keys are the ones in this note. `locked`, `locked_reason`, `mode`, `join_status`, and `last_offset_max_V` / `last_offset_side` on `charge_alone` are optional. Every parallel board key, including `last_rule_b_over`, `last_rule_b_basis` and `outlook_rule_b` (with `ir_match`), is required. Any other extra key fails the build.
+- The keys are the ones in this note. `locked`, `locked_reason`, `individual`, `mode`, `join_status`, and `last_offset_max_V` / `last_offset_side` on `charge_alone` are optional. Every parallel board key, including `last_rule_b_over`, `last_rule_b_basis` and `outlook_rule_b` (with `ir_match`), is required. Any other extra key fails the build.
 - A recorded `last_rule_b_V` of `null` needs `null` call and session and an empty `last_rule_b_over`.
 - `outlook_rule_b.call` is `GO` with an empty `check_first`, or `CHECK FIRST` with a non-empty one, and the `_without_check_first` fields follow it.
 - `ir_match` lists every board pack once, its `check_first` / `charge_alone` lists and `call` follow the pack flags, and IR check-first packs need `current: reduced`.
@@ -207,5 +222,6 @@ A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_board
 - Parallel packs land on L1 through R3, then the next board letter, and stop at 4 boards.
 - Rest spreads are 0–2 V, limits are over 0 and at most 2 V, and a `check_first` rest V is 15–26.5 V (one 6S pack).
 - A disconnected pack is not also given a lead.
+- An `individual` pack is not on a board, in `charge_alone`, in a storage run, or in `do_not_connect`, and is listed once.
 
 Status chips on the charger and board drawings come from the latest status call for that pack. The watch notes, charge-alone reasons, board conditions, check-first notes, and outlook basis are the file's own words.

@@ -848,15 +848,24 @@
       "label": "C1-P4",
       "uid": "CNHL-2026-004",
       "pool": "Rest",
-      "reason": "7-day rest test (left at storage, untouched)",
+      "reason": "Rest pool, 7-day reading due 2026-10-16, not in yet. Left at storage and untouched; stays off every board until it is read.",
       "return_date": "2026-10-16"
     },
     {
       "label": "C2-P2",
       "uid": "CNHL-2026-008",
       "pool": "Rest",
-      "reason": "7-day rest test (left at storage, untouched)",
+      "reason": "Rest pool, 7-day reading due 2026-10-16, not in yet. Left at storage and untouched; stays off every board until it is read.",
       "return_date": "2026-10-16"
+    }
+  ],
+  "individual": [
+    {
+      "label": "D-1",
+      "uid": "CNHL-2026-001",
+      "pool": "D",
+      "status": "Watch",
+      "note": "Charges on its own (D pool); rest test pass 1 of 3."
     }
   ],
   "notes": [

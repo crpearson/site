@@ -18,6 +18,8 @@ export type NextChargeDocument = {
   watch: WatchItem[];
   sets: Record<string, ChargeSet>;
   do_not_connect: DoNotConnectItem[];
+  /** D-pool packs that charge on their own. Omitted when the sheet has none. */
+  individual?: IndividualItem[];
   notes: string[];
 };
 
@@ -129,6 +131,14 @@ export type ChargeAloneItem = {
   last_offset_max_V?: number;
   /** Which side of the board that offset sits on. */
   last_offset_side?: "below" | "above";
+};
+
+export type IndividualItem = {
+  label: string;
+  uid: string;
+  pool: string;
+  status: string;
+  note: string;
 };
 
 export type DoNotConnectItem = {

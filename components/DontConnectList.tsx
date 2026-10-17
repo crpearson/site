@@ -32,7 +32,7 @@ export function DontConnectList({
             <p className="bench-field">{item.uid}</p>
             <p className="note mt-2">{item.reason}</p>
             <p className="bench-return">Pool {item.pool}</p>
-            <p className="bench-return">Returns {item.return_date}</p>
+            <p className="bench-return">7-day reading due {item.return_date}</p>
           </div>
         </li>
       ))}

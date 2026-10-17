@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { ChargerDiagram } from "@/components/ChargerDiagram";
 import { DontConnectList } from "@/components/DontConnectList";
 import { ChargeAlone, ParallelBoardDiagram } from "@/components/ParallelBoardDiagram";
@@ -9,7 +10,7 @@ import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { seriesColor } from "@/lib/color";
 import { formatIr } from "@/lib/format";
 import { chargeSetId, layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
-import type { ChargeSet, IrMatch, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
+import type { ChargeSet, IndividualItem, IrMatch, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
   title: "Next charge",
@@ -267,6 +268,32 @@ function SetPlan({
   );
 }
 
+function OwnChargeList({ items }: { items: IndividualItem[] | undefined }) {
+  if (!items?.length) return null;
+  return (
+    <section className="space-y-3" aria-labelledby="own-heading">
+      <h2 id="own-heading" className="section-title">
+        Charges on its own
+      </h2>
+      <ul className="bench-hold-list">
+        {items.map((item) => (
+          <li key={item.label} className="panel" data-accent="signal">
+            <p>
+              <Link href={`/pack/${item.label}`} className="pack-link font-mono">
+                {item.label}
+              </Link>
+            </p>
+            <p className="bench-field">{item.uid}</p>
+            <p className="bench-return">Pool {item.pool}</p>
+            <p className="note mt-2">{item.status}</p>
+            <p className="note mt-2">{item.note}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default function NextChargePage() {
   const plan = loadNextCharge();
   const rows = new Map(statusRows().map((row) => [row.label, row]));
@@ -314,6 +341,8 @@ export default function NextChargePage() {
         active={<SetPlan name={plan.active_set} set={active} setId={activeId} resolve={resolve} />}
         alternate={<SetPlan name={plan.alternate_set} set={alternate} setId={alternateId} resolve={resolve} />}
       />
+
+      <OwnChargeList items={plan.individual} />
 
       <section className="space-y-3" aria-labelledby="hold-heading">
         <h2 id="hold-heading" className="section-title">
