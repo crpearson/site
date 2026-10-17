@@ -15,12 +15,20 @@ export const metadata: Metadata = {
   description: "Tonight's charge set, the other night's set, and packs to leave disconnected.",
 };
 
+function packList(labels: string[]): string {
+  if (labels.length <= 1) return labels[0] ?? "";
+  return `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+}
+
 function ruleBLine(board: ParallelBoard): string | null {
   const covered = board.last_rule_b_over;
   if (!covered?.length) return null;
-  const packs =
-    covered.length === 1 ? covered[0] : `${covered.slice(0, -1).join(", ")} and ${covered[covered.length - 1]}`;
-  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packs} · ${board.last_rule_b_session}`;
+  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packList(covered)} · ${board.last_rule_b_session}`;
+}
+
+function allPacksLine(board: ParallelBoard): string | null {
+  if (board.last_rest_delta_all_V === board.last_rule_b_V) return null;
+  return `${board.last_rest_delta_all_V.toFixed(3)} V over ${packList(board.packs)}`;
 }
 
 /** A repeated channel starts the next queue. Charge-alone packs are listed before board packs. */
@@ -107,6 +115,7 @@ function SetPlan({
           <div className="bench-stack">
             {boards.map((board) => {
               const ruleB = ruleBLine(board);
+              const withEveryPack = allPacksLine(board);
               return (
                 <div key={board.series} className="bench-series">
                   <article
@@ -120,13 +129,35 @@ function SetPlan({
                         <dt>Current</dt>
                         <dd>{board.current}</dd>
                       </div>
+                      <div>
+                        <dt>Go limit</dt>
+                        <dd>{board.rest_check_limit_V.toFixed(2)} V</dd>
+                      </div>
                       {ruleB ? (
                         <div>
                           <dt>Last Rule B</dt>
                           <dd>{ruleB}</dd>
                         </div>
                       ) : null}
+                      {withEveryPack ? (
+                        <div>
+                          <dt>With every pack</dt>
+                          <dd>{withEveryPack}</dd>
+                        </div>
+                      ) : null}
                     </dl>
+                    {board.check_first.length ? (
+                      <div className="mt-3">
+                        <p className="panel-title">Check first</p>
+                        <ul className="bench-notes">
+                          {board.check_first.map((item) => (
+                            <li key={item.label} className="note">
+                              {item.label}: {item.note}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
                     {board.conditions.length ? (
                       <ul className="bench-notes">
                         {board.conditions.map((condition) => (
@@ -170,21 +201,6 @@ function SetPlan({
         </section>
       ) : null}
 
-      {set.join_status?.length ? (
-        <section className="space-y-3" aria-labelledby={`${setId}-join-heading`}>
-          <h2 id={`${setId}-join-heading`} className="section-title">
-            Joining a board
-          </h2>
-          <ul className="bench-notes">
-            {set.join_status.map((item) => (
-              <li key={item.label} className="note">
-                {item.label}: {item.status}. Storage nights {item.storage_nights}. Clean nights in a row{" "}
-                {item.clean_nights_in_a_row}. {item.rule}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
     </div>
   );
 }

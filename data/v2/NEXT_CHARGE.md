@@ -9,6 +9,7 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | Key | Meaning |
 | --- | --- |
 | `schema` | Must be the string `next_charge/v2`. |
+| `rules` | Must be the string `v4`. |
 | `as_of_session` | Session the sheet is based on. A date or a session id. |
 | `as_of_date_pt` | Pacific calendar date, `YYYY-MM-DD`. |
 | `active_set` | The set for tonight, such as `C1+C2`. |
@@ -34,9 +35,9 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `last_storage_session` | Last storage session for this set. |
 | `storage_runs` | One object per charger channel. See below. |
 | `parallel_boards` | One object per series board. Empty when the set has no board yet. |
-| `charge_alone` | Packs that charge on their own before they join a board. |
+| `charge_alone` | Packs held off the board. Empty under rules v4. |
 | `watch` | Recheck notes for this set. |
-| `join_status` | Optional. One object per pack that is working toward its own board. |
+| `join_status` | Not used. The published sheet has no join list. |
 
 The two sets do not share a pack. A pack may be in `storage_runs`, `charge_alone`, and `watch` on the same set.
 
@@ -69,6 +70,9 @@ A pack may be in `storage_runs` and also on a parallel board or in `charge_alone
 | `packs` | Labels in port order. |
 | `current` | `normal` or `reduced`. This is the charge current for the whole board. |
 | `conditions` | Strings. Limits and exceptions for this board. |
+| `rest_check_limit_V` | Go limit before connecting, in volts. The published sheet uses 0.60. |
+| `last_rest_delta_all_V` | Rest spread of every pack on the board, in volts. |
+| `check_first` | Packs outside the Go limit on the latest night. Each one stays on `packs`. |
 | `last_rule_b_V` | Last Rule B board spread, in volts. A number. |
 | `last_rule_b_call` | Call recorded with that Rule B check. |
 | `last_rule_b_session` | Session of that Rule B check. |
@@ -99,6 +103,17 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 | `uid` | That label's `pack_uid`. |
 | `note` | The recheck note, printed as written. |
 
+## `check_first`
+
+| Key | Meaning |
+| --- | --- |
+| `label` | Pack label on this board. |
+| `uid` | That label's `pack_uid`. |
+| `last_rest_V` | That pack's rest voltage on the latest night. |
+| `last_offset_max_V` | How far it sat from the board, in volts. |
+| `last_offset_side` | `below` or `above`. |
+| `note` | Printed as written, under Check first. |
+
 ## `join_status`
 
 | Key | Meaning |
@@ -107,7 +122,7 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 | `uid` | That label's `pack_uid`. |
 | `storage_nights` | Storage nights so far. A number. Charge runs do not count. |
 | `clean_nights_in_a_row` | Clean storage nights in a row. A number. |
-| `joins_board` | `true` or `false`. `true` means the pack qualifies for its board. It can still charge alone tonight. `false` while that pack is on a parallel board fails the build. |
+| `joins_board` | Not in the published sheet. |
 | `status` | Recorded status, such as `Go (new)` or `Go (watch)`. |
 | `rule` | The recorded join rule, in the file's own words. |
 

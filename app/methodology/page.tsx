@@ -33,10 +33,6 @@ export default function MethodologyPage() {
           {doc.title}
         </h1>
         <div className="page-intro mt-4" dangerouslySetInnerHTML={{ __html: doc.introHtml }} />
-        <p className="note mt-4">
-          C3 and C4 finished storage night 2 on 2026-10-16. Each series has its own board.
-          C3-P5, C3-P6, and C4-P2 are Go (watch) and charge alone. C4-P4 joined the C4 board.
-        </p>
       </header>
       {doc.sections.map((section, index) => (
         <Panel

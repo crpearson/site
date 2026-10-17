@@ -8,7 +8,7 @@ import { IR_UNIT } from "@/lib/ir";
 export const metadata: Metadata = {
   title: "About the data",
   description:
-    "How this LiPo fleet is measured: DX8 storage charges, Rules v3, Rule B, and what the logs do not contain.",
+    "How this LiPo fleet is measured: DX8 storage charges, charge rules v4, Rule B, and what the logs do not contain.",
 };
 
 export default function AboutPage() {
@@ -24,12 +24,12 @@ export default function AboutPage() {
         <p className="page-intro mt-4">
           {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
           {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
-          comes from the start of each storage charge. Rules v3 and Rule B use the limits shown
-          below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and not a
-          series mean. D-1, C1-P4, and C2-P2 are in the Rest pool until 2026-10-16. A Rest pool night
-          is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in rotation:
-          CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16. Each series
-          has its own board. C3-P5, C3-P6, and C4-P2 still charge alone.
+          comes from the start of each storage charge. Charge rules v4 and Rule B use the limits
+          shown below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and
+          not a series mean. D-1, C1-P4, and C2-P2 are in the Rest pool until 2026-10-16. A Rest pool
+          night is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in
+          rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16.
+          Each series has its own board. Watch is a note. C3-P5 is marked check first.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">
@@ -115,22 +115,16 @@ export default function AboutPage() {
           <p className="eyebrow">Inside one pack</p>
           <h2 className="panel-title mt-1">Parallel call</h2>
           <ul className="mt-4 space-y-2 font-mono text-sm">
-            <li className="text-[var(--ok)]">Go</li>
-            <li className="text-[var(--caution)]">
-              Caution, reduced current. Spread ≥ {formatValue("ir", spread.caution_gte)} {IR_UNIT}, or a
-              cell ≥ {thresholds.cell_ratio_to_median.caution_gte}× the pack median, two nights in a row.
-              Or a low-cell gap ≥ {thresholds.low_cell_gap_mv.caution_gte} mV on 2 of the last 3 nights.
-              Or a floor under {thresholds.floor_eye_mv} mV on the usual low cell.
-            </li>
+            <li className="text-[var(--ok)]">Go. On its series board. This is the default.</li>
+            <li className="text-[var(--caution)]">Watch. A note only. The pack stays on its board.</li>
             <li className="text-[var(--off)]">
-              Individual only. Spread ≥ {formatValue("ir", spread.individual_gte)} {IR_UNIT}, or a cell ≥{" "}
-              {thresholds.cell_ratio_to_median.individual_gte}× the median, two nights in a row. Or a gap ≥{" "}
-              {thresholds.low_cell_gap_mv.individual_gte} mV on 2 of the last 3 nights. Or any cell under{" "}
-              {(thresholds.min_cell_rest_mv / 1000).toFixed(2)} V. Or the pack is in the D pool, on a
-              self-discharge watch, or failed a rest test.
+              Pulled. Off the board for safety, or for trouble on 3 of the last 4 nights.
             </li>
           </ul>
           <p className="note mt-4">
+            A spread of {formatValue("ir", spread.caution_gte)} {IR_UNIT} or more, or a cell at{" "}
+            {thresholds.cell_ratio_to_median.caution_gte}× the pack median, is a watch note. A low-cell
+            gap of {thresholds.low_cell_gap_mv.individual_gte} mV or more counts as a trouble night.
             Service is separate: In service, Watch, D pool, or Retire. A Rest pool pack is off every
             board until the 7-day reading. A status line reads Parallel, then Service. The words on
             each pack are the recorded call.
@@ -141,14 +135,12 @@ export default function AboutPage() {
           <h2 className="panel-title mt-1">Rule B · rest-Δ</h2>
           <ul className="mt-4 space-y-2 font-mono text-sm">
             <li className="text-[var(--ok)]">Go ≤ {rest.go_lte.toFixed(2)} V</li>
-            <li className="text-[var(--ruleb)]">
-              Caution {rest.caution_lo.toFixed(2)}–{rest.caution_hi.toFixed(2)} V
-            </li>
-            <li className="text-[var(--off)]">Hard stop &gt; {rest.hard_stop_gt.toFixed(2)} V</li>
           </ul>
           <p className="note mt-4">
-            Violet panel, violet caution band. Kept separate from the parallel call so a spread
-            call and a rest-delta call are not read as the same limit.
+            Before connecting, every pack on the board must rest within {rest.go_lte.toFixed(2)} V.
+            A pack outside that range is checked first and stays off the leads that night only. Its
+            status does not change. Kept separate from the parallel call so a spread note and a
+            rest-delta check are not read as the same limit.
           </p>
         </article>
       </div>

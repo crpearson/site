@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
@@ -323,20 +324,26 @@ for (const label of ["D-1", "C1-P4", "C2-P2"]) {
   if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
 }
 for (const label of ["C3-P5", "C3-P6", "C4-P2"]) {
-  if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
+  if (!board.series.some((item) => item.labels.includes(label))) fail(`${label} is missing from its board`);
 }
 const c4p2 = calls.filter((row) => row.label_at_time === "C4-P2").at(-1);
 const c4p4 = calls.filter((row) => row.label_at_time === "C4-P4").at(-1);
 if (
   !c4p2 ||
   c4p2.date !== "2026-10-16" ||
-  c4p2.status !== "PARALLEL Go (watch): charges alone | SERVICE New (watch)" ||
-  !/Cell 6 started 58 mV below the other cells/.test(c4p2.reason)
+  c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
+  !/Cell 6 started low on both storage nights/.test(c4p2.reason)
 ) {
   fail("C4-P2 latest call changed");
 }
-if (!c4p4 || c4p4.date !== "2026-10-16" || !/GO: joins the C4 board/.test(c4p4.status)) {
+if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the C4 board | SERVICE In service") {
   fail("C4-P4 latest call should be Go on the C4 board");
+}
+const methodologySha = createHash("sha256")
+  .update(fs.readFileSync(path.join(root, "content/methodology.md")))
+  .digest("hex");
+if (methodologySha !== "d54ec09241b4fe16319874549273e243f86c37d32e526183a2c249d212a9ed83") {
+  fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
 const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");

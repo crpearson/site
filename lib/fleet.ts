@@ -355,8 +355,7 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-004":
     "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
-  "CNHL-2026-005":
-    "PARALLEL GO (conditional on Rule B) | SERVICE Watch",
+  "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE Watch",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
   "CNHL-2026-008":
@@ -364,20 +363,19 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-012": "PARALLEL GO (conditional per Rule B) | SERVICE In service",
-  "CNHL-2026-013": "PARALLEL GO: joins the C3 board | SERVICE In service",
-  "CNHL-2026-014":
-    "PARALLEL GO (joins the C3 board if its rest V is within 0.30 V; otherwise charges alone) | SERVICE In service",
-  "CNHL-2026-015": "PARALLEL GO: joins the C3 board | SERVICE In service",
-  "CNHL-2026-016": "PARALLEL GO: joins the C3 board | SERVICE In service",
-  "CNHL-2026-017": "PARALLEL Go (watch): charges alone | SERVICE New (watch)",
-  "CNHL-2026-018": "PARALLEL Go (watch): charges alone | SERVICE New (watch)",
-  "CNHL-2026-019": "PARALLEL GO: joins the C4 board | SERVICE In service",
-  "CNHL-2026-020": "PARALLEL Go (watch): charges alone | SERVICE New (watch)",
-  "CNHL-2026-021": "PARALLEL GO: joins the C4 board | SERVICE In service",
-  "CNHL-2026-022": "PARALLEL GO: joins the C4 board | SERVICE In service",
-  "CNHL-2026-023": "PARALLEL GO: joins the C4 board | SERVICE In service",
-  "CNHL-2026-024": "PARALLEL GO: joins the C4 board | SERVICE In service",
+  "CNHL-2026-012": "PARALLEL GO: on the C2 board | SERVICE In service",
+  "CNHL-2026-013": "PARALLEL GO: on the C3 board | SERVICE In service",
+  "CNHL-2026-014": "PARALLEL GO: on the C3 board | SERVICE In service",
+  "CNHL-2026-015": "PARALLEL GO: on the C3 board | SERVICE In service",
+  "CNHL-2026-016": "PARALLEL GO: on the C3 board | SERVICE In service",
+  "CNHL-2026-017": "PARALLEL GO: on the C3 board | SERVICE In service (watch)",
+  "CNHL-2026-018": "PARALLEL GO: on the C3 board | SERVICE In service (watch)",
+  "CNHL-2026-019": "PARALLEL GO: on the C4 board | SERVICE In service",
+  "CNHL-2026-020": "PARALLEL GO: on the C4 board | SERVICE In service (watch)",
+  "CNHL-2026-021": "PARALLEL GO: on the C4 board | SERVICE In service",
+  "CNHL-2026-022": "PARALLEL GO: on the C4 board | SERVICE In service",
+  "CNHL-2026-023": "PARALLEL GO: on the C4 board | SERVICE In service",
+  "CNHL-2026-024": "PARALLEL GO: on the C4 board | SERVICE In service",
 };
 
 function assertStore() {
@@ -450,14 +448,13 @@ function assertStore() {
   ) {
     throw new Error("2026-10-14 charge run or storage night is missing");
   }
-  const aloneLabels = new Set(["C3-P5", "C3-P6", "C4-P2"]);
   const night2 = measurements.filter((row) => row.session === "2026-10-16");
   if (night2.length !== 12 || night2.some((row) => isNonStorage(row.sessionType) || row.series !== row.label.slice(0, 2))) {
     throw new Error("2026-10-16 storage night is missing");
   }
   for (const label of freshLabels) {
     const pack = packs.find((item) => item.label === label);
-    const mode = aloneLabels.has(label) ? "individual" : "parallel";
+    const mode = "parallel";
     if (!pack || pack.chargeCount !== 3 || pack.chargeMode !== mode || pack.purchaseDate !== "2026-10-13") {
       throw new Error(`${label} should be charge count 3, ${mode}, purchased 2026-10-13`);
     }
@@ -550,13 +547,9 @@ export const ruleABands: Band[] = [
 
 export const ruleBGuides: Guide[] = [
   { y: restRule.go_lte, label: `Go ≤ ${restRule.go_lte.toFixed(2)} V`, color: "#3ddc97" },
-  { y: restRule.hard_stop_gt, label: `Hard stop > ${restRule.hard_stop_gt.toFixed(2)} V`, color: "#ff5c7a" },
 ];
 
-export const ruleBBands: Band[] = [
-  { from: restRule.caution_lo, to: restRule.caution_hi, color: "rgba(196, 161, 255, 0.2)" },
-  { from: restRule.hard_stop_gt, to: 100, color: "rgba(255, 92, 122, 0.12)" },
-];
+export const ruleBBands: Band[] = [];
 
 export const floorGuide: Guide[] = [
   { y: thresholds.floor_eye_mv, label: `${thresholds.floor_eye_mv} mV watch`, color: "#79b8ff" },
@@ -1561,7 +1554,7 @@ function assertDerived() {
   if (night1 < 0 || c3Fleet?.rest[night1] != null || c4Fleet?.rest[night1] != null) {
     throw new Error("C3 or C4 has a Rule B value on the first storage night");
   }
-  if (night2 < 0 || c3Fleet?.rest[night2] == null || Math.abs(c3Fleet.rest[night2] - 0.223) > 0.0005) {
+  if (night2 < 0 || c3Fleet?.rest[night2] == null || Math.abs(c3Fleet.rest[night2] - 0.43) > 0.0005) {
     throw new Error(`C3 Rule B on 2026-10-16 is ${c3Fleet?.rest[night2]}`);
   }
   if (c4Fleet?.rest[night2] == null || Math.abs(c4Fleet.rest[night2] - 0.249) > 0.0005) {
@@ -1585,30 +1578,33 @@ function assertDerived() {
   if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
   const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
   const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
-  if (c1Rule == null || Math.abs(c1Rule - 0.186) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
-  if (c2Rule == null || Math.abs(c2Rule - 0.23) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  if (c1Rule == null || Math.abs(c1Rule - 0.384) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
+  if (c2Rule == null || Math.abs(c2Rule - 0.425) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
   const heldNight = model.categories.findIndex((category) => category.id === "2026-10-10");
   if (heldNight < 0 || c1Fleet?.rest[heldNight] == null || Math.abs(c1Fleet.rest[heldNight] - 0.135) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-10 is ${c1Fleet?.rest[heldNight]}`);
   }
   const storageIndex = model.categories.findIndex((category) => category.id === "2026-10-11");
   const c2Fleet = model.fleets.find((fleet) => fleet.id === "C2");
-  if (storageIndex < 0 || c1Fleet?.rest[storageIndex] == null || Math.abs(c1Fleet.rest[storageIndex] - 0.186) > 0.0005) {
+  if (storageIndex < 0 || c1Fleet?.rest[storageIndex] == null || Math.abs(c1Fleet.rest[storageIndex] - 0.384) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-11 is ${c1Fleet?.rest[storageIndex]}`);
   }
-  if (c2Fleet?.rest[storageIndex] == null || Math.abs(c2Fleet.rest[storageIndex] - 0.23) > 0.0005) {
+  if (c2Fleet?.rest[storageIndex] == null || Math.abs(c2Fleet.rest[storageIndex] - 0.425) > 0.0005) {
     throw new Error(`C2 Rule B on 2026-10-11 is ${c2Fleet?.rest[storageIndex]}`);
   }
   const board = nextParallel();
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (
     rendered !==
-      "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4 | C4:C4-P1+C4-P3+C4-P4+C4-P5+C4-P6" ||
+      "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
     board.as_of !== "2026-10-16"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
-  for (const label of ["C3-P5", "C3-P6", "C4-P2", "D-1", "C1-P4", "C2-P2"]) {
+  for (const label of ["C3-P5", "C3-P6", "C4-P2"]) {
+    if (!board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is missing from its board`);
+  }
+  for (const label of ["D-1", "C1-P4", "C2-P2"]) {
     if (board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is on a next parallel board`);
   }
   assertUnpublishedNight(model, heldNight);
@@ -1858,13 +1854,13 @@ function assertStatusChips() {
     !c2p6 ||
     !c2p6Latest ||
     c2p6.status !== c2p6Latest.status ||
-    /watch Cell 4/i.test(c2p6.status) ||
-    !/\bconditional\b/i.test(c2p6.status)
+    c2p6.status !== "PARALLEL GO: on the C2 board | SERVICE In service" ||
+    c2p6.session !== "2026-10-16"
   ) {
-    throw new Error(`C2-P6 latest call should be conditional Go without the Cell 4 watch (${c2p6?.status})`);
+    throw new Error(`C2-P6 latest call is ${c2p6?.session} ${c2p6?.status}`);
   }
   if (statusChip(c2p6.status, c2p6.chargeMode) !== "GO") {
-    throw new Error("C2-P6 conditional Go must stay the one word GO");
+    throw new Error("C2-P6 Go must stay the one word GO");
   }
   const c1p5 = rows.find((row) => row.label === "C1-P5");
   const c1p5Tile = seriesBlocks()
@@ -1874,9 +1870,10 @@ function assertStatusChips() {
     !c1p5 ||
     !c1p5Tile ||
     c1p5Tile.reason !== c1p5.reason ||
-    c1p5.status !== "PARALLEL GO (conditional on Rule B) | SERVICE Watch" ||
-    !c1p5.reason.includes("clean storage night on 2026-10-11") ||
-    !c1p5.reason.includes("floor 3620 mV") ||
+    c1p5.status !== "PARALLEL GO: on the C1 board | SERVICE Watch" ||
+    !c1p5.reason.includes("within 0.384 V") ||
+    !c1p5.reason.includes("lowest cell 3539 mV") ||
+    c1p5.session !== "2026-10-16" ||
     statusChip(c1p5.status, c1p5.chargeMode) !== "GO"
   ) {
     throw new Error("C1-P5 card must show the recorded GO");
@@ -1884,11 +1881,10 @@ function assertStatusChips() {
   const c4p2 = rows.find((item) => item.label === "C4-P2");
   if (
     !c4p2 ||
-    c4p2.status !== "PARALLEL Go (watch): charges alone | SERVICE New (watch)" ||
-    c4p2.reason !==
-      "Go (watch). On 2026-10-16 Cell 6 started 58 mV below the other cells (175 mV on 2026-10-14); lowest cell 3645 mV. One cell read 1.5x the pack's median IR (3.0 vs 2.0 mOhm). Charges alone for now; recheck next storage night." ||
+    c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
+    !c4p2.reason.includes("Cell 6 started low on both storage nights") ||
+    !c4p2.reason.includes("within 0.249 V") ||
     c4p2.session !== "2026-10-16" ||
-    !isGoWatch(c4p2.status) ||
     statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {
     throw new Error(`C4-P2 call is ${c4p2?.session} ${c4p2?.status}`);
@@ -1896,8 +1892,8 @@ function assertStatusChips() {
   const c4p4 = rows.find((item) => item.label === "C4-P4");
   if (
     !c4p4 ||
-    c4p4.status !== "PARALLEL GO: joins the C4 board | SERVICE In service" ||
-    !c4p4.reason.startsWith("Go: recheck passed on 2026-10-16.") ||
+    c4p4.status !== "PARALLEL GO: on the C4 board | SERVICE In service" ||
+    !c4p4.reason.startsWith("No change: stays on the C4 board.") ||
     c4p4.session !== "2026-10-16" ||
     statusChip(c4p4.status, c4p4.chargeMode) !== "GO"
   ) {
@@ -1905,8 +1901,13 @@ function assertStatusChips() {
   }
   for (const label of ["C3-P5", "C3-P6"]) {
     const row = rows.find((item) => item.label === label);
-    if (!row || !isGoWatch(row.status) || row.session !== "2026-10-16" || statusChip(row.status, row.chargeMode) !== "GO") {
-      throw new Error(`${label} should stay Go (watch) and charge alone`);
+    if (
+      !row ||
+      row.status !== "PARALLEL GO: on the C3 board | SERVICE In service (watch)" ||
+      row.session !== "2026-10-16" ||
+      statusChip(row.status, row.chargeMode) !== "GO"
+    ) {
+      throw new Error(`${label} should stay Go on the C3 board`);
     }
   }
   if (

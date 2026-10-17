@@ -467,24 +467,18 @@ export default function Home() {
             eyebrow="Rule B"
             title="Inter-pack rest-Δ"
             action={
-              <span className="note">
-                Go ≤ {thresholds.inter_pack_rest_delta_v.go_lte.toFixed(2)} · Caution{" "}
-                {thresholds.inter_pack_rest_delta_v.caution_lo.toFixed(2)}–
-                {thresholds.inter_pack_rest_delta_v.caution_hi.toFixed(2)} · Hard stop &gt;{" "}
-                {thresholds.inter_pack_rest_delta_v.hard_stop_gt.toFixed(2)} V
-              </span>
+              <span className="note">Go ≤ {thresholds.inter_pack_rest_delta_v.go_lte.toFixed(2)} V</span>
             }
           >
             <p className="note mb-3">
               One line per series. The line is solid through a night that series did not run. No
-              value is filled in there. Nights before that series existed are not marked. Rule B needs two
-              packs that charged in parallel. A night the series did run,
-              but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
+              value is filled in there. Nights before that series existed are not marked.               Rule B needs two packs on that night's board. A night the series did run, but fewer
+              than two did, is N/A. A recorded board night uses the packs named for that Rule B figure.
               The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
               pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
-              C3 and C4 are separate lines. On 2026-10-16, Rule B uses the packs on each board. A
-              pack that charged alone that night is not in the spread. C3 and C4 do not share a
-              board with each other or with C1 or C2.
+              C3 and C4 are separate lines. On 2026-10-16 the C3 line is the five packs inside
+              0.60 V, and the C4 line is all six. C3-P5 was outside that limit, so the card says
+              to check it first. Series do not share a board.
             </p>
             <LineChart
               categories={model.categories}

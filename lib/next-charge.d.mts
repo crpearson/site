@@ -3,6 +3,7 @@ export const BOARD_NAMES: readonly string[];
 
 export type NextChargeDocument = {
   schema: "next_charge/v2";
+  rules: "v4";
   as_of_session: string;
   as_of_date_pt: string;
   active_set: string;
@@ -54,11 +55,23 @@ export type JoinStatus = {
   rule: string;
 };
 
+export type CheckFirst = {
+  label: string;
+  uid: string;
+  last_rest_V: number;
+  last_offset_max_V: number;
+  last_offset_side: "below" | "above";
+  note: string;
+};
+
 export type ParallelBoard = {
   series: string;
   packs: string[];
   current: "normal" | "reduced";
   conditions: string[];
+  rest_check_limit_V: number;
+  last_rest_delta_all_V: number;
+  check_first: CheckFirst[];
   last_rule_b_V: number;
   last_rule_b_call: string;
   last_rule_b_session: string;
