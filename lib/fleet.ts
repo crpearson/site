@@ -171,22 +171,6 @@ const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row, index) => (
   order: index,
 }));
 
-/**
- * C4-P2's watch note is Cell 6 only. The call file still records that an older
- * IR-cell note was dropped; that sentence is not shown for this pack.
- */
-const C4_P2_HIDDEN_IR_NOTE = [
-  /\s*The earlier note about one cell at 1\.5x the pack median IR \(3\.0 vs 2\.0 mOhm\) is dropped: under the IR rules from 2026-10-17 a single cell counts only if it is at least 1\.5x the pack median and at least 1\.2 mOhm above it, and this cell was 1\.0 mOhm above\.?/g,
-  /\s*One cell read 1\.5x the pack's median IR \(3\.0 vs 2\.0 mOhm\)\.?/g,
-  /,? and one cell at 1\.5x the pack median IR \(3\.0 vs 2\.0 mOhm\)/g,
-];
-
-export function shownCallReason(label: string, reason: string): string {
-  if (label !== "C4-P2") return reason;
-  const text = C4_P2_HIDDEN_IR_NOTE.reduce((current, pattern) => current.replace(pattern, ""), reason);
-  return text.replace(/[ \t]{2,}/g, " ").replace(/\s+\./g, ".").trim();
-}
-
 type RestTest = {
   id: string;
   uid: string;
@@ -1901,19 +1885,6 @@ function assertStatusChips() {
     statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {
     throw new Error(`C4-P2 call is ${c4p2?.session} ${c4p2?.status}`);
-  }
-  const c4p2Shown = shownCallReason("C4-P2", c4p2.reason);
-  if (
-    !c4p2Shown.includes("Watch note: Cell 6 started low on 2026-10-14 and 2026-10-16") ||
-    /1\.5x/i.test(c4p2Shown)
-  ) {
-    throw new Error("C4-P2 watch note must mention only Cell 6");
-  }
-  for (const call of calls) {
-    if (call.label !== "C4-P2" && call.uid !== "CNHL-2026-020") continue;
-    if (/1\.5x/i.test(shownCallReason(call.label, call.reason))) {
-      throw new Error(`C4-P2 shown call on ${call.date} still mentions the dropped IR note`);
-    }
   }
   const c4p4 = rows.find((item) => item.label === "C4-P4");
   if (

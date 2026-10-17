@@ -25,7 +25,6 @@ import {
   ruleABand,
   ruleABands,
   ruleAGuides,
-  shownCallReason,
   thresholds,
 } from "@/lib/fleet";
 
@@ -149,7 +148,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         {goNewText(pack.call.status) ? <p className="note">{goNewText(pack.call.status)}</p> : null}
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
-        <p className="max-w-3xl text-lg leading-relaxed">{shownCallReason(pack.label, pack.call.reason)}</p>
+        <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
         <p className="note">
           Parallel {pack.row.parallel || pack.call.status}
           {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
@@ -365,7 +364,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   <span className="note">{call.label}</span>
                 </p>
                 <p className="call-full mt-1">{call.status}</p>
-                <p className="mt-1 leading-relaxed">{shownCallReason(call.label, call.reason)}</p>
+                <p className="mt-1 leading-relaxed">{call.reason}</p>
               </li>
             ))}
           </ol>

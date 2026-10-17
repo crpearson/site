@@ -21,7 +21,6 @@ import {
   headline,
   nextParallel,
   ruleABands,
-  shownCallReason,
   ruleAGuides,
   ruleBBands,
   ruleBGuides,
@@ -304,7 +303,7 @@ export default function Home() {
                       ) : null}
                     </td>
                     <td>
-                      <p className="reason">{shownCallReason(row.label, row.reason)}</p>
+                      <p className="reason">{row.reason}</p>
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
@@ -333,7 +332,7 @@ export default function Home() {
                   <Lamp status={row.parallel || row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                <p className="mt-2 text-sm leading-relaxed">{shownCallReason(row.label, row.reason)}</p>
+                <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 {row.restPool ? (
                   <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
