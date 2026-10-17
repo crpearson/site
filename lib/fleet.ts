@@ -371,7 +371,7 @@ function inRestPool(uid: string, session: string): boolean {
 
 const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-001":
-    "PARALLEL INDIVIDUAL (D pool) | SERVICE D pool (Watch); rest test RT-001-1 PASS 2026-10-17 (pass 1 of 3)",
+    "D POOL, CHARGED ON ITS OWN (WATCH) | REST TEST RT-001-1 PASS 2026-10-17 (1 OF 3)",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-004":

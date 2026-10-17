@@ -154,8 +154,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{publicProse(pack.call.reason)}</p>
         <p className="note">
-          Parallel {pack.row.parallel || pack.call.status}
-          {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
+          {/* A call without the PARALLEL … | SERVICE … shape (e.g. a D pool call) is shown whole, not as a parallel half. */}
+          {pack.row.service
+            ? `Parallel ${pack.row.parallel} · Service ${pack.row.service}`
+            : `Call ${pack.call.status}`}{" "}
+          · {pack.row.chargeCount} storage charges
         </p>
         {pack.row.restPool ? (
           <p className="note">
