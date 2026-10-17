@@ -115,7 +115,7 @@ export default function AboutPage() {
           <p className="eyebrow">Inside one pack</p>
           <h2 className="panel-title mt-1">Parallel call</h2>
           <ul className="mt-4 space-y-2 font-mono text-sm">
-            <li className="text-[var(--ok)]">Go. On its series board. This is the default.</li>
+            <li className="text-[var(--ok)]">Go. On its parallel board. This is the default.</li>
             <li className="text-[var(--caution)]">Watch. A note only. The pack stays on its board.</li>
             <li className="text-[var(--off)]">
               Pulled. Off the board for safety, or for trouble on 3 of the last 4 nights.

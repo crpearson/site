@@ -18,7 +18,7 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `active_set_reason` | Why this set is tonight, in the file's own words. |
 | `alternate_set` | The other night's set, such as `C3+C4`. It is not the same as `active_set`. |
 | `storage_runs` | Tonight's channel queues. These match the active set. |
-| `parallel_boards` | Tonight's series boards. These match the active set. An empty list is valid. |
+| `parallel_boards` | Tonight's parallel boards. These match the active set. An empty list is valid. |
 | `charge_alone` | Tonight's packs that charge on their own. These match the active set. |
 | `watch` | Tonight's recheck notes. These match the active set. |
 | `sets` | Both plans. The object keys are the set names with `+` written as `_`: `C3+C4` is `C3_C4`. |
@@ -34,7 +34,7 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `series` | Series names in this set. Every pack in the set is one of these series. |
 | `last_storage_session` | Last storage session for this set. |
 | `storage_runs` | One object per charger channel. See below. |
-| `parallel_boards` | One object per series board. Empty when the set has no board yet. |
+| `parallel_boards` | One object per parallel board. Empty when the set has no board yet. |
 | `charge_alone` | Packs held off the board. Empty under rules v4. |
 | `watch` | Recheck notes for this set. |
 | `join_status` | Not used. The published sheet has no join list. |
