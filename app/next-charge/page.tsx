@@ -20,15 +20,9 @@ function packList(labels: string[]): string {
   return `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
 }
 
-function ruleBLine(board: ParallelBoard): string | null {
-  const covered = board.last_rule_b_over;
-  if (!covered?.length) return null;
-  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packList(covered)} · ${board.last_rule_b_session}`;
-}
-
-function allPacksLine(board: ParallelBoard): string | null {
-  if (board.last_rest_delta_all_V === board.last_rule_b_V) return null;
-  return `${board.last_rest_delta_all_V.toFixed(3)} V over ${packList(board.packs)}`;
+function recordedRuleB(board: ParallelBoard): string {
+  if (board.last_rule_b_V == null || board.last_rule_b_over.length === 0) return "No board night yet";
+  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packList(board.last_rule_b_over)} · ${board.last_rule_b_session}`;
 }
 
 /** A repeated channel starts the next queue. Charge-alone packs are listed before board packs. */
@@ -114,8 +108,12 @@ function SetPlan({
           </h2>
           <div className="bench-stack">
             {boards.map((board) => {
-              const ruleB = ruleBLine(board);
-              const withEveryPack = allPacksLine(board);
+              const outlook = board.outlook_rule_b;
+              const checked = outlook.check_first.map((item) => item.label);
+              const without =
+                outlook.value_without_check_first_v != null && checked.length
+                  ? `${outlook.value_without_check_first_v.toFixed(3)} V without ${packList(checked)}`
+                  : null;
               return (
                 <div key={board.series} className="bench-series">
                   <article
@@ -133,31 +131,48 @@ function SetPlan({
                         <dt>Go limit</dt>
                         <dd>{board.rest_check_limit_V.toFixed(2)} V</dd>
                       </div>
-                      {ruleB ? (
-                        <div>
-                          <dt>Last Rule B</dt>
-                          <dd>{ruleB}</dd>
-                        </div>
-                      ) : null}
-                      {withEveryPack ? (
-                        <div>
-                          <dt>With every pack</dt>
-                          <dd>{withEveryPack}</dd>
-                        </div>
-                      ) : null}
+                      <div data-recorded="">
+                        <dt>Recorded Rule B</dt>
+                        <dd>
+                          {recordedRuleB(board)}
+                          <p className="note mt-1">{board.last_rule_b_basis}</p>
+                        </dd>
+                      </div>
                     </dl>
-                    {board.check_first.length ? (
-                      <div className="mt-3">
-                        <p className="panel-title">Check first</p>
+                    <div className="outlook-block" data-outlook="">
+                      <p className="panel-title">Next-night outlook (not a board result)</p>
+                      <dl className="bench-meta mt-3">
+                        <div>
+                          <dt>Outlook</dt>
+                          <dd>
+                            {outlook.value_v.toFixed(3)} V {outlook.call} over {packList(outlook.packs)} · {outlook.session}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Limit</dt>
+                          <dd>{outlook.limit_v.toFixed(2)} V</dd>
+                        </div>
+                        <div>
+                          <dt>Basis</dt>
+                          <dd>{outlook.basis}</dd>
+                        </div>
+                        {without ? (
+                          <div>
+                            <dt>Without the check-first packs</dt>
+                            <dd>{without}</dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                      {outlook.check_first.length ? (
                         <ul className="bench-notes">
-                          {board.check_first.map((item) => (
+                          {outlook.check_first.map((item) => (
                             <li key={item.label} className="note">
                               {item.label}: {item.note}
                             </li>
                           ))}
                         </ul>
-                      </div>
-                    ) : null}
+                      ) : null}
+                    </div>
                     {board.conditions.length ? (
                       <ul className="bench-notes">
                         {board.conditions.map((condition) => (

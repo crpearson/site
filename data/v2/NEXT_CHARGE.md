@@ -71,18 +71,32 @@ A pack may be in `storage_runs` and also on a parallel board or in `charge_alone
 | `current` | `normal` or `reduced`. This is the charge current for the whole board. |
 | `conditions` | Strings. Limits and exceptions for this board. |
 | `rest_check_limit_V` | Go limit before connecting, in volts. The published sheet uses 0.60. |
-| `last_rest_delta_all_V` | Rest spread of every pack on the board, in volts. |
-| `check_first` | Packs outside the Go limit on the latest night. Each one stays on `packs`. |
-| `last_rule_b_V` | Last Rule B board spread, in volts. A number. |
-| `last_rule_b_call` | Call recorded with that Rule B check. |
-| `last_rule_b_session` | Session of that Rule B check. |
-| `last_rule_b_over` | Optional. Pack labels this Rule B figure covers. Each label is one of this board's `packs`. |
+| `last_rule_b_V` | Recorded board-night spread, in volts. `null` when this series has no board night yet. |
+| `last_rule_b_call` | Call recorded with that board night. `null` when `last_rule_b_V` is `null`. |
+| `last_rule_b_session` | Session of that board night. `null` when `last_rule_b_V` is `null`. |
+| `last_rule_b_over` | Packs charged together that night. Empty when `last_rule_b_V` is `null`. Each label is one of this board's `packs`. |
+| `last_rule_b_basis` | Why that recorded figure is what it is. Printed under the recorded line. |
+| `outlook_rule_b` | Next-night outlook from the latest rest of every pack assigned to the board. Not a recorded board result. |
 
 The bench uses 6-port boards. Ports are `L1`, `L2`, `L3`, `R1`, `R2`, `R3`, in that order. `packs[0]` is L1 and `packs[5]` is R3. Empty ports stay blank.
 
 A series with more than 6 packs continues on the next board: pack 7 is L1 on the next letter. Letters are assigned in file order, `Board A` through `Board D`. A series with no packs still takes one board so its current and Rule B line have a drawing. More than 4 boards fails the build. A set with `parallel_boards: []` draws no board.
 
-`current` and `conditions` are printed once for the series, above its board drawing or drawings. When `last_rule_b_over` is present, the page prints Last Rule B as the voltage, the call, and those pack labels, with the V unit. The home chart still draws Rule B from the storage-night rests.
+`current` and `conditions` are printed once for the series, above its board drawing or drawings. Recorded Rule B prints the voltage, the call, and `last_rule_b_over`, with the V unit, or the words "No board night yet" when `last_rule_b_V` is null. The outlook is a separate block, "Next-night outlook (not a board result)", with its value in volts, call, limit, packs, and basis. The home chart draws only recorded board nights and store-based parallel nights. It does not draw outlook values.
+
+## `outlook_rule_b`
+
+| Key | Meaning |
+| --- | --- |
+| `value_v` | Outlook spread, in volts. A number from 0 through 2. |
+| `packs` | Labels this outlook covers. Each one is on this board. |
+| `basis` | Printed under the outlook. |
+| `session` | Night the rests came from. |
+| `limit_v` | Go limit for this outlook, in volts. |
+| `call` | `GO` or `CHECK FIRST`. |
+| `check_first` | Packs outside the limit. Empty when the call is `GO`. |
+| `value_without_check_first_v` | Spread without those packs, in volts. `null` when `check_first` is empty. |
+| `packs_without_check_first` | Labels in that smaller spread. `null` when `check_first` is empty. |
 
 ## `charge_alone`
 
@@ -104,6 +118,8 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 | `note` | The recheck note, printed as written. |
 
 ## `check_first`
+
+Inside `outlook_rule_b`, not on the board itself.
 
 | Key | Meaning |
 | --- | --- |
@@ -144,7 +160,7 @@ A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_board
 
 - `schema` is exactly `next_charge/v2`.
 - The file bytes stay the published sheet. A different hash fails the build.
-- The keys are the ones in this note. `mode`, `last_rule_b_over`, `last_offset_max_V`, `last_offset_side`, and `join_status` are optional. Any other extra key fails the build.
+- The keys are the ones in this note. `mode`, `last_offset_max_V`, `last_offset_side`, and `join_status` are optional. Any other extra key fails the build. An outlook voltage that is not a number of volts, or that sits outside 0–2 V (15–26.5 V for a pack rest), fails the build.
 - The top-level plan matches the active set.
 - Every pack label exists in `packs.csv`, and each `uid` matches that label.
 - A pack's series is one of its set's series. A parallel pack's series matches the board `series`.

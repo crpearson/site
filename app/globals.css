@@ -1177,6 +1177,13 @@ body {
   font-size: 1.05rem;
 }
 
+.outlook-block {
+  margin-top: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
+}
+
 .bench-series {
   display: grid;
   gap: 14px;

@@ -60,17 +60,31 @@
         "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
       ],
       "rest_check_limit_V": 0.6,
-      "last_rest_delta_all_V": 0.384,
-      "check_first": [],
-      "last_rule_b_V": 0.384,
+      "last_rule_b_V": 0.186,
       "last_rule_b_call": "GO",
       "last_rule_b_session": "2026-10-11",
       "last_rule_b_over": [
         "C1-P2",
         "C1-P3",
-        "C1-P5",
         "C1-P6"
-      ]
+      ],
+      "last_rule_b_basis": "packs charged together on this board that night (recorded)",
+      "outlook_rule_b": {
+        "value_v": 0.384,
+        "packs": [
+          "C1-P2",
+          "C1-P3",
+          "C1-P5",
+          "C1-P6"
+        ],
+        "basis": "latest rest V of every pack assigned to this board",
+        "session": "2026-10-11",
+        "limit_v": 0.6,
+        "call": "GO",
+        "check_first": [],
+        "value_without_check_first_v": null,
+        "packs_without_check_first": null
+      }
     },
     {
       "series": "C2",
@@ -87,18 +101,33 @@
         "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
       ],
       "rest_check_limit_V": 0.6,
-      "last_rest_delta_all_V": 0.425,
-      "check_first": [],
-      "last_rule_b_V": 0.425,
+      "last_rule_b_V": 0.23,
       "last_rule_b_call": "GO",
       "last_rule_b_session": "2026-10-11",
       "last_rule_b_over": [
         "C2-P1",
         "C2-P3",
         "C2-P4",
-        "C2-P5",
-        "C2-P6"
-      ]
+        "C2-P5"
+      ],
+      "last_rule_b_basis": "packs charged together on this board that night (recorded)",
+      "outlook_rule_b": {
+        "value_v": 0.425,
+        "packs": [
+          "C2-P1",
+          "C2-P3",
+          "C2-P4",
+          "C2-P5",
+          "C2-P6"
+        ],
+        "basis": "latest rest V of every pack assigned to this board",
+        "session": "2026-10-11",
+        "limit_v": 0.6,
+        "call": "GO",
+        "check_first": [],
+        "value_without_check_first_v": null,
+        "packs_without_check_first": null
+      }
     }
   ],
   "charge_alone": [],
@@ -175,17 +204,31 @@
             "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
           ],
           "rest_check_limit_V": 0.6,
-          "last_rest_delta_all_V": 0.384,
-          "check_first": [],
-          "last_rule_b_V": 0.384,
+          "last_rule_b_V": 0.186,
           "last_rule_b_call": "GO",
           "last_rule_b_session": "2026-10-11",
           "last_rule_b_over": [
             "C1-P2",
             "C1-P3",
-            "C1-P5",
             "C1-P6"
-          ]
+          ],
+          "last_rule_b_basis": "packs charged together on this board that night (recorded)",
+          "outlook_rule_b": {
+            "value_v": 0.384,
+            "packs": [
+              "C1-P2",
+              "C1-P3",
+              "C1-P5",
+              "C1-P6"
+            ],
+            "basis": "latest rest V of every pack assigned to this board",
+            "session": "2026-10-11",
+            "limit_v": 0.6,
+            "call": "GO",
+            "check_first": [],
+            "value_without_check_first_v": null,
+            "packs_without_check_first": null
+          }
         },
         {
           "series": "C2",
@@ -202,18 +245,33 @@
             "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
           ],
           "rest_check_limit_V": 0.6,
-          "last_rest_delta_all_V": 0.425,
-          "check_first": [],
-          "last_rule_b_V": 0.425,
+          "last_rule_b_V": 0.23,
           "last_rule_b_call": "GO",
           "last_rule_b_session": "2026-10-11",
           "last_rule_b_over": [
             "C2-P1",
             "C2-P3",
             "C2-P4",
-            "C2-P5",
-            "C2-P6"
-          ]
+            "C2-P5"
+          ],
+          "last_rule_b_basis": "packs charged together on this board that night (recorded)",
+          "outlook_rule_b": {
+            "value_v": 0.425,
+            "packs": [
+              "C2-P1",
+              "C2-P3",
+              "C2-P4",
+              "C2-P5",
+              "C2-P6"
+            ],
+            "basis": "latest rest V of every pack assigned to this board",
+            "session": "2026-10-11",
+            "limit_v": 0.6,
+            "call": "GO",
+            "check_first": [],
+            "value_without_check_first_v": null,
+            "packs_without_check_first": null
+          }
         }
       ],
       "charge_alone": [],
@@ -296,27 +354,44 @@
             "C3-P5: check its rest V first; it was outside 0.60 V on 2026-10-16."
           ],
           "rest_check_limit_V": 0.6,
-          "last_rest_delta_all_V": 0.629,
-          "check_first": [
-            {
-              "label": "C3-P5",
-              "uid": "CNHL-2026-017",
-              "last_rest_V": 21.596,
-              "last_offset_max_V": 0.629,
-              "last_offset_side": "below",
-              "note": "on its last storage night (2026-10-16) its rest V 21.596 V was outside 0.60 V of the C3 board (below); if it is still outside, it charges alone that night only"
-            }
-          ],
-          "last_rule_b_V": 0.43,
-          "last_rule_b_call": "GO",
-          "last_rule_b_session": "2026-10-16",
-          "last_rule_b_over": [
-            "C3-P1",
-            "C3-P2",
-            "C3-P3",
-            "C3-P4",
-            "C3-P6"
-          ]
+          "last_rule_b_V": null,
+          "last_rule_b_call": null,
+          "last_rule_b_session": null,
+          "last_rule_b_over": [],
+          "last_rule_b_basis": "no parallel board night recorded yet for this series",
+          "outlook_rule_b": {
+            "value_v": 0.629,
+            "packs": [
+              "C3-P1",
+              "C3-P2",
+              "C3-P3",
+              "C3-P4",
+              "C3-P5",
+              "C3-P6"
+            ],
+            "basis": "latest rest V of every pack assigned to this board",
+            "session": "2026-10-16",
+            "limit_v": 0.6,
+            "call": "CHECK FIRST",
+            "check_first": [
+              {
+                "label": "C3-P5",
+                "uid": "CNHL-2026-017",
+                "last_rest_V": 21.596,
+                "last_offset_max_V": 0.629,
+                "last_offset_side": "below",
+                "note": "on its latest storage night (2026-10-16) its rest V 21.596 V was outside 0.60 V of the other C3 packs (below); if it is still outside, it charges alone that night only"
+              }
+            ],
+            "value_without_check_first_v": 0.43,
+            "packs_without_check_first": [
+              "C3-P1",
+              "C3-P2",
+              "C3-P3",
+              "C3-P4",
+              "C3-P6"
+            ]
+          }
         },
         {
           "series": "C4",
@@ -334,19 +409,29 @@
             "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
           ],
           "rest_check_limit_V": 0.6,
-          "last_rest_delta_all_V": 0.249,
-          "check_first": [],
-          "last_rule_b_V": 0.249,
-          "last_rule_b_call": "GO",
-          "last_rule_b_session": "2026-10-16",
-          "last_rule_b_over": [
-            "C4-P1",
-            "C4-P2",
-            "C4-P3",
-            "C4-P4",
-            "C4-P5",
-            "C4-P6"
-          ]
+          "last_rule_b_V": null,
+          "last_rule_b_call": null,
+          "last_rule_b_session": null,
+          "last_rule_b_over": [],
+          "last_rule_b_basis": "no parallel board night recorded yet for this series",
+          "outlook_rule_b": {
+            "value_v": 0.249,
+            "packs": [
+              "C4-P1",
+              "C4-P2",
+              "C4-P3",
+              "C4-P4",
+              "C4-P5",
+              "C4-P6"
+            ],
+            "basis": "latest rest V of every pack assigned to this board",
+            "session": "2026-10-16",
+            "limit_v": 0.6,
+            "call": "GO",
+            "check_first": [],
+            "value_without_check_first_v": null,
+            "packs_without_check_first": null
+          }
         }
       ],
       "charge_alone": [],

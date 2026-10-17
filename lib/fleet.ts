@@ -900,7 +900,10 @@ function recordedBoard(session: string, series: string) {
   const doc = loadNextCharge();
   for (const set of Object.values(doc.sets)) {
     const board = set.parallel_boards.find(
-      (item) => item.series === series && item.last_rule_b_session === session,
+      (item) =>
+        item.series === series &&
+        item.last_rule_b_session === session &&
+        typeof item.last_rule_b_V === "number",
     );
     if (board) return board;
   }
@@ -914,19 +917,8 @@ function parallelBoardUids(): Set<string> {
 
 export function restDelta(session: string, series: string): number | null {
   const recorded = recordedBoard(session, series);
-  if (recorded) {
-    const labels = new Set(recorded.last_rule_b_over ?? recorded.packs);
-    const rows = measurements.filter(
-      (row) =>
-        row.session === session &&
-        row.series === series &&
-        labels.has(row.label) &&
-        !isNonStorage(row.sessionType) &&
-        row.rest != null,
-    );
-    if (rows.length < 2) return null;
-    const rests = rows.map((row) => row.rest as number);
-    return Math.round((Math.max(...rests) - Math.min(...rests)) * 1000) / 1000;
+  if (recorded && typeof recorded.last_rule_b_V === "number") {
+    return recorded.last_rule_b_V;
   }
   const board = parallelBoardUids();
   const rows = measurements.filter(
@@ -959,7 +951,7 @@ export function restNight(session: string, series: string): { value: number | nu
         (row) =>
           row.session === session &&
           row.series === series &&
-          (recorded.last_rule_b_over ?? recorded.packs).includes(row.label) &&
+          recorded.last_rule_b_over.includes(row.label) &&
           !isNonStorage(row.sessionType),
       )
     : measurements.some(
@@ -1554,11 +1546,8 @@ function assertDerived() {
   if (night1 < 0 || c3Fleet?.rest[night1] != null || c4Fleet?.rest[night1] != null) {
     throw new Error("C3 or C4 has a Rule B value on the first storage night");
   }
-  if (night2 < 0 || c3Fleet?.rest[night2] == null || Math.abs(c3Fleet.rest[night2] - 0.43) > 0.0005) {
-    throw new Error(`C3 Rule B on 2026-10-16 is ${c3Fleet?.rest[night2]}`);
-  }
-  if (c4Fleet?.rest[night2] == null || Math.abs(c4Fleet.rest[night2] - 0.249) > 0.0005) {
-    throw new Error(`C4 Rule B on 2026-10-16 is ${c4Fleet?.rest[night2]}`);
+  if (night2 < 0 || c3Fleet?.rest[night2] != null || c4Fleet?.rest[night2] != null) {
+    throw new Error(`C3 or C4 has a Rule B value on 2026-10-16 (${c3Fleet?.rest[night2]}, ${c4Fleet?.rest[night2]})`);
   }
   const charge14 = model.categories.findIndex((category) => category.id === "2026-10-14-charge");
   const c3MeanLine = model.mean.find((line) => line.id === "C3");
@@ -1578,19 +1567,25 @@ function assertDerived() {
   if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
   const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
   const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
-  if (c1Rule == null || Math.abs(c1Rule - 0.384) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
-  if (c2Rule == null || Math.abs(c2Rule - 0.425) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  if (c1Rule == null || Math.abs(c1Rule - 0.186) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
+  if (c2Rule == null || Math.abs(c2Rule - 0.23) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
   const heldNight = model.categories.findIndex((category) => category.id === "2026-10-10");
   if (heldNight < 0 || c1Fleet?.rest[heldNight] == null || Math.abs(c1Fleet.rest[heldNight] - 0.135) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-10 is ${c1Fleet?.rest[heldNight]}`);
   }
   const storageIndex = model.categories.findIndex((category) => category.id === "2026-10-11");
   const c2Fleet = model.fleets.find((fleet) => fleet.id === "C2");
-  if (storageIndex < 0 || c1Fleet?.rest[storageIndex] == null || Math.abs(c1Fleet.rest[storageIndex] - 0.384) > 0.0005) {
+  if (storageIndex < 0 || c1Fleet?.rest[storageIndex] == null || Math.abs(c1Fleet.rest[storageIndex] - 0.186) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-11 is ${c1Fleet?.rest[storageIndex]}`);
   }
-  if (c2Fleet?.rest[storageIndex] == null || Math.abs(c2Fleet.rest[storageIndex] - 0.425) > 0.0005) {
+  if (c2Fleet?.rest[storageIndex] == null || Math.abs(c2Fleet.rest[storageIndex] - 0.23) > 0.0005) {
     throw new Error(`C2 Rule B on 2026-10-11 is ${c2Fleet?.rest[storageIndex]}`);
+  }
+  const outlookOnChart = [c1Fleet, c2Fleet, c3Fleet, c4Fleet].flatMap((fleet) => fleet?.rest ?? []);
+  for (const outlook of [0.384, 0.425, 0.629, 0.43, 0.249]) {
+    if (outlookOnChart.some((value) => value != null && Math.abs(value - outlook) < 0.0005)) {
+      throw new Error(`a Rule B chart plots the outlook figure ${outlook}`);
+    }
   }
   const board = nextParallel();
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
@@ -1871,7 +1866,8 @@ function assertStatusChips() {
     !c1p5Tile ||
     c1p5Tile.reason !== c1p5.reason ||
     c1p5.status !== "PARALLEL GO: on the C1 board | SERVICE Watch" ||
-    !c1p5.reason.includes("within 0.384 V") ||
+    !c1p5.reason.includes("0.186 V apart") ||
+    !c1p5.reason.includes("0.384 V apart") ||
     !c1p5.reason.includes("lowest cell 3539 mV") ||
     c1p5.session !== "2026-10-16" ||
     statusChip(c1p5.status, c1p5.chargeMode) !== "GO"
@@ -1883,7 +1879,8 @@ function assertStatusChips() {
     !c4p2 ||
     c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
     !c4p2.reason.includes("Cell 6 started low on both storage nights") ||
-    !c4p2.reason.includes("within 0.249 V") ||
+    !c4p2.reason.includes("each C4 pack charged on its own") ||
+    !c4p2.reason.includes("0.249 V apart") ||
     c4p2.session !== "2026-10-16" ||
     statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {

@@ -162,6 +162,28 @@ for (const test of rests) {
   }
 }
 
+const chargeSheet = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next_charge.json"), "utf8"));
+function outlookBoards(value, out = []) {
+  if (Array.isArray(value)) value.forEach((item) => outlookBoards(item, out));
+  else if (value && typeof value === "object" && Array.isArray(value.packs) && value.outlook_rule_b) out.push(value);
+  else if (value && typeof value === "object") Object.values(value).forEach((item) => outlookBoards(item, out));
+  return out;
+}
+for (const board of outlookBoards(chargeSheet)) {
+  const where = `${board.series} outlook`;
+  const outlook = board.outlook_rule_b;
+  within({ session: board.series, pack: "outlook" }, "value_v", outlook.value_v, [0, 2], "V");
+  within({ session: board.series, pack: "outlook" }, "limit_v", outlook.limit_v, [0.01, 2], "V");
+  if (outlook.value_without_check_first_v != null) {
+    within({ session: board.series, pack: "outlook" }, "value_without_check_first_v", outlook.value_without_check_first_v, [0, 2], "V");
+  }
+  if (board.last_rule_b_V != null) within({ session: board.series, pack: "recorded" }, "last_rule_b_V", board.last_rule_b_V, [0, 2], "V");
+  for (const item of outlook.check_first ?? []) {
+    within({ session: board.series, pack: item.label }, "last_rest_V", item.last_rest_V, [15, 26.5], "V");
+    within({ session: board.series, pack: item.label }, "last_offset_max_V", item.last_offset_max_V, [0, 2], "V");
+  }
+}
+
 if (plausibility.length) {
   console.error(`plausibility failed (${plausibility.length}). Lary's files were not edited:`);
   for (const line of plausibility) console.error(line);
@@ -342,13 +364,17 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "d54ec09241b4fe16319874549273e243f86c37d32e526183a2c249d212a9ed83") {
+if (methodologySha !== "8b1ef69c62bb1d301d923a60181b675129fb3bd0b9a253800c08cba214ba08c6") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
 const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");
-if (!nextChargePage.includes("last_rule_b_over") || !nextChargePage.includes(" V")) {
-  fail("the next charge page must label which packs last Rule B covers, with the V unit");
+if (
+  !nextChargePage.includes("No board night yet") ||
+  !nextChargePage.includes("Next-night outlook (not a board result)") ||
+  !nextChargePage.includes(" V")
+) {
+  fail("the next charge page must keep recorded Rule B separate from the next-night outlook, with the V unit");
 }
 if (!chargeAlone.includes("last_offset_max_V") || !chargeAlone.includes(" V")) {
   fail("charge-alone offsets must be shown in volts");

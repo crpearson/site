@@ -79,7 +79,7 @@ This is the only check before packs are connected. For the packs on one series b
 | **0.60 V or less** (0.1 V per cell on 6S) | Go: connect them all |
 | **Over 0.60 V** | The pack outside the range charges alone **that night only**. Its status doesn't change, and it's back on the board next time its rest voltage is in range |
 
-The site shows the delta from each series' latest storage night, over the packs that would be connected, and names any pack that was outside 0.60 V so it can be checked first next time. Rule B shows **N/A** for packs charged alone (the D pool and any pulled pack) and for any series with fewer than two packs on the board.
+The site shows two figures per board. The **recorded** delta is history: the packs actually charged together on that series' last board night, judged by the rule in force that night, and it never changes afterwards. The **next-night outlook** uses the latest rest voltage of every pack assigned to the board and names any pack that was outside 0.60 V, so it can be checked first next time. A series that hasn't had a board night yet has no recorded delta. Rule B shows **N/A** for packs charged alone (the D pool and any pulled pack) and for any series with fewer than two packs on the board.
 
 Rule A looks at one pack, and Rule B looks at which packs can share a board. The two are tracked separately and never lumped together as "spread."
 
