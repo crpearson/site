@@ -454,7 +454,7 @@ export function LineChart({
                   onClick={() => setHover(index)}
                   onBlur={() => setHover((current) => (current === index ? null : current))}
                 >
-                  {category.label}
+                  {category.label === "undated" ? "·" : category.label}
                   {category.partial ? "*" : ""}
                 </button>
               );
