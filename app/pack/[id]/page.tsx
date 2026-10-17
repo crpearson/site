@@ -354,7 +354,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           </ol>
         </Panel>
         <Panel accent="signal" eyebrow="Calls" title="Status timeline">
-          <ol className="space-y-3">
+          <ol className="space-y-3" data-status-history="">
             {pack.calls.map((call, index) => (
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
                 <p className="flex flex-wrap items-center gap-2">

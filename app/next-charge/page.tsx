@@ -8,19 +8,40 @@ import { statusRows, type StatusRow } from "@/lib/fleet";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { seriesColor } from "@/lib/color";
 import { chargeSetId, layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
-import type { ChargeSet, ParallelBoard } from "@/lib/next-charge.mjs";
+import type { ChargeSet, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
   title: "Next charge",
   description: "Tonight's charge set, the other night's set, and packs to leave disconnected.",
 };
 
-function ruleBLine(board: ParallelBoard): string | null {
-  const covered = board.last_rule_b_over;
-  if (!covered?.length) return null;
-  const packs =
-    covered.length === 1 ? covered[0] : `${covered.slice(0, -1).join(", ")} and ${covered[covered.length - 1]}`;
-  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packs} · ${board.last_rule_b_session}`;
+function packList(labels: string[]): string {
+  if (labels.length <= 1) return labels[0] ?? "";
+  return `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+}
+
+function recordedRuleB(board: ParallelBoard): string {
+  if (board.last_rule_b_V == null || board.last_rule_b_over.length === 0) return "No board night yet";
+  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packList(board.last_rule_b_over)} · ${board.last_rule_b_session}`;
+}
+
+/** A repeated channel starts the next queue. Charge-alone packs are listed before board packs. */
+function storagePhases(runs: StorageRun[]): StorageRun[][] {
+  const phases: StorageRun[][] = [];
+  let current: StorageRun[] = [];
+  const seen = new Set<string>();
+  for (const run of runs) {
+    const key = `${run.charger}\0${run.channel}`;
+    if (seen.has(key) && current.length) {
+      phases.push(current);
+      current = [];
+      seen.clear();
+    }
+    seen.add(key);
+    current.push(run);
+  }
+  if (current.length) phases.push(current);
+  return phases;
 }
 
 function SetPlan({
@@ -34,10 +55,8 @@ function SetPlan({
   setId: string;
   resolve: (label: string) => StatusRow;
 }) {
-  const summary = storageSummary(set.storage_runs);
-  const chargers = storageChargers(set.storage_runs);
   const boards = set.parallel_boards.length ? layoutParallelBoards(set.parallel_boards) : [];
-  const modes = [...new Set(set.storage_runs.flatMap((run) => (run.mode ? [run.mode] : [])))];
+  const phases = storagePhases(set.storage_runs);
   return (
     <div className="min-w-0 space-y-8">
       <section className="space-y-3" aria-labelledby={`${setId}-storage-heading`}>
@@ -45,28 +64,41 @@ function SetPlan({
           {name}
         </h2>
         <p className="note">Last storage session {set.last_storage_session}</p>
-        {modes.map((mode) => (
-          <p key={mode} className="note">
-            {mode}
-          </p>
-        ))}
-        <div className="bench-stack">
-          <article className="panel" data-accent="signal">
-            <h3 className="panel-title">One pack per channel</h3>
-            <ul className="bench-run-summary">
-              {summary.map((item) => (
-                <li key={item.run}>
-                  <p className="bench-run-line">
-                    <span className="bench-run-kicker">Run {item.run}:</span> {item.line}
-                  </p>
-                </li>
+        {phases.map((phase, phaseIndex) => {
+          const summary = storageSummary(phase);
+          const chargers = storageChargers(phase);
+          const modes = [...new Set(phase.flatMap((run) => (run.mode ? [run.mode] : [])))];
+          return (
+            <div key={`${setId}-phase-${phaseIndex}`} className="space-y-3">
+              {modes.map((mode) => (
+                <p key={mode} className="note">
+                  {mode}
+                </p>
               ))}
-            </ul>
-          </article>
-          {chargers.map((charger) => (
-            <ChargerDiagram key={`${setId}-${charger.charger}`} charger={charger} resolve={resolve} />
-          ))}
-        </div>
+              <div className="bench-stack">
+                <article className="panel" data-accent="signal">
+                  <h3 className="panel-title">One pack per channel</h3>
+                  <ul className="bench-run-summary">
+                    {summary.map((item) => (
+                      <li key={item.run}>
+                        <p className="bench-run-line">
+                          <span className="bench-run-kicker">Run {item.run}:</span> {item.line}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                {chargers.map((charger) => (
+                  <ChargerDiagram
+                    key={`${setId}-${phaseIndex}-${charger.charger}`}
+                    charger={charger}
+                    resolve={resolve}
+                  />
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </section>
 
       {boards.length ? (
@@ -76,7 +108,12 @@ function SetPlan({
           </h2>
           <div className="bench-stack">
             {boards.map((board) => {
-              const ruleB = ruleBLine(board);
+              const outlook = board.outlook_rule_b;
+              const checked = outlook.check_first.map((item) => item.label);
+              const without =
+                outlook.value_without_check_first_v != null && checked.length
+                  ? `${outlook.value_without_check_first_v.toFixed(3)} V without ${packList(checked)}`
+                  : null;
               return (
                 <div key={board.series} className="bench-series">
                   <article
@@ -90,13 +127,52 @@ function SetPlan({
                         <dt>Current</dt>
                         <dd>{board.current}</dd>
                       </div>
-                      {ruleB ? (
-                        <div>
-                          <dt>Last Rule B</dt>
-                          <dd>{ruleB}</dd>
-                        </div>
-                      ) : null}
+                      <div>
+                        <dt>Go limit</dt>
+                        <dd>{board.rest_check_limit_V.toFixed(2)} V</dd>
+                      </div>
+                      <div data-recorded="">
+                        <dt>Recorded Rule B</dt>
+                        <dd>
+                          {recordedRuleB(board)}
+                          <p className="note mt-1">{board.last_rule_b_basis}</p>
+                        </dd>
+                      </div>
                     </dl>
+                    <div className="outlook-block" data-outlook="">
+                      <p className="panel-title">Next-night outlook (not a board result)</p>
+                      <dl className="bench-meta mt-3">
+                        <div>
+                          <dt>Outlook</dt>
+                          <dd>
+                            {outlook.value_v.toFixed(3)} V {outlook.call} over {packList(outlook.packs)} · {outlook.session}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Limit</dt>
+                          <dd>{outlook.limit_v.toFixed(2)} V</dd>
+                        </div>
+                        <div>
+                          <dt>Basis</dt>
+                          <dd>{outlook.basis}</dd>
+                        </div>
+                        {without ? (
+                          <div>
+                            <dt>Without the check-first packs</dt>
+                            <dd>{without}</dd>
+                          </div>
+                        ) : null}
+                      </dl>
+                      {outlook.check_first.length ? (
+                        <ul className="bench-notes">
+                          {outlook.check_first.map((item) => (
+                            <li key={item.label} className="note">
+                              {item.label}: {item.note}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
                     {board.conditions.length ? (
                       <ul className="bench-notes">
                         {board.conditions.map((condition) => (
@@ -140,21 +216,6 @@ function SetPlan({
         </section>
       ) : null}
 
-      {set.join_status?.length ? (
-        <section className="space-y-3" aria-labelledby={`${setId}-join-heading`}>
-          <h2 id={`${setId}-join-heading`} className="section-title">
-            Joining a board
-          </h2>
-          <ul className="bench-notes">
-            {set.join_status.map((item) => (
-              <li key={item.label} className="note">
-                {item.label}: {item.status}. Storage nights {item.storage_nights}. Clean nights in a row{" "}
-                {item.clean_nights_in_a_row}. {item.rule}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
     </div>
   );
 }
@@ -197,7 +258,7 @@ export default function NextChargePage() {
           </div>
         </dl>
         <p className="note">{plan.active_set_reason}</p>
-        <p className="note">{plan.locked_reason}</p>
+        {plan.locked_reason ? <p className="note">{plan.locked_reason}</p> : null}
       </header>
 
       <SetSwitcher

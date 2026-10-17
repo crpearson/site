@@ -467,22 +467,18 @@ export default function Home() {
             eyebrow="Rule B"
             title="Inter-pack rest-Δ"
             action={
-              <span className="note">
-                Go ≤ {thresholds.inter_pack_rest_delta_v.go_lte.toFixed(2)} · Caution{" "}
-                {thresholds.inter_pack_rest_delta_v.caution_lo.toFixed(2)}–
-                {thresholds.inter_pack_rest_delta_v.caution_hi.toFixed(2)} · Hard stop &gt;{" "}
-                {thresholds.inter_pack_rest_delta_v.hard_stop_gt.toFixed(2)} V
-              </span>
+              <span className="note">Go ≤ {thresholds.inter_pack_rest_delta_v.go_lte.toFixed(2)} V</span>
             }
           >
             <p className="note mb-3">
               One line per series. The line is solid through a night that series did not run. No
-              value is filled in there. Nights before that series existed are not marked. Rule B needs two
-              packs that charged in parallel. A night the series did run,
-              but fewer than two did, is N/A. Rule B uses the packs on the next parallel board only.
-              The rest-test day-0 rows are not a parallel charge and are not on this line. Series D,
-              pack D-1, is charged on its own, so Rule B does not apply and it is not a line here.
-              C3 and C4 have no board yet, so they are not on this chart.
+              value is filled in there. Nights before that series existed are not marked.               Rule B needs two packs charged together on that night's board. A night the series did
+              run, but not as a board, is not a point. A recorded board night uses that night's
+              recorded figure. A next-night outlook is not drawn here. On 2026-10-10 the points are
+              C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. C3 and C4
+              have no board night yet, so they are not on this chart. The rest-test day-0 rows are
+              not a parallel charge and are not on this line. Series D, pack D-1, is charged on its
+              own, so Rule B does not apply and it is not a line here. Series do not share a board.
             </p>
             <LineChart
               categories={model.categories}

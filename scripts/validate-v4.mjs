@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
@@ -76,8 +77,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 203) {
-  console.error(`expected 203 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 215) {
+  console.error(`expected 215 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -158,6 +159,28 @@ for (const test of rests) {
     const mv = finite(test[`c${index}_mV`]);
     if (mv == null) continue;
     within(test, `c${index}_mV`, mv / 1000, CELL_V, "V");
+  }
+}
+
+const chargeSheet = JSON.parse(fs.readFileSync(path.join(root, "data/v2/next_charge.json"), "utf8"));
+function outlookBoards(value, out = []) {
+  if (Array.isArray(value)) value.forEach((item) => outlookBoards(item, out));
+  else if (value && typeof value === "object" && Array.isArray(value.packs) && value.outlook_rule_b) out.push(value);
+  else if (value && typeof value === "object") Object.values(value).forEach((item) => outlookBoards(item, out));
+  return out;
+}
+for (const board of outlookBoards(chargeSheet)) {
+  const where = `${board.series} outlook`;
+  const outlook = board.outlook_rule_b;
+  within({ session: board.series, pack: "outlook" }, "value_v", outlook.value_v, [0, 2], "V");
+  within({ session: board.series, pack: "outlook" }, "limit_v", outlook.limit_v, [0.01, 2], "V");
+  if (outlook.value_without_check_first_v != null) {
+    within({ session: board.series, pack: "outlook" }, "value_without_check_first_v", outlook.value_without_check_first_v, [0, 2], "V");
+  }
+  if (board.last_rule_b_V != null) within({ session: board.series, pack: "recorded" }, "last_rule_b_V", board.last_rule_b_V, [0, 2], "V");
+  for (const item of outlook.check_first ?? []) {
+    within({ session: board.series, pack: item.label }, "last_rest_V", item.last_rest_V, [15, 26.5], "V");
+    within({ session: board.series, pack: item.label }, "last_offset_max_V", item.last_offset_max_V, [0, 2], "V");
   }
 }
 
@@ -254,8 +277,8 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 23 || fleetMean.toFixed(3) !== "2.847") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.847 mΩ over 23`);
+if (slotted.length !== 23 || fleetMean.toFixed(3) !== "2.754") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.754 mΩ over 23`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -294,10 +317,10 @@ if (c2Mean.session !== "2026-10-11" || c2Mean.mean.toFixed(3) !== "2.900") {
 }
 const c3Mean = seriesMean("C3");
 const c4Mean = seriesMean("C4");
-if (c3Mean.session !== "2026-10-14" || c3Mean.mean.toFixed(3) !== "2.883") {
+if (c3Mean.session !== "2026-10-16" || c3Mean.mean.toFixed(3) !== "2.780") {
   fail(`C3 last series value is ${c3Mean.session} ${c3Mean.mean}`);
 }
-if (c4Mean.session !== "2026-10-14" || c4Mean.mean.toFixed(3) !== "2.778") {
+if (c4Mean.session !== "2026-10-16" || c4Mean.mean.toFixed(3) !== "2.522") {
   fail(`C4 last series value is ${c4Mean.session} ${c4Mean.mean}`);
 }
 
@@ -306,7 +329,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-14") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-14`);
+if (latestPtDate !== "2026-10-16") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-16`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }
@@ -322,20 +345,36 @@ if (rendered !== expected || board.as_of !== latestPtDate) {
 for (const label of ["D-1", "C1-P4", "C2-P2"]) {
   if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
 }
-if (board.series.some((item) => item.series === "C3" || item.series === "C4")) {
-  fail("C3 or C4 is on a next parallel board");
+for (const label of ["C3-P5", "C3-P6", "C4-P2"]) {
+  if (!board.series.some((item) => item.labels.includes(label))) fail(`${label} is missing from its board`);
 }
-const watch = calls.filter((row) => row.label_at_time === "C4-P2" || row.label_at_time === "C4-P4");
+const c4p2 = calls.filter((row) => row.label_at_time === "C4-P2").at(-1);
+const c4p4 = calls.filter((row) => row.label_at_time === "C4-P4").at(-1);
 if (
-  watch.length !== 2 ||
-  watch.some((row) => !/Go \(watch\)/.test(row.status) || !/watch, recheck next storage night/.test(row.reason))
+  !c4p2 ||
+  c4p2.date !== "2026-10-16" ||
+  c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
+  !/Cell 6 started low on both storage nights/.test(c4p2.reason)
 ) {
-  fail("C4-P2 and C4-P4 must stay Go (watch), recheck next storage night");
+  fail("C4-P2 latest call changed");
+}
+if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the C4 board | SERVICE In service") {
+  fail("C4-P4 latest call should be Go on the C4 board");
+}
+const methodologySha = createHash("sha256")
+  .update(fs.readFileSync(path.join(root, "content/methodology.md")))
+  .digest("hex");
+if (methodologySha !== "45627c9c9cd7222f713b9a42ad913adb5b5cbb4b932ace277b0909968368e280") {
+  fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
 const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");
-if (!nextChargePage.includes("last_rule_b_over") || !nextChargePage.includes(" V")) {
-  fail("the next charge page must label which packs last Rule B covers, with the V unit");
+if (
+  !nextChargePage.includes("No board night yet") ||
+  !nextChargePage.includes("Next-night outlook (not a board result)") ||
+  !nextChargePage.includes(" V")
+) {
+  fail("the next charge page must keep recorded Rule B separate from the next-night outlook, with the V unit");
 }
 if (!chargeAlone.includes("last_offset_max_V") || !chargeAlone.includes(" V")) {
   fail("charge-alone offsets must be shown in volts");

@@ -11,13 +11,13 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `schema` | Must be the string `next_charge/v2`. |
 | `as_of_session` | Session the sheet is based on. A date or a session id. |
 | `as_of_date_pt` | Pacific calendar date, `YYYY-MM-DD`. |
-| `active_set` | The set for tonight, such as `C3+C4`. |
-| `locked` | `true` or `false`. |
-| `locked_reason` | Why the set is locked, in the file's own words. |
+| `active_set` | The set for tonight, such as `C1+C2`. |
+| `locked` | Optional. `true` or `false`. Absent when the sheet is not locked. |
+| `locked_reason` | Optional. Why the set is locked, in the file's own words. Required when `locked` is `true`. |
 | `active_set_reason` | Why this set is tonight, in the file's own words. |
-| `alternate_set` | The other night's set, such as `C1+C2`. It is not the same as `active_set`. |
+| `alternate_set` | The other night's set, such as `C3+C4`. It is not the same as `active_set`. |
 | `storage_runs` | Tonight's channel queues. These match the active set. |
-| `parallel_boards` | Tonight's series boards. These match the active set. An empty list is valid. |
+| `parallel_boards` | Tonight's parallel boards (one per series). These match the active set. An empty list is valid. |
 | `charge_alone` | Tonight's packs that charge on their own. These match the active set. |
 | `watch` | Tonight's recheck notes. These match the active set. |
 | `sets` | Both plans. The object keys are the set names with `+` written as `_`: `C3+C4` is `C3_C4`. |
@@ -33,7 +33,7 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `series` | Series names in this set. Every pack in the set is one of these series. |
 | `last_storage_session` | Last storage session for this set. |
 | `storage_runs` | One object per charger channel. See below. |
-| `parallel_boards` | One object per series board. Empty when the set has no board yet. |
+| `parallel_boards` | One object per parallel board (one per series). Empty when the set has no board yet. |
 | `charge_alone` | Packs that charge on their own before they join a board. |
 | `watch` | Recheck notes for this set. |
 | `join_status` | Optional. One object per pack that is working toward its own board. |
@@ -57,7 +57,7 @@ A DX8 storage-charges one pack on a channel at a time. The page turns `order` in
 - Each run shows that one pack.
 - Above the chargers, Run *n* lists every channel that still has an *n*th pack, in file order. The charger name is printed when it changes: `DX8-1 CH1 C3-P1 · CH2 C3-P4 · DX8-2 CH1 C4-P1 · CH2 C4-P4`.
 
-The same charger and channel cannot appear twice. A pack label cannot appear on two storage channels of the same set. Every label must exist in `data/v2/packs.csv`.
+A charger and channel may appear again later in the list. The first time a channel repeats, that row starts the next queue. Charge-alone packs are listed first, then the board packs. A pack label cannot appear on two storage channels of the same set. Every label must exist in `data/v2/packs.csv`.
 
 A pack may be in `storage_runs` and also on a parallel board or in `charge_alone`. Storage happens first. The pre-flight step is separate.
 
@@ -107,7 +107,7 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 | `uid` | That label's `pack_uid`. |
 | `storage_nights` | Storage nights so far. A number. Charge runs do not count. |
 | `clean_nights_in_a_row` | Clean storage nights in a row. A number. |
-| `joins_board` | `true` or `false`. It must match whether that pack is on a parallel board in this set. |
+| `joins_board` | `true` or `false`. `true` means the pack qualifies for its board. It can still charge alone tonight. `false` while that pack is on a parallel board fails the build. |
 | `status` | Recorded status, such as `Go (new)` or `Go (watch)`. |
 | `rule` | The recorded join rule, in the file's own words. |
 

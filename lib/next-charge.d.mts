@@ -3,11 +3,13 @@ export const BOARD_NAMES: readonly string[];
 
 export type NextChargeDocument = {
   schema: "next_charge/v2";
+  rules: "v4";
   as_of_session: string;
   as_of_date_pt: string;
   active_set: string;
-  locked: boolean;
-  locked_reason: string;
+  /** Present when the sheet is locked to this active set. */
+  locked?: boolean;
+  locked_reason?: string;
   active_set_reason: string;
   alternate_set: string;
   storage_runs: StorageRun[];
@@ -53,16 +55,42 @@ export type JoinStatus = {
   rule: string;
 };
 
+export type CheckFirst = {
+  label: string;
+  uid: string;
+  last_rest_V: number;
+  last_offset_max_V: number;
+  last_offset_side: "below" | "above";
+  note: string;
+};
+
+export type OutlookRuleB = {
+  value_v: number;
+  packs: string[];
+  basis: string;
+  session: string;
+  limit_v: number;
+  call: "GO" | "CHECK FIRST";
+  check_first: CheckFirst[];
+  value_without_check_first_v: number | null;
+  packs_without_check_first: string[] | null;
+};
+
 export type ParallelBoard = {
   series: string;
   packs: string[];
   current: "normal" | "reduced";
   conditions: string[];
-  last_rule_b_V: number;
-  last_rule_b_call: string;
-  last_rule_b_session: string;
-  /** Packs this Rule B figure covers. When present, each label is on this board. */
-  last_rule_b_over?: string[];
+  rest_check_limit_V: number;
+  /** Recorded board-night spread, in volts. Null when this series has no board night yet. */
+  last_rule_b_V: number | null;
+  last_rule_b_call: string | null;
+  last_rule_b_session: string | null;
+  /** Packs charged together on the recorded board night. Empty when last_rule_b_V is null. */
+  last_rule_b_over: string[];
+  last_rule_b_basis: string;
+  /** Latest-rest outlook for the next night. Not a recorded board result. */
+  outlook_rule_b: OutlookRuleB;
 };
 
 export type ChargeAloneItem = {

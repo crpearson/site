@@ -983,6 +983,10 @@ body {
   min-width: 0;
 }
 
+.x-label-before-end {
+  display: none;
+}
+
 @container chart (max-width: 760px) {
   .x-label-alt {
     display: none;
@@ -1171,6 +1175,13 @@ body {
   overflow-wrap: anywhere;
   font-family: var(--font-mono);
   font-size: 1.05rem;
+}
+
+.outlook-block {
+  margin-top: 0.9rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 0.7rem;
 }
 
 .bench-series {

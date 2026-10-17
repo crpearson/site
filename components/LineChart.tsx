@@ -430,10 +430,15 @@ export function LineChart({
                     .join(". ");
               const place =
                 index === firstTick ? " x-label-start" : index === lastTick ? " x-label-end" : "";
-              const nearEnd = !edge && lastTick - index <= 2;
+              const fromEnd = visible.length - 1 - visible.indexOf(index);
+              // The last label is pinned to the right edge, so the date just
+              // before it overlaps on a long axis. The one before that overlaps
+              // once the chart is narrow.
+              const beforeEnd = !edge && fromEnd === 1;
+              const nearEnd = !edge && fromEnd === 2;
               const thin = edge
                 ? ""
-                : `${index % 2 === 1 ? " x-label-alt" : ""}${index % 3 !== 0 ? " x-label-third" : ""}${nearEnd ? " x-label-tail" : ""}`;
+                : `${index % 2 === 1 ? " x-label-alt" : ""}${index % 3 !== 0 ? " x-label-third" : ""}${nearEnd ? " x-label-tail" : ""}${beforeEnd ? " x-label-before-end" : ""}`;
               return (
                 <button
                   key={category.id}
