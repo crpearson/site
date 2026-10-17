@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Lamp } from "@/components/Lamp";
+import { occupancyLabel, publicProse } from "@/lib/format";
 import { getPack, getSlot, latestCall, restTestsFor } from "@/lib/fleet";
 import { goNewText, watchRecheckText } from "@/lib/lamp";
 
@@ -57,7 +58,7 @@ export function SlotDetail({ label }: { label: string }) {
           </div>
           <p className="note mt-2 font-mono">{current.uid}</p>
           {current.lineage ? <p className="mt-2">{current.lineage}</p> : null}
-          <p className="mt-3 leading-relaxed">{call.reason}</p>
+          <p className="mt-3 leading-relaxed">{publicProse(call.reason)}</p>
           {watchRecheckText(call.status, call.reason) ? (
             <p className="note mt-2">Go (watch). {watchRecheckText(call.status, call.reason)}</p>
           ) : null}
@@ -102,7 +103,7 @@ export function SlotDetail({ label }: { label: string }) {
                   </Link>
                 </p>
                 <p className="note mt-1">
-                  {range.start} → {range.end ?? "present"}
+                  {occupancyLabel(range.start, range.end)}
                 </p>
               </li>
             ))}

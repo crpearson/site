@@ -10,7 +10,7 @@ import { Panel } from "@/components/Panel";
 import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
 import { StatusChip } from "@/components/StatusChip";
 import { conditionalJoinNote } from "@/lib/lamp";
-import { formatValue } from "@/lib/format";
+import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import {
   allRestTests,
@@ -203,7 +203,7 @@ export default function Home() {
               <p className="eyebrow">
                 {board.series}
                 {" · last public measurement "}
-                {blocks.find((block) => block.id === board.series)?.lastMeasured}
+                {publicSession(blocks.find((block) => block.id === board.series)?.lastMeasured ?? "")}
               </p>
               <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -244,7 +244,7 @@ export default function Home() {
               {" · status as of "}
               {block.asOf}
               {" · last measured "}
-              {block.lastMeasured}
+              {publicSession(block.lastMeasured)}
             </p>
             <div className="pack-grid">
               {block.slots.map((slot) => (
@@ -303,15 +303,19 @@ export default function Home() {
                       ) : null}
                     </td>
                     <td>
-                      <p className="reason">{row.reason}</p>
+                      <p className="reason">{publicProse(row.reason)}</p>
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
-                      {row.session === row.callDate ? row.callDate : `${row.callDate} · ${row.session}`}
+                      {!isSessionId(row.session) && row.session !== row.callDate
+                        ? `${row.callDate} · ${row.session}`
+                        : shownWhen(row.session, row.callDate)}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
                       <IrFigure value={row.avg} provisional={row.provisional} />
-                      <span className="mt-1 block text-[10px] text-[var(--faint)]">{row.latestSession}</span>
+                      <span className="mt-1 block text-[10px] text-[var(--faint)]">
+                        {publicSession(row.latestSession)}
+                      </span>
                     </td>
                     <td className="font-mono text-sm">
                       <IrFigure value={row.spread} provisional={row.provisional} />
@@ -332,7 +336,7 @@ export default function Home() {
                   <Lamp status={row.parallel || row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
+                <p className="mt-2 text-sm leading-relaxed">{publicProse(row.reason)}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 {row.restPool ? (
                   <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>

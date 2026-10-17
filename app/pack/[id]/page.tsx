@@ -9,7 +9,7 @@ import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
-import { formatValue, volts } from "@/lib/format";
+import { formatValue, isSessionId, publicProse, publicSession, shownWhen, volts } from "@/lib/format";
 import { goNewText, watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
@@ -32,9 +32,12 @@ function historyNote(event: { event: string; to: string; date: string; reason: s
   if (event.event === "rest_pool_enter") {
     return "Off every board until the 7-day reading on 2026-10-16.";
   }
-  if (event.event !== "commission") return event.reason;
+  if (event.event !== "commission") return publicProse(event.reason);
   const replacement = /replacement/i.test(event.reason);
-  const base = `Commissioned into ${event.to} at ${event.date}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
+  const when = isSessionId(event.date) ? null : event.date;
+  const base = when
+    ? `Commissioned into ${event.to} at ${when}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`
+    : `Commissioned into ${event.to}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
   return replacement
     ? `${base} This pack replaced an earlier one in the same slot, which is not in this record.`
     : base;
@@ -149,7 +152,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         {goNewText(pack.call.status) ? <p className="note">{goNewText(pack.call.status)}</p> : null}
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
-        <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
+        <p className="max-w-3xl text-lg leading-relaxed">{publicProse(pack.call.reason)}</p>
         <p className="note">
           Parallel {pack.row.parallel || pack.call.status}
           {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
@@ -161,8 +164,11 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           </p>
         ) : null}
         <p className="note">
-          Status call {pack.call.session}
-          {pack.call.session !== pack.call.date ? ` (dated ${pack.call.date})` : ""} ·{" "}
+          Status call {shownWhen(pack.call.session, pack.call.date)}
+          {!isSessionId(pack.call.session) && pack.call.session !== pack.call.date
+            ? ` (dated ${pack.call.date})`
+            : ""}{" "}
+          ·{" "}
           {pack.row.restPool
             ? "not charged (Rest pool)"
             : pack.chargeMode === "individual"
@@ -183,7 +189,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               <IrFigure value={pack.row.avg} provisional={pack.row.provisional} unit />
             </span>
           </p>
-          <p className="stat-sub">{pack.row.latestSession}</p>
+          <p className="stat-sub">{publicSession(pack.row.latestSession)}</p>
         </article>
         <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "floor"}>
           <p className="eyebrow">Spread</p>
@@ -267,7 +273,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                 {pack.chargeRuns.map((point) => (
                   <tr key={point.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
-                      {point.session}
+                      {publicSession(point.session)}
                     </th>
                     <td className="font-mono text-sm">
                       <IrFigure value={point.avg} provisional={point.provisional} />
@@ -308,7 +314,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                 {pack.restDays.map((point) => (
                   <tr key={point.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
-                      {point.session}
+                      {publicSession(point.session)}
                     </th>
                     <td className="font-mono text-sm">
                       <IrFigure value={point.avg} provisional={point.provisional} />
@@ -349,7 +355,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {pack.events.map((event) => (
               <li key={`${event.date}-${event.event}`} className="text-sm">
                 <p className="font-mono text-[var(--ink)]">
-                  {event.date} · {historyVerb(event.event)}
+                  {shownWhen(event.date)} · {historyVerb(event.event)}
                   {event.from ? ` · ${event.from}` : ""} → {event.to}
                 </p>
                 <p className="note mt-1">{historyNote(event)}</p>
@@ -362,18 +368,18 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             {pack.calls.map((call, index) => (
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
                 <p className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono">{call.session}</span>
+                  <span className="font-mono">{shownWhen(call.session, call.date)}</span>
                   <span className="note">{call.label}</span>
                 </p>
                 <p className="call-full mt-1">{call.status}</p>
-                <p className="mt-1 leading-relaxed">{call.reason}</p>
+                <p className="mt-1 leading-relaxed">{publicProse(call.reason)}</p>
               </li>
             ))}
           </ol>
         </Panel>
       </div>
 
-      <Panel accent="signal" eyebrow={pack.row.latestSession} title="Latest IR cell heatmap">
+      <Panel accent="signal" eyebrow={publicSession(pack.row.latestSession)} title="Latest IR cell heatmap">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...latestCells)}
@@ -492,7 +498,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                 night.kind === "rest-pool" ? (
                   <tr key={night.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
-                      {night.session}
+                      {publicSession(night.session)}
                       {night.partial ? "*" : ""}
                     </th>
                     <td className="font-mono text-sm">{night.label}</td>
@@ -503,7 +509,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                 ) : night.kind === "measured" ? (
                   <tr key={night.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
-                      {night.point.session}
+                      {publicSession(night.point.session)}
                       {night.partial ? "*" : ""}
                     </th>
                     <td className="font-mono text-sm">{night.point.label}</td>
@@ -523,7 +529,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                 ) : (
                   <tr key={night.session}>
                     <th scope="row" className="font-mono text-sm font-normal">
-                      {night.session}
+                      {publicSession(night.session)}
                       {night.partial ? "*" : ""}
                     </th>
                     <td className="font-mono text-sm">{night.label}</td>

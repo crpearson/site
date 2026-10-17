@@ -8,7 +8,7 @@ import { SetSwitcher } from "@/components/SetSwitcher";
 import { statusRows, type StatusRow } from "@/lib/fleet";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { seriesColor } from "@/lib/color";
-import { formatIr } from "@/lib/format";
+import { formatIr, publicSession } from "@/lib/format";
 import { chargeSetId, layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
 import type { ChargeSet, IndividualItem, IrMatch, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
 
@@ -69,7 +69,7 @@ function IrMatchFigures({ match }: { match: IrMatch }) {
 
 function recordedRuleB(board: ParallelBoard): string {
   if (board.last_rule_b_V == null || board.last_rule_b_over.length === 0) return "No board night yet";
-  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packList(board.last_rule_b_over)} · ${board.last_rule_b_session}`;
+  return `${board.last_rule_b_V.toFixed(3)} V ${board.last_rule_b_call} over ${packList(board.last_rule_b_over)} · ${publicSession(board.last_rule_b_session ?? "")}`;
 }
 
 /** A repeated channel starts the next queue. Charge-alone packs are listed before board packs. */
@@ -110,7 +110,7 @@ function SetPlan({
         <h2 id={`${setId}-storage-heading`} className="section-title">
           {name}
         </h2>
-        <p className="note">Last storage session {set.last_storage_session}</p>
+        <p className="note">Last storage session {publicSession(set.last_storage_session)}</p>
         {phases.map((phase, phaseIndex) => {
           const summary = storageSummary(phase);
           const chargers = storageChargers(phase);
@@ -192,7 +192,7 @@ function SetPlan({
                         <div>
                           <dt>Outlook</dt>
                           <dd>
-                            {outlook.value_v.toFixed(3)} V {outlook.call} over {packList(outlook.packs)} · {outlook.session}
+                            {outlook.value_v.toFixed(3)} V {outlook.call} over {packList(outlook.packs)} · {publicSession(outlook.session)}
                           </dd>
                         </div>
                         <div>
@@ -324,7 +324,7 @@ export default function NextChargePage() {
           </div>
           <div>
             <dt>Session</dt>
-            <dd>{plan.as_of_session}</dd>
+            <dd>{publicSession(plan.as_of_session)}</dd>
           </div>
           <div>
             <dt>Tonight</dt>

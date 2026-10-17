@@ -17,7 +17,7 @@ import {
   type ChartMode,
 } from "@/lib/bridges";
 import { ProvisionalMark } from "@/components/ProvisionalMark";
-import { formatAxis, formatValue } from "@/lib/format";
+import { formatAxis, formatValue, publicSession } from "@/lib/format";
 import { PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "@/lib/ir-validation.mjs";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
 import { useId, useMemo, useState } from "react";
@@ -140,7 +140,7 @@ export function LineChart({
     hover == null
       ? ""
       : columnGap
-        ? `${categories[hover].id}. ${phrase}.`
+        ? `${publicSession(categories[hover].id)}. ${phrase}.`
         : `${categories[hover].label}${categories[hover].partial ? ", partial night" : ""}. ${
             phrase ? `${phrase}. ` : ""
           }${shown
@@ -375,7 +375,7 @@ export function LineChart({
                 }}
               >
                 <p className="tip-title">
-                  {categories[hover].id}
+                  {publicSession(categories[hover].id)}
                   {!columnGap && categories[hover].partial ? " · partial" : ""}
                 </p>
                 {phrase ? <p className="tip-miss">{phrase}</p> : null}
@@ -425,7 +425,10 @@ export function LineChart({
                 shown.length > 0 && shown.every((item) => seriesGap(item, index));
               const title = columnMissed
                 ? columnPhrase
-                : [category.partial ? `${category.id} partial night` : category.id, columnPhrase]
+                : [
+                    category.partial ? `${publicSession(category.id)} partial night` : publicSession(category.id),
+                    columnPhrase,
+                  ]
                     .filter(Boolean)
                     .join(". ");
               const place =

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Panel } from "@/components/Panel";
+import { publicSession } from "@/lib/format";
 import { categories, chargers, metricLabels, siteMeta, thresholds } from "@/lib/fleet";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
@@ -56,7 +57,7 @@ export default function AboutPage() {
             key={session.id}
             className={session.partial ? "session-chip is-partial" : "session-chip"}
           >
-            {session.id}
+            {publicSession(session.id)}
             {session.partial ? " · partial" : ""}
           </span>
         ))}

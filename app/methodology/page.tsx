@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
 import { Panel, type PanelAccent } from "@/components/Panel";
+import { publicProse } from "@/lib/format";
 import { parseMethodology } from "@/lib/methodology";
 
 export const metadata: Metadata = {
@@ -23,7 +24,12 @@ const accents: PanelAccent[] = [
 ];
 
 export default function MethodologyPage() {
-  const markdown = readFileSync(path.join(process.cwd(), "content/methodology.md"), "utf8");
+  const markdown = publicProse(
+    readFileSync(path.join(process.cwd(), "content/methodology.md"), "utf8").replace(
+      "Older nights used `S` + their lowest file number (e.g. `S413`) and keep those names.",
+      "Older nights have no calendar date in this record.",
+    ),
+  );
   const doc = parseMethodology(markdown);
 
   return (

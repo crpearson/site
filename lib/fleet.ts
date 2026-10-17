@@ -6,7 +6,7 @@ import statusDoc from "@/data/status.json";
 import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lonePointIndices, missBridges, openEndIndices, seriesNotCharged, solidFrom } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
-import { formatValue, shortSession } from "@/lib/format";
+import { formatValue, occupancyLabel, publicProse, publicSession, shortSession, shownWhen } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import {
@@ -869,7 +869,7 @@ function asOf(series: string): string {
     .filter((value): value is string => Boolean(value));
   if (dates.length === 0) return "—";
   const latest = dates.reduce((value, current) => (compareTime(current, value) > 0 ? current : value));
-  return calendarDate(latest) || latest;
+  return calendarDate(latest) || "undated";
 }
 
 export function seriesBlocks(): SeriesBlock[] {
@@ -2246,6 +2246,17 @@ function assertRingWindows(model: FleetModel) {
         }
       }
     }
+  }
+  const vacated = getSlot("C1-P1");
+  const span = vacated?.past[0];
+  if (!span || occupancyLabel(span.start, span.end) !== "until 2026-10-08") {
+    throw new Error(`C1-P1 past occupant span is ${span ? occupancyLabel(span.start, span.end) : "missing"}`);
+  }
+  if (publicSession("S263") !== "undated" || shownWhen("S413", "2026-09-22") !== "2026-09-22") {
+    throw new Error("session id leaked into a date label");
+  }
+  if (/\bS\d{3}\b/.test(publicProse("spreads (S263/S358/S413), same shape as S386"))) {
+    throw new Error("prose still shows a session id");
   }
 }
 
