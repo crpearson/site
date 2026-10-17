@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Lamp } from "@/components/Lamp";
-import { getPack, getSlot, latestCall, restTestsFor } from "@/lib/fleet";
+import { getPack, getSlot, latestCall, restTestsFor, shownCallReason } from "@/lib/fleet";
 import { goNewText, watchRecheckText } from "@/lib/lamp";
 
 export function SlotDetail({ label }: { label: string }) {
@@ -57,7 +57,7 @@ export function SlotDetail({ label }: { label: string }) {
           </div>
           <p className="note mt-2 font-mono">{current.uid}</p>
           {current.lineage ? <p className="mt-2">{current.lineage}</p> : null}
-          <p className="mt-3 leading-relaxed">{call.reason}</p>
+          <p className="mt-3 leading-relaxed">{shownCallReason(current.label, call.reason)}</p>
           {watchRecheckText(call.status, call.reason) ? (
             <p className="note mt-2">Go (watch). {watchRecheckText(call.status, call.reason)}</p>
           ) : null}

@@ -7,8 +7,9 @@ import { SetSwitcher } from "@/components/SetSwitcher";
 import { statusRows, type StatusRow } from "@/lib/fleet";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import { seriesColor } from "@/lib/color";
+import { formatIr } from "@/lib/format";
 import { chargeSetId, layoutParallelBoards, loadNextCharge, storageChargers, storageSummary } from "@/lib/next-charge.mjs";
-import type { ChargeSet, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
+import type { ChargeSet, IrMatch, ParallelBoard, StorageRun } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
   title: "Next charge",
@@ -18,6 +19,51 @@ export const metadata: Metadata = {
 function packList(labels: string[]): string {
   if (labels.length <= 1) return labels[0] ?? "";
   return `${labels.slice(0, -1).join(", ")} and ${labels[labels.length - 1]}`;
+}
+
+function mohm(value: number | null): string {
+  return value == null ? "—" : `${formatIr(value)} mΩ`;
+}
+
+function pct(value: number | null): string {
+  if (value == null) return "—";
+  return `${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)}%`;
+}
+
+function IrMatchFigures({ match }: { match: IrMatch }) {
+  return (
+    <div data-ir-match="">
+      <p className="panel-title mt-4">IR match (not a recorded result)</p>
+      <dl className="bench-meta mt-3">
+        <div>
+          <dt>IR call</dt>
+          <dd>{match.call}</dd>
+        </div>
+        <div>
+          <dt>Board median</dt>
+          <dd>{mohm(match.board_median_mohm)}</dd>
+        </div>
+        <div>
+          <dt>Check first</dt>
+          <dd>{pct(match.check_first_pct)} off the median</dd>
+        </div>
+        <div>
+          <dt>Charge alone</dt>
+          <dd>
+            {pct(match.charge_alone_pct)} off, on {match.nights_needed} of the last {match.of_last_nights} nights
+          </dd>
+        </div>
+      </dl>
+      <ul className="bench-notes">
+        {match.packs.map((item) => (
+          <li key={item.label} className="note">
+            {item.label}: {mohm(item.avg_mohm)}, {pct(item.pct_off)}, {item.flag}, {item.nights_checked} nights
+          </li>
+        ))}
+      </ul>
+      <p className="note">{match.basis}</p>
+    </div>
+  );
 }
 
 function recordedRuleB(board: ParallelBoard): string {
@@ -172,6 +218,7 @@ function SetPlan({
                           ))}
                         </ul>
                       ) : null}
+                      <IrMatchFigures match={outlook.ir_match} />
                     </div>
                     {board.conditions.length ? (
                       <ul className="bench-notes">

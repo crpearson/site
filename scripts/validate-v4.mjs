@@ -182,6 +182,21 @@ for (const board of outlookBoards(chargeSheet)) {
     within({ session: board.series, pack: item.label }, "last_rest_V", item.last_rest_V, [15, 26.5], "V");
     within({ session: board.series, pack: item.label }, "last_offset_max_V", item.last_offset_max_V, [0, 2], "V");
   }
+  const ir = outlook.ir_match;
+  if (!ir || typeof ir !== "object") {
+    flag({ session: board.series, pack: "ir_match" }, "ir_match", ir, "missing IR match");
+    continue;
+  }
+  within({ session: board.series, pack: "ir_match" }, "board_median_mohm", ir.board_median_mohm, [0.5, 15], "mΩ");
+  within({ session: board.series, pack: "ir_match" }, "check_first_pct", ir.check_first_pct, [0.01, 100], "%");
+  within({ session: board.series, pack: "ir_match" }, "charge_alone_pct", ir.charge_alone_pct, [0.01, 100], "%");
+  if (!(ir.charge_alone_pct > ir.check_first_pct)) {
+    flag({ session: board.series, pack: "ir_match" }, "charge_alone_pct", ir.charge_alone_pct, "must be above check_first_pct");
+  }
+  for (const item of ir.packs ?? []) {
+    within({ session: board.series, pack: item.label }, "avg_mohm", item.avg_mohm, [0.5, 15], "mΩ");
+    within({ session: board.series, pack: item.label }, "pct_off", item.pct_off, [-100, 1000], "%");
+  }
 }
 
 if (plausibility.length) {
@@ -329,7 +344,8 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-16") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-16`);
+// 2026-10-17: latest status call date (C4-P2 watch-note update); latest storage session stays 2026-10-16.
+if (latestPtDate !== "2026-10-17") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-17`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }
@@ -352,9 +368,10 @@ const c4p2 = calls.filter((row) => row.label_at_time === "C4-P2").at(-1);
 const c4p4 = calls.filter((row) => row.label_at_time === "C4-P4").at(-1);
 if (
   !c4p2 ||
-  c4p2.date !== "2026-10-16" ||
+  c4p2.date !== "2026-10-17" ||
   c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
-  !/Cell 6 started low on both storage nights/.test(c4p2.reason)
+  !/Cell 6 started low on 2026-10-14 and 2026-10-16/.test(c4p2.reason) ||
+  /1\.5x the pack median IR \(3\.0 vs 2\.0 mOhm\) is dropped/.test(c4p2.reason) === false
 ) {
   fail("C4-P2 latest call changed");
 }
@@ -364,7 +381,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "45627c9c9cd7222f713b9a42ad913adb5b5cbb4b932ace277b0909968368e280") {
+if (methodologySha !== "cf2f3ef2d6d13cd24b9248eabe2bc6e355bcb334cfbb8a812a1a0510e53ad489") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
@@ -372,9 +389,12 @@ const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDia
 if (
   !nextChargePage.includes("No board night yet") ||
   !nextChargePage.includes("Next-night outlook (not a board result)") ||
-  !nextChargePage.includes(" V")
+  !nextChargePage.includes(" V") ||
+  !nextChargePage.includes("IR match (not a recorded result)") ||
+  !nextChargePage.includes("mΩ") ||
+  !nextChargePage.includes("%")
 ) {
-  fail("the next charge page must keep recorded Rule B separate from the next-night outlook, with the V unit");
+  fail("the next charge page must keep recorded Rule B separate from the next-night outlook, and show IR match with mΩ and %");
 }
 if (!chargeAlone.includes("last_offset_max_V") || !chargeAlone.includes(" V")) {
   fail("charge-alone offsets must be shown in volts");

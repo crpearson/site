@@ -1,6 +1,6 @@
 # Methodology — LostPennyFPV LiPo Fleet Health
 
-*How this fleet is charged, logged, and judged. These are one hobbyist's working rules for one fleet, not manufacturer guidance. Version: 2026-10-16 (rules v4; pack registry v2).*
+*How this fleet is charged, logged, and judged. These are one hobbyist's working rules for one fleet, not manufacturer guidance. Version: 2026-10-17 (rules v5; pack registry v2).*
 
 ## Why track packs at all
 
@@ -27,7 +27,7 @@ A pack is only ever parallel-charged with its own series. Series are never mixed
 
 ## The routine
 
-1. **Before a flying session, parallel-charge by series** at about 1.5C. Every pack charges on its own parallel board, one six-pack parallel board per series. The only check before connecting is rest voltage (see *Rule B*). Packs in the D pool or the rest pool, and any pack taken off its board, are never parallel-charged.
+1. **Before a flying session, parallel-charge by series** at about 1.5C per pack (the board current is that times the number of packs on the board). Every pack charges on its own parallel board, one six-pack parallel board per series. The only check before connecting is rest voltage (see *Rule B*). Packs in the D pool or the rest pool, and any pack taken off its board, are never parallel-charged.
 2. **Fly.**
 3. **After flying, storage-charge each pack individually** on its assigned DX8 channel, in label order, in **Storage mode, 3.85 V/cell**. Charging one pack at a time is what exposes a weak cell that a parallel board would hide.
 4. **Upload the DX8 Storage logs** with their original file names, plus a short note of which packs ran on which charger and channel that night, and **how many days since each pack was last flown or charged** ("unknown" is allowed). Resting voltage depends on that, so it's recorded with the night. Every raw log is kept permanently. Nothing is ever deleted, and new data is only ever added.
@@ -69,7 +69,7 @@ Healthy cells in this fleet read about **2–3.5 mΩ** per cell on the DX8, and 
 ### 2. In-pack IR checks (Rule A: one pack)
 - **Spread** = highest-cell IR minus lowest-cell IR in one pack that night.
 - **Ratio** = a cell's IR divided by the pack's median cell IR.
-- IR readings are noisy, so these are **watch notes**, not reasons to take a pack off its board. A spread of **2.0 mΩ or more**, or a cell at **1.5× the median** or more, gets a watch note so it is looked at again next night.
+- IR readings are noisy, so these are **watch notes**, not reasons to take a pack off its board. A spread of **2.0 mΩ or more** gets a watch note so it is looked at again next night. A single high-IR cell is covered by the IR checks in *section 8*.
 
 ### 3. Rest-voltage check before connecting (Rule B: the board)
 This is the only check before packs are connected. For the packs on one parallel board, take the gap between the highest and lowest resting voltage. It's worked out separately for each series.
@@ -109,8 +109,17 @@ For a suspect cell:
 Each test runs for 3 cycles.
 
 ### 7. Trends over time
-- Each pack's average IR is compared with its own first nights. **+50% or more** counts as a trouble night (3 out of the last 4 take it off its board), and **2×** on 2 nights means retire. Neither has happened yet.
+- Each pack's average IR is compared with its own first 3 storage nights (see *section 8*). **+30%** on 2 of the last 3 nights is a watch note, **+50% or more** counts as a trouble night (3 out of the last 4 take it off its board), and **2×** on 2 nights means retire. None of these has happened yet.
 - When the whole fleet's IR moves the same direction on the same night, it's usually **temperature**, not wear.
+
+### 8. IR on a parallel board (rules v5)
+On a parallel board every pack sits at the same voltage, so the charge current splits between the packs by their internal resistance. A pack with higher IR takes less current and falls behind; a pack with lower IR takes more. A worn pack shows up as rising IR before it shows up anywhere else. So IR is checked three ways, always from each pack's **own storage run** (one pack per run, true cell IR in mΩ), never from a board.
+
+- **Trend against its own start.** The pack's starting level is the middle value of its average IR over its first 3 storage nights. Night-to-night noise on the DX8 is about ±20%, so small moves are ignored. **+30% or more on 2 of its last 3 nights** is a watch note. **+50% or more** on a night is a trouble night. A pack with fewer than 3 storage nights has no starting level yet, so this check doesn't apply to it.
+- **Match across the board.** Each pack's average IR is compared with the middle value of the other packs on its board that ran the same night. **More than 25% off on 2 of its last 3 nights** means check it first, and the board charges at reduced current. **More than 35% off on 2 of 3 nights** means it charges alone until it's back in range.
+- **One high cell.** A cell at **1.5× its pack's middle cell IR or more, and at least 1.2 mΩ above it**, is a watch note for one night. The 1.2 mΩ floor keeps low-IR packs from tripping on normal noise (for example 3.0 against 2.0 mΩ doesn't count). **The same cell on 2 nights running** is a trouble night.
+
+New packs stay on their board. No IR check takes a pack off its board before its 3rd storage night. The voltage checks before connecting stay exactly as they are; the IR checks add to them and don't replace them.
 
 ## How calls are made
 
@@ -119,12 +128,14 @@ Every pack gets two calls: one for the **parallel board**, and one for its **ser
 | Parallel call | Meaning |
 | --- | --- |
 | **Go** | On its parallel board at normal current. This is every pack unless one of the rows below applies |
+| **Go, check first** | On its board, but its IR has been more than 25% off the board on 2 of its last 3 nights. Checked before connecting, and the board charges at reduced current |
 | **Charges alone tonight** | Its rest voltage is more than 0.60 V from the rest of the board. That night only, with no status change |
+| **Charges alone (IR)** | Its IR has been more than 35% off the board on 2 of its last 3 nights. Charged alone until it is back in range |
 | **Pulled** | Off the board and charged alone, for one of the reasons below |
 
 A pack is pulled only for:
 - **Safety, any single time:** puffing or damage, hot on charge, a resting cell under 3.0 V, or a cell more than 0.20 V off its siblings.
-- **Repeated trouble:** 3 of its last 4 storage nights with a cell 100 mV or more low, or with average IR up 50% or more from its own first nights.
+- **Repeated trouble:** 3 of its last 4 storage nights with a cell 100 mV or more low, average IR up 50% or more from its own first 3 nights, or the same high-IR cell on 2 nights running.
 
 | Service status | Typical triggers |
 | --- | --- |
@@ -173,7 +184,7 @@ Rest pool: packs under a 7-day rest test sit here at storage voltage, off every 
 ## New packs
 
 - A new pack gets the next permanent ID and a commission entry. Its first full charge is recorded as a baseline (the arrival cell voltages are that charge's start cells).
-- From then on it charges on its own parallel board like every other pack, with the same rest-voltage check and the same watch notes and pull rules. Series never mix on a board.
+- From then on it charges on its own parallel board like every other pack, with the same rest-voltage check and the same watch notes and pull rules. Series never mix on a board. The IR trend check starts once it has 3 storage nights, and no IR check takes it off its board before its 3rd storage night.
 - Pulled packs may move to the D pool or retire. A new pack can take a freed slot under a new permanent ID.
 
 ---

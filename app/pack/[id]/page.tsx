@@ -9,7 +9,7 @@ import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
-import { volts } from "@/lib/format";
+import { formatValue, volts } from "@/lib/format";
 import { goNewText, watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
@@ -25,6 +25,7 @@ import {
   ruleABand,
   ruleABands,
   ruleAGuides,
+  shownCallReason,
   thresholds,
 } from "@/lib/fleet";
 
@@ -148,7 +149,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         {goNewText(pack.call.status) ? <p className="note">{goNewText(pack.call.status)}</p> : null}
         <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
-        <p className="max-w-3xl text-lg leading-relaxed">{pack.call.reason}</p>
+        <p className="max-w-3xl text-lg leading-relaxed">{shownCallReason(pack.label, pack.call.reason)}</p>
         <p className="note">
           Parallel {pack.row.parallel || pack.call.status}
           {pack.row.service ? ` · Service ${pack.row.service}` : ""} · {pack.row.chargeCount} storage charges
@@ -184,7 +185,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           </p>
           <p className="stat-sub">{pack.row.latestSession}</p>
         </article>
-        <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "off"}>
+        <article className="stat" data-tone={band === "Go" ? "ok" : band === "Caution" ? "caution" : "floor"}>
           <p className="eyebrow">Spread</p>
           <p className="stat-value">
             <span className="num">
@@ -192,8 +193,10 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             </span>
           </p>
           <p className="stat-sub">
-            {band} on this spread alone. Caution starts at {thresholds.spread_mohm.caution_gte} {IR_UNIT},
-            individual at {thresholds.spread_mohm.individual_gte} {IR_UNIT}. The status call is separate.
+            {band === "Watch" ? "Watch note" : band} on this spread alone. Caution starts at{" "}
+            {formatValue("ir", thresholds.spread_mohm.caution_gte)} {IR_UNIT}, watch note at{" "}
+            {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more. The status call is
+            separate.
           </p>
         </article>
         <article className="stat" data-tone="floor">
@@ -362,7 +365,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   <span className="note">{call.label}</span>
                 </p>
                 <p className="call-full mt-1">{call.status}</p>
-                <p className="mt-1 leading-relaxed">{call.reason}</p>
+                <p className="mt-1 leading-relaxed">{shownCallReason(call.label, call.reason)}</p>
               </li>
             ))}
           </ol>
@@ -401,7 +404,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel heading="h3" accent="rulea" eyebrow="Rules v3" title="Intra-pack spread">
+        <Panel heading="h3" accent="rulea" eyebrow="Rules v5" title="Intra-pack spread">
           <LineChart
             categories={pack.categories}
             series={pack.spreadSeries}
@@ -411,7 +414,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             format="ir"
             unit={IR_UNIT}
             mode="pack"
-            ariaLabel={`${pack.uid} intra-pack spread with Rules v3 caution and individual guides, milliohms`}
+            ariaLabel={`${pack.uid} intra-pack spread with watch-note guides, milliohms`}
           />
         </Panel>
         <Panel heading="h3" accent="floor" eyebrow="Watch line" title="Start floor">

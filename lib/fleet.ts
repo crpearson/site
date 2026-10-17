@@ -171,6 +171,22 @@ const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row, index) => (
   order: index,
 }));
 
+/**
+ * C4-P2's watch note is Cell 6 only. The call file still records that an older
+ * IR-cell note was dropped; that sentence is not shown for this pack.
+ */
+const C4_P2_HIDDEN_IR_NOTE = [
+  /\s*The earlier note about one cell at 1\.5x the pack median IR \(3\.0 vs 2\.0 mOhm\) is dropped: under the IR rules from 2026-10-17 a single cell counts only if it is at least 1\.5x the pack median and at least 1\.2 mOhm above it, and this cell was 1\.0 mOhm above\.?/g,
+  /\s*One cell read 1\.5x the pack's median IR \(3\.0 vs 2\.0 mOhm\)\.?/g,
+  /,? and one cell at 1\.5x the pack median IR \(3\.0 vs 2\.0 mOhm\)/g,
+];
+
+export function shownCallReason(label: string, reason: string): string {
+  if (label !== "C4-P2") return reason;
+  const text = C4_P2_HIDDEN_IR_NOTE.reduce((current, pattern) => current.replace(pattern, ""), reason);
+  return text.replace(/[ \t]{2,}/g, " ").replace(/\s+\./g, ".").trim();
+}
+
 type RestTest = {
   id: string;
   uid: string;
@@ -536,13 +552,13 @@ const spreadRule = thresholds.spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
-  { y: spreadRule.caution_gte, label: `Caution ≥ ${formatValue("ir", spreadRule.caution_gte)} ${IR_UNIT}`, color: "#f5b942" },
-  { y: spreadRule.individual_gte, label: `Individual ≥ ${formatValue("ir", spreadRule.individual_gte)} ${IR_UNIT}`, color: "#ff5c7a" },
+  { y: spreadRule.caution_gte, label: `Watch note ≥ ${formatValue("ir", spreadRule.caution_gte)} ${IR_UNIT}`, color: "#f5b942" },
+  { y: spreadRule.individual_gte, label: `Watch note, look first ≥ ${formatValue("ir", spreadRule.individual_gte)} ${IR_UNIT}`, color: "#79b8ff" },
 ];
 
 export const ruleABands: Band[] = [
   { from: spreadRule.caution_gte, to: spreadRule.individual_gte, color: "rgba(245, 185, 66, 0.18)" },
-  { from: spreadRule.individual_gte, to: Number.POSITIVE_INFINITY, color: "rgba(255, 92, 122, 0.12)" },
+  { from: spreadRule.individual_gte, to: Number.POSITIVE_INFINITY, color: "rgba(121, 184, 255, 0.1)" },
 ];
 
 export const ruleBGuides: Guide[] = [
@@ -1480,8 +1496,8 @@ export function nextParallel() {
   };
 }
 
-export function ruleABand(spread: number): "Go" | "Caution" | "Individual" {
-  if (spread >= spreadRule.individual_gte) return "Individual";
+export function ruleABand(spread: number): "Go" | "Caution" | "Watch" {
+  if (spread >= spreadRule.individual_gte) return "Watch";
   if (spread >= spreadRule.caution_gte) return "Caution";
   return "Go";
 }
@@ -1592,7 +1608,7 @@ function assertDerived() {
   if (
     rendered !==
       "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
-    board.as_of !== "2026-10-16"
+    board.as_of !== "2026-10-17"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
@@ -1878,13 +1894,26 @@ function assertStatusChips() {
   if (
     !c4p2 ||
     c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
-    !c4p2.reason.includes("Cell 6 started low on both storage nights") ||
-    !c4p2.reason.includes("each C4 pack charged on its own") ||
-    !c4p2.reason.includes("0.249 V apart") ||
+    !c4p2.reason.includes("Cell 6 started low on 2026-10-14 and 2026-10-16") ||
+    !c4p2.reason.includes("recheck next C3+C4 storage night") ||
+    !c4p2.reason.includes("is dropped") ||
     c4p2.session !== "2026-10-16" ||
     statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {
     throw new Error(`C4-P2 call is ${c4p2?.session} ${c4p2?.status}`);
+  }
+  const c4p2Shown = shownCallReason("C4-P2", c4p2.reason);
+  if (
+    !c4p2Shown.includes("Watch note: Cell 6 started low on 2026-10-14 and 2026-10-16") ||
+    /1\.5x/i.test(c4p2Shown)
+  ) {
+    throw new Error("C4-P2 watch note must mention only Cell 6");
+  }
+  for (const call of calls) {
+    if (call.label !== "C4-P2" && call.uid !== "CNHL-2026-020") continue;
+    if (/1\.5x/i.test(shownCallReason(call.label, call.reason))) {
+      throw new Error(`C4-P2 shown call on ${call.date} still mentions the dropped IR note`);
+    }
   }
   const c4p4 = rows.find((item) => item.label === "C4-P4");
   if (

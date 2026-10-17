@@ -21,6 +21,7 @@ import {
   headline,
   nextParallel,
   ruleABands,
+  shownCallReason,
   ruleAGuides,
   ruleBBands,
   ruleBGuides,
@@ -34,8 +35,10 @@ export default function Home() {
   const stats = headline();
   const individualPacks = chargedIndividually();
   const restPacks = stats.rest.map((row) => row.label);
-  const ruleOff = stats.off.map((row) => row.label);
   const rows = statusRows();
+  const spreadWatch = rows
+    .filter((row) => !row.excluded && !row.restPool && row.spread >= thresholds.spread_mohm.individual_gte)
+    .map((row) => row.label);
   const blocks = seriesBlocks();
   const model = fleetModel();
   const next = nextParallel();
@@ -100,13 +103,15 @@ export default function Home() {
             <p className="stat-sub">{restPacks.join(" · ") || "None"}</p>
           </article>
           <article className="stat" data-tone="off">
-            <p className="eyebrow">Individual only · Rules v3</p>
+            <p className="eyebrow">
+              Watch note at {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more
+            </p>
             <p className="stat-value">
               <span className="num">
-                {ruleOff.length} {ruleOff.length === 1 ? "pack" : "packs"}
+                {spreadWatch.length} {spreadWatch.length === 1 ? "pack" : "packs"}
               </span>
             </p>
-            <p className="stat-sub">Rule outcome. {ruleOff.join(" · ") || "None."}</p>
+            <p className="stat-sub">Spread only. The pack stays on its board. {spreadWatch.join(" · ") || "None."}</p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
@@ -299,7 +304,7 @@ export default function Home() {
                       ) : null}
                     </td>
                     <td>
-                      <p className="reason">{row.reason}</p>
+                      <p className="reason">{shownCallReason(row.label, row.reason)}</p>
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
@@ -328,7 +333,7 @@ export default function Home() {
                   <Lamp status={row.parallel || row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
+                <p className="mt-2 text-sm leading-relaxed">{shownCallReason(row.label, row.reason)}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 {row.restPool ? (
                   <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
@@ -414,12 +419,12 @@ export default function Home() {
               key={`${fleet.id}-spread`}
               heading="h3"
               accent="rulea"
-              eyebrow={`Rules v3 · ${fleet.id}`}
+              eyebrow={`Rules v5 · ${fleet.id}`}
               title="Intra-pack spread"
               action={
                 <span className="note">
-                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Caution ≥{" "}
-                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Individual ≥{" "}
+                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Watch note ≥{" "}
+                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Watch note, look first ≥{" "}
                   {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT}
                 </span>
               }
@@ -434,7 +439,7 @@ export default function Home() {
                 format="ir"
                 unit={IR_UNIT}
                 mode="aggregate"
-                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with Rules v3 caution and individual guides`}
+                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with watch-note guides`}
               />
             </Panel>
           ))}

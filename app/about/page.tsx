@@ -8,7 +8,7 @@ import { IR_UNIT } from "@/lib/ir";
 export const metadata: Metadata = {
   title: "About the data",
   description:
-    "How this LiPo fleet is measured: DX8 storage charges, charge rules v4, Rule B, and what the logs do not contain.",
+    "How this LiPo fleet is measured: DX8 storage charges, charge rules v5, Rule B, and what the logs do not contain.",
 };
 
 export default function AboutPage() {
@@ -24,7 +24,7 @@ export default function AboutPage() {
         <p className="page-intro mt-4">
           {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
           {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
-          comes from the start of each storage charge. Charge rules v4 and Rule B use the limits
+          comes from the start of each storage charge. Charge rules v5 (the v4 voltage checks plus three IR checks) and Rule B use the limits
           shown below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and
           not a series mean. D-1, C1-P4, and C2-P2 are in the Rest pool until 2026-10-16. A Rest pool
           night is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in
@@ -74,8 +74,8 @@ export default function AboutPage() {
           <p className="note">
             Intra-pack spread: the highest cell IR minus the lowest cell IR in that pack, in
             milliohms. Caution is {formatValue("ir", thresholds.spread_mohm.caution_gte)} {IR_UNIT}{" "}
-            or a hot cell, two nights in a row. Individual only is{" "}
-            {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} on that same pattern.
+            or a hot cell, two nights in a row. Watch note at{" "}
+            {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more on that same pattern.
           </p>
         </Panel>
         <Panel accent="floor" eyebrow="Glossary" title="Floor">
