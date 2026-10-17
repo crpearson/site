@@ -97,7 +97,7 @@ The lowest cell on the first log line, as the pack arrives.
 
 ### 6. Rest test (confirms self-discharge)
 For a suspect cell:
-1. Storage-charge the pack, leave it untouched, and read the cells at 90 minutes and at 7 days.
+1. Storage-charge the pack, leave it untouched, and read the cells at 90 minutes and at 7 days. The 7-day reading is taken before the pack is charged again. A late reading records its actual day: D-1's RT-001-1 was read on day 8 (due 2026-10-16), before charging.
 2. Compare the suspect cell's drop with the median drop of the other five cells.
 
 | Extra drop over 7 days | Result |
@@ -168,7 +168,7 @@ Rest pool: packs under a 7-day rest test sit here at storage voltage, off every 
 - **Charge count:** each pack's number of logged storage sessions is tracked. Older flights and charges before logging began aren't counted.
 - **Purchase date:** unknown for the current packs; recorded for new packs.
 - **Cost per cycle:** not tracked.
-- **Ambient temperature at measurement:** not logged.
+- **Ambient and pack temperature at measurement:** not measured. The temperature the charger logs and shows is its own internal reading, not the pack's.
 - **Heat, sag, or puff checks:** not tracked as data. A pack reported as puffed, damaged, or hot on charge comes off its board at once, and puffing or damage means retirement.
 
 ## Safety notes

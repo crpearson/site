@@ -390,7 +390,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "cf2f3ef2d6d13cd24b9248eabe2bc6e355bcb334cfbb8a812a1a0510e53ad489") {
+if (methodologySha !== "3597a88d6243c81beb1cb7769f7dbcfe517ce89dae0353f101ad3edeb0809d56") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
