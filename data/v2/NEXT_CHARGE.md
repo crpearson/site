@@ -9,7 +9,6 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | Key | Meaning |
 | --- | --- |
 | `schema` | Must be the string `next_charge/v2`. |
-| `rules` | Must be the string `v4`. |
 | `as_of_session` | Session the sheet is based on. A date or a session id. |
 | `as_of_date_pt` | Pacific calendar date, `YYYY-MM-DD`. |
 | `active_set` | The set for tonight, such as `C1+C2`. |
@@ -18,7 +17,7 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `active_set_reason` | Why this set is tonight, in the file's own words. |
 | `alternate_set` | The other night's set, such as `C3+C4`. It is not the same as `active_set`. |
 | `storage_runs` | Tonight's channel queues. These match the active set. |
-| `parallel_boards` | Tonight's parallel boards. These match the active set. An empty list is valid. |
+| `parallel_boards` | Tonight's parallel boards (one per series). These match the active set. An empty list is valid. |
 | `charge_alone` | Tonight's packs that charge on their own. These match the active set. |
 | `watch` | Tonight's recheck notes. These match the active set. |
 | `sets` | Both plans. The object keys are the set names with `+` written as `_`: `C3+C4` is `C3_C4`. |
@@ -34,10 +33,10 @@ The published file uses schema `next_charge/v2`. Any other `schema` value fails 
 | `series` | Series names in this set. Every pack in the set is one of these series. |
 | `last_storage_session` | Last storage session for this set. |
 | `storage_runs` | One object per charger channel. See below. |
-| `parallel_boards` | One object per parallel board. Empty when the set has no board yet. |
-| `charge_alone` | Packs held off the board. Empty under rules v4. |
+| `parallel_boards` | One object per parallel board (one per series). Empty when the set has no board yet. |
+| `charge_alone` | Packs that charge on their own before they join a board. |
 | `watch` | Recheck notes for this set. |
-| `join_status` | Not used. The published sheet has no join list. |
+| `join_status` | Optional. One object per pack that is working toward its own board. |
 
 The two sets do not share a pack. A pack may be in `storage_runs`, `charge_alone`, and `watch` on the same set.
 
@@ -70,33 +69,16 @@ A pack may be in `storage_runs` and also on a parallel board or in `charge_alone
 | `packs` | Labels in port order. |
 | `current` | `normal` or `reduced`. This is the charge current for the whole board. |
 | `conditions` | Strings. Limits and exceptions for this board. |
-| `rest_check_limit_V` | Go limit before connecting, in volts. The published sheet uses 0.60. |
-| `last_rule_b_V` | Recorded board-night spread, in volts. `null` when this series has no board night yet. |
-| `last_rule_b_call` | Call recorded with that board night. `null` when `last_rule_b_V` is `null`. |
-| `last_rule_b_session` | Session of that board night. `null` when `last_rule_b_V` is `null`. |
-| `last_rule_b_over` | Packs charged together that night. Empty when `last_rule_b_V` is `null`. Each label is one of this board's `packs`. |
-| `last_rule_b_basis` | Why that recorded figure is what it is. Printed under the recorded line. |
-| `outlook_rule_b` | Next-night outlook from the latest rest of every pack assigned to the board. Not a recorded board result. |
+| `last_rule_b_V` | Last Rule B board spread, in volts. A number. |
+| `last_rule_b_call` | Call recorded with that Rule B check. |
+| `last_rule_b_session` | Session of that Rule B check. |
+| `last_rule_b_over` | Optional. Pack labels this Rule B figure covers. Each label is one of this board's `packs`. |
 
 The bench uses 6-port boards. Ports are `L1`, `L2`, `L3`, `R1`, `R2`, `R3`, in that order. `packs[0]` is L1 and `packs[5]` is R3. Empty ports stay blank.
 
 A series with more than 6 packs continues on the next board: pack 7 is L1 on the next letter. Letters are assigned in file order, `Board A` through `Board D`. A series with no packs still takes one board so its current and Rule B line have a drawing. More than 4 boards fails the build. A set with `parallel_boards: []` draws no board.
 
-`current` and `conditions` are printed once for the series, above its board drawing or drawings. Recorded Rule B prints the voltage, the call, and `last_rule_b_over`, with the V unit, or the words "No board night yet" when `last_rule_b_V` is null. The outlook is a separate block, "Next-night outlook (not a board result)", with its value in volts, call, limit, packs, and basis. The home chart draws only recorded board nights and store-based parallel nights. It does not draw outlook values.
-
-## `outlook_rule_b`
-
-| Key | Meaning |
-| --- | --- |
-| `value_v` | Outlook spread, in volts. A number from 0 through 2. |
-| `packs` | Labels this outlook covers. Each one is on this board. |
-| `basis` | Printed under the outlook. |
-| `session` | Night the rests came from. |
-| `limit_v` | Go limit for this outlook, in volts. |
-| `call` | `GO` or `CHECK FIRST`. |
-| `check_first` | Packs outside the limit. Empty when the call is `GO`. |
-| `value_without_check_first_v` | Spread without those packs, in volts. `null` when `check_first` is empty. |
-| `packs_without_check_first` | Labels in that smaller spread. `null` when `check_first` is empty. |
+`current` and `conditions` are printed once for the series, above its board drawing or drawings. When `last_rule_b_over` is present, the page prints Last Rule B as the voltage, the call, and those pack labels, with the V unit. The home chart still draws Rule B from the storage-night rests.
 
 ## `charge_alone`
 
@@ -117,19 +99,6 @@ A series with more than 6 packs continues on the next board: pack 7 is L1 on the
 | `uid` | That label's `pack_uid`. |
 | `note` | The recheck note, printed as written. |
 
-## `check_first`
-
-Inside `outlook_rule_b`, not on the board itself.
-
-| Key | Meaning |
-| --- | --- |
-| `label` | Pack label on this board. |
-| `uid` | That label's `pack_uid`. |
-| `last_rest_V` | That pack's rest voltage on the latest night. |
-| `last_offset_max_V` | How far it sat from the board, in volts. |
-| `last_offset_side` | `below` or `above`. |
-| `note` | Printed as written, under Check first. |
-
 ## `join_status`
 
 | Key | Meaning |
@@ -138,7 +107,7 @@ Inside `outlook_rule_b`, not on the board itself.
 | `uid` | That label's `pack_uid`. |
 | `storage_nights` | Storage nights so far. A number. Charge runs do not count. |
 | `clean_nights_in_a_row` | Clean storage nights in a row. A number. |
-| `joins_board` | Not in the published sheet. |
+| `joins_board` | `true` or `false`. `true` means the pack qualifies for its board. It can still charge alone tonight. `false` while that pack is on a parallel board fails the build. |
 | `status` | Recorded status, such as `Go (new)` or `Go (watch)`. |
 | `rule` | The recorded join rule, in the file's own words. |
 
@@ -160,7 +129,7 @@ A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_board
 
 - `schema` is exactly `next_charge/v2`.
 - The file bytes stay the published sheet. A different hash fails the build.
-- The keys are the ones in this note. `mode`, `last_offset_max_V`, `last_offset_side`, and `join_status` are optional. Any other extra key fails the build. An outlook voltage that is not a number of volts, or that sits outside 0–2 V (15–26.5 V for a pack rest), fails the build.
+- The keys are the ones in this note. `mode`, `last_rule_b_over`, `last_offset_max_V`, `last_offset_side`, and `join_status` are optional. Any other extra key fails the build.
 - The top-level plan matches the active set.
 - Every pack label exists in `packs.csv`, and each `uid` matches that label.
 - A pack's series is one of its set's series. A parallel pack's series matches the board `series`.

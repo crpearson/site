@@ -27,7 +27,7 @@ A pack is only ever parallel-charged with its own series. Series are never mixed
 
 ## The routine
 
-1. **Before a flying session, parallel-charge by series** at about 1.5C. Every pack charges on its own series board, one six-pack board per series. The only check before connecting is rest voltage (see *Rule B*). Packs in the D pool or the rest pool, and any pack taken off its board, are never parallel-charged.
+1. **Before a flying session, parallel-charge by series** at about 1.5C. Every pack charges on its own parallel board, one six-pack parallel board per series. The only check before connecting is rest voltage (see *Rule B*). Packs in the D pool or the rest pool, and any pack taken off its board, are never parallel-charged.
 2. **Fly.**
 3. **After flying, storage-charge each pack individually** on its assigned DX8 channel, in label order, in **Storage mode, 3.85 V/cell**. Charging one pack at a time is what exposes a weak cell that a parallel board would hide.
 4. **Upload the DX8 Storage logs** with their original file names, plus a short note of which packs ran on which charger and channel that night, and **how many days since each pack was last flown or charged** ("unknown" is allowed). Resting voltage depends on that, so it's recorded with the night. Every raw log is kept permanently. Nothing is ever deleted, and new data is only ever added.
@@ -72,7 +72,7 @@ Healthy cells in this fleet read about **2–3.5 mΩ** per cell on the DX8, and 
 - IR readings are noisy, so these are **watch notes**, not reasons to take a pack off its board. A spread of **2.0 mΩ or more**, or a cell at **1.5× the median** or more, gets a watch note so it is looked at again next night.
 
 ### 3. Rest-voltage check before connecting (Rule B: the board)
-This is the only check before packs are connected. For the packs on one series board, take the gap between the highest and lowest resting voltage. It's worked out separately for each series.
+This is the only check before packs are connected. For the packs on one parallel board, take the gap between the highest and lowest resting voltage. It's worked out separately for each series.
 
 | Delta | Call |
 | --- | --- |
@@ -114,11 +114,11 @@ Each test runs for 3 cycles.
 
 ## How calls are made
 
-Every pack gets two calls: one for the **parallel board**, and one for its **service status**. The default is simple: **every pack charges on its own series board.**
+Every pack gets two calls: one for the **parallel board**, and one for its **service status**. The default is simple: **every pack charges on its own parallel board.**
 
 | Parallel call | Meaning |
 | --- | --- |
-| **Go** | On its series board at normal current. This is every pack unless one of the rows below applies |
+| **Go** | On its parallel board at normal current. This is every pack unless one of the rows below applies |
 | **Charges alone tonight** | Its rest voltage is more than 0.60 V from the rest of the board. That night only, with no status change |
 | **Pulled** | Off the board and charged alone, for one of the reasons below |
 
@@ -173,7 +173,7 @@ Rest pool: packs under a 7-day rest test sit here at storage voltage, off every 
 ## New packs
 
 - A new pack gets the next permanent ID and a commission entry. Its first full charge is recorded as a baseline (the arrival cell voltages are that charge's start cells).
-- From then on it charges on its own series board like every other pack, with the same rest-voltage check and the same watch notes and pull rules. Series never mix on a board.
+- From then on it charges on its own parallel board like every other pack, with the same rest-voltage check and the same watch notes and pull rules. Series never mix on a board.
 - Pulled packs may move to the D pool or retire. A new pack can take a freed slot under a new permanent ID.
 
 ---

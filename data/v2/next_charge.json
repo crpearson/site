@@ -487,7 +487,7 @@
     "One night = one set of 12: C1+C2 (set A) or C3+C4 (set B). Sets do not mix on a night; series never mix on a board.",
     "One pack per channel per run, in the order listed, for both sets; keep each log file.",
     "DX8-1 carries C1 (set A) or C3 (set B); DX8-2 carries C2 or C4. CH1 = P1-P3, CH2 = P4-P6.",
-    "Every pack charges on its own series board. Watch is a note only.",
+    "Every pack charges on its own parallel board. Watch is a note only.",
     "Before connecting, check rest V: all packs within 0.60 V (0.1 V per cell) are connected together. A pack outside that range charges alone that night only.",
     "A pack is taken off its board only for safety (puffing or damage, hot on charge, a resting cell under 3.0 V, or a cell more than 0.20 V off the others) or for repeated trouble (3 of its last 4 storage nights with a cell 100 mV or more low, or average IR up 50% or more from its own starting level).",
     "IR from both DX8 chargers is validated against their screens."
