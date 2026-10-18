@@ -2261,4 +2261,33 @@ function assertRingWindows(model: FleetModel) {
   }
 }
 
+function assertCellJoinsFollowPack() {
+  const service = ["0", "0", "0"];
+  const hole = lineSegments(chartLine("hole", [1, null, 2], service, [true, true, true]), "pack");
+  const full = lineSegments(chartLine("full", [1, 1.2, 2], service, [true, true, true]), "pack");
+  const skipped = lineSegments(chartLine("skip", [1, null, 2], service, [true, false, true]), "pack");
+  if (hole.length !== 1 || hole[0].style !== "solid") {
+    throw new Error(`a missing cell on a charged night changed the join: ${hole.map((segment) => segment.style).join(",")}`);
+  }
+  if (full.length !== 2 || full.some((segment) => segment.style !== "solid")) {
+    throw new Error(`pack-charged joins were ${full.map((segment) => segment.style).join(",")}`);
+  }
+  if (skipped.length !== 1 || skipped[0].style !== "dotted") {
+    throw new Error(`an uncharged night stayed ${skipped.map((segment) => segment.style).join(",")}`);
+  }
+  for (const pack of packs) {
+    const view = getPack(pack.uid);
+    if (!view) continue;
+    const signatures = view.cellSeries.map((line) =>
+      lineSegments(line, "pack")
+        .map((segment) => `${segment.from}-${segment.to}-${segment.style}`)
+        .join(" "),
+    );
+    if (new Set(signatures).size !== 1) {
+      throw new Error(`${pack.uid} per-cell charts disagree on join style`);
+    }
+  }
+}
+
+assertCellJoinsFollowPack();
 assertDerived();

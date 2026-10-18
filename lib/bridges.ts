@@ -81,9 +81,15 @@ export function readingIndices(series: ChartSeries): number[] {
   return indices;
 }
 
-/** A night between two readings where the pack was not charged, or the metric is N/A. */
+/**
+ * A night between two readings where the pack was not charged, or the metric is N/A.
+ * Charge is a pack fact (the logged mask), shared by every cell. A cell with no
+ * number on a night the pack was charged is a hole in that cell, and the join
+ * stays solid so the six cells match.
+ */
 function unchargedBetween(series: ChartSeries, from: number, to: number): boolean {
   for (let cursor = from + 1; cursor < to; cursor += 1) {
+    if (series.logged?.[cursor]) continue;
     const kind = gapKind(series, cursor);
     if (kind === "skip" || kind === "na" || kind === "rest") return true;
   }

@@ -210,6 +210,19 @@ function measure() {
       }
     }
   }
+  for (const el of document.querySelectorAll(".y-tick, .x-label, svg text")) {
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") continue;
+    const raw = el.getBoundingClientRect();
+    if (raw.width < 1 || raw.height < 1) continue;
+    const visible = clippedRect(el);
+    const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 32);
+    if (visible.width < raw.width - 1 || visible.height < raw.height - 1) {
+      const chart = el.closest(".chart");
+      const name = chart?.querySelector(".plot")?.getAttribute("aria-label") || "chart";
+      problems.push(`axis label clipped ${text} (${name.slice(0, 48)})`);
+    }
+  }
   for (const card of document.querySelectorAll(".tile, .stat, .panel")) {
     if (card.closest("[data-scroll-ok]")) continue;
     const box = card.getBoundingClientRect();

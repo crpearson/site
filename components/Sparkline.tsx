@@ -82,8 +82,7 @@ export function Sparkline({
           strokeWidth="1.7"
           strokeLinejoin="round"
           strokeLinecap="round"
-          strokeDasharray="1.2 3.2"
-          pathLength="28"
+          strokeDasharray="1.5 7"
           vectorEffect="non-scaling-stroke"
         />
       ) : null}

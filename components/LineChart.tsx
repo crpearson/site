@@ -60,6 +60,15 @@ function yPos(value: number, domain: [number, number]): number {
   return ((domain[1] - value) / span) * 100;
 }
 
+/** Keep an edge tick inside the axis. A label centered on 0% or 100% is clipped. */
+function tickPlacement(y: number, height: number): { top: string; transform: string } {
+  const half = 10;
+  const px = (y / 100) * height;
+  if (px <= half) return { top: "1px", transform: "translateY(0)" };
+  if (px >= height - half) return { top: `${height - 1}px`, transform: "translateY(-100%)" };
+  return { top: `${y}%`, transform: "translateY(-50%)" };
+}
+
 function linePaths(series: ChartSeries, domain: [number, number], mode: ChartMode): string[] {
   const paths: string[] = [];
   let current = "";
@@ -213,15 +222,14 @@ export function LineChart({
       </div>
       <div className="chart-body">
         <div className="y-axis" style={{ height }}>
-          {ticks.map((tick) => (
-            <span
-              key={tick}
-              className="y-tick"
-              style={{ top: `${yPos(tick, yDomain)}%` }}
-            >
-              {formatAxis(format, tick)} {unit}
-            </span>
-          ))}
+          {ticks.map((tick) => {
+            const place = tickPlacement(yPos(tick, yDomain), height);
+            return (
+              <span key={tick} className="y-tick" style={place}>
+                {formatAxis(format, tick)} {unit}
+              </span>
+            );
+          })}
         </div>
         <div>
           <div
@@ -278,6 +286,7 @@ export function LineChart({
               preserveAspectRatio="none"
               aria-hidden="true"
             >
+              {/* pathLength would scale the dash with the segment, so a steep cell looks dotted and a flat one looks solid. */}
               {shown.map((item) =>
                 bridgePath(item, yDomain, nightIds, mode).map((d, pathIndex) => (
                   <path
@@ -291,8 +300,7 @@ export function LineChart({
                     strokeWidth="1.7"
                     strokeLinejoin="round"
                     strokeLinecap="round"
-                    strokeDasharray="1.2 3.2"
-                    pathLength="28"
+                    strokeDasharray="1.5 7"
                     vectorEffect="non-scaling-stroke"
                   />
                 )),
