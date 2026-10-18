@@ -75,8 +75,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 236) {
-  console.error(`expected 236 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 238) {
+  console.error(`expected 238 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -212,19 +212,20 @@ const day0Rests = visibleRests.filter((row) => row.reading === "storage_end");
 const d1Seven = visibleRests.filter((row) => row.test_id === "RT-001-1" && row.reading === "7day");
 if (
   day0Rests.length !== 3 ||
-  visibleRests.length !== 4 ||
+  visibleRests.length !== 6 ||
+  ["RT-004-1", "RT-008-1"].some((id) => visibleRests.filter((row) => row.test_id === id && row.reading === "7day" && row.result === "PASS" && row.reading_date === "2026-10-18").length !== 1) ||
   d1Seven.length !== 1 ||
   d1Seven[0].result !== "PASS" ||
   d1Seven[0].excess_mV !== "2" ||
   visibleRests.some((row) => row.pack_uid === "CNHL-2026-003")
 ) {
-  console.error("rest tests should show three day-0 rows, the RT-001-1 7-day PASS, and no C1-P3 test");
+  console.error("rest tests should show three day-0 rows, the RT-001-1, RT-004-1 and RT-008-1 PASS rows, and no C1-P3 test");
   process.exit(1);
 }
 for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
   const pack = packs.find((row) => row.pack_uid === uid);
-  if (!pack || pack.charge_count !== "14") {
-    console.error(`${uid} charge_count should be 14`);
+  if (!pack || pack.charge_count !== "15") {
+    console.error(`${uid} charge_count should be 15`);
     process.exit(1);
   }
 }
@@ -305,8 +306,8 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-// 2026-10-17: latest status call date (C4-P2 watch-note update); latest storage session stays 2026-10-16.
-if (latestPtDate !== "2026-10-17") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-17`);
+// 2026-10-18: latest data date is the C1-P4 / C2-P2 charge run and their self-discharge pass calls.
+if (latestPtDate !== "2026-10-18") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-18`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }
@@ -324,8 +325,8 @@ if (board.resting.length !== 0) fail("the rest pool is retired (rules v6), but n
 // Rules v7 (2026-10-17): re-grade under the new pull / charge-alone rules.
 for (const [label, series, test] of [["C1-P4", "C1", "RT-004-1"], ["C2-P2", "C2", "RT-008-1"]]) {
   const call = calls.filter((row) => row.label_at_time === label).at(-1);
-  if (!call || call.date !== "2026-10-17" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE Watch (self-discharge check ${test})` || !/rules v7/.test(call.source)) {
-    fail(`${label} latest call should be the rules v7 self-discharge check on the ${series} board`);
+  if (!call || call.date !== "2026-10-18" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE In service` || !/rules v7/.test(call.source) || !call.reason.includes("check passed")) {
+    fail(`${label} latest call should be the 2026-10-18 rules v7 pass (${test}) on the ${series} board`);
   }
   const back = events.filter((row) => row.pack_uid === call.pack_uid && row.event === "rest_pool_exit" && row.date === "2026-10-17");
   if (back.length !== 1) fail(`${label} needs one rest_pool_exit event dated 2026-10-17`);
@@ -361,7 +362,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "8cbf115edb7e6c2f98732d07f10350e08cba3d73c38ccca37a14374396173fc3") {
+if (methodologySha !== "cb1289db5f30309a969ef770886a3e45b40555b2e8550f5a0f6c18b3ac0fa900") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");

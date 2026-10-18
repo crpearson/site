@@ -454,6 +454,9 @@ export function LineChart({
               const place =
                 index === firstTick ? " x-label-start" : index === lastTick ? " x-label-end" : "";
               const fromEnd = visible.length - 1 - visible.indexOf(index);
+              // Thin by position among the visible ticks, not the raw column index, so hidden
+              // columns (rest-baseline or charge-run nights) cannot leave two neighbours unthinned.
+              const tick = visible.indexOf(index);
               // The last label is pinned to the right edge, so the date just
               // before it overlaps on a long axis. The one before that overlaps
               // once the chart is narrow.
@@ -461,7 +464,7 @@ export function LineChart({
               const nearEnd = !edge && fromEnd === 2;
               const thin = edge
                 ? ""
-                : `${index % 2 === 1 ? " x-label-alt" : ""}${index % 3 !== 0 ? " x-label-third" : ""}${nearEnd ? " x-label-tail" : ""}${beforeEnd ? " x-label-before-end" : ""}`;
+                : `${tick % 2 === 1 ? " x-label-alt" : ""}${tick % 3 !== 0 ? " x-label-third" : ""}${nearEnd ? " x-label-tail" : ""}${beforeEnd ? " x-label-before-end" : ""}`;
               return (
                 <button
                   key={category.id}

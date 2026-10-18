@@ -2,7 +2,7 @@
   "schema": "next_charge/v4",
   "rules": "v7",
   "as_of_session": "2026-10-17",
-  "as_of_date_pt": "2026-10-17",
+  "as_of_date_pt": "2026-10-18",
   "measurement": {
     "rest_rule": "Resting voltage is read at least 90 minutes after a charge or flight.",
     "ir_rule": "IR is measured solo only (one pack on a channel); IR read on a parallel board is not used.",
@@ -2095,6 +2095,16 @@
   "charge_alone": [],
   "check_before_connecting": [
     {
+      "label": "C1-P4",
+      "uid": "CNHL-2026-004",
+      "note": "Check resting voltage before connecting (advisory, from the logs): it was charged full on 2026-10-18 (about 4.20 V per cell) after its last storage run; bring it to storage voltage, or charge it alone, before it joins the board."
+    },
+    {
+      "label": "C2-P2",
+      "uid": "CNHL-2026-008",
+      "note": "Check resting voltage before connecting (advisory, from the logs): it was charged full on 2026-10-18 (about 4.20 V per cell) after its last storage run; bring it to storage voltage, or charge it alone, before it joins the board."
+    },
+    {
       "label": "C3-P1",
       "uid": "CNHL-2026-013",
       "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P2; Cell 2 195 mV from C3-P3; Cell 6 195 mV from C3-P3; Cell 2 195 mV from C3-P4; Cell 6 195 mV from C3-P4; Cell 6 195 mV from C3-P5; Cell 2 195 mV from C3-P6; Cell 6 195 mV from C3-P6; Cell 2 194 mV from C3-P2; Cell 2 194 mV from C3-P5; Cell 1 193 mV from C3-P2; Cell 5 193 mV from C3-P2; Cell 5 193 mV from C3-P4; Cell 4 193 mV from C3-P6; Cell 5 193 mV from C3-P6; Cell 4 192 mV from C3-P2; Cell 1 192 mV from C3-P3; Cell 5 192 mV from C3-P3; Cell 1 192 mV from C3-P4; Cell 4 192 mV from C3-P4; Cell 4 192 mV from C3-P5; Cell 1 192 mV from C3-P6; Cell 4 191 mV from C3-P3; Cell 3 191 mV from C3-P4; Cell 1 191 mV from C3-P5; Cell 5 191 mV from C3-P5; Cell 3 190 mV from C3-P2; Cell 3 190 mV from C3-P3; Cell 3 190 mV from C3-P6; Cell 3 189 mV from C3-P5 (over 0.10 V from the same-position cell of another pack on the board)."
@@ -2130,16 +2140,6 @@
       "label": "C1-P1",
       "uid": "CNHL-2026-001",
       "note": "Watch (note only): Cell 6 (self-discharge history: chronic low floor up to 2026-10-08; rest test RT-001-1 passed 2026-10-17, 2 mV extra drop; Cell 6 started 172 mV below the other cells after flying on 2026-10-17)."
-    },
-    {
-      "label": "C1-P4",
-      "uid": "CNHL-2026-004",
-      "note": "Watch (note only): self-discharge check RT-004-1 (Cell 1) from the first line of its next storage log."
-    },
-    {
-      "label": "C2-P2",
-      "uid": "CNHL-2026-008",
-      "note": "Watch (note only): self-discharge check RT-008-1 (Cell 6) from the first line of its next storage log."
     }
   ],
   "performance_notes": [
@@ -2201,40 +2201,7 @@
     "how_we_check": "compare the first line of the next storage log with the end of the last storage run, for a pack that did not fly in between (the upload note lists the flown series or packs).",
     "longer_gaps": "if more than 72 hours passed, a relative drop under 0.05 V clears the check; 0.05 V or more is not proof, so it is an advisory to recheck within 48 to 72 hours.",
     "performance_grade": "scaled to 7 days: 10 mV or less pass, 10 to 30 mV borderline, over 30 mV fail. The grade is a note only, never a reason to retire a pack.",
-    "open": [
-      {
-        "test_id": "RT-008-1",
-        "label": "C2-P2",
-        "uid": "CNHL-2026-008",
-        "suspect_cell": 6,
-        "storage_end_date": "2026-10-09",
-        "storage_end_mV": [
-          3861,
-          3861,
-          3861,
-          3861,
-          3862,
-          3861
-        ],
-        "completes_from": "the first line of its next storage log, if it has not flown since 2026-10-09"
-      },
-      {
-        "test_id": "RT-004-1",
-        "label": "C1-P4",
-        "uid": "CNHL-2026-004",
-        "suspect_cell": 1,
-        "storage_end_date": "2026-10-09",
-        "storage_end_mV": [
-          3861,
-          3862,
-          3861,
-          3861,
-          3861,
-          3861
-        ],
-        "completes_from": "the first line of its next storage log, if it has not flown since 2026-10-09"
-      }
-    ]
+    "open": []
   },
   "notes": [
     "Charge every series that was flown, all of it, including any packs in it that did not fly. Series that were not flown stay off.",

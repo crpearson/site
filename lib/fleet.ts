@@ -420,11 +420,11 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-001": "PARALLEL GO: on the C1 board | SERVICE In service (watch)",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-004": "PARALLEL GO: on the C1 board | SERVICE Watch (self-discharge check RT-004-1)",
+  "CNHL-2026-004": "PARALLEL GO: on the C1 board | SERVICE In service",
   "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE In service",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO: on the C2 board | SERVICE In service",
-  "CNHL-2026-008": "PARALLEL GO: on the C2 board | SERVICE Watch (self-discharge check RT-008-1)",
+  "CNHL-2026-008": "PARALLEL GO: on the C2 board | SERVICE In service",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
@@ -444,8 +444,8 @@ const EXPECTED_LATEST: Record<string, string> = {
 };
 
 function assertStore() {
-  if (measurements.length !== 236 || v4Rows.length !== 236) {
-    throw new Error(`Expected 236 measurements, got ${measurements.length}`);
+  if (measurements.length !== 238 || v4Rows.length !== 238) {
+    throw new Error(`Expected 238 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -465,8 +465,8 @@ function assertStore() {
   if (!restC1 || restC1.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.1,3.4,3.2,3.7,2.8,2.8") {
     throw new Error("C1-P4 rest-day IR spot check failed");
   }
-  if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
-    throw new Error("C1-P4 and C2-P2 charge_count should be 14");
+  if (packByUid("CNHL-2026-004")?.chargeCount !== 15 || packByUid("CNHL-2026-008")?.chargeCount !== 15) {
+    throw new Error("C1-P4 and C2-P2 charge_count should be 15 (2026-10-18 charge run)");
   }
   if (packByUid("CNHL-2026-005")?.chargeCount !== 17 || packByUid("CNHL-2026-012")?.chargeCount !== 17) {
     throw new Error("C1-P5 and C2-P6 charge_count should be 17");
@@ -1679,7 +1679,7 @@ function assertDerived() {
   if (
     rendered !==
       "C1:C1-P1+C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
-    board.as_of !== "2026-10-17"
+    board.as_of !== "2026-10-18"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
