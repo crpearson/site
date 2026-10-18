@@ -77,8 +77,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 215) {
-  console.error(`expected 215 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 236) {
+  console.error(`expected 236 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -303,8 +303,8 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 23 || fleetMean.toFixed(3) !== "2.754") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.754 mΩ over 23`);
+if (slotted.length !== 23 || fleetMean.toFixed(3) !== "2.680") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.680 mΩ over 23`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -335,18 +335,18 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-10-11" || c1Mean.mean.toFixed(3) !== "2.733") {
+if (c1Mean.session !== "2026-10-17" || c1Mean.mean.toFixed(3) !== "2.667") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
-if (c2Mean.session !== "2026-10-11" || c2Mean.mean.toFixed(3) !== "2.900") {
+if (c2Mean.session !== "2026-10-17" || c2Mean.mean.toFixed(3) !== "2.617") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 const c3Mean = seriesMean("C3");
 const c4Mean = seriesMean("C4");
-if (c3Mean.session !== "2026-10-16" || c3Mean.mean.toFixed(3) !== "2.780") {
+if (c3Mean.session !== "2026-10-17" || c3Mean.mean.toFixed(3) !== "2.802") {
   fail(`C3 last series value is ${c3Mean.session} ${c3Mean.mean}`);
 }
-if (c4Mean.session !== "2026-10-16" || c4Mean.mean.toFixed(3) !== "2.522") {
+if (c4Mean.session !== "2026-10-17" || c4Mean.mean.toFixed(3) !== "2.483") {
   fail(`C4 last series value is ${c4Mean.session} ${c4Mean.mean}`);
 }
 
@@ -411,7 +411,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "36fea8395f69d5ab3b93fd20d5f2090ea63c49eea1de7320c66bc901e664954a") {
+if (methodologySha !== "2ff7abdff2eae69da14691a8ca5efe05486312ffc1fa91cda6746afe94c6849c") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");

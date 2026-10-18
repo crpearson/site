@@ -1,4 +1,4 @@
-import type { NextChargeV4 } from "@/lib/next-charge.mjs";
+import { loadNextChargeV4, type NextChargeV4 } from "@/lib/next-charge.mjs";
 
 function NoteList({ items }: { items: { label: string; note: string }[] }) {
   if (items.length === 0) return <p className="note mt-2">None.</p>;
@@ -14,10 +14,64 @@ function NoteList({ items }: { items: { label: string; note: string }[] }) {
   );
 }
 
+export function OutlookBoards({ doc }: { doc: NextChargeV4 }) {
+  return (
+    <div className="space-y-4">
+      {doc.parallel_boards.map((board) => {
+        const outlook = board.outlook_rule_b;
+        return (
+          <article key={board.series} className="panel" data-accent={outlook.call === "CHECK FIRST" ? "rulea" : "signal"}>
+            <h3 className="panel-title">
+              {board.series} {outlook.call}
+            </h3>
+            <p className="note mt-2">{outlook.basis}</p>
+            <ul className="mt-2 space-y-1">
+              {board.conditions.map((line) => (
+                <li key={line} className="note">
+                  {line}
+                </li>
+              ))}
+            </ul>
+            {outlook.check_first.map((item) => (
+              <p key={item.label} className="note mt-2">
+                {item.note}
+              </p>
+            ))}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+export function SlotNightNotes({ label }: { label: string }) {
+  const doc = loadNextChargeV4();
+  const lines = doc.parallel_boards.flatMap((board) => [
+    ...board.conditions.filter((line) => line.includes(label)),
+    ...board.outlook_rule_b.check_first.filter((item) => item.label === label).map((item) => item.note),
+  ]);
+  if (lines.length === 0) return null;
+  return (
+    <div className="mt-3 space-y-2">
+      {lines.map((line) => (
+        <p key={line} className="note">
+          {line}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
   const checks = doc.self_discharge_checks;
   return (
     <div className="space-y-6">
+      <section className="space-y-3" aria-labelledby="outlook-heading">
+        <h2 id="outlook-heading" className="section-title">
+          Next-night outlook
+        </h2>
+        <OutlookBoards doc={doc} />
+      </section>
       <section className="panel" data-accent="off" aria-labelledby="pulled-heading">
         <h2 id="pulled-heading" className="panel-title">
           Pulled

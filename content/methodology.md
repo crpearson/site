@@ -65,7 +65,7 @@ Every slot has a permanent home channel. It doesn't change from night to night.
 ## Mapping logs to packs
 
 1. Split the files by charger (from the header), then by channel. Each charger's files follow that night's run order, round by round, Channel 1 then Channel 2. Each charger has one file counter, shared by Charge and Storage runs, so gaps in the numbering are normal.
-2. Every file is checked against the run order: its channel must match, its first reading must make sense for that pack (for example, a pack charged earlier the same day starts near full), and the number of files must match the number of packs that ran on that charger. **A wrong channel, a wrong count, or first readings that don't fit the pack hold that charger's mapping until it is confirmed.** Nothing is ever guessed.
+2. Every file is checked against the run order: its channel must match, its first reading must make sense for that pack (for example, a pack charged earlier the same day starts near full), and the number of files must match the number of packs that ran on that charger. **A wrong channel, a wrong count, or first readings that don't fit the pack hold that charger's mapping until it is confirmed.** If a run has no log, the remaining logs are matched to packs by their cell pattern, and the pack without a log is shown as charged with no reading.
 3. As a soft cross-check, each pack tends to have the same lowest cell on arrival night after night. A mismatch gets a note but never causes a remap on its own. Packs are **never quietly relabeled**.
 
 ## Metrics and thresholds
@@ -100,7 +100,7 @@ The cell-against-cell check matters because on a parallel board each cell is tie
 
 The site shows two figures per board for the pack spread. The **recorded** figure is history: the packs actually charged together on that series' last board night, judged by the rule in force that night, and it never changes afterwards. The **next-night outlook** uses the latest rest voltage of every pack on the board and names any pack that was outside 0.60 V, so it can be checked first. A series that hasn't had a board night yet has no recorded figure. The pack spread shows **N/A** for a pulled pack (not charged; its slot is skipped) and for a series with fewer than two packs on the board.
 
-**What the logs can and can't show here.** The first line of a storage log is the pack's voltage when it was plugged in, and that may be less than 90 minutes after a flight. So when the logs show cells more than 0.10 V apart, or a cell 0.10 V from its neighbour pack's, or a cell between 2.0 and 3.0 V, it becomes an advisory: **check resting voltage before connecting**. It is never a status change. The check itself is done at the board.
+**What the logs can and can't show here.** The next board connection comes after the storage charge, so the board checks use the voltages at the end of each pack's latest storage run. If a run has no end reading, or the pack was charged with no log, we use the end of its previous storage run and say so. When those end voltages show packs more than 0.60 V apart, cells more than 0.10 V apart, a cell more than 0.10 V from the same cell of another pack, or a cell between 2.0 and 3.0 V, it becomes an advisory: **check resting voltage before connecting**. It is never a status change. The check itself is done at the board.
 
 Rule A looks at one pack's IR, and the board checks look at which packs can share a board. The two are tracked separately and never lumped together as "spread."
 

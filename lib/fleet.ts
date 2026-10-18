@@ -397,8 +397,8 @@ const EXPECTED_LATEST: Record<string, string> = {
 };
 
 function assertStore() {
-  if (measurements.length !== 215 || v4Rows.length !== 215) {
-    throw new Error(`Expected 215 measurements, got ${measurements.length}`);
+  if (measurements.length !== 236 || v4Rows.length !== 236) {
+    throw new Error(`Expected 236 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -421,8 +421,8 @@ function assertStore() {
   if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
     throw new Error("C1-P4 and C2-P2 charge_count should be 14");
   }
-  if (packByUid("CNHL-2026-005")?.chargeCount !== 16 || packByUid("CNHL-2026-012")?.chargeCount !== 16) {
-    throw new Error("C1-P5 and C2-P6 charge_count should be 16");
+  if (packByUid("CNHL-2026-005")?.chargeCount !== 17 || packByUid("CNHL-2026-012")?.chargeCount !== 17) {
+    throw new Error("C1-P5 and C2-P6 charge_count should be 17");
   }
   const chargeRuns = measurements.filter((row) => row.session === "2026-10-11-charge");
   if (
@@ -443,11 +443,11 @@ function assertStore() {
     throw new Error(`2026-10-11 storage night is ${storageLabels}`);
   }
   if (
-    latestOperational("CNHL-2026-012")?.session !== "2026-10-11" ||
-    latestOperational("CNHL-2026-005")?.session !== "2026-10-11" ||
-    latestOperational("CNHL-2026-007")?.session !== "2026-10-11"
+    latestOperational("CNHL-2026-012")?.session !== "2026-10-17" ||
+    latestOperational("CNHL-2026-005")?.session !== "2026-10-17" ||
+    latestOperational("CNHL-2026-007")?.session !== "2026-10-17"
   ) {
-    throw new Error("2026-10-11 storage rows are the latest readings");
+    throw new Error("2026-10-17 storage rows are the latest readings");
   }
   if (operationalPoints("CNHL-2026-012").some((row) => row.session === "2026-10-11-charge")) {
     throw new Error("the charge run is still in the latest readings");
@@ -474,10 +474,13 @@ function assertStore() {
   for (const label of freshLabels) {
     const pack = packs.find((item) => item.label === label);
     const mode = "parallel";
-    if (!pack || pack.chargeCount !== 3 || pack.chargeMode !== mode || pack.purchaseDate !== "2026-10-13") {
-      throw new Error(`${label} should be charge count 3, ${mode}, purchased 2026-10-13`);
+    // 2026-10-17: C3-P2 was charged with no log, so it keeps count 3 and its 2026-10-16 reading.
+    const count = label === "C3-P2" ? 3 : 4;
+    const latest = label === "C3-P2" ? "2026-10-16" : "2026-10-17";
+    if (!pack || pack.chargeCount !== count || pack.chargeMode !== mode || pack.purchaseDate !== "2026-10-13") {
+      throw new Error(`${label} should be charge count ${count}, ${mode}, purchased 2026-10-13`);
     }
-    if (latestOperational(pack.uid)?.session !== "2026-10-16") {
+    if (latestOperational(pack.uid)?.session !== latest) {
       throw new Error(`${label} latest storage night is ${latestOperational(pack.uid)?.session}`);
     }
     if (operationalPoints(pack.uid).some((row) => row.session === "2026-10-14-charge")) {
@@ -1525,8 +1528,8 @@ export function ruleBNote(series: string): string | null {
 
 function assertDerived() {
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.754" || stats.counted !== 23) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.754 mΩ over 23 slotted packs`);
+  if (stats.mean.toFixed(3) !== "2.680" || stats.counted !== 23) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.680 mΩ over 23 slotted packs`);
   }
   const c1p4 = statusRows().find((row) => row.label === "C1-P4");
   if (
@@ -1551,12 +1554,12 @@ function assertDerived() {
   };
   const c1Last = lastOf("C1");
   const c2Last = lastOf("C2");
-  if (c1Last == null || c1Last.toFixed(3) !== "2.733") throw new Error(`C1 series mean last is ${c1Last}`);
-  if (c2Last == null || c2Last.toFixed(3) !== "2.900") throw new Error(`C2 series mean last is ${c2Last}`);
+  if (c1Last == null || c1Last.toFixed(3) !== "2.667") throw new Error(`C1 series mean last is ${c1Last}`);
+  if (c2Last == null || c2Last.toFixed(3) !== "2.617") throw new Error(`C2 series mean last is ${c2Last}`);
   const c3Last = lastOf("C3");
   const c4Last = lastOf("C4");
-  if (c3Last == null || c3Last.toFixed(3) !== "2.780") throw new Error(`C3 series mean last is ${c3Last}`);
-  if (c4Last == null || c4Last.toFixed(3) !== "2.522") throw new Error(`C4 series mean last is ${c4Last}`);
+  if (c3Last == null || c3Last.toFixed(3) !== "2.802") throw new Error(`C3 series mean last is ${c3Last}`);
+  if (c4Last == null || c4Last.toFixed(3) !== "2.483") throw new Error(`C4 series mean last is ${c4Last}`);
   const night1 = model.categories.findIndex((category) => category.id === "2026-10-14");
   const night2 = model.categories.findIndex((category) => category.id === "2026-10-16");
   const c3Fleet = model.fleets.find((item) => item.id === "C3");
@@ -1585,8 +1588,13 @@ function assertDerived() {
   if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
   const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
   const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
+  // 2026-10-17 was per-pack storage runs (no board connection), so no Rule B is recorded for it.
   if (c1Rule == null || Math.abs(c1Rule - 0.186) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
   if (c2Rule == null || Math.abs(c2Rule - 0.23) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  {
+    const n17 = model.categories.findIndex((category) => category.id === "2026-10-17");
+    if (n17 < 0 || model.fleets.some((fleet) => fleet.rest[n17] != null)) throw new Error("a Rule B value is recorded for 2026-10-17");
+  }
   const heldNight = model.categories.findIndex((category) => category.id === "2026-10-10");
   if (heldNight < 0 || c1Fleet?.rest[heldNight] == null || Math.abs(c1Fleet.rest[heldNight] - 0.135) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-10 is ${c1Fleet?.rest[heldNight]}`);
@@ -1705,7 +1713,7 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   }
   const c2Card = statusRows().find((row) => row.uid === "CNHL-2026-007");
   const c1Card = statusRows().find((row) => row.uid === "CNHL-2026-003");
-  if (!c2Card || c2Card.provisional || c2Card.latestSession !== "2026-10-11" || c2Card.avg.toFixed(3) !== "2.467" || c2Card.spread.toFixed(1) !== "0.3") {
+  if (!c2Card || c2Card.provisional || c2Card.latestSession !== "2026-10-17" || c2Card.avg.toFixed(3) !== "2.617" || c2Card.spread.toFixed(1) !== "0.9") {
     throw new Error(`C2-P1 card is ${c2Card?.latestSession} ${c2Card?.avg} provisional=${c2Card?.provisional}`);
   }
   if (!c1Card || c1Card.provisional) throw new Error("C1-P3 card is marked provisional");
@@ -2190,6 +2198,12 @@ function assertGapGeometry(model: FleetModel) {
     if (!intoD || intoD.from !== indexOf("2026-09-27") || intoD.style !== "solid") {
       throw new Error("series chart did not draw a solid line from D-1's C1-P1 era into 2026-10-09");
     }
+    const through = lineSegments(trend, "aggregate").find(
+      (segment) => segment.from === indexOf("2026-10-09") && segment.to === indexOf("2026-10-17"),
+    );
+    if (!through || through.style !== "solid") {
+      throw new Error("series chart did not keep the 2026-10-17 D-1 reading on the same line");
+    }
   }
 }
 
@@ -2208,8 +2222,15 @@ function assertRingWindows(model: FleetModel) {
   if (dValue == null || dValue.toFixed(3) !== "2.767") {
     throw new Error(`Series D mean on 2026-10-09 is ${dValue}`);
   }
-  if (!dMean || !lonePointIndices(chartLine("D", dMean.values, dMean.service)).includes(dIndex)) {
-    throw new Error("Series D mean point is not a single visible dot");
+  const d17 = categories.findIndex((category) => category.id === "2026-10-17");
+  const d17Value = dMean?.values[d17];
+  if (d17Value == null || d17Value.toFixed(3) !== "2.400") {
+    throw new Error(`Series D mean on 2026-10-17 is ${d17Value}`);
+  }
+  const dChart = chartLine("D", dMean!.values, dMean!.service);
+  const joined = lineSegments(dChart, "aggregate").find((segment) => segment.from === dIndex && segment.to === d17);
+  if (!joined || joined.style !== "solid" || lonePointIndices(dChart).length !== 0) {
+    throw new Error("Series D mean did not join the 2026-10-09 and 2026-10-17 readings");
   }
 
   for (const fleet of model.fleets) {

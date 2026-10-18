@@ -6,12 +6,14 @@ import { IrFigure } from "@/components/IrFigure";
 import { Lamp } from "@/components/Lamp";
 import { PackTile } from "@/components/PackTile";
 import { LineChart } from "@/components/LineChart";
+import { OutlookBoards } from "@/components/NextChargeNotes";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
 import { StatusChip } from "@/components/StatusChip";
 import { conditionalJoinNote } from "@/lib/lamp";
 import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
+import { loadNextChargeV4 } from "@/lib/next-charge.mjs";
 import {
   allRestTests,
   chargedIndividually,
@@ -41,6 +43,7 @@ export default function Home() {
   const blocks = seriesBlocks();
   const model = fleetModel();
   const next = nextParallel();
+  const charge = loadNextChargeV4();
   const heatRows = rows.filter((row) => row.cells.length > 0);
   const heatValues = heatRows.flatMap((row) => row.cells);
   const heatMin = Math.min(...heatValues);
@@ -195,6 +198,9 @@ export default function Home() {
             Next parallel
           </h2>
           <p className="note mt-1">{next.note}</p>
+          <div className="mt-3">
+            <OutlookBoards doc={charge} />
+          </div>
           {next.resting.length ? (
             <p className="note mt-1">
               Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
