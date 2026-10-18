@@ -48,3 +48,9 @@ IR is true milliohms from `ir_store_v4` (215 rows, including the 2026-10-11 stor
 - DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.
 - Mapping uses the night's manifest. The usual-low-cell check is advisory only.
 - C3 and C4 storage night 2 was 2026-10-16, one pack per run. Each parallel board holds all six packs, and neither series has a recorded board night. The next-night outlook is C3 0.629 V check first (0.430 V without C3-P5) and C4 0.249 V Go over all six, including C4-P2. The Go limit is 0.60 V. C3 and C4 do not share a board with each other or with C1 or C2. DX8-2 IR is validated against the charger screen.
+
+## Rules v6 (2026-10-17)
+- `data/v2/next_charge.json` is `next_charge/v3`: `home_channels` (one row per slot, C1-P1 empty until the spare arrives, D-1 last on DX8-2 Channel 1), `planner_rules`, `start_order`, 31 `planner_fixtures` (all 15 flown-series sets × D-1 off/on, plus one fixture-only pulled C2-P3), per-series `parallel_boards`, `charge_alone` (pulls only), `watch` (notes), `individual`, `rest_tests_in_place`. Run order and file counts only; no log numbers.
+- `loadNextCharge()` returns a v2-shaped page view (set A and set B) built by `pageView()`; `loadNextChargeV3()` returns the v3 file. `planRuns()` is the site's own planner and must agree with every fixture.
+- The rest pool is retired. C1-P4 and C2-P2 are back on the C1 and C2 parallel boards; RT-004-1 and RT-008-1 complete in place from the first reading of their next storage log. D-1 stays in rotation in the D pool, charged on its own.
+- Pulls only for safety or sustained failure. IR trend, board IR match and single-cell IR are notes; no reduced current.

@@ -345,7 +345,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
               <li key={`${test.id}-${test.uid}`}>
                 Cell {test.cell} started {test.start}. Day-0 baseline {test.readingDate || test.start}.
                 7-day reading due {test.due}.{" "}
-                {test.result === "unread" ? "Not read yet." : `Read ${test.readDate}: ${test.result}${test.excessMv ? ` (${test.excessMv} mV extra drop)` : ""}.`}
+                {test.result === "unread" ? "Completes in place from the first reading of its next storage log." : `Read ${test.readDate}: ${test.result}${test.excessMv ? ` (${test.excessMv} mV extra drop)` : ""}.`}
               </li>
             ))}
           </ul>

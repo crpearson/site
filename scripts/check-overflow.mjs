@@ -14,7 +14,9 @@ import { fileURLToPath } from "node:url";
  * Case-alias pages that only meta-refresh to the canonical URL are skipped;
  * the canonical page is checked.
  *
- * After the layout pass, every exported HTML file is scanned for
+ * After the layout pass, /next-charge/ is opened again with JavaScript on.
+ * Set A, set B, all four plus D-1, and C1+C3+D-1 are ticked, and the same
+ * overflow measure runs on each. Then every exported HTML file is scanned for
  * 2603022837|cliff|pearson|chad. /next-charge/ is part of that scan.
  */
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -274,6 +276,63 @@ for (const width of [1280, 390]) {
       context = await browser.newContext({
         viewport: { width, height: 900 },
         javaScriptEnabled: false,
+      });
+      page = await context.newPage();
+    }
+  }
+  await context.close().catch(() => {});
+}
+
+const plannerCombos = [
+  { name: "set A", ids: ["fly-C1", "fly-C2"], line: "DX8-1: 5 files, DX8-2: 6 files" },
+  { name: "set B", ids: ["fly-C3", "fly-C4"], line: "DX8-1: 6 files, DX8-2: 6 files" },
+  {
+    name: "all four and D-1",
+    ids: ["fly-C1", "fly-C2", "fly-C3", "fly-C4", "fly-D-1"],
+    line: "DX8-1: 11 files, DX8-2: 13 files",
+  },
+  { name: "C1+C3+D-1", ids: ["fly-C1", "fly-C3", "fly-D-1"], line: "DX8-1: 7 files, DX8-2: 5 files" },
+];
+
+for (const width of [1280, 390]) {
+  let context = await browser.newContext({
+    viewport: { width, height: 900 },
+    javaScriptEnabled: true,
+  });
+  let page = await context.newPage();
+  for (const combo of plannerCombos) {
+    const route = "/next-charge/";
+    try {
+      const response = await Promise.race([
+        page.goto(`http://127.0.0.1:${port}${route}`, { waitUntil: "domcontentloaded", timeout: 8000 }),
+        deadline(10000),
+      ]);
+      if (!response || response.status() >= 400) {
+        failures.push(`${width}px ${route} ${combo.name} HTTP ${response?.status() ?? "none"}`);
+        continue;
+      }
+      await page.waitForSelector("[data-planner-ready]", { timeout: 8000 });
+      for (const id of combo.ids) await page.locator(`#${id}`).check();
+      const line = (await page.locator(".planner-files-live").innerText()).replace(/\s+/g, " ").trim();
+      if (!line.includes(combo.line)) {
+        failures.push(`${width}px ${route} ${combo.name} file count ${JSON.stringify(line)}`);
+      }
+      if (!(await page.locator("#planner-static").isHidden())) {
+        failures.push(`${width}px ${route} ${combo.name} static lists still showing`);
+      }
+      const found = await Promise.race([page.evaluate(measure), deadline(10000)]);
+      const shown = found.slice(0, 8);
+      for (const problem of shown) failures.push(`${width}px ${route} ${combo.name} ${problem}`);
+      if (found.length > shown.length) {
+        failures.push(`${width}px ${route} ${combo.name} +${found.length - shown.length} more`);
+      }
+    } catch (error) {
+      failures.push(`${width}px ${route} ${combo.name} check failed: ${error.message.split("\n")[0]}`);
+      await context.close().catch(() => {});
+      if (!browser.isConnected()) browser = await launchBrowser();
+      context = await browser.newContext({
+        viewport: { width, height: 900 },
+        javaScriptEnabled: true,
       });
       page = await context.newPage();
     }

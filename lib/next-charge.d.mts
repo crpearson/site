@@ -3,7 +3,8 @@ export const BOARD_NAMES: readonly string[];
 
 export type NextChargeDocument = {
   schema: "next_charge/v2";
-  rules: "v5";
+  /** "v6" when this is the page view built from a next_charge/v3 file. */
+  rules: "v5" | "v6";
   as_of_session: string;
   as_of_date_pt: string;
   active_set: string;
@@ -181,4 +182,125 @@ export function validateNextCharge(
   packs: Map<string, { uid: string; series: string }>,
 ): NextChargeDocument;
 export function loadNextCharge(root?: string): NextChargeDocument;
-export function checkNextCharge(root?: string): NextChargeDocument;
+/** Returns the v3 document (checkNextCharge validates the file, its fixtures and the page view). */
+export function checkNextCharge(root?: string): NextChargeV3;
+
+// ---- next_charge/v3 (Rules v6): run order and per-charger file counts only, no log numbers ----
+export type ChargerName = "DX8-1" | "DX8-2";
+export type ChannelNumber = 1 | 2;
+/** "DX8-1 Channel 1" ... "DX8-2 Channel 2" */
+export type ChannelKey = string;
+
+export type HomeChannelRow = {
+  label: string;
+  /** null when the slot is empty */
+  uid: string | null;
+  series: "C1" | "C2" | "C3" | "C4" | "D";
+  slot: number;
+  charger: ChargerName;
+  channel: ChannelNumber;
+  state: "active" | "empty" | "pulled";
+  /** Plain reason when state is not active; the D pool placement for D rows; else null. */
+  note: string | null;
+};
+
+export type PlannerRules = {
+  series_order: ["C1", "C2", "C3", "C4", "D"];
+  channel_start_order: [1, 2];
+  skip_empty: true;
+  reorder: false;
+  include_states: ["active"];
+  d_pool: string;
+  steps: string[];
+};
+
+export type PlannerPlan = {
+  channels: Record<ChannelKey, string[]>;
+  /** Per charger, each round as [Channel 1 pack, Channel 2 pack]; null once that channel has run out. */
+  rounds: Record<ChargerName, [string | null, string | null][]>;
+  /** Log files per charger (one per pack). */
+  files: Record<ChargerName, number>;
+};
+
+export type PlannerFixture = PlannerPlan & {
+  id: string;
+  name: string | null;
+  flown_series: string[];
+  d1_flown: boolean;
+  /** Only on the made-up test case. */
+  fixture_only?: string;
+  fixture_states?: Record<string, HomeChannelRow["state"]>;
+};
+
+export type IrMatchV3 = {
+  basis: string;
+  session: string;
+  board_median_mohm: number | null;
+  note_pct: number;
+  strong_note_pct: number;
+  nights_needed: number;
+  of_last_nights: number;
+  packs: {
+    label: string;
+    avg_mohm: number | null;
+    session: string | null;
+    pct_off: number | null;
+    nights_checked: number;
+    nights_over_25_pct: number;
+    nights_over_35_pct: number;
+    flag: "ok" | "over 25%" | "over 35%";
+  }[];
+  /** Labels flagged; a note only, the pack stays on its board. */
+  notes: string[];
+};
+
+export type ParallelBoardV3 = Omit<ParallelBoard, "current" | "outlook_rule_b"> & {
+  outlook_rule_b: Omit<OutlookRuleB, "ir_match"> & { ir_match: IrMatchV3 };
+};
+
+export type RestTestInPlace = {
+  test_id: string;
+  label: string;
+  uid: string;
+  suspect_cell: number;
+  storage_end_date: string;
+  storage_end_mV: number[];
+  completes_from: string;
+};
+
+export type NextChargeV3 = {
+  schema: "next_charge/v3";
+  rules: "v6";
+  as_of_session: string;
+  as_of_date_pt: string;
+  home_channels: HomeChannelRow[];
+  planner_rules: PlannerRules;
+  start_order: { rule: string; mapping: string };
+  planner_fixtures: PlannerFixture[];
+  parallel_boards: ParallelBoardV3[];
+  charge_alone: ChargeAloneItem[];
+  watch: WatchItem[];
+  individual: IndividualItem[];
+  rest_tests_in_place: {
+    applies_when: string;
+    min_days: number;
+    compare: string;
+    scale_to_days: number;
+    pass_max_mv: number;
+    borderline_max_mv: number;
+    grading: string;
+    needs: string;
+    open: RestTestInPlace[];
+  };
+  notes: string[];
+};
+
+export const PLANNER_SERIES: readonly string[];
+export const PLANNER_CHANNELS: readonly [ChargerName, ChannelNumber][];
+export function channelName(charger: ChargerName, channel: ChannelNumber): ChannelKey;
+export function homeChannel(series: string, slot: number): [ChargerName, ChannelNumber];
+export function planRuns(rows: HomeChannelRow[], rules: PlannerRules, flown: string[], dFlown: boolean): PlannerPlan;
+export function validateNextChargeV3(doc: NextChargeV3, packs: Map<string, { uid: string; series: string }>): NextChargeV3;
+/** Transitional v2-shaped view (set A and set B) for the current page. */
+export function pageView(doc: NextChargeV3): NextChargeDocument;
+export function loadNextChargeV3(root?: string): NextChargeV3;

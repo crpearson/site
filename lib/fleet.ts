@@ -371,16 +371,16 @@ function inRestPool(uid: string, session: string): boolean {
 
 const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-001":
-    "D POOL, CHARGED ON ITS OWN (WATCH) | REST TEST RT-001-1 PASS 2026-10-17 (1 OF 3)",
+    "D POOL, CHARGED ON ITS OWN (WATCH) | IN ROTATION, LAST ON DX8-2 CHANNEL 1",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-004":
-    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
+    "PARALLEL GO: on the C1 board | SERVICE Watch (rest test RT-004-1 completes in place)",
   "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE Watch",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
   "CNHL-2026-008":
-    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-008-1, 7-day reading due 2026-10-16; not charged during test",
+    "PARALLEL GO: on the C2 board | SERVICE Watch (rest test RT-008-1 completes in place)",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
@@ -1607,17 +1607,15 @@ function assertDerived() {
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (
     rendered !==
-      "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
+      "C1:C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
     board.as_of !== "2026-10-17"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
-  for (const label of ["C3-P5", "C3-P6", "C4-P2"]) {
+  for (const label of ["C1-P4", "C2-P2", "C3-P5", "C3-P6", "C4-P2"]) {
     if (!board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is missing from its board`);
   }
-  for (const label of ["D-1", "C1-P4", "C2-P2"]) {
-    if (board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is on a next parallel board`);
-  }
+  if (board.series.some((item) => item.labels.includes("D-1"))) throw new Error("D-1 is on a next parallel board");
   assertUnpublishedNight(model, heldNight);
   assertStatusChips();
   assertRingWindows(model);
@@ -1804,11 +1802,11 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
 const EXPECTED_CHIPS: Record<string, StatusChipName> = {
   "C1-P2": "GO",
   "C1-P3": "GO",
-  "C1-P4": "REST",
+  "C1-P4": "GO",
   "C1-P5": "GO",
   "C1-P6": "GO",
   "C2-P1": "GO",
-  "C2-P2": "REST",
+  "C2-P2": "GO",
   "C2-P3": "GO",
   "C2-P4": "GO",
   "C2-P5": "GO",

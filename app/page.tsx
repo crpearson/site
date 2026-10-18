@@ -91,15 +91,17 @@ export default function Home() {
             </p>
             <p className="stat-sub">{individualPacks.join(" · ") || "None"}</p>
           </article>
-          <article className="stat" data-tone="floor">
-            <p className="eyebrow">Rest pool</p>
-            <p className="stat-value">
-              <span className="num">
-                {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
-              </span>
-            </p>
-            <p className="stat-sub">{restPacks.join(" · ") || "None"}</p>
-          </article>
+          {restPacks.length > 0 ? (
+            <article className="stat" data-tone="floor">
+              <p className="eyebrow">Rest pool</p>
+              <p className="stat-value">
+                <span className="num">
+                  {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
+                </span>
+              </p>
+              <p className="stat-sub">{restPacks.join(" · ")}</p>
+            </article>
+          ) : null}
           <article className="stat" data-tone="off">
             <p className="eyebrow">
               Watch note at {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more
@@ -128,29 +130,31 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
-        <p className="eyebrow">Off every board</p>
-        <h2 id="rest-pool-heading" className="panel-title mt-1">
-          Rest pool
-        </h2>
-        <p className="note mt-2">
-          Day 0 {stats.rest[0]?.restDay0 ?? "2026-10-09"}. 7-day reading due {stats.rest[0]?.restDue ?? "2026-10-16"}.
-          These packs are not charged during the test. C1-P4 and C2-P2 keep their slots.
-        </p>
-        <ul className="mt-3 space-y-2 text-sm">
-          {stats.rest.map((row) => (
-            <li key={row.uid}>
-              <Link href={`/pack/${row.uid}`} className="pack-link">
-                {row.label}
-              </Link>
-              <span className="note">
-                {" "}
-                · day 0 {row.restDay0} · due {row.restDue} · {row.series}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {restPacks.length > 0 ? (
+        <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
+          <p className="eyebrow">Off every board</p>
+          <h2 id="rest-pool-heading" className="panel-title mt-1">
+            Rest pool
+          </h2>
+          <p className="note mt-2">
+            Day 0 {stats.rest[0]?.restDay0}. 7-day reading due {stats.rest[0]?.restDue}. These packs are not charged
+            during the test.
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {stats.rest.map((row) => (
+              <li key={row.uid}>
+                <Link href={`/pack/${row.uid}`} className="pack-link">
+                  {row.label}
+                </Link>
+                <span className="note">
+                  {" "}
+                  · day 0 {row.restDay0} · due {row.restDue} · {row.series}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <Panel
         accent="signal"

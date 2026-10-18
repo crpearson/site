@@ -25,11 +25,11 @@ export default function AboutPage() {
         <p className="page-intro mt-4">
           {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
           {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
-          comes from the start of each storage charge. Charge rules v5 (the v4 voltage checks plus three IR checks) and Rule B use the limits
+          comes from the start of each storage charge. Charge rules v6 (permanent home channels, the same voltage checks, and IR checks as notes) and Rule B use the limits
           shown below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and
-          not a series mean. C1-P4 and C2-P2 are in the Rest pool until their 7-day reading. D-1 passed its
-          7-day rest test on 2026-10-17 and is back in the D pool, charged on its own. A Rest pool
-          night is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in
+          not a series mean. The rest pool is retired: C1-P4 and C2-P2 are back in rotation, and their rest
+          tests complete in place. D-1 passed its 7-day rest test on 2026-10-17 and stays in rotation in the
+          D pool, charged on its own, last on DX8-2 Channel 1. A Rest pool night is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in
           rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16.
           Each series has its own board. Watch is a note. C3-P5 is marked check first.
         </p>
@@ -127,8 +127,8 @@ export default function AboutPage() {
             A spread of {formatValue("ir", spread.caution_gte)} {IR_UNIT} or more, or a cell at{" "}
             {thresholds.cell_ratio_to_median.caution_gte}× the pack median, is a watch note. A low-cell
             gap of {thresholds.low_cell_gap_mv.individual_gte} mV or more counts as a trouble night.
-            Service is separate: In service, Watch, D pool, or Retire. A Rest pool pack is off every
-            board until the 7-day reading. A status line reads Parallel, then Service. The words on
+            Service is separate: In service, Watch, D pool, or Retire. Rest pool nights before 2026-10-17
+            are labeled Rest pool. A status line reads Parallel, then Service. The words on
             each pack are the recorded call.
           </p>
         </article>

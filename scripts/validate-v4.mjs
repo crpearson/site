@@ -188,10 +188,12 @@ for (const board of outlookBoards(chargeSheet)) {
     continue;
   }
   within({ session: board.series, pack: "ir_match" }, "board_median_mohm", ir.board_median_mohm, [0.5, 15], "mΩ");
-  within({ session: board.series, pack: "ir_match" }, "check_first_pct", ir.check_first_pct, [0.01, 100], "%");
-  within({ session: board.series, pack: "ir_match" }, "charge_alone_pct", ir.charge_alone_pct, [0.01, 100], "%");
-  if (!(ir.charge_alone_pct > ir.check_first_pct)) {
-    flag({ session: board.series, pack: "ir_match" }, "charge_alone_pct", ir.charge_alone_pct, "must be above check_first_pct");
+  const notePct = ir.note_pct ?? ir.check_first_pct;
+  const strongPct = ir.strong_note_pct ?? ir.charge_alone_pct;
+  within({ session: board.series, pack: "ir_match" }, "note_pct", notePct, [0.01, 100], "%");
+  within({ session: board.series, pack: "ir_match" }, "strong_note_pct", strongPct, [0.01, 100], "%");
+  if (!(strongPct > notePct)) {
+    flag({ session: board.series, pack: "ir_match" }, "strong_note_pct", strongPct, "must be above note_pct");
   }
   for (const item of ir.packs ?? []) {
     within({ session: board.series, pack: item.label }, "avg_mohm", item.avg_mohm, [0.5, 15], "mΩ");
@@ -367,10 +369,32 @@ const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | "
 if (rendered !== expected || board.as_of !== latestPtDate) {
   fail(`next parallel ${board.as_of} ${rendered}, expected ${latestPtDate} ${expected}`);
 }
-for (const label of ["D-1", "C1-P4", "C2-P2"]) {
-  if (board.series.some((item) => item.labels.includes(label))) fail(`${label} is on a next parallel board`);
+if (board.series.some((item) => item.labels.includes("D-1"))) fail("D-1 is on a next parallel board");
+if (board.resting.length !== 0) fail("the rest pool is retired (rules v6), but next.json still lists resting packs");
+// Rules v6 (2026-10-17): C1-P4 and C2-P2 return to their home slots and boards; their rest tests complete in place.
+for (const [label, series, test] of [["C1-P4", "C1", "RT-004-1"], ["C2-P2", "C2", "RT-008-1"]]) {
+  const call = calls.filter((row) => row.label_at_time === label).at(-1);
+  if (!call || call.date !== "2026-10-17" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE Watch (rest test ${test} completes in place)`) {
+    fail(`${label} latest call should return it to the ${series} board under rules v6`);
+  }
+  const back = events.filter((row) => row.pack_uid === call.pack_uid && row.event === "rest_pool_exit" && row.date === "2026-10-17");
+  if (back.length !== 1) fail(`${label} needs one rest_pool_exit event dated 2026-10-17`);
 }
-for (const label of ["C3-P5", "C3-P6", "C4-P2"]) {
+{
+  const d1 = calls.filter((row) => row.label_at_time === "D-1").at(-1);
+  if (!d1 || d1.status !== "D POOL, CHARGED ON ITS OWN (WATCH) | IN ROTATION, LAST ON DX8-2 CHANNEL 1") fail("D-1 latest call changed");
+  if (!d1 || !/Charged on its own for one more storage night, then reviewed for a return to C1-P1/.test(d1.reason)) {
+    fail("D-1 latest reason must name the one more storage night and the review for C1-P1");
+  }
+}
+// Planner data: run order and file counts only; no log numbers and no short channel tags in next_charge.
+for (const file of ["data/v2/next_charge.json", "data/v2/NEXT_CHARGE.md"]) {
+  const body = fs.readFileSync(path.join(root, file), "utf8");
+  const hit = body.match(/Storage_\d+|next_log|next_number|log_number|expected_log/i);
+  if (hit) fail(`${file} carries a log number field (${hit[0]})`);
+  if (/\bCH[12]\b/.test(body)) fail(`${file} uses a short channel tag; write "DX8-1 Channel 1" in full`);
+}
+for (const label of ["C1-P4", "C2-P2", "C3-P5", "C3-P6", "C4-P2"]) {
   if (!board.series.some((item) => item.labels.includes(label))) fail(`${label} is missing from its board`);
 }
 const c4p2 = calls.filter((row) => row.label_at_time === "C4-P2").at(-1);
@@ -390,20 +414,28 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "85f701864d095e745cb55c0935d69498790d82223ab5c5fe1c43257ed37647d6") {
+if (methodologySha !== "88a1092c4b9c3bd1027dcc224ffa3d003a50289600df41f566b115ec0fdf9c3f") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
+const chargePlanner = fs.readFileSync(path.join(root, "components/ChargePlanner.tsx"), "utf8");
+const runSheet = fs.readFileSync(path.join(root, "components/RunSheet.tsx"), "utf8");
 const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");
-if (
-  !nextChargePage.includes("No board night yet") ||
-  !nextChargePage.includes("Next-night outlook (not a board result)") ||
-  !nextChargePage.includes(" V") ||
-  !nextChargePage.includes("IR match (not a recorded result)") ||
-  !nextChargePage.includes("mΩ") ||
-  !nextChargePage.includes("%")
-) {
-  fail("the next charge page must keep recorded Rule B separate from the next-night outlook, and show IR match with mΩ and %");
+const plannerSource = `${nextChargePage}\n${chargePlanner}\n${runSheet}`;
+if (!nextChargePage.includes("loadNextChargeV3") || !nextChargePage.includes("planRuns")) {
+  fail("the next charge page must plan runs with planRuns from the v3 file");
+}
+if (!chargePlanner.includes('from "@/lib/plan-runs.mjs"') || chargePlanner.includes("next-charge.mjs")) {
+  fail("the planner client must call planRuns from the pure module");
+}
+if (!plannerSource.includes("DX8-1 Channel 1") || !plannerSource.includes("DX8-1: ")) {
+  fail("the next charge page must show full channel names and file counts");
+}
+if (/\bCH[12]\b/.test(plannerSource) || /series board|series parallel/i.test(plannerSource)) {
+  fail("the next charge page uses a short channel tag or a series board");
+}
+if (/Storage_\d+|log number|next_log/i.test(plannerSource)) {
+  fail("the next charge page asks for a log number");
 }
 if (!chargeAlone.includes("last_offset_max_V") || !chargeAlone.includes(" V")) {
   fail("charge-alone offsets must be shown in volts");
