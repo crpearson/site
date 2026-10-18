@@ -79,7 +79,7 @@ Current layout:
 | DX8-2 Channel 1 | C1-P5, C2-P1, C2-P2, C3-P5, C4-P1, C4-P2 |
 | DX8-2 Channel 2 | C1-P6, C2-P3, C2-P4, C3-P6, C4-P3, C4-P4 |
 
-C1-P1 is back. The pack that left C1-P1 on 2026-10-08 for a weak Cell 6 (D-1) passed its rest test on 2026-10-17 and returns to C1-P1 from the next storage night: same pack, same ID, same history. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. There is no D pool now, so there is no D-1 checkbox and no D series in this file.
+C1-P1 is back. The pack that left C1-P1 on 2026-10-08 for a weak Cell 6 passed its rest test on 2026-10-17 and returns to C1-P1 from the next storage night: same pack, same ID, same history. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. The planner covers C1, C2, C3 and C4.
 
 ## `planner_rules`
 
