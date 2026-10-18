@@ -15,8 +15,8 @@ import { fileURLToPath } from "node:url";
  * the canonical page is checked.
  *
  * After the layout pass, /next-charge/ is opened again with JavaScript on.
- * Set A, set B, all four plus D-1, and C1+C3+D-1 are ticked, and the same
- * overflow measure runs on each. Then every exported HTML file is scanned for
+ * Set A, set B, all four, and C1+C3 are ticked, and the same overflow measure
+ * runs on each. Then every exported HTML file is scanned for
  * 2603022837|cliff|pearson|chad. /next-charge/ is part of that scan.
  */
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -284,14 +284,14 @@ for (const width of [1280, 390]) {
 }
 
 const plannerCombos = [
-  { name: "set A", ids: ["fly-C1", "fly-C2"], line: "DX8-1: 5 files, DX8-2: 6 files" },
+  { name: "set A", ids: ["fly-C1", "fly-C2"], line: "DX8-1: 6 files, DX8-2: 6 files" },
   { name: "set B", ids: ["fly-C3", "fly-C4"], line: "DX8-1: 6 files, DX8-2: 6 files" },
   {
-    name: "all four and D-1",
-    ids: ["fly-C1", "fly-C2", "fly-C3", "fly-C4", "fly-D-1"],
-    line: "DX8-1: 11 files, DX8-2: 13 files",
+    name: "all four",
+    ids: ["fly-C1", "fly-C2", "fly-C3", "fly-C4"],
+    line: "DX8-1: 12 files, DX8-2: 12 files",
   },
-  { name: "C1+C3+D-1", ids: ["fly-C1", "fly-C3", "fly-D-1"], line: "DX8-1: 7 files, DX8-2: 5 files" },
+  { name: "C1+C3", ids: ["fly-C1", "fly-C3"], line: "DX8-1: 8 files, DX8-2: 4 files" },
 ];
 
 for (const width of [1280, 390]) {
@@ -312,6 +312,9 @@ for (const width of [1280, 390]) {
         continue;
       }
       await page.waitForSelector("[data-planner-ready]", { timeout: 8000 });
+      if (await page.locator("#fly-D-1").count()) {
+        failures.push(`${width}px ${route} still has a D-1 box`);
+      }
       for (const id of combo.ids) await page.locator(`#${id}`).check();
       const line = (await page.locator(".planner-files-live").innerText()).replace(/\s+/g, " ").trim();
       if (!line.includes(combo.line)) {

@@ -369,33 +369,33 @@
       "permanent": true
     },
     {
-      "source": "/pack/D-1",
-      "destination": "/pack/D-1/",
+      "source": "/pack/C1-P1",
+      "destination": "/pack/C1-P1/",
       "permanent": true
     },
     {
-      "source": "/slot/D-1",
-      "destination": "/slot/D-1/",
+      "source": "/slot/C1-P1",
+      "destination": "/slot/C1-P1/",
       "permanent": true
     },
     {
-      "source": "/pack/d-1",
-      "destination": "/pack/D-1/",
+      "source": "/pack/c1-p1",
+      "destination": "/pack/C1-P1/",
       "permanent": true
     },
     {
-      "source": "/pack/d-1/",
-      "destination": "/pack/D-1/",
+      "source": "/pack/c1-p1/",
+      "destination": "/pack/C1-P1/",
       "permanent": true
     },
     {
-      "source": "/slot/d-1",
-      "destination": "/slot/D-1/",
+      "source": "/slot/c1-p1",
+      "destination": "/slot/C1-P1/",
       "permanent": true
     },
     {
-      "source": "/slot/d-1/",
-      "destination": "/slot/D-1/",
+      "source": "/slot/c1-p1/",
+      "destination": "/slot/C1-P1/",
       "permanent": true
     },
     {
@@ -1089,33 +1089,33 @@
       "permanent": true
     },
     {
-      "source": "/pack/C1-P1",
-      "destination": "/pack/C1-P1/",
+      "source": "/pack/D-1",
+      "destination": "/pack/D-1/",
       "permanent": true
     },
     {
-      "source": "/slot/C1-P1",
-      "destination": "/slot/C1-P1/",
+      "source": "/slot/D-1",
+      "destination": "/slot/D-1/",
       "permanent": true
     },
     {
-      "source": "/pack/c1-p1",
-      "destination": "/pack/C1-P1/",
+      "source": "/pack/d-1",
+      "destination": "/pack/D-1/",
       "permanent": true
     },
     {
-      "source": "/pack/c1-p1/",
-      "destination": "/pack/C1-P1/",
+      "source": "/pack/d-1/",
+      "destination": "/pack/D-1/",
       "permanent": true
     },
     {
-      "source": "/slot/c1-p1",
-      "destination": "/slot/C1-P1/",
+      "source": "/slot/d-1",
+      "destination": "/slot/D-1/",
       "permanent": true
     },
     {
-      "source": "/slot/c1-p1/",
-      "destination": "/slot/C1-P1/",
+      "source": "/slot/d-1/",
+      "destination": "/slot/D-1/",
       "permanent": true
     }
   ]

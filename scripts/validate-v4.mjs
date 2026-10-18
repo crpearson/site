@@ -369,22 +369,29 @@ const expected = EXPECTED_BOARDS.map((item) => item.labels.join("+")).join(" | "
 if (rendered !== expected || board.as_of !== latestPtDate) {
   fail(`next parallel ${board.as_of} ${rendered}, expected ${latestPtDate} ${expected}`);
 }
-if (board.series.some((item) => item.labels.includes("D-1"))) fail("D-1 is on a next parallel board");
+if (board.series.some((item) => item.labels.some((label) => label.startsWith("D-")))) fail("a D label is on a next parallel board");
 if (board.resting.length !== 0) fail("the rest pool is retired (rules v6), but next.json still lists resting packs");
-// Rules v6 (2026-10-17): C1-P4 and C2-P2 return to their home slots and boards; their rest tests complete in place.
+// Rules v7 (2026-10-17): re-grade under the new pull / charge-alone rules.
 for (const [label, series, test] of [["C1-P4", "C1", "RT-004-1"], ["C2-P2", "C2", "RT-008-1"]]) {
   const call = calls.filter((row) => row.label_at_time === label).at(-1);
-  if (!call || call.date !== "2026-10-17" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE Watch (rest test ${test} completes in place)`) {
-    fail(`${label} latest call should return it to the ${series} board under rules v6`);
+  if (!call || call.date !== "2026-10-17" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE Watch (self-discharge check ${test})` || !/rules v7/.test(call.source)) {
+    fail(`${label} latest call should be the rules v7 self-discharge check on the ${series} board`);
   }
   const back = events.filter((row) => row.pack_uid === call.pack_uid && row.event === "rest_pool_exit" && row.date === "2026-10-17");
   if (back.length !== 1) fail(`${label} needs one rest_pool_exit event dated 2026-10-17`);
 }
 {
-  const d1 = calls.filter((row) => row.label_at_time === "D-1").at(-1);
-  if (!d1 || d1.status !== "D POOL, CHARGED ON ITS OWN (WATCH) | IN ROTATION, LAST ON DX8-2 CHANNEL 1") fail("D-1 latest call changed");
-  if (!d1 || !/Charged on its own for one more storage night, then reviewed for a return to C1-P1/.test(d1.reason)) {
-    fail("D-1 latest reason must name the one more storage night and the review for C1-P1");
+  // C1-P1 is back: same uid CNHL-2026-001, continuous history; a move event D-1 -> C1-P1 dated 2026-10-17.
+  const p1 = calls.filter((row) => row.pack_uid === "CNHL-2026-001").at(-1);
+  if (!p1 || p1.label_at_time !== "C1-P1" || p1.date !== "2026-10-17" || p1.status !== "PARALLEL GO: on the C1 board | SERVICE In service (watch)") fail("CNHL-2026-001 latest call should be C1-P1 on the C1 board");
+  const move = events.filter((row) => row.pack_uid === "CNHL-2026-001" && row.event === "move");
+  if (move.length !== 2 || move[1].date !== "2026-10-17" || move[1].from_label !== "D-1" || move[1].to_label !== "C1-P1") fail("CNHL-2026-001 needs the 2026-10-17 move D-1 -> C1-P1");
+  if (!board.series.find((item) => item.series === "C1")?.labels.includes("C1-P1")) fail("C1-P1 is missing from the C1 board");
+}
+for (const [label, series] of [["C1-P5", "C1"], ["C2-P1", "C2"], ["C3-P2", "C3"], ["C3-P5", "C3"], ["C3-P6", "C3"], ["C4-P2", "C4"]]) {
+  const call = calls.filter((row) => row.label_at_time === label).at(-1);
+  if (!call || call.date !== "2026-10-17" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE In service` || !/performance note/.test(call.reason)) {
+    fail(`${label} latest call should be Go, In service, with its watch item as a performance note (rules v7)`);
   }
 }
 // Planner data: run order and file counts only; no log numbers and no short channel tags in next_charge.
@@ -397,39 +404,36 @@ for (const file of ["data/v2/next_charge.json", "data/v2/NEXT_CHARGE.md"]) {
 for (const label of ["C1-P4", "C2-P2", "C3-P5", "C3-P6", "C4-P2"]) {
   if (!board.series.some((item) => item.labels.includes(label))) fail(`${label} is missing from its board`);
 }
-const c4p2 = calls.filter((row) => row.label_at_time === "C4-P2").at(-1);
 const c4p4 = calls.filter((row) => row.label_at_time === "C4-P4").at(-1);
-if (
-  !c4p2 ||
-  c4p2.date !== "2026-10-17" ||
-  c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
-  !/Cell 6 started low on 2026-10-14 and 2026-10-16/.test(c4p2.reason) ||
-  /1\.5x the pack median IR \(3\.0 vs 2\.0 mOhm\) is dropped/.test(c4p2.reason) === false
-) {
-  fail("C4-P2 latest call changed");
-}
 if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the C4 board | SERVICE In service") {
   fail("C4-P4 latest call should be Go on the C4 board");
 }
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "88a1092c4b9c3bd1027dcc224ffa3d003a50289600df41f566b115ec0fdf9c3f") {
+if (methodologySha !== "36fea8395f69d5ab3b93fd20d5f2090ea63c49eea1de7320c66bc901e664954a") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
 const chargePlanner = fs.readFileSync(path.join(root, "components/ChargePlanner.tsx"), "utf8");
 const runSheet = fs.readFileSync(path.join(root, "components/RunSheet.tsx"), "utf8");
+const notes = fs.readFileSync(path.join(root, "components/NextChargeNotes.tsx"), "utf8");
 const chargeAlone = fs.readFileSync(path.join(root, "components/ParallelBoardDiagram.tsx"), "utf8");
-const plannerSource = `${nextChargePage}\n${chargePlanner}\n${runSheet}`;
-if (!nextChargePage.includes("loadNextChargeV3") || !nextChargePage.includes("planRuns")) {
-  fail("the next charge page must plan runs with planRuns from the v3 file");
+const plannerSource = `${nextChargePage}\n${chargePlanner}\n${runSheet}\n${notes}`;
+if (!nextChargePage.includes("loadNextChargeV4") || !nextChargePage.includes("planRuns")) {
+  fail("the next charge page must plan runs with planRuns from the v4 file");
 }
 if (!chargePlanner.includes('from "@/lib/plan-runs.mjs"') || chargePlanner.includes("next-charge.mjs")) {
   fail("the planner client must call planRuns from the pure module");
 }
+if (chargePlanner.includes("fly-D-1") || chargePlanner.includes("D-1") || nextChargePage.includes("with D-1")) {
+  fail("the next charge planner must not offer a D-1 box");
+}
 if (!plannerSource.includes("DX8-1 Channel 1") || !plannerSource.includes("DX8-1: ")) {
   fail("the next charge page must show full channel names and file counts");
+}
+if (!notes.includes("Pulled") || !notes.includes("Performance notes") || !notes.includes("Self-discharge") || !notes.includes("Measurement") || !notes.includes("Per-cell check")) {
+  fail("the next charge page must show pulled packs, performance notes, self-discharge checks, measurement and the per-cell check");
 }
 if (/\bCH[12]\b/.test(plannerSource) || /series board|series parallel/i.test(plannerSource)) {
   fail("the next charge page uses a short channel tag or a series board");

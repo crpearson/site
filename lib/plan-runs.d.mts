@@ -23,4 +23,4 @@ export type PlanResult = {
 };
 
 export function channelName(charger: "DX8-1" | "DX8-2", channel: 1 | 2): string;
-export function planRuns(rows: readonly PlanRow[], rules: PlanRules, flown: readonly string[], dFlown: boolean): PlanResult;
+export function planRuns(rows: readonly PlanRow[], rules: PlanRules, flown: readonly string[]): PlanResult;

@@ -370,17 +370,14 @@ function inRestPool(uid: string, session: string): boolean {
 }
 
 const EXPECTED_LATEST: Record<string, string> = {
-  "CNHL-2026-001":
-    "D POOL, CHARGED ON ITS OWN (WATCH) | IN ROTATION, LAST ON DX8-2 CHANNEL 1",
+  "CNHL-2026-001": "PARALLEL GO: on the C1 board | SERVICE In service (watch)",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-004":
-    "PARALLEL GO: on the C1 board | SERVICE Watch (rest test RT-004-1 completes in place)",
-  "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE Watch",
+  "CNHL-2026-004": "PARALLEL GO: on the C1 board | SERVICE Watch (self-discharge check RT-004-1)",
+  "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE In service",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
-  "CNHL-2026-008":
-    "PARALLEL GO: on the C2 board | SERVICE Watch (rest test RT-008-1 completes in place)",
+  "CNHL-2026-007": "PARALLEL GO: on the C2 board | SERVICE In service",
+  "CNHL-2026-008": "PARALLEL GO: on the C2 board | SERVICE Watch (self-discharge check RT-008-1)",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
@@ -389,10 +386,10 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-014": "PARALLEL GO: on the C3 board | SERVICE In service",
   "CNHL-2026-015": "PARALLEL GO: on the C3 board | SERVICE In service",
   "CNHL-2026-016": "PARALLEL GO: on the C3 board | SERVICE In service",
-  "CNHL-2026-017": "PARALLEL GO: on the C3 board | SERVICE In service (watch)",
-  "CNHL-2026-018": "PARALLEL GO: on the C3 board | SERVICE In service (watch)",
+  "CNHL-2026-017": "PARALLEL GO: on the C3 board | SERVICE In service",
+  "CNHL-2026-018": "PARALLEL GO: on the C3 board | SERVICE In service",
   "CNHL-2026-019": "PARALLEL GO: on the C4 board | SERVICE In service",
-  "CNHL-2026-020": "PARALLEL GO: on the C4 board | SERVICE In service (watch)",
+  "CNHL-2026-020": "PARALLEL GO: on the C4 board | SERVICE In service",
   "CNHL-2026-021": "PARALLEL GO: on the C4 board | SERVICE In service",
   "CNHL-2026-022": "PARALLEL GO: on the C4 board | SERVICE In service",
   "CNHL-2026-023": "PARALLEL GO: on the C4 board | SERVICE In service",
@@ -521,14 +518,18 @@ function assertStore() {
       console.warn(`parallel call disagreement ${uid}: computed ${computed.call}, recorded ${recorded}`);
     }
   }
-  if (packs.some((pack) => pack.label === "C1-P1")) {
-    throw new Error("C1-P1 should be an empty slot");
+  // Rules v7 (2026-10-17): the pack that was D-1 is C1-P1 again (same uid, continuous history).
+  if (packs.find((pack) => pack.label === "C1-P1")?.uid !== "CNHL-2026-001" || packs.some((pack) => pack.label.startsWith("D-"))) {
+    throw new Error("C1-P1 should be CNHL-2026-001 again, with no D pack");
   }
   if (labelAsOf("CNHL-2026-001", "2026-09-30") !== "C1-P1") {
     throw new Error("CNHL-2026-001 should still be C1-P1 on 2026-09-30");
   }
   if (labelAsOf("CNHL-2026-001", "2026-10-08") !== "D-1") {
     throw new Error("CNHL-2026-001 should be D-1 on 2026-10-08");
+  }
+  if (labelAsOf("CNHL-2026-001", "2026-10-16") !== "D-1" || labelAsOf("CNHL-2026-001", "2026-10-18") !== "C1-P1") {
+    throw new Error("CNHL-2026-001 should be D-1 up to 2026-10-16 and C1-P1 from 2026-10-17");
   }
 }
 
@@ -675,7 +676,8 @@ function spreadChartDomain(spreads: number[]): [number, number] {
 const SERIES_ORDER = ["C1", "C2", "D", "C3", "C4"];
 
 export function seriesIds(): string[] {
-  const present = new Set(packs.map((pack) => pack.series));
+  // Rules v7: a series that has no packs now (the D pool) stays while it has history, so moved packs keep their line.
+  const present = new Set([...packs.map((pack) => pack.series), ...measurements.filter((row) => !isNonStorage(row.sessionType)).map((row) => row.series)]);
   return [...present].sort((a, b) => {
     const ai = SERIES_ORDER.indexOf(a);
     const bi = SERIES_ORDER.indexOf(b);
@@ -1607,15 +1609,15 @@ function assertDerived() {
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (
     rendered !==
-      "C1:C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
+      "C1:C1-P1+C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
     board.as_of !== "2026-10-17"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
-  for (const label of ["C1-P4", "C2-P2", "C3-P5", "C3-P6", "C4-P2"]) {
+  for (const label of ["C1-P1", "C1-P4", "C2-P2", "C3-P5", "C3-P6", "C4-P2"]) {
     if (!board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is missing from its board`);
   }
-  if (board.series.some((item) => item.labels.includes("D-1"))) throw new Error("D-1 is on a next parallel board");
+  if (board.series.some((item) => item.labels.some((label) => label.startsWith("D-")))) throw new Error("a D label is on a next parallel board");
   assertUnpublishedNight(model, heldNight);
   assertStatusChips();
   assertRingWindows(model);
@@ -1800,6 +1802,7 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
 }
 
 const EXPECTED_CHIPS: Record<string, StatusChipName> = {
+  "C1-P1": "GO",
   "C1-P2": "GO",
   "C1-P3": "GO",
   "C1-P4": "GO",
@@ -1811,7 +1814,6 @@ const EXPECTED_CHIPS: Record<string, StatusChipName> = {
   "C2-P4": "GO",
   "C2-P5": "GO",
   "C2-P6": "GO",
-  "D-1": "ALONE",
   "C3-P1": "GO",
   "C3-P2": "GO",
   "C3-P3": "GO",
@@ -1879,11 +1881,9 @@ function assertStatusChips() {
     !c1p5 ||
     !c1p5Tile ||
     c1p5Tile.reason !== c1p5.reason ||
-    c1p5.status !== "PARALLEL GO: on the C1 board | SERVICE Watch" ||
-    !c1p5.reason.includes("0.186 V apart") ||
-    !c1p5.reason.includes("0.384 V apart") ||
-    !c1p5.reason.includes("lowest cell 3539 mV") ||
-    c1p5.session !== "2026-10-16" ||
+    c1p5.status !== "PARALLEL GO: on the C1 board | SERVICE In service" ||
+    !c1p5.reason.includes("rules v7") ||
+    !c1p5.reason.includes("low Cell 4 is a performance note") ||
     statusChip(c1p5.status, c1p5.chargeMode) !== "GO"
   ) {
     throw new Error("C1-P5 card must show the recorded GO");
@@ -1891,11 +1891,8 @@ function assertStatusChips() {
   const c4p2 = rows.find((item) => item.label === "C4-P2");
   if (
     !c4p2 ||
-    c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
-    !c4p2.reason.includes("Cell 6 started low on 2026-10-14 and 2026-10-16") ||
-    !c4p2.reason.includes("recheck next C3+C4 storage night") ||
-    !c4p2.reason.includes("is dropped") ||
-    c4p2.session !== "2026-10-16" ||
+    c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service" ||
+    !c4p2.reason.includes("low Cell 6 on 2026-10-14 and 2026-10-16 is a performance note") ||
     statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {
     throw new Error(`C4-P2 call is ${c4p2?.session} ${c4p2?.status}`);
@@ -1914,8 +1911,8 @@ function assertStatusChips() {
     const row = rows.find((item) => item.label === label);
     if (
       !row ||
-      row.status !== "PARALLEL GO: on the C3 board | SERVICE In service (watch)" ||
-      row.session !== "2026-10-16" ||
+      row.status !== "PARALLEL GO: on the C3 board | SERVICE In service" ||
+      !row.reason.includes("rules v7") ||
       statusChip(row.status, row.chargeMode) !== "GO"
     ) {
       throw new Error(`${label} should stay Go on the C3 board`);

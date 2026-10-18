@@ -25,13 +25,13 @@ export default function AboutPage() {
         <p className="page-intro mt-4">
           {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
           {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
-          comes from the start of each storage charge. Charge rules v6 (permanent home channels, the same voltage checks, and IR checks as notes) and Rule B use the limits
+          comes from the start of each storage charge. Charge rules v7 (permanent home channels; a pack is pulled only for fire risk; a pack that fails a board check charges alone that night; IR checks are performance notes) and Rule B use the limits
           shown below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and
           not a series mean. The rest pool is retired: C1-P4 and C2-P2 are back in rotation, and their rest
-          tests complete in place. D-1 passed its 7-day rest test on 2026-10-17 and stays in rotation in the
-          D pool, charged on its own, last on DX8-2 Channel 1. A Rest pool night is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in
+          tests complete as self-discharge checks. D-1 passed its 7-day rest test on 2026-10-17 and returns to C1-P1
+          from the next storage night: same pack, same history, on the C1 board. A Rest pool night is labeled Rest pool. Its D-1 runs stay on series D. C3 and C4 are in
           rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16.
-          Each series has its own board. Watch is a note. C3-P5 is marked check first.
+          Each series has its own board. Watch and performance notes are notes. C3-P5 is marked check first.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">
@@ -120,14 +120,14 @@ export default function AboutPage() {
             <li className="text-[var(--ok)]">Go. On its parallel board. This is the default.</li>
             <li className="text-[var(--caution)]">Watch. A note only. The pack stays on its board.</li>
             <li className="text-[var(--off)]">
-              Pulled. Off the board for safety, or for trouble on 3 of the last 4 nights.
+              Pulled. Fire risk only: swelling or damage, heat, a very low cell, self-discharge, or abnormal charging. Not charged.
             </li>
           </ul>
           <p className="note mt-4">
             A spread of {formatValue("ir", spread.caution_gte)} {IR_UNIT} or more, or a cell at{" "}
-            {thresholds.cell_ratio_to_median.caution_gte}× the pack median, is a watch note. A low-cell
-            gap of {thresholds.low_cell_gap_mv.individual_gte} mV or more counts as a trouble night.
-            Service is separate: In service, Watch, D pool, or Retire. Rest pool nights before 2026-10-17
+            {thresholds.cell_ratio_to_median.caution_gte}× the pack median, is a performance note. A low-cell
+            gap of {thresholds.low_cell_gap_mv.individual_gte} mV or more is a performance note too.
+            Service is separate: In service, Watch, Pulled, or Retire. Rest pool nights before 2026-10-17
             are labeled Rest pool. A status line reads Parallel, then Service. The words on
             each pack are the recorded call.
           </p>
