@@ -396,6 +396,12 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           dotted line with no value on that night. Nothing is drawn before the first reading or after
           the last. A pack with only its first reading is a single point. A star on the night label
           is a partial night and is separate.
+          {pack.nights.some((night) => night.kind === "charged-no-log")
+            ? ` Charged, no log: ${pack.nights
+                .filter((night) => night.kind === "charged-no-log")
+                .map((night) => night.session)
+                .join(", ")}. No value is plotted on that night.`
+            : ""}
         </p>
         <LineChart
           categories={pack.categories}
