@@ -5,8 +5,6 @@ import { buildNextBoard, EXPECTED_BOARDS } from "../lib/next-board.mjs";
 import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
 import { checkNextCharge } from "../lib/next-charge.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
-import { laryParallelBucket, parallelBucket } from "../lib/parallel-rules.mjs";
-
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -231,60 +229,6 @@ for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
   }
 }
 
-function sessionOf(source, date) {
-  const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
-  const token = raw.split(/\s+/)[0] ?? "";
-  if (/^\d{4}-\d{2}-\d{2}-(?:restday0|charge)$/.test(token)) return token;
-  if (/^\d{4}-\d{2}-\d{2}(?:-eve)?$/.test(token) || /^S\d+$/.test(token)) return token;
-  return date;
-}
-
-const byUid = new Map();
-calls.forEach((row, index) => {
-  const list = byUid.get(row.pack_uid) ?? [];
-  list.push({ ...row, index, session: sessionOf(row.source, row.date) });
-  byUid.set(row.pack_uid, list);
-});
-
-const disagreements = [];
-for (const [uid, list] of byUid) {
-  const statusRows = list
-    .filter((row) => !/^unchanged\b/i.test(row.status.trim()))
-    .sort((a, b) => compareTime(a.session, b.session) || compareTime(a.date, b.date) || a.index - b.index);
-  const latest = statusRows[statusRows.length - 1];
-  if (!latest || !latest.status.startsWith("PARALLEL")) continue;
-  const history = v4
-    .filter((row) => row.pack_uid === uid && row.session_type !== "rest-test-day0" && row.session_type !== "charge-run")
-    .sort((a, b) => compareTime(a.session, b.session));
-  const pack = packs.find((row) => row.pack_uid === uid);
-  const computed = parallelBucket(
-    history.map((row) => ({
-      spread: Number(row.spread_mOhm),
-      cells: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`c${index}_mOhm`])),
-      gap: Number(row.low_cell_gap_mV),
-      floor: Number(row.floor_mV),
-      floorCell: Number(row.floor_cell),
-      starts: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`start_c${index}_mV`])),
-    })),
-    {
-      inDPool: pack?.series === "D" || /d pool/i.test(pack?.status ?? ""),
-      failedRest: visibleRests.some((row) => row.pack_uid === uid && /fail/i.test(row.result)),
-      selfDischargeWatch: /self-discharge/i.test(pack?.status ?? ""),
-    },
-  );
-  const recorded = laryParallelBucket(latest.status);
-  if (/REST POOL/i.test(latest.status)) {
-    console.log(`rest pool ${uid} (${latest.label_at_time}): recorded OFF, not a parallel-call disagreement`);
-  } else if (computed.call !== recorded) {
-    disagreements.push(`${uid}: computed ${computed.call}, recorded ${recorded}`);
-  }
-}
-
-if (disagreements.length) {
-  console.log(`parallel call disagreements (${disagreements.length}), Lary's text left unchanged:`);
-  for (const line of disagreements) console.log(line);
-}
-
 console.log(`v4 IR validation passed ${matched}/${v4.length} (site scale is 1; displayed mΩ match ir_store_v4)`);
 
 function fail(message) {
@@ -293,7 +237,15 @@ function fail(message) {
 }
 
 const events = parseCsv(fs.readFileSync(path.join(root, "data/v2/pack_events.csv"), "utf8"));
-const moved = new Set(events.filter((row) => row.event === "move").map((row) => row.pack_uid));
+// Label registry (2026-10-17): display mapping only. A mapped pack shows one label and series on every date.
+const labelRegistry = parseCsv(fs.readFileSync(path.join(root, "data/v2/label_registry.csv"), "utf8"));
+const mapped = new Map(labelRegistry.map((row) => [row.pack_uid, row]));
+const reg001 = mapped.get("CNHL-2026-001");
+if (!reg001 || reg001.display_label !== "C1-P1" || reg001.display_series !== "C1" || reg001.applies_to !== "all dates" || reg001.date !== "2026-10-17") {
+  fail("label_registry must map CNHL-2026-001 to C1-P1 / C1 for all dates, dated 2026-10-17");
+}
+const shownSeries = (row) => (mapped.has(row.pack_uid) && row.series_at_time === "D" ? mapped.get(row.pack_uid).display_series : row.series_at_time);
+const moved = new Set(events.filter((row) => row.event === "move" && !mapped.has(row.pack_uid)).map((row) => row.pack_uid));
 const slotted = packs.filter((pack) => !moved.has(pack.pack_uid) && !pack.retired.trim());
 const latestAvg = (uid) => {
   const rows = v4
@@ -303,8 +255,8 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 23 || fleetMean.toFixed(3) !== "2.680") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.680 mΩ over 23`);
+if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.669") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.669 mΩ over 24`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
@@ -314,16 +266,14 @@ const c2p2 = latestAvg("CNHL-2026-008");
 if (!c2p2 || c2p2.session !== "2026-09-30" || Number(c2p2.avg_mOhm) !== 3.217) {
   fail(`C2-P2 latest operational row is ${c2p2?.session} ${c2p2?.avg_mOhm}`);
 }
-if (v4.some((row) => row.session === "2026-10-09" && row.series_at_time === "C1")) {
-  fail("D-1 2026-10-09 must not belong to series C1");
-}
+// The append-only store keeps the original 2026-10-09 row; the site shows it under C1 through the registry.
 const d1 = v4.find((row) => row.session === "2026-10-09" && row.pack_uid === "CNHL-2026-001");
-if (!d1 || d1.series_at_time !== "D") fail("D-1 2026-10-09 must belong to series D");
+if (!d1 || d1.series_at_time !== "D" || shownSeries(d1) !== "C1") fail("CNHL-2026-001 2026-10-09 must be stored as written and shown under C1");
 
 function seriesMean(series) {
   const groups = new Map();
   for (const row of v4) {
-    if (row.series_at_time !== series || row.session_type === "rest-test-day0" || row.session_type === "charge-run") continue;
+    if (shownSeries(row) !== series || row.session_type === "rest-test-day0" || row.session_type === "charge-run") continue;
     const list = groups.get(row.session) ?? [];
     list.push(Number(row.avg_mOhm));
     groups.set(row.session, list);
@@ -335,7 +285,7 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-10-17" || c1Mean.mean.toFixed(3) !== "2.667") {
+if (c1Mean.session !== "2026-10-17" || c1Mean.mean.toFixed(3) !== "2.600") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
 if (c2Mean.session !== "2026-10-17" || c2Mean.mean.toFixed(3) !== "2.617") {
@@ -411,7 +361,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "2ff7abdff2eae69da14691a8ca5efe05486312ffc1fa91cda6746afe94c6849c") {
+if (methodologySha !== "8cbf115edb7e6c2f98732d07f10350e08cba3d73c38ccca37a14374396173fc3") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");

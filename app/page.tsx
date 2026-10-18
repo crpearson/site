@@ -168,7 +168,7 @@ export default function Home() {
             {IR_UNIT} · a series with one reading is a single point. Later readings are a solid
             line through a night that series was not measured. No value is filled in there. The
             mean averages only packs measured in that series that night. Rest-test day 0 is left
-            off this mean. D-1 on 10-09 stays in the series D mean.
+            off this mean.
           </span>
         }
       >
@@ -303,9 +303,9 @@ export default function Home() {
                       </span>
                     </th>
                     <td>
-                      <Lamp status={row.parallel || row.status} />
+                      <Lamp status={row.status} />
                       <p className="mt-1 text-sm">{row.parallel || row.status}</p>
-                      {row.service ? <p className="note mt-1">Service {row.service}</p> : null}
+                      {row.service ? <p className="note mt-1">{row.service}</p> : null}
                       {row.restPool ? (
                         <p className="note mt-1">
                           Rest pool · day 0 {row.restDay0} · due {row.restDue}
@@ -343,7 +343,7 @@ export default function Home() {
                   <Link href={`/pack/${row.uid}`} className="pack-link">
                     {row.label}
                   </Link>
-                  <Lamp status={row.parallel || row.status} />
+                  <Lamp status={row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
                 <p className="mt-2 text-sm leading-relaxed">{publicProse(row.reason)}</p>
@@ -353,7 +353,7 @@ export default function Home() {
                 ) : null}
                 <p className="note mt-2 font-mono">
                   {row.parallel || row.status}
-                  {row.service ? ` · Service ${row.service}` : ""} · IR{" "}
+                  {row.service ? ` · ${row.service}` : ""} · IR{" "}
                   <IrFigure value={row.avg} provisional={row.provisional} unit /> · spread{" "}
                   <IrFigure value={row.spread} provisional={row.provisional} unit /> · floor{" "}
                   {row.floor == null ? "—" : `${row.floor} mV`}
@@ -495,8 +495,7 @@ export default function Home() {
               recorded figure. A next-night outlook is not drawn here. On 2026-10-10 the points are
               C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. C3 and C4
               have no board night yet, so they are not on this chart. The rest-test day-0 rows are
-              not a parallel charge and are not on this line. Series D, pack D-1, is charged on its
-              own, so Rule B does not apply and it is not a line here. Series do not share a board.
+              not a parallel charge and are not on this line. Series do not share a board.
             </p>
             <LineChart
               categories={model.categories}
@@ -554,6 +553,7 @@ export default function Home() {
                 cells: pack.historyCells,
                 service: pack.service,
                 logged: pack.logged,
+                nolog: pack.nolog,
                 rest: pack.rest,
                 unpublished: pack.unpublished,
                 provisional: pack.provisional,

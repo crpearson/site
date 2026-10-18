@@ -6,7 +6,7 @@ export type MissBridge = {
   nights: string[];
 };
 
-export type GapKind = "value" | "skip" | "na" | "out" | "rest";
+export type GapKind = "value" | "skip" | "na" | "out" | "rest" | "nolog";
 
 /** Pack charts mark skips. Aggregate charts draw a solid line through them. */
 export type ChartMode = "aggregate" | "pack";
@@ -30,6 +30,7 @@ export function gapKind(series: ChartSeries, index: number): GapKind {
   if (series.rest?.[index]) return "rest";
   if (spanAt(series, index) == null) return "out";
   if (series.na?.[index]) return "na";
+  if (series.nolog?.[index]) return "nolog";
   if (series.logged) {
     if (!series.logged[index]) return "skip";
     return "out";
@@ -39,6 +40,10 @@ export function gapKind(series: ChartSeries, index: number): GapKind {
 
 export function seriesNotCharged(series: ChartSeries, index: number): boolean {
   return gapKind(series, index) === "skip";
+}
+
+export function seriesChargedNoLog(series: ChartSeries, index: number): boolean {
+  return gapKind(series, index) === "nolog";
 }
 
 export function seriesNa(series: ChartSeries, index: number): boolean {
@@ -59,8 +64,8 @@ export function axisNightVisible(series: ChartSeries[], index: number, nightId?:
   if (series.length === 0) return true;
   const plotted = series.some((item) => {
     const kind = gapKind(item, index);
-    if (item.unpublished?.[index]) return kind === "value" || kind === "skip" || kind === "na";
-    return kind === "value" || kind === "skip" || kind === "na" || kind === "rest";
+    if (item.unpublished?.[index]) return kind === "value" || kind === "skip" || kind === "na" || kind === "nolog";
+    return kind === "value" || kind === "skip" || kind === "na" || kind === "rest" || kind === "nolog";
   });
   if (!plotted) return false;
   if (nightId?.endsWith("-restday0") || nightId?.endsWith("-charge")) {
@@ -165,8 +170,10 @@ export function gapPhrase(series: ChartSeries[], nightIds: string[], index: numb
   const skipped = new Set<string>();
   const na = new Set<string>();
   const resting = new Set<string>();
+  const noLog = new Set<string>();
   for (const item of series) {
     if (gapKind(item, index) === "rest") resting.add(nightIds[index]);
+    if (gapKind(item, index) === "nolog") noLog.add(nightIds[index]);
     if (!seriesGap(item, index)) continue;
     for (const night of nightsForGap(item, nightIds, index)) {
       const nightIndex = nightIds.indexOf(night);
@@ -179,8 +186,10 @@ export function gapPhrase(series: ChartSeries[], nightIds: string[], index: numb
   const skipOrdered = nightIds.filter((night) => skipped.has(night));
   const naOrdered = nightIds.filter((night) => na.has(night));
   const restOrdered = nightIds.filter((night) => resting.has(night));
+  const noLogOrdered = nightIds.filter((night) => noLog.has(night) && !chartHasValue(series, nightIds.indexOf(night)));
   if (restOrdered.length) parts.push(`Rest pool: ${restOrdered.join(", ")}`);
   if (skipOrdered.length) parts.push(`Not charged: ${skipOrdered.join(", ")}`);
+  if (noLogOrdered.length) parts.push(`Charged, no log: ${noLogOrdered.join(", ")}`);
   if (naOrdered.length) parts.push(`N/A: ${naOrdered.join(", ")}`);
   return parts.join(". ");
 }
@@ -189,6 +198,13 @@ export function allNotCharged(series: ChartSeries[], nightIds: string[]): string
   return nightIds.filter((night, index) => {
     if (chartHasValue(series, index)) return false;
     return series.some((item) => seriesNotCharged(item, index));
+  });
+}
+
+export function allChargedNoLog(series: ChartSeries[], nightIds: string[]): string[] {
+  return nightIds.filter((night, index) => {
+    if (chartHasValue(series, index)) return false;
+    return series.some((item) => seriesChargedNoLog(item, index));
   });
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  allChargedNoLog,
   allNa,
   allNotCharged,
   axisNightVisible,
@@ -10,6 +11,7 @@ import {
   missBridges,
   openEndIndices,
   solidFrom,
+  seriesChargedNoLog,
   seriesGap,
   seriesNa,
   seriesNotCharged,
@@ -134,6 +136,7 @@ export function LineChart({
   const nightIds = categories.map((category) => category.id);
   const note = legendNote(shown, nightIds, mode);
   const missed = allNotCharged(shown, nightIds);
+  const noLog = allChargedNoLog(shown, nightIds);
   const naNights = allNa(shown, nightIds);
   const phrase = hover == null ? "" : gapPhrase(shown, nightIds, hover);
   const columnGap =
@@ -160,6 +163,7 @@ export function LineChart({
                 return `${item.label} ${formatValue(format, value)}${mark} ${unit}`;
               }
               if (seriesRest(item, hover)) return `${item.label} Rest pool`;
+              if (seriesChargedNoLog(item, hover)) return `${item.label} charged, no log`;
               if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
               if (seriesNa(item, hover)) return `${item.label} N/A`;
               return `${item.label} no value`;
@@ -215,6 +219,7 @@ export function LineChart({
         A pack with only its first reading is a single point. A star on the night label is a partial
         night and is separate: a pack that was charged still has a point.
         {mode === "pack" && missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
+        {mode === "pack" && noLog.length ? ` Charged, no log: ${noLog.join(", ")}.` : ""}
         {naNights.length ? ` N/A: ${naNights.join(", ")}.` : ""}
       </p>
       <div className="sr-only" aria-live="polite">
@@ -396,17 +401,20 @@ export function LineChart({
                     {shown.map((item) => {
                       const value = item.values[hover];
                       const missedNight = seriesNotCharged(item, hover);
+                      const noLogNight = seriesChargedNoLog(item, hover);
                       const naNight = seriesNa(item, hover);
                       return (
                         <li key={item.id}>
                           <span className="swatch" style={{ background: item.color }} />
                           <span>{item.label}</span>
                           <span className="font-mono">
-                            {value != null && !missedNight && !naNight ? (
+                            {value != null && !missedNight && !naNight && !noLogNight ? (
                               <>
                                 {formatValue(format, value)}
                                 {provisionalAt(item, hover, format) ? <ProvisionalMark /> : null} {unit}
                               </>
+                            ) : noLogNight ? (
+                              "charged, no log"
                             ) : missedNight ? (
                               "not charged"
                             ) : naNight ? (

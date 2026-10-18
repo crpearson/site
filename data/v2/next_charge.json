@@ -27,7 +27,7 @@
       "charger": "DX8-1",
       "channel": 1,
       "state": "active",
-      "note": "Back from the D pool on 2026-10-17 (same pack, same history). Cell 6 is a watch note."
+      "note": "Cell 6 is a watch note (rest test RT-001-1 passed 2026-10-17)."
     },
     {
       "label": "C1-P2",
@@ -2129,7 +2129,7 @@
     {
       "label": "C1-P1",
       "uid": "CNHL-2026-001",
-      "note": "Watch (note only): Cell 6 (self-discharge history: chronic low floor up to 2026-10-08; rest test RT-001-1 passed 2026-10-17, 2 mV extra drop; Cell 6 started 172 mV below the other cells after flying on 2026-10-17, its last night as D-1)."
+      "note": "Watch (note only): Cell 6 (self-discharge history: chronic low floor up to 2026-10-08; rest test RT-001-1 passed 2026-10-17, 2 mV extra drop; Cell 6 started 172 mV below the other cells after flying on 2026-10-17)."
     },
     {
       "label": "C1-P4",
@@ -2239,7 +2239,7 @@
   "notes": [
     "Charge every series that was flown, all of it, including any packs in it that did not fly. Series that were not flown stay off.",
     "Each pack has a permanent home channel; empty and pulled slots are skipped and nothing is reordered.",
-    "C1-P1 is back from the D pool from the next storage night (same pack, same history); it charges on DX8-1 Channel 1.",
+    "C1-P1 charges on DX8-1 Channel 1 on the C1 board from the next storage night.",
     "Add the flown series or packs and the days since last use to the upload note.",
     "Pull a pack only for fire risk: swelling or pouch damage, charge heat of 45 °C or more or clearly hotter than its siblings, a cell under 1.5 V (or under 2.0 V for about a week), self-discharge, or abnormal behaviour on a solo charge. A pulled pack is not charged.",
     "Charge a pack alone that night (it stays in rotation) for the board checks: 0.60 V pack spread, a cell 0.10 V from its same-position cell on another pack, 0.10 V spread inside the pack, a cell resting 2.0 to 3.0 V, a damaged connector, or a cell IR step of 2x its own level and the pack median.",

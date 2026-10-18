@@ -28,8 +28,8 @@ export default function AboutPage() {
           comes from the start of each storage charge. Charge rules v7 (permanent home channels; a pack is pulled only for fire risk; a pack that fails a board check charges alone that night; IR checks are performance notes) and Rule B use the limits
           shown below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and
           not a series mean. The rest pool is retired: C1-P4 and C2-P2 are back in rotation, and their rest
-          tests complete as self-discharge checks. D-1 passed its 7-day rest test on 2026-10-17 and returns to C1-P1
-          from the next storage night: same pack, same history, on the C1 board. A Rest pool night is labeled Rest pool. Its D-1 runs stay on series D. C3 and C4 are in
+          tests complete as self-discharge checks. C1-P1 passed its 7-day rest test on 2026-10-17 and charges on the C1
+          board from the next storage night; its whole history is shown as C1-P1. A Rest pool night is labeled Rest pool. C3 and C4 are in
           rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16.
           Each series has its own board. Watch and performance notes are notes. C3-P5 is marked check first.
         </p>
@@ -150,7 +150,7 @@ export default function AboutPage() {
       <Panel accent="signal" eyebrow="Charts" title="A night with no reading">
         <p className="note">
           No chart is given a made-up value. Every recorded reading for a pack is joined to the
-          next one, including D-pool nights, charge-alone nights, rest-test nights, and nights from
+          next one, including charge-alone nights, rest-test nights, and nights from
           before a move. Fleet charts — the series mean, the pack trends, Rule B, and the bake-off —
           draw that line solid through a night with no reading. A pack page, and the sparkline on a
           pack tile, uses a faint dotted line across a night that pack was not charged. Nothing is

@@ -26,11 +26,6 @@
     }
   },
   "packs": {
-    "D-1": {
-      "status": "PARALLEL INDIVIDUAL-ONLY | SERVICE D pool (Watch); rest test cycle 1 started 2026-10-09",
-      "reason": "Individual only. Rest test cycle 1 started 2026-10-09. Last night IR avg 2.77 mΩ, spread 1.0 mΩ.",
-      "call_date": "2026-10-09"
-    },
     "C1-P2": {
       "status": "PARALLEL GO | SERVICE In service",
       "reason": "Go. IR avg 2.93 mΩ, spread 0.6 mΩ. No trigger.",
@@ -88,12 +83,12 @@
     }
   },
   "gaps": [
-    "C1 and C2 were last measured on 2026-10-11. D-1 was measured on 2026-10-09. C1-P4 and C2-P2 also have the rest-day baseline. The 2026-10-11 charge run for C1-P5 and C2-P6 is not a storage night.",
+    "C1 and C2 were last measured on 2026-10-11. C1-P4 and C2-P2 also have the rest-day baseline. The 2026-10-11 charge run for C1-P5 and C2-P6 is not a storage night.",
     "A night that did not include every pack stays incomplete. Missing packs are not filled in.",
     "No capacity in/out series — storage runs are top-ups, not capacity tests.",
     "DX8 cell IR reads about 2–3.5 mΩ per cell (whole pack about 11–21 mΩ). The DX8's IR accuracy is limited, so IR is used for relative and trend checks only.",
     "Mapping uses the night's manifest. The usual-low-cell check is advisory only.",
     "C3 and C4 are in rotation (CNHL V2 6S 1300 Black, purchased 2026-10-13). Storage night 2 was 2026-10-16. Every pack charges on its own parallel board. Watch is a note. Bake-off prices are shop prices, not purchase prices.",
-    "DX8-2 IR is validated against the charger screen. A row is marked provisional only when its ir_validation says so."
+    "DX8-2 IR is validated against the charger screen. A row is flagged only when its ir_validation says so."
   ]
 }

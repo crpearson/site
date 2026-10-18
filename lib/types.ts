@@ -24,6 +24,11 @@ export type ChartSeries = {
   /** True when a measurement row exists that night. Omit to treat a value as the row. */
   logged?: boolean[];
   /**
+   * True when the pack was charged that night but the charger kept no log.
+   * No value is invented. The night is not a skipped charge and has no ring.
+   */
+  nolog?: boolean[];
+  /**
    * True when this line ran that night but the metric does not apply. The night
    * is still drawn as a skip, with the tooltip "N/A: <night>".
    */

@@ -21,8 +21,8 @@ A pack is only ever parallel-charged with its own series. Series are never mixed
 ## Pack identity
 
 - Every physical pack has a **permanent ID** in the form `{brand}-{year}-{number}`, e.g. `CNHL-2026-001`. The year is the year the ID was assigned. IDs are never reused and don't include the slot.
-- The **label** (e.g. `C1-P4`) is the pack's current slot in a series. Series slots are `C1-P1…P6`, `C2-P1…P6`, `C3-P1…P6` and `C4-P1…P6`. The D pool (labels `D-1`, `D-2`, …) has no packs now.
-- When a pack moves (for example from C1-P1 to D-1 and back), its ID and full history go with it. When a new pack takes over a slot, it gets a new ID, and the old pack's history stays under its own ID.
+- The **label** (e.g. `C1-P4`) is the pack's current slot in a series. Series slots are `C1-P1…P6`, `C2-P1…P6`, `C3-P1…P6` and `C4-P1…P6`: 24 packs.
+- When a pack moves, its ID and full history go with it. When a new pack takes over a slot, it gets a new ID, and the old pack's history stays under its own ID.
 - Every move, replacement, and retirement is logged as a dated event, and every status call is kept as a dated history.
 
 ## The routine
@@ -43,7 +43,7 @@ From each DX8 Storage log:
 - The DX8 auto-names files `LiPo[Storage_NNN_CHx].txt` and counts NNN upward.
 - **NNN is per charger.** DX8-1's file 100 has nothing to do with DX8-2's file 100, so number streams are never merged across chargers.
 - A **session** is one Storage night, named by calendar date (Pacific), e.g. `2026-09-27`. Older nights used `S` + their lowest file number (e.g. `S413`) and keep those names.
-- If only some series ran that night, only those packs get rows. A pack that didn't run gets no value for that night, and nothing is ever filled in. Charts never show a reading as a lone dot. Each pack's readings are joined by one line across every night it has a reading, including D pool, charge-alone and rest-test nights. A pack that moves keeps one line through its whole history: D-1's line continues through its nights as C1-P1. On a pack's own chart, a night the pack wasn't charged is a faint dotted line between the real readings on either side. Series, fleet, Rule B and bake-off charts draw a solid line straight through any night a series skipped. Nothing is drawn before a pack's first reading or after its last. The only reading shown on its own is a brand-new pack's very first reading.
+- If only some series ran that night, only those packs get rows. A pack that didn't run gets no value for that night, and nothing is ever filled in. Charts never show a reading as a lone dot. Each pack's readings are joined by one line across every night it has a reading, including charge-alone and rest-test nights. A pack that moves keeps one line through its whole history. On a pack's own chart, a night the pack wasn't charged is a faint dotted line between the real readings on either side. Series, fleet, Rule B and bake-off charts draw a solid line straight through any night a series skipped. Nothing is drawn before a pack's first reading or after its last. The only reading shown on its own is a brand-new pack's very first reading.
 
 ## Home channels
 
@@ -55,7 +55,7 @@ Every slot has a permanent home channel. It doesn't change from night to night.
 | C2 and C4 | DX8-2 Channel 1 | DX8-2 Channel 2 | DX8-1 Channel 1 | DX8-1 Channel 2 |
 
 - An **empty slot** or a **pulled pack** is skipped, and nothing is reordered. A pulled pack gets no storage charge.
-- **C1-P1** is filled again from the next storage night: the pack that was D-1 moves back (see *The D pool*). The spare pack stays a spare.
+- **C1-P1** charges on the C1 board from the next storage night (see *C1-P1* below). The spare pack stays a spare.
 
 ### Each night
 1. Take every series that was flown, and every pack in it.
@@ -131,7 +131,7 @@ Results are also graded, scaled to 7 days, as a performance note:
 | 10–30 mV | Borderline |
 | Over 30 mV | Fail |
 
-A fail grade is a note only; it is never a reason to retire a pack. C1-P1's RT-001-1 (from its time as D-1) was read from a screen photo on day 8 and passed. C1-P4's RT-004-1 and C2-P2's RT-008-1 complete from the first reading of their next storage log, if they haven't flown since 2026-10-09.
+A fail grade is a note only; it is never a reason to retire a pack. C1-P1's RT-001-1 was read from a screen photo on day 8 and passed. C1-P4's RT-004-1 and C2-P2's RT-008-1 complete from the first reading of their next storage log, if they haven't flown since 2026-10-09.
 
 ### 7. Trends over time
 - Each pack's average IR is compared with its own first 3 storage nights (see *section 8*). These are performance notes only.
@@ -180,11 +180,10 @@ Everything else is a performance note: IR trend, board IR match, a single high-I
 - A pack charging alone one night isn't the same as a pulled pack.
 - Leaving a pack out of the averages doesn't delete its data.
 
-## The D pool (no packs)
+## C1-P1
 
-- The D pool was for packs charged on their own only. It has **no packs now**, and no new pack goes there under these rules.
-- *History:* the pack that was C1-P1 became **D-1** on 2026-10-08 for self-discharge on Cell 6 (a chronic low floor). It charged on its own after that, last on DX8-2 Channel 1.
-- **It moves back to C1-P1 from the next storage night (2026-10-17).** It passed its rest test, and under these rules a weak cell's history is a note, not a pull: only a repeat of the self-discharge (see *section 6*) would pull it. It keeps its permanent ID `CNHL-2026-001` and its full history, so its page and chart run on unbroken from C1-P1 through D-1 and back. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. It was charged full on 2026-10-17, so its resting voltage is checked before it is connected. The spare pack stays a spare.
+- C1-P1 (`CNHL-2026-001`) charged on its own from 2026-10-08 to 2026-10-17 because of self-discharge on Cell 6 (a chronic low floor). Its whole history is shown as C1-P1, as one line.
+- **It charges on the C1 board from the next storage night.** It passed its rest test, and under these rules a weak cell's history is a note, not a pull: only a repeat of the self-discharge (see *section 6*) would pull it. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. The spare pack stays a spare.
 
 ## Rest pool (retired)
 

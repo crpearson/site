@@ -10,7 +10,7 @@ import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
 import { SlotDetail } from "@/components/SlotDetail";
 import { formatValue, isSessionId, publicProse, publicSession, shownWhen, volts } from "@/lib/format";
-import { goNewText, watchRecheckText } from "@/lib/lamp";
+import { callChipText, goNewText, watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
   floorBands,
@@ -154,11 +154,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{publicProse(pack.call.reason)}</p>
         <p className="note">
-          {/* A call without the PARALLEL … | SERVICE … shape (e.g. a D pool call) is shown whole, not as a parallel half. */}
-          {pack.row.service
-            ? `Parallel ${pack.row.parallel} · Service ${pack.row.service}`
-            : `Call ${pack.call.status}`}{" "}
-          · {pack.row.chargeCount} storage charges
+          {callChipText(pack.call.status)} · {pack.row.chargeCount} storage charges
         </p>
         {pack.row.restPool ? (
           <p className="note">
@@ -395,7 +391,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       <Panel accent="signal" eyebrow="Every night for this pack" title="Cell IR across nights">
         <p className="note mb-3">
           The line follows this pack under whatever label it had that night, keyed by serial. Every
-          recorded reading is joined to the next one, including D-pool nights, charge-alone nights,
+          recorded reading is joined to the next one, including charge-alone nights,
           and nights from before a move. A night it was not charged, between two readings, is a faint
           dotted line with no value on that night. Nothing is drawn before the first reading or after
           the last. A pack with only its first reading is a single point. A star on the night label
@@ -507,6 +503,17 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                     <td className="font-mono text-sm">{night.label}</td>
                     <td className="text-sm" colSpan={8}>
                       Rest pool
+                    </td>
+                  </tr>
+                ) : night.kind === "charged-no-log" ? (
+                  <tr key={night.session}>
+                    <th scope="row" className="font-mono text-sm font-normal">
+                      {publicSession(night.session)}
+                      {night.partial ? "*" : ""}
+                    </th>
+                    <td className="font-mono text-sm">{night.label}</td>
+                    <td className="text-sm" colSpan={8}>
+                      Charged, no log
                     </td>
                   </tr>
                 ) : night.kind === "measured" ? (

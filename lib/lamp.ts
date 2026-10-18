@@ -94,6 +94,23 @@ export function splitCall(status: string): { parallel: string; service: string }
   return { parallel: match[1].trim(), service: match[2].trim() };
 }
 
+/** A leading shout (GO, CAUTION) reads as a sentence. The rest of the phrase stays as recorded. */
+function softenLead(text: string): string {
+  return text.replace(/^[A-Z][A-Z0-9-]*/, (word) => word.charAt(0) + word.slice(1).toLowerCase());
+}
+
+/**
+ * Lamp text. The recorded call keeps its PARALLEL and SERVICE field labels.
+ * The chip drops both labels, because the service value already says the tier
+ * ("In service", "Watch", "In service (watch)").
+ */
+export function callChipText(status: string): string {
+  const match = status.match(/^PARALLEL\s+([\s\S]+?)\s+\|\s+SERVICE\s+([\s\S]+)$/i);
+  if (match) return `Parallel ${softenLead(match[1].trim())} | ${match[2].trim()}`;
+  if (/^PARALLEL\s+/i.test(status)) return `Parallel ${softenLead(status.replace(/^PARALLEL\s+/i, "").trim())}`;
+  return softenLead(status.trim());
+}
+
 /** Lamp for the parallel half of a Rules v3 call. Older one-word calls still map. */
 export function parallelTone(status: string): LampTone {
   const parallel = splitCall(status).parallel.toUpperCase();
