@@ -62,8 +62,18 @@ export function SlotNightNotes({ label }: { label: string }) {
   );
 }
 
+/** One line when every per-cell gap on a board names the same pack. No pair list. */
+function cellGapCause(board: NextChargeV4["parallel_boards"][number]): string | null {
+  const pairs = board.outlook_rule_b.cell_check.pairs;
+  if (pairs.length === 0) return null;
+  const cause = board.packs.filter((label) => pairs.every((pair) => pair.labels.includes(label)));
+  if (cause.length !== 1) return null;
+  return `${board.series}: all gaps come from ${cause[0]}`;
+}
+
 export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
   const checks = doc.self_discharge_checks;
+  const gapLines = doc.parallel_boards.map(cellGapCause).filter((line): line is string => line !== null);
   return (
     <div className="space-y-6">
       <section className="space-y-3" aria-labelledby="outlook-heading">
@@ -97,33 +107,20 @@ export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
         <NoteList items={doc.check_before_connecting} />
       </section>
 
-      <section className="panel" data-accent="muted" aria-labelledby="cell-check-heading">
-        <h2 id="cell-check-heading" className="panel-title">
-          Per-cell check
-        </h2>
-        <div className="mt-3 space-y-4">
-          {doc.parallel_boards.map((board) => {
-            const check = board.outlook_rule_b.cell_check;
-            return (
-              <div key={board.series}>
-                <h3 className="font-mono text-sm">{board.series}</h3>
-                <p className="note mt-1">{check.basis}</p>
-                {check.pairs.length === 0 ? (
-                  <p className="note mt-1">None.</p>
-                ) : (
-                  <ul className="mt-2 space-y-1">
-                    {check.pairs.map((pair) => (
-                      <li key={`${board.series}-${pair.labels.join("-")}-${pair.cell}`} className="font-mono text-sm">
-                        {pair.labels.join(", ")} cell {pair.cell} {pair.diff_mv} mV
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      {gapLines.length === 0 ? null : (
+        <section className="panel" data-accent="muted" aria-labelledby="cell-check-heading">
+          <h2 id="cell-check-heading" className="panel-title">
+            Per-cell check
+          </h2>
+          <ul className="mt-3 space-y-1">
+            {gapLines.map((line) => (
+              <li key={line} className="note">
+                {line}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="panel" data-accent="signal" aria-labelledby="performance-heading">
         <h2 id="performance-heading" className="panel-title">
