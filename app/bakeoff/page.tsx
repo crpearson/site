@@ -4,7 +4,7 @@ import { Panel } from "@/components/Panel";
 import { usd } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { brandCards, fleetModel, headline, seriesBlocks } from "@/lib/fleet";
-import { splitCall } from "@/lib/lamp";
+import { callChipText } from "@/lib/lamp";
 
 export const metadata: Metadata = {
   title: "Brand bake-off",
@@ -96,7 +96,7 @@ export default function BakeoffPage() {
                       .filter((slot) => slot.status)
                       .map((slot) => (
                         <li key={slot.label}>
-                          {slot.label}: {splitCall(slot.status ?? "").parallel}
+                          {slot.label}: {callChipText(slot.status ?? "")}
                         </li>
                       ))}
                   </ul>

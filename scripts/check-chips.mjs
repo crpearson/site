@@ -64,6 +64,23 @@ function chipTexts(html) {
   return texts;
 }
 
+/** Field label still sitting in front of a tier. Display text drops that label. */
+const serviceField = /\bSERVICE\s+(?:In\s+service|Watch|Pulled|Retire|In\s+rotation|New|D[ -]pool)\b/i;
+const serviceInService = /\bservice\s+in\s+service\b/i;
+
+function visibleAndLabels(html) {
+  const attrs = [...html.matchAll(/\b(?:title|aria-label|aria-description|alt)="([^"]*)"/gi)].map(
+    (match) => decode(match[1]),
+  );
+  const body = html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ");
+  return decode(`${body} ${attrs.join(" ")}`).replace(/\s+/g, " ");
+}
+
 function selfTest() {
   const bad = [
     "SERVICE IN SERVICE",
@@ -73,16 +90,33 @@ function selfTest() {
   ];
   const good = [
     "Parallel Go: on the C3 board | In service",
+    "Parallel Go | In service",
     "Parallel Go: on the C1 board | In service (watch)",
     "Parallel Go: on the C1 board | Watch (self-discharge check RT-004-1)",
     "Go (watch)",
     "GO",
+    "service status",
+    "Service is separate: In service, Watch, Pulled, or Retire.",
   ];
   for (const text of bad) {
     if (!doubledWords(text)) throw new Error(`chip check missed ${text}`);
   }
+  if (!serviceInService.test("SERVICE IN SERVICE") || !serviceField.test("SERVICE IN SERVICE")) {
+    throw new Error("page check missed SERVICE IN SERVICE");
+  }
   for (const text of good) {
     if (doubledWords(text)) throw new Error(`chip check flagged ${text}`);
+    if (serviceInService.test(text) || serviceField.test(text)) {
+      throw new Error(`page check flagged ${text}`);
+    }
+  }
+  const raw = [
+    "PARALLEL GO | SERVICE In service",
+    "PARALLEL GO: on the C1 board | SERVICE In service (watch)",
+    "PARALLEL GO: on the C1 board | SERVICE Watch (self-discharge check RT-004-1)",
+  ];
+  for (const text of raw) {
+    if (!serviceField.test(text)) throw new Error(`page check missed ${text}`);
   }
 }
 
@@ -111,3 +145,24 @@ if (hits.length) {
 }
 
 console.log(`chip check passed (${chips} chips, 0 doubled)`);
+
+const pageHits = [];
+for (const file of walk(outDir)) {
+  const text = visibleAndLabels(fs.readFileSync(file, "utf8"));
+  const doubled = [...text.matchAll(new RegExp(serviceInService.source, "gi"))];
+  const labeled = [...text.matchAll(new RegExp(serviceField.source, "gi"))];
+  for (const match of doubled) {
+    pageHits.push(`${path.relative(root, file)}: service in service at “${text.slice(Math.max(0, match.index - 24), match.index + match[0].length + 24)}”`);
+  }
+  for (const match of labeled) {
+    pageHits.push(`${path.relative(root, file)}: SERVICE field at “${text.slice(Math.max(0, match.index - 24), match.index + match[0].length + 24)}”`);
+  }
+}
+
+if (pageHits.length) {
+  console.error(`status display check failed (${pageHits.length}).`);
+  for (const hit of pageHits.slice(0, 40)) console.error(hit);
+  process.exit(1);
+}
+
+console.log("status display check passed (service in service 0, SERVICE field label 0)");

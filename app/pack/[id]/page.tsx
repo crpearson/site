@@ -145,7 +145,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <StatusChip status={pack.call.status} chargeMode={pack.chargeMode} />
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
-        <p className="call-full">{pack.call.status}</p>
+        <p className="call-full">{callChipText(pack.call.status)}</p>
         {watchRecheckText(pack.call.status, pack.call.reason) ? (
           <p className="note">Go (watch). {watchRecheckText(pack.call.status, pack.call.reason)}</p>
         ) : null}
@@ -370,7 +370,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
                   <span className="font-mono">{shownWhen(call.session, call.date)}</span>
                   <span className="note">{call.label}</span>
                 </p>
-                <p className="call-full mt-1">{call.status}</p>
+                <p className="call-full mt-1">{callChipText(call.status)}</p>
                 <p className="mt-1 leading-relaxed">{publicProse(call.reason)}</p>
               </li>
             ))}

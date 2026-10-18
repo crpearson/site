@@ -10,7 +10,7 @@ import { OutlookBoards } from "@/components/NextChargeNotes";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
 import { StatusChip } from "@/components/StatusChip";
-import { conditionalJoinNote } from "@/lib/lamp";
+import { callChipText, conditionalJoinNote } from "@/lib/lamp";
 import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { loadNextChargeV4 } from "@/lib/next-charge.mjs";
@@ -304,8 +304,7 @@ export default function Home() {
                     </th>
                     <td>
                       <Lamp status={row.status} />
-                      <p className="mt-1 text-sm">{row.parallel || row.status}</p>
-                      {row.service ? <p className="note mt-1">{row.service}</p> : null}
+                      <p className="mt-1 text-sm">{callChipText(row.status)}</p>
                       {row.restPool ? (
                         <p className="note mt-1">
                           Rest pool · day 0 {row.restDay0} · due {row.restDue}
@@ -352,8 +351,7 @@ export default function Home() {
                   <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
                 ) : null}
                 <p className="note mt-2 font-mono">
-                  {row.parallel || row.status}
-                  {row.service ? ` · ${row.service}` : ""} · IR{" "}
+                  {callChipText(row.status)} · IR{" "}
                   <IrFigure value={row.avg} provisional={row.provisional} unit /> · spread{" "}
                   <IrFigure value={row.spread} provisional={row.provisional} unit /> · floor{" "}
                   {row.floor == null ? "—" : `${row.floor} mV`}
