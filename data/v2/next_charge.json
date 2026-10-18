@@ -1599,7 +1599,7 @@
         "Charge a pack alone that night (it stays in rotation, no status change) if: the board's packs are more than 0.60 V apart; any cell is more than 0.10 V from the same-position cell of another pack on the board; its own cells are more than 0.10 V apart; a cell rests between 2.0 and 3.0 V; or a connector is damaged (fix it first).",
         "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V.",
         "C3-P1: check its rest V first; it was outside 0.60 V at the end of its latest storage run.",
-        "Per-cell check: at the end of the latest storage runs, same-position cells were more than 0.10 V apart (C3-P1, C3-P2, C3-P3, C3-P4, C3-P5, C3-P6). Check resting voltage before connecting.",
+        "Per-cell check: at the end of the latest storage runs, same-position cells were more than 0.10 V apart, all against C3-P1. Check resting voltage before connecting.",
         "C3-P2: charged 2026-10-17 with no log; using the end of its 2026-10-16 storage run."
       ],
       "rest_check_limit_V": 0.6,
@@ -2097,42 +2097,17 @@
     {
       "label": "C1-P4",
       "uid": "CNHL-2026-004",
-      "note": "Check resting voltage before connecting (advisory, from the logs): it was charged full on 2026-10-18 (about 4.20 V per cell) after its last storage run; bring it to storage voltage, or charge it alone, before it joins the board."
+      "note": "Charged full on 10-18 (about 4.20 V per cell). Storage-charge it before it goes back on the C1 board."
     },
     {
       "label": "C2-P2",
       "uid": "CNHL-2026-008",
-      "note": "Check resting voltage before connecting (advisory, from the logs): it was charged full on 2026-10-18 (about 4.20 V per cell) after its last storage run; bring it to storage voltage, or charge it alone, before it joins the board."
+      "note": "Charged full on 10-18 (about 4.20 V per cell). Storage-charge it before it goes back on the C2 board."
     },
     {
       "label": "C3-P1",
       "uid": "CNHL-2026-013",
-      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P2; Cell 2 195 mV from C3-P3; Cell 6 195 mV from C3-P3; Cell 2 195 mV from C3-P4; Cell 6 195 mV from C3-P4; Cell 6 195 mV from C3-P5; Cell 2 195 mV from C3-P6; Cell 6 195 mV from C3-P6; Cell 2 194 mV from C3-P2; Cell 2 194 mV from C3-P5; Cell 1 193 mV from C3-P2; Cell 5 193 mV from C3-P2; Cell 5 193 mV from C3-P4; Cell 4 193 mV from C3-P6; Cell 5 193 mV from C3-P6; Cell 4 192 mV from C3-P2; Cell 1 192 mV from C3-P3; Cell 5 192 mV from C3-P3; Cell 1 192 mV from C3-P4; Cell 4 192 mV from C3-P4; Cell 4 192 mV from C3-P5; Cell 1 192 mV from C3-P6; Cell 4 191 mV from C3-P3; Cell 3 191 mV from C3-P4; Cell 1 191 mV from C3-P5; Cell 5 191 mV from C3-P5; Cell 3 190 mV from C3-P2; Cell 3 190 mV from C3-P3; Cell 3 190 mV from C3-P6; Cell 3 189 mV from C3-P5 (over 0.10 V from the same-position cell of another pack on the board)."
-    },
-    {
-      "label": "C3-P2",
-      "uid": "CNHL-2026-014",
-      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P1; Cell 2 194 mV from C3-P1; Cell 1 193 mV from C3-P1; Cell 5 193 mV from C3-P1; Cell 4 192 mV from C3-P1; Cell 3 190 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
-    },
-    {
-      "label": "C3-P3",
-      "uid": "CNHL-2026-015",
-      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 2 195 mV from C3-P1; Cell 6 195 mV from C3-P1; Cell 1 192 mV from C3-P1; Cell 5 192 mV from C3-P1; Cell 4 191 mV from C3-P1; Cell 3 190 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
-    },
-    {
-      "label": "C3-P4",
-      "uid": "CNHL-2026-016",
-      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 2 195 mV from C3-P1; Cell 6 195 mV from C3-P1; Cell 5 193 mV from C3-P1; Cell 1 192 mV from C3-P1; Cell 4 192 mV from C3-P1; Cell 3 191 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
-    },
-    {
-      "label": "C3-P5",
-      "uid": "CNHL-2026-017",
-      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P1; Cell 2 194 mV from C3-P1; Cell 4 192 mV from C3-P1; Cell 1 191 mV from C3-P1; Cell 5 191 mV from C3-P1; Cell 3 189 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
-    },
-    {
-      "label": "C3-P6",
-      "uid": "CNHL-2026-018",
-      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 2 195 mV from C3-P1; Cell 6 195 mV from C3-P1; Cell 4 193 mV from C3-P1; Cell 5 193 mV from C3-P1; Cell 1 192 mV from C3-P1; Cell 3 190 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
+      "note": "Its 10-17 storage run stopped short (about 3.67 V per cell). Top it up to storage before it goes on the C3 board."
     }
   ],
   "watch": [

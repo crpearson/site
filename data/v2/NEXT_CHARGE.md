@@ -150,7 +150,7 @@ One entry per series, with the packs on its board (all active packs). `condition
 
 - `pulled`: `{label, uid, reason}`. From the logs the build can see only a cell under 1.5 V or 2.0 V; the other pull signs are reported by hand.
 - `charge_alone`: `{label, uid, reason, until}`. Only the measured single-cell IR step (2 times its own level and 2 times the pack median). That board night only.
-- `check_before_connecting`: `{label, uid, note}`. Signs in the logs that a board check may fail: cells more than 0.10 V apart, a cell 0.10 V from the same-position cell of another pack, a cell between 2.0 and 3.0 V, or a recent full charge.
+- `check_before_connecting`: `{label, uid, note}`. Signs in the logs that a board check may fail: cells more than 0.10 V apart, a cell 0.10 V from the same-position cell of another pack, a cell between 2.0 and 3.0 V, a storage run that stopped short or ended high, or a recent full charge. One plain line per pack (30 words or fewer, no cell lists) giving the root cause only; a pack whose per-cell gaps all come from another pack's gap gets no line of its own.
 
 ## `watch` and `performance_notes`
 
