@@ -2,7 +2,7 @@ import Link from "next/link";
 import { IrFigure } from "@/components/IrFigure";
 import { Sparkline } from "@/components/Sparkline";
 import { StatusChip } from "@/components/StatusChip";
-import { chipTone, goNewText, statusChip, watchRecheckText } from "@/lib/lamp";
+import { callChipText, chipTone, goNewText, statusChip, watchRecheckText } from "@/lib/lamp";
 import { vacationFrom, type SlotTile } from "@/lib/fleet";
 
 export function PackTile({ slot }: { slot: SlotTile }) {
@@ -41,8 +41,8 @@ export function PackTile({ slot }: { slot: SlotTile }) {
         provisional={slot.provisional}
       />
       {slot.status ? (
-        <span className="tile-call" title={slot.status}>
-          {slot.status}
+        <span className="tile-call" title={callChipText(slot.status)}>
+          {callChipText(slot.status)}
         </span>
       ) : null}
       {slot.status && watchRecheckText(slot.status, slot.reason ?? "") ? (

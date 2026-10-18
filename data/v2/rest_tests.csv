@@ -4,3 +4,4 @@ RT-004-1,CNHL-2026-004,C1-P4,1,2026-10-09,2026-10-16,storage_end,,,,,,,,,,,FILLE
 RT-008-1,CNHL-2026-008,C2-P2,6,2026-10-09,2026-10-16,storage_end,,,,,,,,,,,FILLED-SEE-DAY0-ROW,1,awaiting log,placeholder superseded by the 2026-10-09-restday0 row below
 RT-008-1,CNHL-2026-008,C2-P2,6,2026-10-09,2026-10-16,storage_end,2026-10-09,3861,3861,3861,3861,3862,3861,,,,,1,DX8 log end cells,day-0 baseline; drops at 90min and 7day vs this row
 RT-004-1,CNHL-2026-004,C1-P4,1,2026-10-09,2026-10-16,storage_end,2026-10-09,3861,3862,3861,3861,3861,3861,,,,,1,DX8 log end cells,day-0 baseline; drops at 90min and 7day vs this row
+RT-001-1,CNHL-2026-001,D-1,6,2026-10-09,2026-10-16,7day,2026-10-17,3851,3851,3849,3850,3852,3848,11,13,2,PASS,1,DX8-2 Channel 1 screen reading,"read on day 8 (due 2026-10-16), before charging; charger reading about 29 °C (pack temperature not measured); drops vs day 0: 11, 11, 13, 12, 10 and 13 mV"

@@ -4,7 +4,7 @@ import { Panel } from "@/components/Panel";
 import { usd } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { brandCards, fleetModel, headline, seriesBlocks } from "@/lib/fleet";
-import { splitCall } from "@/lib/lamp";
+import { callChipText } from "@/lib/lamp";
 
 export const metadata: Metadata = {
   title: "Brand bake-off",
@@ -96,7 +96,7 @@ export default function BakeoffPage() {
                       .filter((slot) => slot.status)
                       .map((slot) => (
                         <li key={slot.label}>
-                          {slot.label}: {splitCall(slot.status ?? "").parallel}
+                          {slot.label}: {callChipText(slot.status ?? "")}
                         </li>
                       ))}
                   </ul>
@@ -117,7 +117,7 @@ export default function BakeoffPage() {
             <p className="eyebrow">Measured IR by series</p>
             <p className="note mt-1">
               The line is solid through a night that series was not measured. No value is filled in
-              there. Nights before that series existed are not marked. A single reading is a dot.
+              there. A series with one reading is a single point. Later readings stay on one line.
             </p>
             <div className="mt-2">
               <LineChart

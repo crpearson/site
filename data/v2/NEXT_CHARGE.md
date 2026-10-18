@@ -1,140 +1,165 @@
 # Next charge
 
-`data/v2/next_charge.json` is the only source for the Next charge page. After each night, replace this file. The page reads it at build time and does not keep its own pack list, charger names, notes, or dates.
+`next_charge.json` says how the next storage night runs under rules v7: each pack's permanent home channel, the run order for whichever series were flown, which packs are pulled, and the checks before packs go on a parallel board. It carries run order and file counts only. It holds no log file numbers.
 
-The published file uses schema `next_charge/v2`. Any other `schema` value fails the build. One night is one set. The page shows the active set first and keeps the other set one control away.
+Rules v7 keeps the v6 layout and run order. What changed is when a pack is pulled and when it charges alone, and C1-P1 is back.
 
 ## Document
 
-| Key | Meaning |
+| Key | What it is |
 | --- | --- |
-| `schema` | Must be the string `next_charge/v2`. |
-| `as_of_session` | Session the sheet is based on. A date or a session id. |
-| `as_of_date_pt` | Pacific calendar date, `YYYY-MM-DD`. |
-| `active_set` | The set for tonight, such as `C1+C2`. |
-| `locked` | Optional. `true` or `false`. Absent when the sheet is not locked. |
-| `locked_reason` | Optional. Why the set is locked, in the file's own words. Required when `locked` is `true`. |
-| `active_set_reason` | Why this set is tonight, in the file's own words. |
-| `alternate_set` | The other night's set, such as `C3+C4`. It is not the same as `active_set`. |
-| `storage_runs` | Tonight's channel queues. These match the active set. |
-| `parallel_boards` | Tonight's parallel boards (one per series). These match the active set. An empty list is valid. |
-| `charge_alone` | Tonight's packs that charge on their own. These match the active set. |
-| `watch` | Tonight's recheck notes. These match the active set. |
-| `sets` | Both plans. The object keys are the set names with `+` written as `_`: `C3+C4` is `C3_C4`. |
-| `do_not_connect` | Packs that stay off every lead, on either set. |
-| `notes` | Strings printed at the bottom of the page. |
+| `schema` | `next_charge/v4` |
+| `rules` | `v7` |
+| `as_of_session`, `as_of_date_pt` | The latest storage night in the data, and the date this file was built (Pacific) |
+| `measurement` | How readings are taken, and what the logs can and can't show (below) |
+| `home_channels` | One row per slot (below) |
+| `planner_rules` | How to turn the flown series into a run order (below) |
+| `start_order` | `rule` and `mapping`, in words |
+| `planner_fixtures` | Every flown-series case worked out in full (below) |
+| `parallel_boards` | One entry per series: the board checks, the recorded and next-night figures, the per-cell check, and IR match notes |
+| `pulled` | Packs pulled for fire risk: out of rotation and not charged; their slot is skipped. Empty when none |
+| `charge_alone` | Packs that charge alone on the next board night because of a measured single-cell IR step. They stay in rotation. Empty when none |
+| `check_before_connecting` | Advisories from the logs: check this pack's resting voltage before connecting it |
+| `watch` | Notes only. A pack on this list stays on its board |
+| `performance_notes` | IR and low-cell notes. Never a reason to pull a pack or charge it alone |
+| `self_discharge_checks` | The self-discharge pull rule, how we check it from logs, and the checks still open |
+| `notes` | Plain-language reminders |
 
-`storage_runs`, `parallel_boards`, `charge_alone`, and `watch` at the top of the file are the same JSON as those arrays on the active set. A difference fails the build.
+## The rules
 
-## A set
+**Pull** (fire risk only). A pulled pack is out of rotation and is not charged; its slot is skipped like an empty slot and nothing is reordered:
+- swelling or pouch damage;
+- heat while charging of 45 °C or more, or clearly hotter than the other packs;
+- a cell under 1.5 V, or under 2.0 V for about a week;
+- self-discharge: after a balanced storage charge, one cell drops 0.05 V or more more than the others within 48 to 72 hours, or any cell loses about 0.10 V within 24 hours;
+- abnormal behaviour when charged on its own.
 
-| Key | Meaning |
+**Charge alone that night**. The pack stays in rotation and nothing in its record changes:
+- the board's packs are more than 0.60 V apart;
+- any cell is more than 0.10 V from the same-position cell of another pack on the board;
+- the pack's own cells are more than 0.10 V apart at rest;
+- a cell rests between 2.0 and 3.0 V (below 2.5 V the DX8 uses its restore function);
+- a damaged connector (fix it first);
+- a port fuse blows or a balance-pin light comes on (the outlier pack charges alone; a pack that keeps causing it gets a 0.30 V gap of its own);
+- one cell's IR is at least 2 times its own starting level and at least 2 times the pack median, measured with the pack on its own.
+
+**Performance notes only**: IR trend, board IR match, a single high-IR cell (1.5 times the median and 1.2 mΩ above it), low cells and low-cell gaps.
+
+Storage nights apply only the pull list.
+
+## `measurement`
+
+`rest_rule` (resting voltage at least 90 minutes after a charge or flight), `ir_rule` (IR measured solo only), `from_logs[]` and `not_from_logs[]`.
+
+The logs can show: solo cell IR on every storage run, the first-line cell voltages, and the storage-end voltages.
+
+The logs can't show: pack temperature (the charger reports only its own temperature), swelling, damage or abnormal charging, or flight times. The first log line may be less than 90 minutes after a flight, so voltage signs from the logs are advisories ("check resting voltage before connecting"), never a status change. The board checks themselves happen at the board, before connecting.
+
+## `home_channels`
+
+One row per slot, for every C1 to C4 slot:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `label` | string | Slot label, e.g. `C1-P2` |
+| `uid` | string or null | Permanent pack ID; `null` when the slot is empty |
+| `series` | `C1`, `C2`, `C3` or `C4` | |
+| `slot` | integer | Pack number in the series |
+| `charger` | `DX8-1` or `DX8-2` | |
+| `channel` | `1` or `2` | Channel number on that charger |
+| `state` | `active`, `empty` or `pulled` | Only `active` slots run. Empty and pulled slots are skipped (a pulled pack is not charged), and nothing is reordered |
+| `note` | string or null | Plain reason when the state isn't `active`, or a short note |
+
+Current layout:
+
+| Channel | Slots, in run order |
 | --- | --- |
-| `series` | Series names in this set. Every pack in the set is one of these series. |
-| `last_storage_session` | Last storage session for this set. |
-| `storage_runs` | One object per charger channel. See below. |
-| `parallel_boards` | One object per parallel board (one per series). Empty when the set has no board yet. |
-| `charge_alone` | Packs that charge on their own before they join a board. |
-| `watch` | Recheck notes for this set. |
-| `join_status` | Optional. One object per pack that is working toward its own board. |
+| DX8-1 Channel 1 | C1-P1, C1-P2, C2-P5, C3-P1, C3-P2, C4-P5 |
+| DX8-1 Channel 2 | C1-P3, C1-P4, C2-P6, C3-P3, C3-P4, C4-P6 |
+| DX8-2 Channel 1 | C1-P5, C2-P1, C2-P2, C3-P5, C4-P1, C4-P2 |
+| DX8-2 Channel 2 | C1-P6, C2-P3, C2-P4, C3-P6, C4-P3, C4-P4 |
 
-The two sets do not share a pack. A pack may be in `storage_runs`, `charge_alone`, and `watch` on the same set.
+C1-P1 is back. The pack that left C1-P1 on 2026-10-08 for a weak Cell 6 (D-1) passed its rest test on 2026-10-17 and returns to C1-P1 from the next storage night: same pack, same ID, same history. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. There is no D pool now, so there is no D-1 checkbox and no D series in this file.
 
-## `storage_runs`
+## `planner_rules`
 
-Each object is one channel's queue, not one timed run.
-
-| Key | Meaning |
+| Key | Value |
 | --- | --- |
-| `charger` | Charger alias, such as `DX8-1`. |
-| `channel` | Channel name, such as `CH1`. |
-| `order` | Pack labels in the order they will be storage-charged on that channel. |
-| `mode` | Optional. A recorded mode string, such as one pack per run. |
+| `series_order` | `["C1", "C2", "C3", "C4"]` |
+| `channel_start_order` | `[1, 2]`: on each charger, Channel 1 starts first |
+| `skip_empty` | `true`: empty slots are skipped |
+| `reorder` | `false`: nothing moves up to fill a gap |
+| `include_states` | `["active"]` |
+| `steps` | The steps below, in words |
 
-A DX8 storage-charges one pack on a channel at a time. The page turns `order` into runs:
+Steps:
+1. Select the flown series and include every active pack in them. Empty and pulled slots are skipped: a pulled pack gets no storage charge, and nothing is reordered.
+2. Order each channel by series, then by pack number.
+3. On each charger, run Channel 1 and Channel 2 in rounds: start Channel 1, then Channel 2, and wait for both before the next round. When one channel is empty, the other continues alone.
+4. Count the files per charger: one log file per pack.
 
-- `order[0]` is Run 1, `order[1]` is Run 2, and so on.
-- Each run shows that one pack.
-- Above the chargers, Run *n* lists every channel that still has an *n*th pack, in file order. The charger name is printed when it changes: `DX8-1 CH1 C3-P1 · CH2 C3-P4 · DX8-2 CH1 C4-P1 · CH2 C4-P4`.
+## `planner_fixtures`
 
-A charger and channel may appear again later in the list. The first time a channel repeats, that row starts the next queue. Charge-alone packs are listed first, then the board packs. A pack label cannot appear on two storage channels of the same set. Every label must exist in `data/v2/packs.csv`.
+16 worked cases: every non-empty set of flown series (15), plus one fixture-only case with a made-up pulled C2-P3 to test skipping. The pulled C2-P3 is test data only; it isn't a real status.
 
-A pack may be in `storage_runs` and also on a parallel board or in `charge_alone`. Storage happens first. The pre-flight step is separate.
+| Field | Meaning |
+| --- | --- |
+| `id` | e.g. `C1+C3` |
+| `name` | `set A`, `set B` or `all four series` where it applies, else `null` |
+| `flown_series` | The series ticked as flown |
+| `channels` | Run order per channel, keyed `DX8-1 Channel 1`, `DX8-1 Channel 2`, `DX8-2 Channel 1`, `DX8-2 Channel 2` |
+| `rounds` | Per charger, each round as `[Channel 1 pack, Channel 2 pack]`; `null` when that channel has run out |
+| `files` | Log files expected per charger (one per pack) |
+| `fixture_only`, `fixture_states` | Only on the made-up case: what it tests, and the slot states it uses instead of the real ones |
+
+The builder works out every case twice, with two separate methods, and stops if they disagree. The site check works them out a third time.
+
+Example, `C1` (C1 flown):
+
+| Channel | Run order |
+| --- | --- |
+| DX8-1 Channel 1 | C1-P1, C1-P2 |
+| DX8-1 Channel 2 | C1-P3, C1-P4 |
+| DX8-2 Channel 1 | C1-P5 |
+| DX8-2 Channel 2 | C1-P6 |
+
+Files: DX8-1 4, DX8-2 2.
+
+All four series:
+
+| Channel | Run order |
+| --- | --- |
+| DX8-1 Channel 1 | C1-P1, C1-P2, C2-P5, C3-P1, C3-P2, C4-P5 |
+| DX8-1 Channel 2 | C1-P3, C1-P4, C2-P6, C3-P3, C3-P4, C4-P6 |
+| DX8-2 Channel 1 | C1-P5, C2-P1, C2-P2, C3-P5, C4-P1, C4-P2 |
+| DX8-2 Channel 2 | C1-P6, C2-P3, C2-P4, C3-P6, C4-P3, C4-P4 |
+
+Files: DX8-1 12, DX8-2 12.
 
 ## `parallel_boards`
 
-| Key | Meaning |
-| --- | --- |
-| `series` | Series name. Every pack in `packs` must be that series in `packs.csv`, and that series must be in the set. |
-| `packs` | Labels in port order. |
-| `current` | `normal` or `reduced`. This is the charge current for the whole board. |
-| `conditions` | Strings. Limits and exceptions for this board. |
-| `last_rule_b_V` | Last Rule B board spread, in volts. A number. |
-| `last_rule_b_call` | Call recorded with that Rule B check. |
-| `last_rule_b_session` | Session of that Rule B check. |
-| `last_rule_b_over` | Optional. Pack labels this Rule B figure covers. Each label is one of this board's `packs`. |
+One entry per series, with the packs on its board (all active packs). `conditions` gives the board checks in words. They apply only when packs are actually connected in parallel, and they are read at the board before connecting.
 
-The bench uses 6-port boards. Ports are `L1`, `L2`, `L3`, `R1`, `R2`, `R3`, in that order. `packs[0]` is L1 and `packs[5]` is R3. Empty ports stay blank.
+- `rest_check_limit_V` (0.60) and `cell_check_limit_V` (0.10).
+- `last_rule_b_V`, `last_rule_b_call`, `last_rule_b_session`, `last_rule_b_over`, `last_rule_b_basis`: the recorded figure, from the packs actually charged together on that series' last board night. It never changes afterwards.
+- `outlook_rule_b`: the next-night outlook from the latest rest V of the board's packs (`value_v`, `packs`, `limit_v`, `call`, `check_first`, `value_without_check_first_v`, `packs_without_check_first`).
+- `outlook_rule_b.cell_check`: same-position cells more than 0.10 V apart in the first log line of the latest storage night (`pairs[]` of `{labels, cell, diff_mv}`, and `labels`). An advisory only.
+- `outlook_rule_b.ir_match`: each pack's average IR against the board median over its last 3 storage nights. A performance note only.
 
-A series with more than 6 packs continues on the next board: pack 7 is L1 on the next letter. Letters are assigned in file order, `Board A` through `Board D`. A series with no packs still takes one board so its current and Rule B line have a drawing. More than 4 boards fails the build. A set with `parallel_boards: []` draws no board.
+## `pulled`, `charge_alone`, `check_before_connecting`
 
-`current` and `conditions` are printed once for the series, above its board drawing or drawings. When `last_rule_b_over` is present, the page prints Last Rule B as the voltage, the call, and those pack labels, with the V unit. The home chart still draws Rule B from the storage-night rests.
+- `pulled`: `{label, uid, reason}`. From the logs the build can see only a cell under 1.5 V or 2.0 V; the other pull signs are reported by hand.
+- `charge_alone`: `{label, uid, reason, until}`. Only the measured single-cell IR step (2 times its own level and 2 times the pack median). That board night only.
+- `check_before_connecting`: `{label, uid, note}`. Signs in the logs that a board check may fail: cells more than 0.10 V apart, a cell 0.10 V from the same-position cell of another pack, a cell between 2.0 and 3.0 V, or a recent full charge.
 
-## `charge_alone`
+## `watch` and `performance_notes`
 
-| Key | Meaning |
-| --- | --- |
-| `label` | Pack label in `packs.csv`. |
-| `uid` | That label's `pack_uid`. A mismatch fails the build. |
-| `reason` | Why it charges alone. Printed as written. |
-| `until` | When it can join a board again. Free text, not necessarily a date. |
-| `last_offset_max_V` | Optional. Largest rest offset from that pack's board, in volts. Present only with `last_offset_side`. |
-| `last_offset_side` | Optional. `below` or `above`. |
+`{label, uid, note}`. Notes only. Neither list takes a pack off its board.
 
-## `watch`
+## `self_discharge_checks`
 
-| Key | Meaning |
-| --- | --- |
-| `label` | Pack label in `packs.csv`. |
-| `uid` | That label's `pack_uid`. |
-| `note` | The recheck note, printed as written. |
-
-## `join_status`
-
-| Key | Meaning |
-| --- | --- |
-| `label` | Pack label in `packs.csv`. |
-| `uid` | That label's `pack_uid`. |
-| `storage_nights` | Storage nights so far. A number. Charge runs do not count. |
-| `clean_nights_in_a_row` | Clean storage nights in a row. A number. |
-| `joins_board` | `true` or `false`. `true` means the pack qualifies for its board. It can still charge alone tonight. `false` while that pack is on a parallel board fails the build. |
-| `status` | Recorded status, such as `Go (new)` or `Go (watch)`. |
-| `rule` | The recorded join rule, in the file's own words. |
-
-## `do_not_connect`
-
-| Key | Meaning |
-| --- | --- |
-| `label` | Pack label in `packs.csv`. |
-| `uid` | That label's `pack_uid`. A mismatch fails the build. |
-| `pool` | Pool name, such as `Rest`. |
-| `reason` | Why it stays disconnected. |
-| `return_date` | Pacific date it can return, `YYYY-MM-DD`. |
-
-A pack in `do_not_connect` cannot also appear in `storage_runs`, `parallel_boards`, or `charge_alone` on the top-level plan or on either set.
+The pull rule in words and figures (`pull_relative_mv` 50, `pull_window_h` [48, 72], `pull_any_cell_mv` 100, `pull_any_cell_h` 24), `how_we_check`, `longer_gaps`, `performance_grade` (the 7-day grade, a note only) and `open[]`: `{test_id, label, uid, suspect_cell, storage_end_date, storage_end_mV, completes_from}`.
 
 ## What the build checks
 
-`npm run build` runs `scripts/validate-v4.mjs`, which checks this file.
-
-- `schema` is exactly `next_charge/v2`.
-- The file bytes stay the published sheet. A different hash fails the build.
-- The keys are the ones in this note. `mode`, `last_rule_b_over`, `last_offset_max_V`, `last_offset_side`, and `join_status` are optional. Any other extra key fails the build.
-- The top-level plan matches the active set.
-- Every pack label exists in `packs.csv`, and each `uid` matches that label.
-- A pack's series is one of its set's series. A parallel pack's series matches the board `series`.
-- Storage puts one pack on each run, taken from `order`.
-- Parallel packs land on L1 through R3, then the next board letter, and stop at 4 boards.
-- A disconnected pack is not also given a lead.
-
-Status chips on the charger and board drawings come from the latest status call for that pack. The watch notes, charge-alone reasons, board conditions, and join rules are the file's own words.
+The site check validates the shape above. It recomputes every fixture from `home_channels` and `planner_rules`, checks that pulled packs are not on a board or in any fixture, and checks that no log file numbers appear.

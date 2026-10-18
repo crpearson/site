@@ -1,12 +1,14 @@
 {
-  "as_of": "2026-10-16",
-  "note": "Every pack charges on its own parallel board. Watch is a note. Rest pool packs stay off until the 7-day reading. C3 and C4 have no recorded board night yet. C3-P5's latest rest was outside 0.60 V of the other C3 packs, so the next-night outlook says check it first. Series do not share a board.",
+  "as_of": "2026-10-17",
+  "note": "Every pack charges on its own parallel board. Rules v7: a pack is pulled only for fire risk, and a pack that fails a board check charges alone that night only. Watch and performance notes are notes. C1-P1 is back on the C1 board from the next storage night. C1-P4 and C2-P2 are back on their boards. C3 and C4 have no recorded board night yet. Series do not share a board.",
   "series": [
     {
       "series": "C1",
       "labels": [
+        "C1-P1",
         "C1-P2",
         "C1-P3",
+        "C1-P4",
         "C1-P5",
         "C1-P6"
       ]
@@ -15,6 +17,7 @@
       "series": "C2",
       "labels": [
         "C2-P1",
+        "C2-P2",
         "C2-P3",
         "C2-P4",
         "C2-P5",
@@ -44,24 +47,5 @@
       ]
     }
   ],
-  "resting": [
-    {
-      "label": "D-1",
-      "uid": "CNHL-2026-001",
-      "day0": "2026-10-09",
-      "until": "2026-10-16"
-    },
-    {
-      "label": "C1-P4",
-      "uid": "CNHL-2026-004",
-      "day0": "2026-10-09",
-      "until": "2026-10-16"
-    },
-    {
-      "label": "C2-P2",
-      "uid": "CNHL-2026-008",
-      "day0": "2026-10-09",
-      "until": "2026-10-16"
-    }
-  ]
+  "resting": []
 }

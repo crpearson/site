@@ -3,10 +3,10 @@ import path from "node:path";
 import metaDoc from "@/data/meta.json";
 import registryDoc from "@/data/pack-registry.json";
 import statusDoc from "@/data/status.json";
-import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lonePointIndices, missBridges, openEndIndices, seriesNotCharged, solidFrom } from "@/lib/bridges";
+import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lineSegments, lonePointIndices, missBridges, openEndIndices, readingIndices, seriesNotCharged, solidFrom, type ChartMode } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
-import { formatValue, shortSession } from "@/lib/format";
+import { formatValue, occupancyLabel, publicProse, publicSession, shortSession, shownWhen } from "@/lib/format";
 import { IR_STORE_IS_DX8_INTEGER, IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import {
@@ -21,7 +21,6 @@ import {
 import { buildNextBoard } from "@/lib/next-board.mjs";
 import { loadNextCharge } from "@/lib/next-charge.mjs";
 import { calendarDate } from "@/lib/pacific-date.mjs";
-import { laryParallelBucket, parallelBucket } from "@/lib/parallel-rules.mjs";
 import type { Band, Category, ChartSeries, Guide } from "@/lib/types";
 
 type Measurement = {
@@ -141,14 +140,60 @@ const packs: PackRec[] = readCsv("v2/packs.csv").map((row) => ({
   notes: row.notes,
 }));
 
-const events: PackEvent[] = readCsv("v2/pack_events.csv").map((row) => ({
-  date: row.date,
+/**
+ * Display label registry (2026-10-17). A row maps a pack to one public label and series for all dates.
+ * The stores are untouched (append-only); the site shows the mapped label, drops the move events and
+ * status rows that only concern a hidden label, and rewrites hidden-label wording in displayed text.
+ */
+type LabelMap = { uid: string; label: string; series: string; hidden: string[] };
+const labelRegistry: LabelMap[] = readCsv("v2/label_registry.csv").map((row) => ({
   uid: row.pack_uid,
-  event: row.event,
-  from: row.from_label,
-  to: row.to_label,
-  reason: row.reason,
+  label: row.display_label,
+  series: row.display_series,
+  hidden: row.hidden_labels.split("|").map((item) => item.trim()).filter(Boolean),
 }));
+const hiddenPool = /\b(?:the\s+)?D[ -]pool\b/gi;
+function mapOf(uid: string): LabelMap | undefined {
+  return labelRegistry.find((item) => item.uid === uid);
+}
+function shownLabel(uid: string, label: string): string {
+  const map = mapOf(uid);
+  return map && (map.hidden.includes(label) || /^D-\d+$/.test(label)) ? map.label : label;
+}
+function shownSeries(uid: string, series: string): string {
+  const map = mapOf(uid);
+  return map && series === "D" ? map.series : series;
+}
+function mentionsHidden(uid: string, text: string): boolean {
+  const map = mapOf(uid);
+  if (!map) return false;
+  return map.hidden.some((label) => new RegExp(`\\b${label}\\b`).test(text)) || new RegExp(hiddenPool.source, "i").test(text);
+}
+function scrubText(uid: string, text: string): string {
+  const map = mapOf(uid);
+  if (!map) return text;
+  let out = text;
+  for (const label of map.hidden) out = out.replace(new RegExp(`\\b${label}\\b`, "g"), map.label);
+  return out.replace(hiddenPool, "individual charging").replace(/\bseries D\b/g, `series ${map.series}`);
+}
+for (const pack of packs) {
+  pack.notes = scrubText(pack.uid, pack.notes);
+  pack.parallelCall = scrubText(pack.uid, pack.parallelCall);
+  pack.serviceStatus = scrubText(pack.uid, pack.serviceStatus);
+  if (mapOf(pack.uid)) pack.pool = "";
+}
+
+const events: PackEvent[] = readCsv("v2/pack_events.csv")
+  .map((row) => ({
+    date: row.date,
+    uid: row.pack_uid,
+    event: row.event,
+    from: row.from_label ? shownLabel(row.pack_uid, row.from_label) : row.from_label,
+    to: row.to_label ? shownLabel(row.pack_uid, row.to_label) : row.to_label,
+    reason: scrubText(row.pack_uid, row.reason),
+  }))
+  // A move between a hidden label and the shown one is not a move on the site.
+  .filter((event) => !(event.event === "move" && mapOf(event.uid) && event.from === event.to));
 
 function sessionFromSource(source: string, date: string): string {
   const raw = source.match(/session=([^;]+)/)?.[1]?.trim() ?? "";
@@ -160,16 +205,20 @@ function sessionFromSource(source: string, date: string): string {
   return token || date;
 }
 
-const calls: StatusCall[] = readCsv("v2/status_calls.csv").map((row, index) => ({
-  date: row.date,
-  uid: row.pack_uid,
-  label: row.label_at_time,
-  status: row.status,
-  reason: row.reason,
-  source: row.source,
-  session: sessionFromSource(row.source, row.date),
-  order: index,
-}));
+const calls: StatusCall[] = readCsv("v2/status_calls.csv")
+  .map((row, index) => ({
+    date: row.date,
+    uid: row.pack_uid,
+    label: row.label_at_time,
+    status: row.status,
+    reason: row.reason,
+    source: row.source,
+    session: sessionFromSource(row.source, row.date),
+    order: index,
+  }))
+  // Status rows under a hidden label (or about it) are left off the site; later rows supersede them.
+  .filter((call) => !(mapOf(call.uid) && (mapOf(call.uid)!.hidden.includes(call.label) || mentionsHidden(call.uid, `${call.status} ${call.reason}`))))
+  .map((call) => ({ ...call, label: shownLabel(call.uid, call.label) }));
 
 type RestTest = {
   id: string;
@@ -180,30 +229,53 @@ type RestTest = {
   due: string;
   result: string;
   note: string;
+  /** Day-0 baseline date (the storage_end row). */
   readingDate: string;
+  /** 7-day reading date, or "" while unread. */
+  readDate: string;
+  excessMv: string;
 };
 
-const restTests: RestTest[] = readCsv("v2/rest_tests.csv")
-  .filter((row) => row.result.trim() !== "FILLED-SEE-DAY0-ROW")
-  .map((row) => ({
-    id: row.test_id,
-    uid: row.pack_uid,
-    label: row.label,
-    cell: row.suspect_cell,
-    start: row.start_date,
-    due: row.due_date,
-    result: row.result.trim() || "unread",
-    note: row.note,
-    readingDate: row.reading_date.trim(),
-  }));
+// One entry per test: the storage_end row is day 0; a later reading row (e.g. 7day) adds the result.
+const restTests: RestTest[] = (() => {
+  const byId = new Map<string, RestTest>();
+  for (const row of readCsv("v2/rest_tests.csv").filter((item) => item.result.trim() !== "FILLED-SEE-DAY0-ROW")) {
+    const key = `${row.test_id}|${row.pack_uid}`;
+    if (row.reading === "storage_end") {
+      byId.set(key, {
+        id: row.test_id,
+        uid: row.pack_uid,
+        label: shownLabel(row.pack_uid, row.label),
+        cell: row.suspect_cell,
+        start: row.start_date,
+        due: row.due_date,
+        result: "unread",
+        note: scrubText(row.pack_uid, row.note),
+        readingDate: row.reading_date.trim(),
+        readDate: "",
+        excessMv: "",
+      });
+    } else {
+      const test = byId.get(key);
+      if (!test) throw new Error(`${row.test_id} ${row.reading} reading has no day-0 row`);
+      test.result = row.result.trim() || "unread";
+      test.readDate = row.reading_date.trim();
+      test.excessMv = row.excess_mV.trim();
+      test.note = scrubText(row.pack_uid, row.note);
+    }
+  }
+  return [...byId.values()];
+})();
 
 const v4Rows = readCsv("v2/ir_store_v4.public.csv");
 
+// A mapped pack's own charge-run session id is shown as the plain "<date>-charge" night.
+const shownSession = (uid: string, session: string) => (mapOf(uid) ? session.replace(/-d\d+-charge$/, "-charge") : session);
 const measurements: Measurement[] = v4Rows.map((row) => ({
-  session: row.session,
-  label: row.label_at_time,
+  session: shownSession(row.pack_uid, row.session),
+  label: shownLabel(row.pack_uid, row.label_at_time),
   uid: row.pack_uid,
-  series: row.series_at_time,
+  series: shownSeries(row.pack_uid, row.series_at_time),
   cells: [1, 2, 3, 4, 5, 6].map((index) => scaleStoredIr(Number(row[`c${index}_mOhm`]))),
   avg: scaleStoredIr(Number(row.avg_mOhm)),
   spread: scaleStoredIr(Number(row.spread_mOhm)),
@@ -216,7 +288,7 @@ const measurements: Measurement[] = v4Rows.map((row) => ({
   starts: [1, 2, 3, 4, 5, 6].map((index) => Number(row[`start_c${index}_mV`])),
   chargeMode: row.charge_mode_at_time,
   sessionType: row.session_type,
-  note: row.v4_note,
+  note: scrubText(row.pack_uid, row.v4_note),
   provisional: irValidationIsProvisional(row.ir_validation),
 }));
 
@@ -235,12 +307,12 @@ export function nonStorageSession(session: string): boolean {
 }
 
 /**
- * The series was charged, but its rows are not in the public file. Those packs
- * are out of span for that night: no value, no dotted join, no hollow ring, and
- * no "not charged" caption. The date tick is hidden when every plotted line
- * is unpublished, and when nothing is plotted. A rest-baseline column is a
- * tick only when a value is drawn there. Empty while every measured
- * series-night is published.
+ * The series was charged, but its rows are not in the public file. That night
+ * is not labeled "not charged". A recorded reading on either side still joins
+ * through it, and no value is invented for the unpublished night. The date tick
+ * is hidden when every plotted line is unpublished, and when nothing is plotted.
+ * A rest-baseline column is a tick only when a value is drawn there. Empty while
+ * every measured series-night is published.
  * A series that truly did not run stays "not charged".
  */
 const UNPUBLISHED_SERIES_NIGHTS: { session: string; series: string }[] = [];
@@ -313,10 +385,6 @@ export function latestCall(uid: string): StatusCall | undefined {
   return list[list.length - 1];
 }
 
-function ruleHistory(uid: string): Measurement[] {
-  return pointsFor(uid).filter((point) => !isNonStorage(point.sessionType));
-}
-
 function pointsFor(uid: string): Measurement[] {
   const order = new Map(sessionOrder.map((id, index) => [id, index]));
   return measurements
@@ -349,17 +417,14 @@ function inRestPool(uid: string, session: string): boolean {
 }
 
 const EXPECTED_LATEST: Record<string, string> = {
-  "CNHL-2026-001":
-    "PARALLEL OFF (Rest pool) | SERVICE D pool (Watch); rest test RT-001-1, 7-day reading due 2026-10-16; not charged during test",
+  "CNHL-2026-001": "PARALLEL GO: on the C1 board | SERVICE In service (watch)",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-004":
-    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-004-1, 7-day reading due 2026-10-16; not charged during test",
-  "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE Watch",
+  "CNHL-2026-004": "PARALLEL GO: on the C1 board | SERVICE Watch (self-discharge check RT-004-1)",
+  "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE In service",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-007": "PARALLEL GO | SERVICE Watch (IR spread)",
-  "CNHL-2026-008":
-    "PARALLEL OFF (Rest pool) | SERVICE Watch; rest test RT-008-1, 7-day reading due 2026-10-16; not charged during test",
+  "CNHL-2026-007": "PARALLEL GO: on the C2 board | SERVICE In service",
+  "CNHL-2026-008": "PARALLEL GO: on the C2 board | SERVICE Watch (self-discharge check RT-008-1)",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
@@ -368,10 +433,10 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-014": "PARALLEL GO: on the C3 board | SERVICE In service",
   "CNHL-2026-015": "PARALLEL GO: on the C3 board | SERVICE In service",
   "CNHL-2026-016": "PARALLEL GO: on the C3 board | SERVICE In service",
-  "CNHL-2026-017": "PARALLEL GO: on the C3 board | SERVICE In service (watch)",
-  "CNHL-2026-018": "PARALLEL GO: on the C3 board | SERVICE In service (watch)",
+  "CNHL-2026-017": "PARALLEL GO: on the C3 board | SERVICE In service",
+  "CNHL-2026-018": "PARALLEL GO: on the C3 board | SERVICE In service",
   "CNHL-2026-019": "PARALLEL GO: on the C4 board | SERVICE In service",
-  "CNHL-2026-020": "PARALLEL GO: on the C4 board | SERVICE In service (watch)",
+  "CNHL-2026-020": "PARALLEL GO: on the C4 board | SERVICE In service",
   "CNHL-2026-021": "PARALLEL GO: on the C4 board | SERVICE In service",
   "CNHL-2026-022": "PARALLEL GO: on the C4 board | SERVICE In service",
   "CNHL-2026-023": "PARALLEL GO: on the C4 board | SERVICE In service",
@@ -379,18 +444,18 @@ const EXPECTED_LATEST: Record<string, string> = {
 };
 
 function assertStore() {
-  if (measurements.length !== 215 || v4Rows.length !== 215) {
-    throw new Error(`Expected 215 measurements, got ${measurements.length}`);
+  if (measurements.length !== 236 || v4Rows.length !== 236) {
+    throw new Error(`Expected 236 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
   }
   const sample = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "2026-10-09");
   if (!sample || sample.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.2,2.9,2.5,2.2,3.0,2.8") {
-    throw new Error("D-1 2026-10-09 IR spot check failed");
+    throw new Error("C1-P1 2026-10-09 IR spot check failed");
   }
   if (sample.avg.toFixed(3) !== "2.767" || sample.spread.toFixed(1) !== "1.0") {
-    throw new Error("D-1 2026-10-09 average or spread spot check failed");
+    throw new Error("C1-P1 2026-10-09 average or spread spot check failed");
   }
   const restC2 = measurements.find((row) => row.uid === "CNHL-2026-008" && row.session === "2026-10-09-restday0");
   const restC1 = measurements.find((row) => row.uid === "CNHL-2026-004" && row.session === "2026-10-09-restday0");
@@ -403,8 +468,8 @@ function assertStore() {
   if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
     throw new Error("C1-P4 and C2-P2 charge_count should be 14");
   }
-  if (packByUid("CNHL-2026-005")?.chargeCount !== 16 || packByUid("CNHL-2026-012")?.chargeCount !== 16) {
-    throw new Error("C1-P5 and C2-P6 charge_count should be 16");
+  if (packByUid("CNHL-2026-005")?.chargeCount !== 17 || packByUid("CNHL-2026-012")?.chargeCount !== 17) {
+    throw new Error("C1-P5 and C2-P6 charge_count should be 17");
   }
   const chargeRuns = measurements.filter((row) => row.session === "2026-10-11-charge");
   if (
@@ -425,17 +490,18 @@ function assertStore() {
     throw new Error(`2026-10-11 storage night is ${storageLabels}`);
   }
   if (
-    latestOperational("CNHL-2026-012")?.session !== "2026-10-11" ||
-    latestOperational("CNHL-2026-005")?.session !== "2026-10-11" ||
-    latestOperational("CNHL-2026-007")?.session !== "2026-10-11"
+    latestOperational("CNHL-2026-012")?.session !== "2026-10-17" ||
+    latestOperational("CNHL-2026-005")?.session !== "2026-10-17" ||
+    latestOperational("CNHL-2026-007")?.session !== "2026-10-17"
   ) {
-    throw new Error("2026-10-11 storage rows are the latest readings");
+    throw new Error("2026-10-17 storage rows are the latest readings");
   }
   if (operationalPoints("CNHL-2026-012").some((row) => row.session === "2026-10-11-charge")) {
     throw new Error("the charge run is still in the latest readings");
   }
-  if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3) {
-    throw new Error("Rest tests should be the three day-0 rows, with no C1-P3 test");
+  const d1Pass = restTests.filter((test) => test.id === "RT-001-1" && test.result === "PASS" && test.readDate === "2026-10-17" && test.readingDate === "2026-10-09");
+  if (restTests.some((test) => test.uid === "CNHL-2026-003") || restTests.length !== 3 || d1Pass.length !== 1) {
+    throw new Error("Rest tests should be the three tests (day 0 2026-10-09) with RT-001-1 read PASS on 2026-10-17, and no C1-P3 test");
   }
   const freshCharge = measurements.filter((row) => row.session === "2026-10-14-charge");
   const freshStorage = measurements.filter((row) => row.session === "2026-10-14");
@@ -455,10 +521,13 @@ function assertStore() {
   for (const label of freshLabels) {
     const pack = packs.find((item) => item.label === label);
     const mode = "parallel";
-    if (!pack || pack.chargeCount !== 3 || pack.chargeMode !== mode || pack.purchaseDate !== "2026-10-13") {
-      throw new Error(`${label} should be charge count 3, ${mode}, purchased 2026-10-13`);
+    // 2026-10-17: C3-P2 was charged with no log, so it keeps count 3 and its 2026-10-16 reading.
+    const count = label === "C3-P2" ? 3 : 4;
+    const latest = label === "C3-P2" ? "2026-10-16" : "2026-10-17";
+    if (!pack || pack.chargeCount !== count || pack.chargeMode !== mode || pack.purchaseDate !== "2026-10-13") {
+      throw new Error(`${label} should be charge count ${count}, ${mode}, purchased 2026-10-13`);
     }
-    if (latestOperational(pack.uid)?.session !== "2026-10-16") {
+    if (latestOperational(pack.uid)?.session !== latest) {
       throw new Error(`${label} latest storage night is ${latestOperational(pack.uid)?.session}`);
     }
     if (operationalPoints(pack.uid).some((row) => row.session === "2026-10-14-charge")) {
@@ -476,38 +545,30 @@ function assertStore() {
     if (!call || call.status !== status) {
       throw new Error(`Latest status for ${uid} is ${call?.status ?? "missing"}`);
     }
-    const pack = packByUid(uid);
-    const computed = parallelBucket(
-      ruleHistory(uid).map((point) => ({
-        spread: point.spread,
-        cells: point.cells,
-        gap: point.lowGap ?? 0,
-        floor: point.floor ?? 0,
-        floorCell: point.floorCell ?? 0,
-        starts: point.starts,
-      })),
-      {
-        inDPool: pack?.series === "D" || /d pool/i.test(pack?.serviceStatus ?? ""),
-        failedRest: restTests.some((test) => test.uid === uid && /fail/i.test(test.result)),
-        selfDischargeWatch: /self-discharge/i.test(pack?.serviceStatus ?? ""),
-      },
-    );
-    const recorded = laryParallelBucket(call.status);
-    if (/REST POOL/i.test(call.status)) {
-      console.log(`rest pool ${uid}: recorded OFF, not a parallel-call disagreement`);
-    } else if (computed.call !== recorded) {
-      console.warn(`parallel call disagreement ${uid}: computed ${computed.call}, recorded ${recorded}`);
-    }
   }
-  if (packs.some((pack) => pack.label === "C1-P1")) {
-    throw new Error("C1-P1 should be an empty slot");
+  // Rules v7 (2026-10-17): the pack that was D-1 is C1-P1 again (same uid, continuous history).
+  if (packs.find((pack) => pack.label === "C1-P1")?.uid !== "CNHL-2026-001" || packs.some((pack) => pack.label.startsWith("D-"))) {
+    throw new Error("C1-P1 should be CNHL-2026-001 again, with no D pack");
   }
   if (labelAsOf("CNHL-2026-001", "2026-09-30") !== "C1-P1") {
     throw new Error("CNHL-2026-001 should still be C1-P1 on 2026-09-30");
   }
-  if (labelAsOf("CNHL-2026-001", "2026-10-08") !== "D-1") {
-    throw new Error("CNHL-2026-001 should be D-1 on 2026-10-08");
+  // Label registry (2026-10-17): CNHL-2026-001 is shown as C1-P1 on every date, with no move on the site.
+  for (const day of ["2026-10-08", "2026-10-09", "2026-10-16", "2026-10-17", "2026-10-18"]) {
+    if (labelAsOf("CNHL-2026-001", day) !== "C1-P1") throw new Error(`CNHL-2026-001 should be C1-P1 on ${day}`);
   }
+  if (movedEvent("CNHL-2026-001")) throw new Error("CNHL-2026-001 should have no move on the site");
+  const hiddenLabel = (text: string) => /\bD-\d\b|\bD[ -]pool\b|\bseries D\b/i.test(text);
+  if (
+    measurements.some((row) => row.series === "D" || hiddenLabel(row.label) || hiddenLabel(row.note)) ||
+    calls.some((call) => hiddenLabel(`${call.label} ${call.status} ${call.reason}`)) ||
+    events.some((event) => hiddenLabel(`${event.from} ${event.to} ${event.reason}`)) ||
+    restTests.some((test) => hiddenLabel(`${test.label} ${test.note}`)) ||
+    packs.some((pack) => pack.series === "D" || hiddenLabel(`${pack.label} ${pack.notes} ${pack.parallelCall} ${pack.serviceStatus}`))
+  ) {
+    throw new Error("a hidden label or series D is still in the displayed data");
+  }
+  if (packs.filter((pack) => !pack.retired && /^C[1-4]-P[1-6]$/.test(pack.label)).length !== 24) throw new Error("the fleet should be 24 packs, C1-C4 x 6");
 }
 
 assertStore();
@@ -536,13 +597,13 @@ const spreadRule = thresholds.spread_mohm;
 const restRule = thresholds.inter_pack_rest_delta_v;
 
 export const ruleAGuides: Guide[] = [
-  { y: spreadRule.caution_gte, label: `Caution ≥ ${formatValue("ir", spreadRule.caution_gte)} ${IR_UNIT}`, color: "#f5b942" },
-  { y: spreadRule.individual_gte, label: `Individual ≥ ${formatValue("ir", spreadRule.individual_gte)} ${IR_UNIT}`, color: "#ff5c7a" },
+  { y: spreadRule.caution_gte, label: `Watch note ≥ ${formatValue("ir", spreadRule.caution_gte)} ${IR_UNIT}`, color: "#f5b942" },
+  { y: spreadRule.individual_gte, label: `Watch note, look first ≥ ${formatValue("ir", spreadRule.individual_gte)} ${IR_UNIT}`, color: "#79b8ff" },
 ];
 
 export const ruleABands: Band[] = [
   { from: spreadRule.caution_gte, to: spreadRule.individual_gte, color: "rgba(245, 185, 66, 0.18)" },
-  { from: spreadRule.individual_gte, to: Number.POSITIVE_INFINITY, color: "rgba(255, 92, 122, 0.12)" },
+  { from: spreadRule.individual_gte, to: Number.POSITIVE_INFINITY, color: "rgba(121, 184, 255, 0.1)" },
 ];
 
 export const ruleBGuides: Guide[] = [
@@ -569,29 +630,24 @@ export const categories: Category[] = sessionOrder.map((id) => ({
 }));
 
 /**
- * Span id while the pack is in service. Null before commission and from a
- * retirement date onward. Each move starts the next span, so a dotted join
- * stays inside one label and does not cross the move.
+ * Span id while this uid is in service. Null before commission and from a
+ * retirement date onward. A move does not start a new span: the pack is one
+ * serial, and its readings stay on one line through every label.
  */
 function serviceSpans(uid: string): (string | null)[] {
   const pack = packByUid(uid);
   const list = eventsFor(uid);
   const commission = list.find((event) => event.event === "commission");
-  const moves = list.filter((event) => event.event === "move");
   const retired = pack?.retired.trim() ?? "";
   return categories.map((category) => {
     if (!commission || compareTime(category.id, commission.date) < 0) return null;
     if (retired && compareTime(category.id, retired) >= 0) return null;
-    let span = 0;
-    for (const move of moves) {
-      if (compareTime(category.id, move.date) >= 0) span += 1;
-    }
     // Rest-test day 0 and charge runs are not storage nights. The column is a
     // hole, so a later storage reading still joins the earlier one.
     if (nonStorageSessions.has(category.id)) return null;
-    // Unpublished series rows are not a skipped charge. The night stays off the line.
+    // Unpublished series rows are not a skipped charge. Readings on either side still join.
     if (nightUnpublished(category.id, seriesOfLabel(labelAsOf(uid, category.id)))) return null;
-    return String(span);
+    return "0";
   });
 }
 
@@ -600,8 +656,18 @@ function loggedNights(uid: string): boolean[] {
   return categories.map((category) => have.has(category.id));
 }
 
-function lineMeta(uid: string): { service: (string | null)[]; logged: boolean[] } {
-  return { service: serviceSpans(uid), logged: loggedNights(uid) };
+/** Nights the pack note says were charged with no charger log. No IR value is invented. */
+function noLogNights(uid: string): boolean[] {
+  const notes = packByUid(uid)?.notes ?? "";
+  const dates = new Set<string>();
+  for (const match of notes.matchAll(/(\d{4}-\d{2}-\d{2}):\s*charged,\s*no log/gi)) {
+    dates.add(match[1]);
+  }
+  return categories.map((category) => dates.has(category.id) || dates.has(calendarDate(category.id)));
+}
+
+function lineMeta(uid: string): { service: (string | null)[]; logged: boolean[]; nolog: boolean[] } {
+  return { service: serviceSpans(uid), logged: loggedNights(uid), nolog: noLogNights(uid) };
 }
 
 function alignUid(
@@ -655,10 +721,11 @@ function spreadChartDomain(spreads: number[]): [number, number] {
   return [0, Math.max(0.01, top + Math.max(top, 0.01) * 0.12)];
 }
 
-const SERIES_ORDER = ["C1", "C2", "D", "C3", "C4"];
+const SERIES_ORDER = ["C1", "C2", "C3", "C4"];
 
 export function seriesIds(): string[] {
-  const present = new Set(packs.map((pack) => pack.series));
+  // Rules v7: a series that has no packs now (the D pool) stays while it has history, so moved packs keep their line.
+  const present = new Set([...packs.map((pack) => pack.series), ...measurements.filter((row) => !isNonStorage(row.sessionType)).map((row) => row.series)]);
   return [...present].sort((a, b) => {
     const ai = SERIES_ORDER.indexOf(a);
     const bi = SERIES_ORDER.indexOf(b);
@@ -847,7 +914,7 @@ function asOf(series: string): string {
     .filter((value): value is string => Boolean(value));
   if (dates.length === 0) return "—";
   const latest = dates.reduce((value, current) => (compareTime(current, value) > 0 ? current : value));
-  return calendarDate(latest) || latest;
+  return calendarDate(latest) || "undated";
 }
 
 export function seriesBlocks(): SeriesBlock[] {
@@ -972,12 +1039,19 @@ export type PackSeries = {
   uid: string;
   color: string;
   tone: LampTone;
+  /** Series-local readings. The series mean uses these and ignores other labels. */
   avg: (number | null)[];
   spread: (number | null)[];
   floor: (number | null)[];
   cells: (number | null)[][];
+  /** Every storage reading for this uid, including nights under an earlier label. */
+  historyAvg: (number | null)[];
+  historySpread: (number | null)[];
+  historyFloor: (number | null)[];
+  historyCells: (number | null)[][];
   service: (string | null)[];
   logged: boolean[];
+  nolog: boolean[];
   rest: boolean[];
   unpublished: boolean[];
   provisional: boolean[];
@@ -1026,11 +1100,16 @@ function seriesPacks(series: string): PackSeries[] {
       spread: alignUid(uid, (row) => row.spread, series),
       floor: alignUid(uid, (row) => row.floor, series),
       cells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null, series)),
-      service: membershipSpans(uid, series),
+      historyAvg: alignUid(uid, (row) => row.avg),
+      historySpread: alignUid(uid, (row) => row.spread),
+      historyFloor: alignUid(uid, (row) => row.floor),
+      historyCells: [0, 1, 2, 3, 4, 5].map((index) => alignUid(uid, (row) => row.cells[index] ?? null)),
+      service: meta.service,
       logged: meta.logged,
+      nolog: meta.nolog,
       rest: restFlags(uid),
       unpublished: unpublishedForSeries(series),
-      provisional: alignProvisional(uid, series),
+      provisional: alignProvisional(uid),
     };
   });
 }
@@ -1083,19 +1162,6 @@ function seriesInService(series: string): (string | null)[] {
   });
 }
 
-/**
- * Pack span only while that pack's label is in this series. Nights before the
- * move into the series, and nights after the move out, are out of span.
- */
-function membershipSpans(uid: string, series: string): (string | null)[] {
-  const spans = serviceSpans(uid);
-  return categories.map((category, index) => {
-    if (spans[index] == null) return null;
-    if (seriesOfLabel(labelAsOf(uid, category.id)) !== series) return null;
-    return spans[index];
-  });
-}
-
 export function fleetModel(): FleetModel {
   const fleets = seriesIds().map((series) => {
     const members = packs.filter((pack) => pack.series === series);
@@ -1111,9 +1177,11 @@ export function fleetModel(): FleetModel {
     };
   });
   const measured = fleets.filter((fleet) => fleet.packs.length > 0);
-  const allIr = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => [...pack.avg, ...pack.cells.flat()]));
-  const allSpread = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.spread));
-  const allFloor = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.floor));
+  const allIr = measured.flatMap((fleet) =>
+    fleet.packs.flatMap((pack) => [...pack.historyAvg, ...pack.historyCells.flat()]),
+  );
+  const allSpread = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.historySpread));
+  const allFloor = measured.flatMap((fleet) => fleet.packs.flatMap((pack) => pack.historyFloor));
   const allRest = measured.flatMap((fleet) => fleet.rest);
   const meanValues = measured.flatMap((fleet) => fleetMean(fleet.packs));
   const restNums = nums(allRest);
@@ -1142,9 +1210,10 @@ export function seriesOf(rows: PackSeries[], pick: "avg" | "spread" | "floor"): 
     id: row.uid,
     label: row.id,
     color: row.color,
-    values: row[pick],
+    values: pick === "avg" ? row.historyAvg : pick === "spread" ? row.historySpread : row.historyFloor,
     service: row.service,
     logged: row.logged,
+    nolog: row.nolog,
     rest: row.rest,
     unpublished: row.unpublished,
     provisional: pick === "floor" ? undefined : row.provisional,
@@ -1183,10 +1252,11 @@ export function lineage(uid: string): string | null {
 export type PackNight =
   | { session: string; partial: boolean; kind: "measured"; point: Measurement }
   | { session: string; partial: boolean; kind: "rest-pool"; label: string }
-  | { session: string; partial: boolean; kind: "not-charged"; label: string; bridged: boolean };
+  | { session: string; partial: boolean; kind: "not-charged"; label: string; bridged: boolean }
+  | { session: string; partial: boolean; kind: "charged-no-log"; label: string };
 
 function packNights(uid: string): PackNight[] {
-  const { service, logged } = lineMeta(uid);
+  const { service, logged, nolog } = lineMeta(uid);
   const points = pointsFor(uid);
   const bySession = new Map(points.map((point) => [point.session, point]));
   const values = categories.map((category) => {
@@ -1218,6 +1288,15 @@ function packNights(uid: string): PackNight[] {
       return;
     }
     if (service[index] == null) return;
+    if (nolog[index]) {
+      nights.push({
+        session: category.id,
+        partial: category.partial,
+        kind: "charged-no-log",
+        label: labelAsOf(uid, category.id) ?? "—",
+      });
+      return;
+    }
     nights.push({
       session: category.id,
       partial: category.partial,
@@ -1308,6 +1387,7 @@ export function getPack(uid: string): PackView | null {
       values: alignUid(uid, (point) => point.cells[index] ?? null),
       service: meta.service,
       logged: meta.logged,
+      nolog: meta.nolog,
       rest,
       unpublished: unpublishedForUid(uid),
       provisional,
@@ -1320,6 +1400,7 @@ export function getPack(uid: string): PackView | null {
         values: alignUid(uid, (point) => point.spread),
         service: meta.service,
         logged: meta.logged,
+        nolog: meta.nolog,
         rest,
         unpublished: unpublishedForUid(uid),
         provisional,
@@ -1333,6 +1414,7 @@ export function getPack(uid: string): PackView | null {
         values: alignUid(uid, (point) => point.floor),
         service: meta.service,
         logged: meta.logged,
+        nolog: meta.nolog,
         rest,
         unpublished: unpublishedForUid(uid),
       },
@@ -1480,8 +1562,8 @@ export function nextParallel() {
   };
 }
 
-export function ruleABand(spread: number): "Go" | "Caution" | "Individual" {
-  if (spread >= spreadRule.individual_gte) return "Individual";
+export function ruleABand(spread: number): "Go" | "Caution" | "Watch" {
+  if (spread >= spreadRule.individual_gte) return "Watch";
   if (spread >= spreadRule.caution_gte) return "Caution";
   return "Go";
 }
@@ -1507,8 +1589,8 @@ export function ruleBNote(series: string): string | null {
 
 function assertDerived() {
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.754" || stats.counted !== 23) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.754 mΩ over 23 slotted packs`);
+  if (stats.mean.toFixed(3) !== "2.669" || stats.counted !== 24) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.669 mΩ over 24 slotted packs`);
   }
   const c1p4 = statusRows().find((row) => row.label === "C1-P4");
   if (
@@ -1533,12 +1615,12 @@ function assertDerived() {
   };
   const c1Last = lastOf("C1");
   const c2Last = lastOf("C2");
-  if (c1Last == null || c1Last.toFixed(3) !== "2.733") throw new Error(`C1 series mean last is ${c1Last}`);
-  if (c2Last == null || c2Last.toFixed(3) !== "2.900") throw new Error(`C2 series mean last is ${c2Last}`);
+  if (c1Last == null || c1Last.toFixed(3) !== "2.600") throw new Error(`C1 series mean last is ${c1Last}`);
+  if (c2Last == null || c2Last.toFixed(3) !== "2.617") throw new Error(`C2 series mean last is ${c2Last}`);
   const c3Last = lastOf("C3");
   const c4Last = lastOf("C4");
-  if (c3Last == null || c3Last.toFixed(3) !== "2.780") throw new Error(`C3 series mean last is ${c3Last}`);
-  if (c4Last == null || c4Last.toFixed(3) !== "2.522") throw new Error(`C4 series mean last is ${c4Last}`);
+  if (c3Last == null || c3Last.toFixed(3) !== "2.802") throw new Error(`C3 series mean last is ${c3Last}`);
+  if (c4Last == null || c4Last.toFixed(3) !== "2.483") throw new Error(`C4 series mean last is ${c4Last}`);
   const night1 = model.categories.findIndex((category) => category.id === "2026-10-14");
   const night2 = model.categories.findIndex((category) => category.id === "2026-10-16");
   const c3Fleet = model.fleets.find((item) => item.id === "C3");
@@ -1559,16 +1641,21 @@ function assertDerived() {
   const day = model.categories.findIndex((category) => category.id === "2026-10-09");
   const restNightIndex = model.categories.findIndex((category) => category.id === "2026-10-09-restday0");
   const moved = c1Fleet?.packs.find((pack) => pack.uid === "CNHL-2026-001");
-  if (!moved || moved.avg[day] != null) throw new Error("D-1 2026-10-09 is on the C1 line");
-  const d1 = model.fleets.find((fleet) => fleet.id === "D")?.packs.find((pack) => pack.uid === "CNHL-2026-001");
-  if (!d1 || d1.avg[day] == null || d1.avg[day].toFixed(3) !== "2.767") throw new Error("D-1 2026-10-09 is missing from series D");
+  // Label registry: C1-P1's 2026-10-09 reading is on the C1 line; there is no series D.
+  if (!moved || moved.avg[day] == null || moved.avg[day]!.toFixed(3) !== "2.767") throw new Error("C1-P1 2026-10-09 is missing from the C1 line");
+  if (model.fleets.some((fleet) => fleet.id === "D")) throw new Error("series D is still on the site");
   const p4 = c1Fleet?.packs.find((pack) => pack.uid === "CNHL-2026-004");
   if (!p4 || p4.avg[restNightIndex] != null) throw new Error("C1-P4 rest-day row is on a series line");
   if (c1Fleet && c1Fleet.rest[restNightIndex] != null) throw new Error("Rule B plotted the rest-day night");
   const c1Rule = [...(c1Fleet?.rest ?? [])].reverse().find((value) => value != null);
   const c2Rule = [...(model.fleets.find((fleet) => fleet.id === "C2")?.rest ?? [])].reverse().find((value) => value != null);
+  // 2026-10-17 was per-pack storage runs (no board connection), so no Rule B is recorded for it.
   if (c1Rule == null || Math.abs(c1Rule - 0.186) > 0.0005) throw new Error(`C1 Rule B last is ${c1Rule}`);
   if (c2Rule == null || Math.abs(c2Rule - 0.23) > 0.0005) throw new Error(`C2 Rule B last is ${c2Rule}`);
+  {
+    const n17 = model.categories.findIndex((category) => category.id === "2026-10-17");
+    if (n17 < 0 || model.fleets.some((fleet) => fleet.rest[n17] != null)) throw new Error("a Rule B value is recorded for 2026-10-17");
+  }
   const heldNight = model.categories.findIndex((category) => category.id === "2026-10-10");
   if (heldNight < 0 || c1Fleet?.rest[heldNight] == null || Math.abs(c1Fleet.rest[heldNight] - 0.135) > 0.0005) {
     throw new Error(`C1 Rule B on 2026-10-10 is ${c1Fleet?.rest[heldNight]}`);
@@ -1591,17 +1678,15 @@ function assertDerived() {
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (
     rendered !==
-      "C1:C1-P2+C1-P3+C1-P5+C1-P6 | C2:C2-P1+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
-    board.as_of !== "2026-10-16"
+      "C1:C1-P1+C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
+    board.as_of !== "2026-10-17"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
-  for (const label of ["C3-P5", "C3-P6", "C4-P2"]) {
+  for (const label of ["C1-P1", "C1-P4", "C2-P2", "C3-P5", "C3-P6", "C4-P2"]) {
     if (!board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is missing from its board`);
   }
-  for (const label of ["D-1", "C1-P4", "C2-P2"]) {
-    if (board.series.some((item) => item.labels.includes(label))) throw new Error(`${label} is on a next parallel board`);
-  }
+  if (board.series.some((item) => item.labels.some((label) => label.startsWith("D-")))) throw new Error("a D label is on a next parallel board");
   assertUnpublishedNight(model, heldNight);
   assertStatusChips();
   assertRingWindows(model);
@@ -1689,7 +1774,7 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   }
   const c2Card = statusRows().find((row) => row.uid === "CNHL-2026-007");
   const c1Card = statusRows().find((row) => row.uid === "CNHL-2026-003");
-  if (!c2Card || c2Card.provisional || c2Card.latestSession !== "2026-10-11" || c2Card.avg.toFixed(3) !== "2.467" || c2Card.spread.toFixed(1) !== "0.3") {
+  if (!c2Card || c2Card.provisional || c2Card.latestSession !== "2026-10-17" || c2Card.avg.toFixed(3) !== "2.617" || c2Card.spread.toFixed(1) !== "0.9") {
     throw new Error(`C2-P1 card is ${c2Card?.latestSession} ${c2Card?.avg} provisional=${c2Card?.provisional}`);
   }
   if (!c1Card || c1Card.provisional) throw new Error("C1-P3 card is marked provisional");
@@ -1786,18 +1871,18 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
 }
 
 const EXPECTED_CHIPS: Record<string, StatusChipName> = {
+  "C1-P1": "GO",
   "C1-P2": "GO",
   "C1-P3": "GO",
-  "C1-P4": "REST",
+  "C1-P4": "GO",
   "C1-P5": "GO",
   "C1-P6": "GO",
   "C2-P1": "GO",
-  "C2-P2": "REST",
+  "C2-P2": "GO",
   "C2-P3": "GO",
   "C2-P4": "GO",
   "C2-P5": "GO",
   "C2-P6": "GO",
-  "D-1": "REST",
   "C3-P1": "GO",
   "C3-P2": "GO",
   "C3-P3": "GO",
@@ -1865,11 +1950,9 @@ function assertStatusChips() {
     !c1p5 ||
     !c1p5Tile ||
     c1p5Tile.reason !== c1p5.reason ||
-    c1p5.status !== "PARALLEL GO: on the C1 board | SERVICE Watch" ||
-    !c1p5.reason.includes("0.186 V apart") ||
-    !c1p5.reason.includes("0.384 V apart") ||
-    !c1p5.reason.includes("lowest cell 3539 mV") ||
-    c1p5.session !== "2026-10-16" ||
+    c1p5.status !== "PARALLEL GO: on the C1 board | SERVICE In service" ||
+    !c1p5.reason.includes("rules v7") ||
+    !c1p5.reason.includes("low Cell 4 is a performance note") ||
     statusChip(c1p5.status, c1p5.chargeMode) !== "GO"
   ) {
     throw new Error("C1-P5 card must show the recorded GO");
@@ -1877,11 +1960,8 @@ function assertStatusChips() {
   const c4p2 = rows.find((item) => item.label === "C4-P2");
   if (
     !c4p2 ||
-    c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service (watch)" ||
-    !c4p2.reason.includes("Cell 6 started low on both storage nights") ||
-    !c4p2.reason.includes("each C4 pack charged on its own") ||
-    !c4p2.reason.includes("0.249 V apart") ||
-    c4p2.session !== "2026-10-16" ||
+    c4p2.status !== "PARALLEL GO: on the C4 board | SERVICE In service" ||
+    !c4p2.reason.includes("low Cell 6 on 2026-10-14 and 2026-10-16 is a performance note") ||
     statusChip(c4p2.status, c4p2.chargeMode) !== "GO"
   ) {
     throw new Error(`C4-P2 call is ${c4p2?.session} ${c4p2?.status}`);
@@ -1900,8 +1980,8 @@ function assertStatusChips() {
     const row = rows.find((item) => item.label === label);
     if (
       !row ||
-      row.status !== "PARALLEL GO: on the C3 board | SERVICE In service (watch)" ||
-      row.session !== "2026-10-16" ||
+      row.status !== "PARALLEL GO: on the C3 board | SERVICE In service" ||
+      !row.reason.includes("rules v7") ||
       statusChip(row.status, row.chargeMode) !== "GO"
     ) {
       throw new Error(`${label} should stay Go on the C3 board`);
@@ -1927,6 +2007,29 @@ function chartLine(
 
 function ringNights(series: ChartSeries): string[] {
   return openEndIndices(series).map((index) => categories[index].id);
+}
+
+function assertJoined(series: ChartSeries, mode: ChartMode, label: string) {
+  const readings = readingIndices(series);
+  const segments = lineSegments(series, mode);
+  if (segments.length !== Math.max(0, readings.length - 1)) {
+    throw new Error(`${label} has ${readings.length} readings and ${segments.length} segments`);
+  }
+  if (openEndIndices(series, mode).length !== 0) {
+    throw new Error(`${label} still draws a hollow ring`);
+  }
+  const lone = lonePointIndices(series, mode);
+  if (readings.length <= 1) {
+    if (lone.length !== readings.length) throw new Error(`${label} lone marker does not match its single reading`);
+    return;
+  }
+  if (lone.length !== 0) throw new Error(`${label} draws a lone dot beside a line`);
+  for (let index = 1; index < readings.length; index += 1) {
+    const segment = segments[index - 1];
+    if (!segment || segment.from !== readings[index - 1] || segment.to !== readings[index]) {
+      throw new Error(`${label} broke between readings ${readings[index - 1]} and ${readings[index]}`);
+    }
+  }
 }
 
 function assertNoInteriorRing(series: ChartSeries, label: string) {
@@ -1956,14 +2059,8 @@ function assertGapGeometry(model: FleetModel) {
     service: ["0", "0", "0", null, "0", "0"],
   };
   const sampleRings = openEndIndices(sample);
-  if (sampleRings.includes(2)) {
-    throw new Error("interior skip was ringed before a later real point");
-  }
-  if (!sampleRings.includes(0) || !sampleRings.includes(5)) {
-    throw new Error("a leading or trailing ring is missing");
-  }
-  if (interiorRingIndices(sample).length !== 0) {
-    throw new Error("leading and trailing rings were treated as interior");
+  if (sampleRings.length !== 0 || interiorRingIndices(sample).length !== 0) {
+    throw new Error("a skipped night before the first reading or after the last was ringed");
   }
   const sampleBridge = missBridges(sample, ["a", "b", "c", "d", "e", "f"]);
   if (sampleBridge.length !== 1 || sampleBridge[0].from !== 1 || sampleBridge[0].to !== 4) {
@@ -1986,8 +2083,11 @@ function assertGapGeometry(model: FleetModel) {
     values: [1, null, 2],
     service: ["0", "0", "1"],
   };
-  if (solidFrom(movedSpan, 2, "aggregate") !== -1 || missBridges(movedSpan, ["a", "b", "c"], "aggregate").length !== 0) {
-    throw new Error("an aggregate line crossed a move");
+  if (solidFrom(movedSpan, 2, "aggregate") !== 0 || missBridges(movedSpan, ["a", "b", "c"], "aggregate").length !== 0) {
+    throw new Error("an aggregate line broke across a move");
+  }
+  if (solidFrom(movedSpan, 2, "pack") !== -1 || missBridges(movedSpan, ["a", "b", "c"], "pack").length !== 1) {
+    throw new Error("a pack line did not draw a dotted join across a move when the night between was not charged");
   }
   const holeOnly: ChartSeries = {
     id: "hole",
@@ -2009,12 +2109,12 @@ function assertGapGeometry(model: FleetModel) {
     unpublished: [false, true, false],
   };
   if (
+    solidFrom(held, 2, "pack") !== 0 ||
+    solidFrom(held, 2, "aggregate") !== 0 ||
     missBridges(held, ["a", "b", "c"], "pack").length !== 0 ||
-    solidFrom(held, 2, "pack") !== -1 ||
-    missBridges(held, ["a", "b", "c"], "aggregate").length !== 0 ||
-    solidFrom(held, 2, "aggregate") !== -1
+    missBridges(held, ["a", "b", "c"], "aggregate").length !== 0
   ) {
-    throw new Error("an unpublished night was joined");
+    throw new Error("an unpublished night broke the line between two readings");
   }
 
   const nightIds = model.categories.map((category) => category.id);
@@ -2042,7 +2142,7 @@ function assertGapGeometry(model: FleetModel) {
       unpublished: line.unpublished,
     };
   };
-  for (const series of ["C1", "C2", "D", "C3", "C4"]) {
+  for (const series of ["C1", "C2", "C3", "C4"]) {
     const line = meanLine(series);
     nightIds.forEach((night, index) => {
       const expected = fromV4(night, series);
@@ -2062,8 +2162,9 @@ function assertGapGeometry(model: FleetModel) {
   const c2 = meanLine("C2");
   const packJoined = (series: ChartSeries, from: string, to: string) =>
     missBridges(series, nightIds, "pack").some((bridge) => nightIds[bridge.from] === from && nightIds[bridge.to] === to);
-  if (solidFrom(c1, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-09-27")) {
-    throw new Error("C1 mean does not solid-join 2026-09-27 to 2026-10-10");
+  // C1-P1's 2026-10-09 reading is a C1 mean point (label registry), so the C1 mean runs 2026-09-27, 2026-10-09, 2026-10-10.
+  if (solidFrom(c1, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-10-09") || solidFrom(c1, indexOf("2026-10-09"), "aggregate") !== indexOf("2026-09-27")) {
+    throw new Error("C1 mean does not solid-join 2026-09-27, 2026-10-09 and 2026-10-10");
   }
   if (solidFrom(c2, indexOf("2026-10-10"), "aggregate") !== indexOf("2026-09-30")) {
     throw new Error("C2 mean does not solid-join 2026-09-30 to 2026-10-10");
@@ -2071,10 +2172,10 @@ function assertGapGeometry(model: FleetModel) {
   if (solidFrom(c2, indexOf("2026-09-30"), "aggregate") !== indexOf("2026-09-27")) {
     throw new Error("C2 mean must solid-join 2026-09-27 to 2026-09-30");
   }
-  if (packJoined(c1, "2026-09-27", "2026-10-10") && solidFrom(c1, indexOf("2026-10-10"), "pack") !== -1) {
+  if (packJoined(c1, "2026-09-27", "2026-10-09") && solidFrom(c1, indexOf("2026-10-09"), "pack") !== -1) {
     throw new Error("pack mode solid-joined a genuine skip on the C1 mean shape");
   }
-  if (!packJoined(c1, "2026-09-27", "2026-10-10") || solidFrom(c1, indexOf("2026-10-10"), "pack") !== -1) {
+  if (!packJoined(c1, "2026-09-27", "2026-10-09") || solidFrom(c1, indexOf("2026-10-09"), "pack") !== -1) {
     throw new Error("pack mode lost the dotted join across a genuine skip");
   }
   for (const line of [c1, c2]) {
@@ -2087,7 +2188,7 @@ function assertGapGeometry(model: FleetModel) {
     throw new Error("aggregate legend still says not charged");
   }
 
-  const meanLines = ["C1", "C2", "D"].map((id) => meanLine(id));
+  const meanLines = ["C1", "C2"].map((id) => meanLine(id));
   const restIndex = indexOf("2026-10-09-restday0");
   if (axisNightVisible(meanLines, restIndex, "2026-10-09-restday0")) {
     throw new Error("10-09r is an axis tick on the series mean chart");
@@ -2110,10 +2211,11 @@ function assertGapGeometry(model: FleetModel) {
       throw new Error(`${fleet.id} Rule B legend says not charged`);
     }
     for (const pack of fleet.packs) {
-      for (const values of [pack.avg, pack.spread, pack.floor, ...pack.cells]) {
+      for (const values of [pack.historyAvg, pack.historySpread, pack.historyFloor, ...pack.historyCells]) {
         const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
         assertAggregateQuiet(chart, nightIds, `${fleet.id} ${pack.uid} fleet chart`);
         assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
+        assertJoined(chart, "aggregate", `${fleet.id} ${pack.uid} fleet chart`);
       }
     }
   }
@@ -2133,66 +2235,80 @@ function assertGapGeometry(model: FleetModel) {
   }
   for (const line of [...c1p2.cellSeries, ...c1p2.spreadSeries, ...c1p2.floorSeries, ...c2p1.cellSeries, ...c2p1.spreadSeries, ...c2p1.floorSeries]) {
     assertNoInteriorRing(line, line.id);
+    assertJoined(line, "pack", line.id);
+  }
+  // Label registry: CNHL-2026-001 is one continuous C1-P1 line (15 readings) on its page and on the C1 chart.
+  const p1 = getPack("CNHL-2026-001");
+  if (!p1 || p1.label !== "C1-P1" || p1.series !== "C1") throw new Error("missing C1-P1 pack chart");
+  if (p1.points.length !== 15 || p1.points.some((point) => point.label !== "C1-P1" || point.series !== "C1")) {
+    throw new Error(`C1-P1 should have 15 C1-P1 readings, has ${p1.points.length}`);
+  }
+  for (const line of [...p1.cellSeries, ...p1.spreadSeries, ...p1.floorSeries]) {
+    assertJoined(line, "pack", `C1-P1 ${line.label}`);
+    if (readingIndices(line).length !== 15) throw new Error(`C1-P1 ${line.label} has ${readingIndices(line).length} readings`);
+    const segments = lineSegments(line, "pack");
+    if (segments.length !== 14) throw new Error(`C1-P1 ${line.label} has ${segments.length} segments, expected 14`);
+    const into09 = segments.find((segment) => segment.to === indexOf("2026-10-09"));
+    const into17 = segments.find((segment) => segment.to === indexOf("2026-10-17"));
+    if (!into09 || into09.from !== indexOf("2026-09-27") || !into17 || into17.from !== indexOf("2026-10-09")) {
+      throw new Error(`C1-P1 ${line.label} does not join 2026-09-27, 2026-10-09 and 2026-10-17`);
+    }
+  }
+  const c3p2 = getPack("CNHL-2026-014");
+  const noLogNight = c3p2?.nights.find((night) => night.session === "2026-10-17");
+  if (!c3p2 || !noLogNight || noLogNight.kind !== "charged-no-log") {
+    throw new Error("C3-P2 2026-10-17 should read as charged with no log");
+  }
+  if (allNotCharged([...c3p2.cellSeries, ...c3p2.spreadSeries, ...c3p2.floorSeries], nightIds).includes("2026-10-17")) {
+    throw new Error("C3-P2 chart still captions 2026-10-17 as not charged");
+  }
+  for (const line of [...c3p2.cellSeries, ...c3p2.spreadSeries, ...c3p2.floorSeries]) {
+    if (seriesNotCharged(line, indexOf("2026-10-17"))) throw new Error(`C3-P2 ${line.label} marks 2026-10-17 not charged`);
+    if (openEndIndices(line, "pack").length !== 0) throw new Error(`C3-P2 ${line.label} draws a not-charged ring`);
+    if (readingIndices(line).length !== 2 || lonePointIndices(line, "pack").length !== 0) {
+      throw new Error(`C3-P2 ${line.label} should stay two joined readings`);
+    }
+    assertJoined(line, "pack", `C3-P2 ${line.label}`);
+  }
+  const c1FleetPack = model.fleets.find((fleet) => fleet.id === "C1")?.packs.find((pack) => pack.uid === "CNHL-2026-001");
+  if (!c1FleetPack || c1FleetPack.avg[indexOf("2026-10-09")] == null) throw new Error("C1-P1 is missing from the C1 series chart");
+  {
+    const trend = chartLine(c1FleetPack.uid, c1FleetPack.historyAvg, c1FleetPack.service, c1FleetPack.logged, c1FleetPack.rest);
+    assertJoined(trend, "aggregate", "C1-P1 series trend");
+    const through = lineSegments(trend, "aggregate").find(
+      (segment) => segment.from === indexOf("2026-10-09") && segment.to === indexOf("2026-10-17"),
+    );
+    if (!through || through.style !== "solid") throw new Error("C1 series chart did not join C1-P1's 2026-10-09 and 2026-10-17 readings");
   }
 }
 
-/** Rings stay inside the first in-service span: not before that date, and not after a move. */
+/** Every plotted line joins its recorded readings. Hollow rings are not drawn. */
 function assertRingWindows(model: FleetModel) {
-  const member = (series: string, night: string) =>
-    packs.some((pack) => seriesOfLabel(labelAsOf(pack.uid, night)) === series);
-
   for (const line of model.mean) {
     const chart = chartLine(line.id, line.values, line.service);
-    const nights = ringNights(chart);
-    if (line.id === "D" && nights.length > 0) {
-      throw new Error(`Series D mean has a ring on ${nights.join(", ")}`);
-    }
-    for (const night of nights) {
-      if (!member(line.id, night)) {
-        throw new Error(`${line.id} mean ring on ${night} is before that series or after its packs moved out`);
-      }
-    }
+    assertJoined(chart, "aggregate", `${line.id} mean`);
     assertNoInteriorRing(chart, `${line.id} mean`);
+    if (ringNights(chart).length !== 0) throw new Error(`${line.id} mean still draws a hollow ring`);
   }
 
-  const dMean = model.mean.find((line) => line.id === "D");
-  const dIndex = categories.findIndex((category) => category.id === "2026-10-09");
-  const dValue = dMean?.values[dIndex];
-  if (dValue == null || dValue.toFixed(3) !== "2.767") {
-    throw new Error(`Series D mean on 2026-10-09 is ${dValue}`);
-  }
-  if (!dMean || !lonePointIndices(chartLine("D", dMean.values, dMean.service)).includes(dIndex)) {
-    throw new Error("Series D mean point is not a single visible dot");
+  if (model.mean.some((line) => line.id === "D")) throw new Error("series D mean is still on the site");
+  {
+    const c1Mean = model.mean.find((line) => line.id === "C1");
+    const at09 = c1Mean?.values[categories.findIndex((category) => category.id === "2026-10-09")];
+    if (at09 == null || at09.toFixed(3) !== "2.767") throw new Error(`C1 mean on 2026-10-09 is ${at09}`);
   }
 
   for (const fleet of model.fleets) {
     const restChart = chartLine(fleet.id, fleet.rest, fleet.restService, undefined, undefined, fleet.restNa);
-    for (const night of ringNights(restChart)) {
-      if (!member(fleet.id, night)) {
-        throw new Error(`${fleet.id} Rule B ring on ${night} is outside that series`);
-      }
-    }
+    assertJoined(restChart, "aggregate", `${fleet.id} Rule B`);
     assertNoInteriorRing(restChart, `${fleet.id} Rule B`);
     for (const pack of fleet.packs) {
-      const lines = [pack.avg, pack.spread, pack.floor, ...pack.cells];
+      const lines = [pack.historyAvg, pack.historySpread, pack.historyFloor, ...pack.historyCells];
       for (const values of lines) {
         const chart = chartLine(`${fleet.id} ${pack.uid}`, values, pack.service, pack.logged, pack.rest);
-        assertNoInteriorRing(chart, `${fleet.id} ${pack.uid}`);
-        for (const night of ringNights(chart)) {
-          if (seriesOfLabel(labelAsOf(pack.uid, night)) !== fleet.id) {
-            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before that series or after the move`);
-          }
-          const move = movedEvent(pack.uid);
-          if (move && seriesOfLabel(move.from) === fleet.id && compareTime(night, move.date) >= 0) {
-            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is after the move`);
-          }
-          if (move && seriesOfLabel(move.to) === fleet.id && compareTime(night, move.date) < 0) {
-            throw new Error(`${fleet.id} ${pack.uid} ring on ${night} is before the move into ${fleet.id}`);
-          }
-          const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
-          if (!commission || compareTime(night, commission.date) < 0) {
-            throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
-          }
+        assertJoined(chart, "aggregate", `${fleet.id} ${pack.uid}`);
+        if (ringNights(chart).length !== 0) {
+          throw new Error(`${fleet.id} ${pack.uid} still draws a hollow ring`);
         }
       }
     }
@@ -2209,22 +2325,49 @@ function assertRingWindows(model: FleetModel) {
     ];
     for (const values of lines) {
       const chart = chartLine(pack.uid, values, meta.service, meta.logged, rest);
-      assertNoInteriorRing(chart, pack.uid);
-      for (const night of ringNights(chart)) {
-        const commission = eventsFor(pack.uid).find((event) => event.event === "commission");
-        if (!commission || compareTime(night, commission.date) < 0) {
-          throw new Error(`${pack.uid} ring on ${night} is before it was in service`);
-        }
-        const move = movedEvent(pack.uid);
-        if (move && compareTime(night, move.date) >= 0) {
-          throw new Error(`${pack.uid} ring on ${night} is after its move`);
-        }
-        if (pack.retired && compareTime(night, pack.retired) >= 0) {
-          throw new Error(`${pack.uid} ring on ${night} is after retirement`);
-        }
-      }
+      assertJoined(chart, "pack", pack.uid);
+      if (ringNights(chart).length !== 0) throw new Error(`${pack.uid} still draws a hollow ring`);
+    }
+  }
+  // Label registry: C1-P1 has one occupant for its whole history, so no past occupant span.
+  const c1p1Slot = getSlot("C1-P1");
+  if (!c1p1Slot || c1p1Slot.past.length !== 0) throw new Error(`C1-P1 should have no past occupant, has ${c1p1Slot?.past.length}`);
+  if (getSlot("D-1")) throw new Error("a D-1 slot is still on the site");
+  if (publicSession("S263") !== "undated" || shownWhen("S413", "2026-09-22") !== "2026-09-22") {
+    throw new Error("session id leaked into a date label");
+  }
+  if (/\bS\d{3}\b/.test(publicProse("spreads (S263/S358/S413), same shape as S386"))) {
+    throw new Error("prose still shows a session id");
+  }
+}
+
+function assertCellJoinsFollowPack() {
+  const service = ["0", "0", "0"];
+  const hole = lineSegments(chartLine("hole", [1, null, 2], service, [true, true, true]), "pack");
+  const full = lineSegments(chartLine("full", [1, 1.2, 2], service, [true, true, true]), "pack");
+  const skipped = lineSegments(chartLine("skip", [1, null, 2], service, [true, false, true]), "pack");
+  if (hole.length !== 1 || hole[0].style !== "solid") {
+    throw new Error(`a missing cell on a charged night changed the join: ${hole.map((segment) => segment.style).join(",")}`);
+  }
+  if (full.length !== 2 || full.some((segment) => segment.style !== "solid")) {
+    throw new Error(`pack-charged joins were ${full.map((segment) => segment.style).join(",")}`);
+  }
+  if (skipped.length !== 1 || skipped[0].style !== "dotted") {
+    throw new Error(`an uncharged night stayed ${skipped.map((segment) => segment.style).join(",")}`);
+  }
+  for (const pack of packs) {
+    const view = getPack(pack.uid);
+    if (!view) continue;
+    const signatures = view.cellSeries.map((line) =>
+      lineSegments(line, "pack")
+        .map((segment) => `${segment.from}-${segment.to}-${segment.style}`)
+        .join(" "),
+    );
+    if (new Set(signatures).size !== 1) {
+      throw new Error(`${pack.uid} per-cell charts disagree on join style`);
     }
   }
 }
 
+assertCellJoinsFollowPack();
 assertDerived();

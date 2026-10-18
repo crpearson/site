@@ -1,65 +1,1359 @@
 {
-  "schema": "next_charge/v2",
-  "rules": "v4",
-  "as_of_session": "2026-10-16",
-  "as_of_date_pt": "2026-10-16",
-  "active_set": "C1+C2",
-  "active_set_reason": "rotation: set A (C1+C2) is the least recently charged set (last storage night 2026-10-11); set B ran 2026-10-14 and 2026-10-16",
-  "alternate_set": "C3+C4",
-  "storage_runs": [
+  "schema": "next_charge/v4",
+  "rules": "v7",
+  "as_of_session": "2026-10-17",
+  "as_of_date_pt": "2026-10-17",
+  "measurement": {
+    "rest_rule": "Resting voltage is read at least 90 minutes after a charge or flight.",
+    "ir_rule": "IR is measured solo only (one pack on a channel); IR read on a parallel board is not used.",
+    "from_logs": [
+      "solo cell IR on every storage run (performance notes and the 2x single-cell check)",
+      "first-line cell voltages (deep-discharge pull check, and advisories for the board checks)",
+      "storage-end voltages, for the self-discharge check when a pack did not fly in between"
+    ],
+    "not_from_logs": [
+      "pack temperature: the DX8 logs show only the charger's own temperature, so heat is reported by hand",
+      "swelling, pouch damage, connector damage and abnormal charging behaviour: reported by hand",
+      "flight times: the first log line may be less than 90 minutes after a flight, so voltage checks from logs are advisories",
+      "the board checks themselves (0.60 V pack spread, 0.10 V per cell, 0.10 V in-pack, 2.0 to 3.0 V cells): read at the board before connecting"
+    ]
+  },
+  "home_channels": [
     {
+      "label": "C1-P1",
+      "uid": "CNHL-2026-001",
+      "series": "C1",
+      "slot": 1,
       "charger": "DX8-1",
-      "channel": "CH1",
-      "order": [
-        "C1-P2",
-        "C1-P3"
-      ],
-      "mode": "one pack per run, in this order"
+      "channel": 1,
+      "state": "active",
+      "note": "Cell 6 is a watch note (rest test RT-001-1 passed 2026-10-17)."
     },
     {
+      "label": "C1-P2",
+      "uid": "CNHL-2026-002",
+      "series": "C1",
+      "slot": 2,
       "charger": "DX8-1",
-      "channel": "CH2",
-      "order": [
-        "C1-P5",
-        "C1-P6"
-      ],
-      "mode": "one pack per run, in this order"
+      "channel": 1,
+      "state": "active",
+      "note": null
     },
     {
-      "charger": "DX8-2",
-      "channel": "CH1",
-      "order": [
-        "C2-P1",
-        "C2-P3"
-      ],
-      "mode": "one pack per run, in this order"
+      "label": "C1-P3",
+      "uid": "CNHL-2026-003",
+      "series": "C1",
+      "slot": 3,
+      "charger": "DX8-1",
+      "channel": 2,
+      "state": "active",
+      "note": null
     },
     {
+      "label": "C1-P4",
+      "uid": "CNHL-2026-004",
+      "series": "C1",
+      "slot": 4,
+      "charger": "DX8-1",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C1-P5",
+      "uid": "CNHL-2026-005",
+      "series": "C1",
+      "slot": 5,
       "charger": "DX8-2",
-      "channel": "CH2",
-      "order": [
-        "C2-P4",
-        "C2-P5",
-        "C2-P6"
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C1-P6",
+      "uid": "CNHL-2026-006",
+      "series": "C1",
+      "slot": 6,
+      "charger": "DX8-2",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C2-P1",
+      "uid": "CNHL-2026-007",
+      "series": "C2",
+      "slot": 1,
+      "charger": "DX8-2",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C2-P2",
+      "uid": "CNHL-2026-008",
+      "series": "C2",
+      "slot": 2,
+      "charger": "DX8-2",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C2-P3",
+      "uid": "CNHL-2026-009",
+      "series": "C2",
+      "slot": 3,
+      "charger": "DX8-2",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C2-P4",
+      "uid": "CNHL-2026-010",
+      "series": "C2",
+      "slot": 4,
+      "charger": "DX8-2",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C2-P5",
+      "uid": "CNHL-2026-011",
+      "series": "C2",
+      "slot": 5,
+      "charger": "DX8-1",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C2-P6",
+      "uid": "CNHL-2026-012",
+      "series": "C2",
+      "slot": 6,
+      "charger": "DX8-1",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C3-P1",
+      "uid": "CNHL-2026-013",
+      "series": "C3",
+      "slot": 1,
+      "charger": "DX8-1",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C3-P2",
+      "uid": "CNHL-2026-014",
+      "series": "C3",
+      "slot": 2,
+      "charger": "DX8-1",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C3-P3",
+      "uid": "CNHL-2026-015",
+      "series": "C3",
+      "slot": 3,
+      "charger": "DX8-1",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C3-P4",
+      "uid": "CNHL-2026-016",
+      "series": "C3",
+      "slot": 4,
+      "charger": "DX8-1",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C3-P5",
+      "uid": "CNHL-2026-017",
+      "series": "C3",
+      "slot": 5,
+      "charger": "DX8-2",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C3-P6",
+      "uid": "CNHL-2026-018",
+      "series": "C3",
+      "slot": 6,
+      "charger": "DX8-2",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C4-P1",
+      "uid": "CNHL-2026-019",
+      "series": "C4",
+      "slot": 1,
+      "charger": "DX8-2",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C4-P2",
+      "uid": "CNHL-2026-020",
+      "series": "C4",
+      "slot": 2,
+      "charger": "DX8-2",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C4-P3",
+      "uid": "CNHL-2026-021",
+      "series": "C4",
+      "slot": 3,
+      "charger": "DX8-2",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C4-P4",
+      "uid": "CNHL-2026-022",
+      "series": "C4",
+      "slot": 4,
+      "charger": "DX8-2",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C4-P5",
+      "uid": "CNHL-2026-023",
+      "series": "C4",
+      "slot": 5,
+      "charger": "DX8-1",
+      "channel": 1,
+      "state": "active",
+      "note": null
+    },
+    {
+      "label": "C4-P6",
+      "uid": "CNHL-2026-024",
+      "series": "C4",
+      "slot": 6,
+      "charger": "DX8-1",
+      "channel": 2,
+      "state": "active",
+      "note": null
+    }
+  ],
+  "planner_rules": {
+    "series_order": [
+      "C1",
+      "C2",
+      "C3",
+      "C4"
+    ],
+    "channel_start_order": [
+      1,
+      2
+    ],
+    "skip_empty": true,
+    "reorder": false,
+    "include_states": [
+      "active"
+    ],
+    "steps": [
+      "Select the flown series and include every active pack in them. Empty and pulled slots are skipped: a pulled pack gets no storage charge, and nothing is reordered.",
+      "Order each channel by series, then by pack number.",
+      "On each charger, run Channel 1 and Channel 2 in rounds: start Channel 1, then Channel 2, and wait for both before the next round. When one channel is empty, the other continues alone.",
+      "Count the files per charger: one log file per pack."
+    ]
+  },
+  "start_order": {
+    "rule": "On each charger, start Channel 1, then Channel 2, then wait for both to finish before the next round. When one channel runs out, the other carries on.",
+    "mapping": "Logs map by charger, channel and order (one log file per pack)."
+  },
+  "planner_fixtures": [
+    {
+      "id": "C1",
+      "name": null,
+      "flown_series": [
+        "C1"
       ],
-      "mode": "one pack per run, in this order"
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 4,
+        "DX8-2": 2
+      }
+    },
+    {
+      "id": "C2",
+      "name": null,
+      "flown_series": [
+        "C2"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C2-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C2-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C2-P1",
+          "C2-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C2-P3",
+          "C2-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C2-P5",
+            "C2-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 2,
+        "DX8-2": 4
+      }
+    },
+    {
+      "id": "C3",
+      "name": null,
+      "flown_series": [
+        "C3"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C3-P1",
+          "C3-P2"
+        ],
+        "DX8-1 Channel 2": [
+          "C3-P3",
+          "C3-P4"
+        ],
+        "DX8-2 Channel 1": [
+          "C3-P5"
+        ],
+        "DX8-2 Channel 2": [
+          "C3-P6"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C3-P5",
+            "C3-P6"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 4,
+        "DX8-2": 2
+      }
+    },
+    {
+      "id": "C4",
+      "name": null,
+      "flown_series": [
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 2,
+        "DX8-2": 4
+      }
+    },
+    {
+      "id": "C1+C2",
+      "name": "set A",
+      "flown_series": [
+        "C1",
+        "C2"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C2-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C2-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C2-P1",
+          "C2-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C2-P3",
+          "C2-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C2-P5",
+            "C2-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 6,
+        "DX8-2": 6
+      }
+    },
+    {
+      "id": "C1+C3",
+      "name": null,
+      "flown_series": [
+        "C1",
+        "C3"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C3-P1",
+          "C3-P2"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C3-P3",
+          "C3-P4"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C3-P5"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C3-P6"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C3-P5",
+            "C3-P6"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 8,
+        "DX8-2": 4
+      }
+    },
+    {
+      "id": "C1+C4",
+      "name": null,
+      "flown_series": [
+        "C1",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 6,
+        "DX8-2": 6
+      }
+    },
+    {
+      "id": "C2+C3",
+      "name": null,
+      "flown_series": [
+        "C2",
+        "C3"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C2-P5",
+          "C3-P1",
+          "C3-P2"
+        ],
+        "DX8-1 Channel 2": [
+          "C2-P6",
+          "C3-P3",
+          "C3-P4"
+        ],
+        "DX8-2 Channel 1": [
+          "C2-P1",
+          "C2-P2",
+          "C3-P5"
+        ],
+        "DX8-2 Channel 2": [
+          "C2-P3",
+          "C2-P4",
+          "C3-P6"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C2-P5",
+            "C2-P6"
+          ],
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ],
+          [
+            "C3-P5",
+            "C3-P6"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 6,
+        "DX8-2": 6
+      }
+    },
+    {
+      "id": "C2+C4",
+      "name": null,
+      "flown_series": [
+        "C2",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C2-P5",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C2-P6",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C2-P1",
+          "C2-P2",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C2-P3",
+          "C2-P4",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C2-P5",
+            "C2-P6"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 4,
+        "DX8-2": 8
+      }
+    },
+    {
+      "id": "C3+C4",
+      "name": "set B",
+      "flown_series": [
+        "C3",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C3-P1",
+          "C3-P2",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C3-P3",
+          "C3-P4",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C3-P5",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C3-P6",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C3-P5",
+            "C3-P6"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 6,
+        "DX8-2": 6
+      }
+    },
+    {
+      "id": "C1+C2+C3",
+      "name": null,
+      "flown_series": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C2-P5",
+          "C3-P1",
+          "C3-P2"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C2-P6",
+          "C3-P3",
+          "C3-P4"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C2-P1",
+          "C2-P2",
+          "C3-P5"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C2-P3",
+          "C2-P4",
+          "C3-P6"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C2-P5",
+            "C2-P6"
+          ],
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ],
+          [
+            "C3-P5",
+            "C3-P6"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 10,
+        "DX8-2": 8
+      }
+    },
+    {
+      "id": "C1+C2+C4",
+      "name": null,
+      "flown_series": [
+        "C1",
+        "C2",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C2-P5",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C2-P6",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C2-P1",
+          "C2-P2",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C2-P3",
+          "C2-P4",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C2-P5",
+            "C2-P6"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 8,
+        "DX8-2": 10
+      }
+    },
+    {
+      "id": "C1+C3+C4",
+      "name": null,
+      "flown_series": [
+        "C1",
+        "C3",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C3-P1",
+          "C3-P2",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C3-P3",
+          "C3-P4",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C3-P5",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C3-P6",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C3-P5",
+            "C3-P6"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 10,
+        "DX8-2": 8
+      }
+    },
+    {
+      "id": "C2+C3+C4",
+      "name": null,
+      "flown_series": [
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C2-P5",
+          "C3-P1",
+          "C3-P2",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C2-P6",
+          "C3-P3",
+          "C3-P4",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C2-P1",
+          "C2-P2",
+          "C3-P5",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C2-P3",
+          "C2-P4",
+          "C3-P6",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C2-P5",
+            "C2-P6"
+          ],
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ],
+          [
+            "C3-P5",
+            "C3-P6"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 8,
+        "DX8-2": 10
+      }
+    },
+    {
+      "id": "C1+C2+C3+C4",
+      "name": "all four series",
+      "flown_series": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C1-P1",
+          "C1-P2",
+          "C2-P5",
+          "C3-P1",
+          "C3-P2",
+          "C4-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C1-P3",
+          "C1-P4",
+          "C2-P6",
+          "C3-P3",
+          "C3-P4",
+          "C4-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C1-P5",
+          "C2-P1",
+          "C2-P2",
+          "C3-P5",
+          "C4-P1",
+          "C4-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C1-P6",
+          "C2-P3",
+          "C2-P4",
+          "C3-P6",
+          "C4-P3",
+          "C4-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C1-P1",
+            "C1-P3"
+          ],
+          [
+            "C1-P2",
+            "C1-P4"
+          ],
+          [
+            "C2-P5",
+            "C2-P6"
+          ],
+          [
+            "C3-P1",
+            "C3-P3"
+          ],
+          [
+            "C3-P2",
+            "C3-P4"
+          ],
+          [
+            "C4-P5",
+            "C4-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C1-P5",
+            "C1-P6"
+          ],
+          [
+            "C2-P1",
+            "C2-P3"
+          ],
+          [
+            "C2-P2",
+            "C2-P4"
+          ],
+          [
+            "C3-P5",
+            "C3-P6"
+          ],
+          [
+            "C4-P1",
+            "C4-P3"
+          ],
+          [
+            "C4-P2",
+            "C4-P4"
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 12,
+        "DX8-2": 12
+      }
+    },
+    {
+      "id": "C2 (fixture-only pulled C2-P3)",
+      "name": null,
+      "flown_series": [
+        "C2"
+      ],
+      "channels": {
+        "DX8-1 Channel 1": [
+          "C2-P5"
+        ],
+        "DX8-1 Channel 2": [
+          "C2-P6"
+        ],
+        "DX8-2 Channel 1": [
+          "C2-P1",
+          "C2-P2"
+        ],
+        "DX8-2 Channel 2": [
+          "C2-P4"
+        ]
+      },
+      "rounds": {
+        "DX8-1": [
+          [
+            "C2-P5",
+            "C2-P6"
+          ]
+        ],
+        "DX8-2": [
+          [
+            "C2-P1",
+            "C2-P4"
+          ],
+          [
+            "C2-P2",
+            null
+          ]
+        ]
+      },
+      "files": {
+        "DX8-1": 2,
+        "DX8-2": 3
+      },
+      "fixture_only": "synthetic pulled C2-P3 to test skipping; not a real status",
+      "fixture_states": {
+        "C2-P3": "pulled"
+      }
     }
   ],
   "parallel_boards": [
     {
       "series": "C1",
       "packs": [
+        "C1-P1",
         "C1-P2",
         "C1-P3",
+        "C1-P4",
         "C1-P5",
         "C1-P6"
       ],
-      "current": "normal",
       "conditions": [
-        "Check each pack's rest V before connecting. If all packs are within 0.60 V (0.1 V per cell), connect them all.",
-        "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
+        "Before connecting, read each pack's resting voltage at least 90 minutes after its last charge or flight.",
+        "Charge a pack alone that night (it stays in rotation, no status change) if: the board's packs are more than 0.60 V apart; any cell is more than 0.10 V from the same-position cell of another pack on the board; its own cells are more than 0.10 V apart; a cell rests between 2.0 and 3.0 V; or a connector is damaged (fix it first).",
+        "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V.",
+        "C1-P3: no end reading on 2026-10-17; using the end of its 2026-10-11 storage run."
       ],
       "rest_check_limit_V": 0.6,
+      "cell_check_limit_V": 0.1,
       "last_rule_b_V": 0.186,
       "last_rule_b_call": "GO",
       "last_rule_b_session": "2026-10-11",
@@ -70,37 +1364,119 @@
       ],
       "last_rule_b_basis": "packs charged together on this board that night (recorded)",
       "outlook_rule_b": {
-        "value_v": 0.384,
+        "value_v": 0.18,
         "packs": [
+          "C1-P1",
           "C1-P2",
           "C1-P3",
           "C1-P5",
           "C1-P6"
         ],
-        "basis": "latest rest V of every pack assigned to this board",
-        "session": "2026-10-11",
+        "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
+        "session": "2026-10-17",
         "limit_v": 0.6,
         "call": "GO",
         "check_first": [],
         "value_without_check_first_v": null,
-        "packs_without_check_first": null
+        "packs_without_check_first": null,
+        "cell_check": {
+          "session": "2026-10-17",
+          "limit_mv": 100,
+          "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
+          "pairs": [],
+          "labels": []
+        },
+        "ir_match": {
+          "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
+          "session": "2026-10-17",
+          "board_median_mohm": 2.575,
+          "note_pct": 25,
+          "strong_note_pct": 35,
+          "nights_needed": 2,
+          "of_last_nights": 3,
+          "packs": [
+            {
+              "label": "C1-P1",
+              "avg_mohm": 2.4,
+              "session": "2026-10-17",
+              "pct_off": -6.8,
+              "nights_checked": 2,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C1-P2",
+              "avg_mohm": 2.683,
+              "session": "2026-10-17",
+              "pct_off": 4.2,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C1-P3",
+              "avg_mohm": 2.9,
+              "session": "2026-10-11",
+              "pct_off": 4.5,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C1-P4",
+              "avg_mohm": 2.875,
+              "session": "2026-09-27",
+              "pct_off": -2.0,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C1-P5",
+              "avg_mohm": 2.85,
+              "session": "2026-10-17",
+              "pct_off": 10.7,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C1-P6",
+              "avg_mohm": 2.467,
+              "session": "2026-10-17",
+              "pct_off": -4.2,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            }
+          ],
+          "notes": []
+        }
       }
     },
     {
       "series": "C2",
       "packs": [
         "C2-P1",
+        "C2-P2",
         "C2-P3",
         "C2-P4",
         "C2-P5",
         "C2-P6"
       ],
-      "current": "normal",
       "conditions": [
-        "Check each pack's rest V before connecting. If all packs are within 0.60 V (0.1 V per cell), connect them all.",
-        "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
+        "Before connecting, read each pack's resting voltage at least 90 minutes after its last charge or flight.",
+        "Charge a pack alone that night (it stays in rotation, no status change) if: the board's packs are more than 0.60 V apart; any cell is more than 0.10 V from the same-position cell of another pack on the board; its own cells are more than 0.10 V apart; a cell rests between 2.0 and 3.0 V; or a connector is damaged (fix it first).",
+        "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V."
       ],
       "rest_check_limit_V": 0.6,
+      "cell_check_limit_V": 0.1,
       "last_rule_b_V": 0.23,
       "last_rule_b_call": "GO",
       "last_rule_b_session": "2026-10-11",
@@ -112,7 +1488,7 @@
       ],
       "last_rule_b_basis": "packs charged together on this board that night (recorded)",
       "outlook_rule_b": {
-        "value_v": 0.425,
+        "value_v": 0.005,
         "packs": [
           "C2-P1",
           "C2-P3",
@@ -120,376 +1496,755 @@
           "C2-P5",
           "C2-P6"
         ],
-        "basis": "latest rest V of every pack assigned to this board",
-        "session": "2026-10-11",
+        "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
+        "session": "2026-10-17",
         "limit_v": 0.6,
         "call": "GO",
         "check_first": [],
         "value_without_check_first_v": null,
-        "packs_without_check_first": null
+        "packs_without_check_first": null,
+        "cell_check": {
+          "session": "2026-10-17",
+          "limit_mv": 100,
+          "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
+          "pairs": [],
+          "labels": []
+        },
+        "ir_match": {
+          "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
+          "session": "2026-10-17",
+          "board_median_mohm": 2.617,
+          "note_pct": 25,
+          "strong_note_pct": 35,
+          "nights_needed": 2,
+          "of_last_nights": 3,
+          "packs": [
+            {
+              "label": "C2-P1",
+              "avg_mohm": 2.617,
+              "session": "2026-10-17",
+              "pct_off": 0.0,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C2-P2",
+              "avg_mohm": 3.217,
+              "session": "2026-09-30",
+              "pct_off": 10.3,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C2-P3",
+              "avg_mohm": 2.667,
+              "session": "2026-10-17",
+              "pct_off": 1.9,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C2-P4",
+              "avg_mohm": 2.583,
+              "session": "2026-10-17",
+              "pct_off": -1.3,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C2-P5",
+              "avg_mohm": 2.567,
+              "session": "2026-10-17",
+              "pct_off": -1.9,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C2-P6",
+              "avg_mohm": 2.65,
+              "session": "2026-10-17",
+              "pct_off": 1.3,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            }
+          ],
+          "notes": []
+        }
       }
-    }
-  ],
-  "charge_alone": [],
-  "watch": [
-    {
-      "label": "C1-P5",
-      "uid": "CNHL-2026-005",
-      "note": "Watch (note only, stays on its board): low Cell 4 (started 61, 77 and 50 mV below the other cells on 2026-09-27, 2026-10-10 and 2026-10-11; lowest cell 3539 mV on 2026-09-27)."
     },
     {
-      "label": "C2-P1",
-      "uid": "CNHL-2026-007",
-      "note": "Watch (note only, stays on its board): IR spread."
-    }
-  ],
-  "sets": {
-    "C1_C2": {
-      "series": [
-        "C1",
-        "C2"
+      "series": "C3",
+      "packs": [
+        "C3-P1",
+        "C3-P2",
+        "C3-P3",
+        "C3-P4",
+        "C3-P5",
+        "C3-P6"
       ],
-      "last_storage_session": "2026-10-11",
-      "storage_runs": [
-        {
-          "charger": "DX8-1",
-          "channel": "CH1",
-          "order": [
-            "C1-P2",
-            "C1-P3"
-          ],
-          "mode": "one pack per run, in this order"
-        },
-        {
-          "charger": "DX8-1",
-          "channel": "CH2",
-          "order": [
-            "C1-P5",
-            "C1-P6"
-          ],
-          "mode": "one pack per run, in this order"
-        },
-        {
-          "charger": "DX8-2",
-          "channel": "CH1",
-          "order": [
-            "C2-P1",
-            "C2-P3"
-          ],
-          "mode": "one pack per run, in this order"
-        },
-        {
-          "charger": "DX8-2",
-          "channel": "CH2",
-          "order": [
-            "C2-P4",
-            "C2-P5",
-            "C2-P6"
-          ],
-          "mode": "one pack per run, in this order"
-        }
+      "conditions": [
+        "Before connecting, read each pack's resting voltage at least 90 minutes after its last charge or flight.",
+        "Charge a pack alone that night (it stays in rotation, no status change) if: the board's packs are more than 0.60 V apart; any cell is more than 0.10 V from the same-position cell of another pack on the board; its own cells are more than 0.10 V apart; a cell rests between 2.0 and 3.0 V; or a connector is damaged (fix it first).",
+        "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V.",
+        "C3-P1: check its rest V first; it was outside 0.60 V at the end of its latest storage run.",
+        "Per-cell check: at the end of the latest storage runs, same-position cells were more than 0.10 V apart (C3-P1, C3-P2, C3-P3, C3-P4, C3-P5, C3-P6). Check resting voltage before connecting.",
+        "C3-P2: charged 2026-10-17 with no log; using the end of its 2026-10-16 storage run."
       ],
-      "parallel_boards": [
-        {
-          "series": "C1",
-          "packs": [
-            "C1-P2",
-            "C1-P3",
-            "C1-P5",
-            "C1-P6"
-          ],
-          "current": "normal",
-          "conditions": [
-            "Check each pack's rest V before connecting. If all packs are within 0.60 V (0.1 V per cell), connect them all.",
-            "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
-          ],
-          "rest_check_limit_V": 0.6,
-          "last_rule_b_V": 0.186,
-          "last_rule_b_call": "GO",
-          "last_rule_b_session": "2026-10-11",
-          "last_rule_b_over": [
-            "C1-P2",
-            "C1-P3",
-            "C1-P6"
-          ],
-          "last_rule_b_basis": "packs charged together on this board that night (recorded)",
-          "outlook_rule_b": {
-            "value_v": 0.384,
-            "packs": [
-              "C1-P2",
-              "C1-P3",
-              "C1-P5",
-              "C1-P6"
-            ],
-            "basis": "latest rest V of every pack assigned to this board",
-            "session": "2026-10-11",
-            "limit_v": 0.6,
-            "call": "GO",
-            "check_first": [],
-            "value_without_check_first_v": null,
-            "packs_without_check_first": null
+      "rest_check_limit_V": 0.6,
+      "cell_check_limit_V": 0.1,
+      "last_rule_b_V": null,
+      "last_rule_b_call": null,
+      "last_rule_b_session": null,
+      "last_rule_b_over": [],
+      "last_rule_b_basis": "no parallel board night recorded yet for this series",
+      "outlook_rule_b": {
+        "value_v": 1.158,
+        "packs": [
+          "C3-P1",
+          "C3-P2",
+          "C3-P3",
+          "C3-P4",
+          "C3-P5",
+          "C3-P6"
+        ],
+        "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
+        "session": "2026-10-17",
+        "limit_v": 0.6,
+        "call": "CHECK FIRST",
+        "check_first": [
+          {
+            "label": "C3-P1",
+            "uid": "CNHL-2026-013",
+            "last_rest_V": 22.011,
+            "last_offset_max_V": 1.158,
+            "last_offset_side": "below",
+            "note": "at the end of its latest storage run its pack voltage 22.011 V was outside 0.60 V of the other C3 packs (below); if it is still outside, it charges alone that night only"
           }
-        },
-        {
-          "series": "C2",
-          "packs": [
-            "C2-P1",
-            "C2-P3",
-            "C2-P4",
-            "C2-P5",
-            "C2-P6"
+        ],
+        "value_without_check_first_v": 0.006,
+        "packs_without_check_first": [
+          "C3-P2",
+          "C3-P3",
+          "C3-P4",
+          "C3-P5",
+          "C3-P6"
+        ],
+        "cell_check": {
+          "session": "2026-10-17",
+          "limit_mv": 100,
+          "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
+          "pairs": [
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P2"
+              ],
+              "cell": 6,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P3"
+              ],
+              "cell": 2,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P3"
+              ],
+              "cell": 6,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P4"
+              ],
+              "cell": 2,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P4"
+              ],
+              "cell": 6,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P5"
+              ],
+              "cell": 6,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P6"
+              ],
+              "cell": 2,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P6"
+              ],
+              "cell": 6,
+              "diff_mv": 195
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P2"
+              ],
+              "cell": 2,
+              "diff_mv": 194
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P5"
+              ],
+              "cell": 2,
+              "diff_mv": 194
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P2"
+              ],
+              "cell": 1,
+              "diff_mv": 193
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P2"
+              ],
+              "cell": 5,
+              "diff_mv": 193
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P4"
+              ],
+              "cell": 5,
+              "diff_mv": 193
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P6"
+              ],
+              "cell": 4,
+              "diff_mv": 193
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P6"
+              ],
+              "cell": 5,
+              "diff_mv": 193
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P2"
+              ],
+              "cell": 4,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P3"
+              ],
+              "cell": 1,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P3"
+              ],
+              "cell": 5,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P4"
+              ],
+              "cell": 1,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P4"
+              ],
+              "cell": 4,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P5"
+              ],
+              "cell": 4,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P6"
+              ],
+              "cell": 1,
+              "diff_mv": 192
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P3"
+              ],
+              "cell": 4,
+              "diff_mv": 191
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P4"
+              ],
+              "cell": 3,
+              "diff_mv": 191
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P5"
+              ],
+              "cell": 1,
+              "diff_mv": 191
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P5"
+              ],
+              "cell": 5,
+              "diff_mv": 191
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P2"
+              ],
+              "cell": 3,
+              "diff_mv": 190
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P3"
+              ],
+              "cell": 3,
+              "diff_mv": 190
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P6"
+              ],
+              "cell": 3,
+              "diff_mv": 190
+            },
+            {
+              "labels": [
+                "C3-P1",
+                "C3-P5"
+              ],
+              "cell": 3,
+              "diff_mv": 189
+            }
           ],
-          "current": "normal",
-          "conditions": [
-            "Check each pack's rest V before connecting. If all packs are within 0.60 V (0.1 V per cell), connect them all.",
-            "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
-          ],
-          "rest_check_limit_V": 0.6,
-          "last_rule_b_V": 0.23,
-          "last_rule_b_call": "GO",
-          "last_rule_b_session": "2026-10-11",
-          "last_rule_b_over": [
-            "C2-P1",
-            "C2-P3",
-            "C2-P4",
-            "C2-P5"
-          ],
-          "last_rule_b_basis": "packs charged together on this board that night (recorded)",
-          "outlook_rule_b": {
-            "value_v": 0.425,
-            "packs": [
-              "C2-P1",
-              "C2-P3",
-              "C2-P4",
-              "C2-P5",
-              "C2-P6"
-            ],
-            "basis": "latest rest V of every pack assigned to this board",
-            "session": "2026-10-11",
-            "limit_v": 0.6,
-            "call": "GO",
-            "check_first": [],
-            "value_without_check_first_v": null,
-            "packs_without_check_first": null
-          }
-        }
-      ],
-      "charge_alone": [],
-      "watch": [
-        {
-          "label": "C1-P5",
-          "uid": "CNHL-2026-005",
-          "note": "Watch (note only, stays on its board): low Cell 4 (started 61, 77 and 50 mV below the other cells on 2026-09-27, 2026-10-10 and 2026-10-11; lowest cell 3539 mV on 2026-09-27)."
-        },
-        {
-          "label": "C2-P1",
-          "uid": "CNHL-2026-007",
-          "note": "Watch (note only, stays on its board): IR spread."
-        }
-      ]
-    },
-    "C3_C4": {
-      "series": [
-        "C3",
-        "C4"
-      ],
-      "last_storage_session": "2026-10-16",
-      "storage_runs": [
-        {
-          "charger": "DX8-1",
-          "channel": "CH1",
-          "order": [
-            "C3-P1",
-            "C3-P2",
-            "C3-P3"
-          ],
-          "mode": "one pack per run, in this order"
-        },
-        {
-          "charger": "DX8-1",
-          "channel": "CH2",
-          "order": [
-            "C3-P4",
-            "C3-P5",
-            "C3-P6"
-          ],
-          "mode": "one pack per run, in this order"
-        },
-        {
-          "charger": "DX8-2",
-          "channel": "CH1",
-          "order": [
-            "C4-P1",
-            "C4-P2",
-            "C4-P3"
-          ],
-          "mode": "one pack per run, in this order"
-        },
-        {
-          "charger": "DX8-2",
-          "channel": "CH2",
-          "order": [
-            "C4-P4",
-            "C4-P5",
-            "C4-P6"
-          ],
-          "mode": "one pack per run, in this order"
-        }
-      ],
-      "parallel_boards": [
-        {
-          "series": "C3",
-          "packs": [
+          "labels": [
             "C3-P1",
             "C3-P2",
             "C3-P3",
             "C3-P4",
             "C3-P5",
             "C3-P6"
-          ],
-          "current": "normal",
-          "conditions": [
-            "Check each pack's rest V before connecting. If all packs are within 0.60 V (0.1 V per cell), connect them all.",
-            "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time.",
-            "C3-P5: check its rest V first; it was outside 0.60 V on 2026-10-16."
-          ],
-          "rest_check_limit_V": 0.6,
-          "last_rule_b_V": null,
-          "last_rule_b_call": null,
-          "last_rule_b_session": null,
-          "last_rule_b_over": [],
-          "last_rule_b_basis": "no parallel board night recorded yet for this series",
-          "outlook_rule_b": {
-            "value_v": 0.629,
-            "packs": [
-              "C3-P1",
-              "C3-P2",
-              "C3-P3",
-              "C3-P4",
-              "C3-P5",
-              "C3-P6"
-            ],
-            "basis": "latest rest V of every pack assigned to this board",
-            "session": "2026-10-16",
-            "limit_v": 0.6,
-            "call": "CHECK FIRST",
-            "check_first": [
-              {
-                "label": "C3-P5",
-                "uid": "CNHL-2026-017",
-                "last_rest_V": 21.596,
-                "last_offset_max_V": 0.629,
-                "last_offset_side": "below",
-                "note": "on its latest storage night (2026-10-16) its rest V 21.596 V was outside 0.60 V of the other C3 packs (below); if it is still outside, it charges alone that night only"
-              }
-            ],
-            "value_without_check_first_v": 0.43,
-            "packs_without_check_first": [
-              "C3-P1",
-              "C3-P2",
-              "C3-P3",
-              "C3-P4",
-              "C3-P6"
-            ]
-          }
+          ]
         },
-        {
-          "series": "C4",
+        "ir_match": {
+          "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
+          "session": "2026-10-17",
+          "board_median_mohm": 2.867,
+          "note_pct": 25,
+          "strong_note_pct": 35,
+          "nights_needed": 2,
+          "of_last_nights": 3,
           "packs": [
-            "C4-P1",
-            "C4-P2",
-            "C4-P3",
-            "C4-P4",
-            "C4-P5",
-            "C4-P6"
+            {
+              "label": "C3-P1",
+              "avg_mohm": 2.533,
+              "session": "2026-10-17",
+              "pct_off": -11.6,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C3-P2",
+              "avg_mohm": 2.667,
+              "session": "2026-10-16",
+              "pct_off": -5.9,
+              "nights_checked": 2,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C3-P3",
+              "avg_mohm": 3.025,
+              "session": "2026-10-17",
+              "pct_off": 5.5,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C3-P4",
+              "avg_mohm": 2.883,
+              "session": "2026-10-17",
+              "pct_off": 0.6,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C3-P5",
+              "avg_mohm": 2.867,
+              "session": "2026-10-17",
+              "pct_off": 0.0,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C3-P6",
+              "avg_mohm": 2.7,
+              "session": "2026-10-17",
+              "pct_off": -5.8,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            }
           ],
-          "current": "normal",
-          "conditions": [
-            "Check each pack's rest V before connecting. If all packs are within 0.60 V (0.1 V per cell), connect them all.",
-            "A pack outside 0.60 V charges alone that night only; its status does not change and it is back on the board next time."
-          ],
-          "rest_check_limit_V": 0.6,
-          "last_rule_b_V": null,
-          "last_rule_b_call": null,
-          "last_rule_b_session": null,
-          "last_rule_b_over": [],
-          "last_rule_b_basis": "no parallel board night recorded yet for this series",
-          "outlook_rule_b": {
-            "value_v": 0.249,
-            "packs": [
-              "C4-P1",
-              "C4-P2",
-              "C4-P3",
-              "C4-P4",
-              "C4-P5",
-              "C4-P6"
-            ],
-            "basis": "latest rest V of every pack assigned to this board",
-            "session": "2026-10-16",
-            "limit_v": 0.6,
-            "call": "GO",
-            "check_first": [],
-            "value_without_check_first_v": null,
-            "packs_without_check_first": null
-          }
+          "notes": []
         }
-      ],
-      "charge_alone": [],
-      "watch": [
-        {
-          "label": "C3-P2",
-          "uid": "CNHL-2026-014",
-          "note": "Watch (note only, stays on its board): rest V was the highest in C3 on 2026-10-16 (22.225 V); no cell issue."
-        },
-        {
-          "label": "C3-P5",
-          "uid": "CNHL-2026-017",
-          "note": "Watch (note only, stays on its board): lowest cell 3592 mV (Cell 1) on 2026-10-16, just under 3600, with all six cells even; rest V 21.596 V was the lowest in C3."
-        },
-        {
-          "label": "C3-P6",
-          "uid": "CNHL-2026-018",
-          "note": "Watch (note only, stays on its board): Cell 6 started 128 mV below the other cells once (2026-10-16)."
-        },
-        {
-          "label": "C4-P2",
-          "uid": "CNHL-2026-020",
-          "note": "Watch (note only, stays on its board): Cell 6 started low on both storage nights (175 then 58 mV below the other cells) and one cell at 1.5x the pack median IR."
-        }
-      ]
-    }
-  },
-  "do_not_connect": [
+      }
+    },
     {
-      "label": "D-1",
+      "series": "C4",
+      "packs": [
+        "C4-P1",
+        "C4-P2",
+        "C4-P3",
+        "C4-P4",
+        "C4-P5",
+        "C4-P6"
+      ],
+      "conditions": [
+        "Before connecting, read each pack's resting voltage at least 90 minutes after its last charge or flight.",
+        "Charge a pack alone that night (it stays in rotation, no status change) if: the board's packs are more than 0.60 V apart; any cell is more than 0.10 V from the same-position cell of another pack on the board; its own cells are more than 0.10 V apart; a cell rests between 2.0 and 3.0 V; or a connector is damaged (fix it first).",
+        "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V."
+      ],
+      "rest_check_limit_V": 0.6,
+      "cell_check_limit_V": 0.1,
+      "last_rule_b_V": null,
+      "last_rule_b_call": null,
+      "last_rule_b_session": null,
+      "last_rule_b_over": [],
+      "last_rule_b_basis": "no parallel board night recorded yet for this series",
+      "outlook_rule_b": {
+        "value_v": 0.005,
+        "packs": [
+          "C4-P1",
+          "C4-P2",
+          "C4-P3",
+          "C4-P4",
+          "C4-P5",
+          "C4-P6"
+        ],
+        "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
+        "session": "2026-10-17",
+        "limit_v": 0.6,
+        "call": "GO",
+        "check_first": [],
+        "value_without_check_first_v": null,
+        "packs_without_check_first": null,
+        "cell_check": {
+          "session": "2026-10-17",
+          "limit_mv": 100,
+          "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
+          "pairs": [],
+          "labels": []
+        },
+        "ir_match": {
+          "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
+          "session": "2026-10-17",
+          "board_median_mohm": 2.492,
+          "note_pct": 25,
+          "strong_note_pct": 35,
+          "nights_needed": 2,
+          "of_last_nights": 3,
+          "packs": [
+            {
+              "label": "C4-P1",
+              "avg_mohm": 2.45,
+              "session": "2026-10-17",
+              "pct_off": -1.7,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C4-P2",
+              "avg_mohm": 2.6,
+              "session": "2026-10-17",
+              "pct_off": 4.4,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C4-P3",
+              "avg_mohm": 2.533,
+              "session": "2026-10-17",
+              "pct_off": 1.7,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C4-P4",
+              "avg_mohm": 2.417,
+              "session": "2026-10-17",
+              "pct_off": -3.0,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C4-P5",
+              "avg_mohm": 2.567,
+              "session": "2026-10-17",
+              "pct_off": 3.0,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            },
+            {
+              "label": "C4-P6",
+              "avg_mohm": 2.333,
+              "session": "2026-10-17",
+              "pct_off": -6.4,
+              "nights_checked": 3,
+              "nights_over_25_pct": 0,
+              "nights_over_35_pct": 0,
+              "flag": "ok"
+            }
+          ],
+          "notes": []
+        }
+      }
+    }
+  ],
+  "pulled": [],
+  "charge_alone": [],
+  "check_before_connecting": [
+    {
+      "label": "C3-P1",
+      "uid": "CNHL-2026-013",
+      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P2; Cell 2 195 mV from C3-P3; Cell 6 195 mV from C3-P3; Cell 2 195 mV from C3-P4; Cell 6 195 mV from C3-P4; Cell 6 195 mV from C3-P5; Cell 2 195 mV from C3-P6; Cell 6 195 mV from C3-P6; Cell 2 194 mV from C3-P2; Cell 2 194 mV from C3-P5; Cell 1 193 mV from C3-P2; Cell 5 193 mV from C3-P2; Cell 5 193 mV from C3-P4; Cell 4 193 mV from C3-P6; Cell 5 193 mV from C3-P6; Cell 4 192 mV from C3-P2; Cell 1 192 mV from C3-P3; Cell 5 192 mV from C3-P3; Cell 1 192 mV from C3-P4; Cell 4 192 mV from C3-P4; Cell 4 192 mV from C3-P5; Cell 1 192 mV from C3-P6; Cell 4 191 mV from C3-P3; Cell 3 191 mV from C3-P4; Cell 1 191 mV from C3-P5; Cell 5 191 mV from C3-P5; Cell 3 190 mV from C3-P2; Cell 3 190 mV from C3-P3; Cell 3 190 mV from C3-P6; Cell 3 189 mV from C3-P5 (over 0.10 V from the same-position cell of another pack on the board)."
+    },
+    {
+      "label": "C3-P2",
+      "uid": "CNHL-2026-014",
+      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P1; Cell 2 194 mV from C3-P1; Cell 1 193 mV from C3-P1; Cell 5 193 mV from C3-P1; Cell 4 192 mV from C3-P1; Cell 3 190 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
+    },
+    {
+      "label": "C3-P3",
+      "uid": "CNHL-2026-015",
+      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 2 195 mV from C3-P1; Cell 6 195 mV from C3-P1; Cell 1 192 mV from C3-P1; Cell 5 192 mV from C3-P1; Cell 4 191 mV from C3-P1; Cell 3 190 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
+    },
+    {
+      "label": "C3-P4",
+      "uid": "CNHL-2026-016",
+      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 2 195 mV from C3-P1; Cell 6 195 mV from C3-P1; Cell 5 193 mV from C3-P1; Cell 1 192 mV from C3-P1; Cell 4 192 mV from C3-P1; Cell 3 191 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
+    },
+    {
+      "label": "C3-P5",
+      "uid": "CNHL-2026-017",
+      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 6 195 mV from C3-P1; Cell 2 194 mV from C3-P1; Cell 4 192 mV from C3-P1; Cell 1 191 mV from C3-P1; Cell 5 191 mV from C3-P1; Cell 3 189 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
+    },
+    {
+      "label": "C3-P6",
+      "uid": "CNHL-2026-018",
+      "note": "Check resting voltage before connecting (advisory, from the logs): at the end of the latest storage runs it had Cell 2 195 mV from C3-P1; Cell 6 195 mV from C3-P1; Cell 4 193 mV from C3-P1; Cell 5 193 mV from C3-P1; Cell 1 192 mV from C3-P1; Cell 3 190 mV from C3-P1 (over 0.10 V from the same-position cell of another pack on the board)."
+    }
+  ],
+  "watch": [
+    {
+      "label": "C1-P1",
       "uid": "CNHL-2026-001",
-      "pool": "Rest",
-      "reason": "7-day rest test (left at storage, untouched)",
-      "return_date": "2026-10-16"
+      "note": "Watch (note only): Cell 6 (self-discharge history: chronic low floor up to 2026-10-08; rest test RT-001-1 passed 2026-10-17, 2 mV extra drop; Cell 6 started 172 mV below the other cells after flying on 2026-10-17)."
     },
     {
       "label": "C1-P4",
       "uid": "CNHL-2026-004",
-      "pool": "Rest",
-      "reason": "7-day rest test (left at storage, untouched)",
-      "return_date": "2026-10-16"
+      "note": "Watch (note only): self-discharge check RT-004-1 (Cell 1) from the first line of its next storage log."
     },
     {
       "label": "C2-P2",
       "uid": "CNHL-2026-008",
-      "pool": "Rest",
-      "reason": "7-day rest test (left at storage, untouched)",
-      "return_date": "2026-10-16"
+      "note": "Watch (note only): self-discharge check RT-008-1 (Cell 6) from the first line of its next storage log."
     }
   ],
+  "performance_notes": [
+    {
+      "label": "C1-P1",
+      "uid": "CNHL-2026-001",
+      "note": "Performance note (not a pull or charge-alone reason): lowest cell 3520 mV at the start of 2026-10-17; low-cell gap 172 mV on 2026-10-17."
+    },
+    {
+      "label": "C1-P4",
+      "uid": "CNHL-2026-004",
+      "note": "Performance note (not a pull or charge-alone reason): low-cell gap 93 mV on 2026-09-27."
+    },
+    {
+      "label": "C1-P5",
+      "uid": "CNHL-2026-005",
+      "note": "Performance note (not a pull or charge-alone reason): low Cell 4 (started 61, 77 and 50 mV below the other cells on 2026-09-27, 2026-10-10 and 2026-10-11; lowest cell 3539 mV on 2026-09-27)."
+    },
+    {
+      "label": "C2-P1",
+      "uid": "CNHL-2026-007",
+      "note": "Performance note (not a pull or charge-alone reason): IR spread."
+    },
+    {
+      "label": "C2-P2",
+      "uid": "CNHL-2026-008",
+      "note": "Performance note (not a pull or charge-alone reason): lowest cell 3597 mV at the start of 2026-09-30; low-cell gap 98 mV on 2026-09-30."
+    },
+    {
+      "label": "C3-P2",
+      "uid": "CNHL-2026-014",
+      "note": "Performance note (not a pull or charge-alone reason): rest V was the highest in C3 on 2026-10-16 (22.225 V); no cell issue."
+    },
+    {
+      "label": "C3-P5",
+      "uid": "CNHL-2026-017",
+      "note": "Performance note (not a pull or charge-alone reason): lowest cell 3592 mV (Cell 1) on 2026-10-16, just under 3600, with all six cells even; rest V 21.596 V was the lowest in C3."
+    },
+    {
+      "label": "C3-P6",
+      "uid": "CNHL-2026-018",
+      "note": "Performance note (not a pull or charge-alone reason): Cell 6 started 128 mV below the other cells once (2026-10-16)."
+    },
+    {
+      "label": "C4-P2",
+      "uid": "CNHL-2026-020",
+      "note": "Performance note (not a pull or charge-alone reason): Cell 6 started low on 2026-10-14 and 2026-10-16 (175 mV, then 58 mV below the other cells)."
+    }
+  ],
+  "self_discharge_checks": {
+    "pull_rule": "P5 (pull): after a balanced storage charge, one cell drops 0.05 V or more more than the other cells within 48 to 72 hours, or any cell loses about 0.10 V within 24 hours.",
+    "pull_relative_mv": 50,
+    "pull_window_h": [
+      48,
+      72
+    ],
+    "pull_any_cell_mv": 100,
+    "pull_any_cell_h": 24,
+    "how_we_check": "compare the first line of the next storage log with the end of the last storage run, for a pack that did not fly in between (the upload note lists the flown series or packs).",
+    "longer_gaps": "if more than 72 hours passed, a relative drop under 0.05 V clears the check; 0.05 V or more is not proof, so it is an advisory to recheck within 48 to 72 hours.",
+    "performance_grade": "scaled to 7 days: 10 mV or less pass, 10 to 30 mV borderline, over 30 mV fail. The grade is a note only, never a reason to retire a pack.",
+    "open": [
+      {
+        "test_id": "RT-008-1",
+        "label": "C2-P2",
+        "uid": "CNHL-2026-008",
+        "suspect_cell": 6,
+        "storage_end_date": "2026-10-09",
+        "storage_end_mV": [
+          3861,
+          3861,
+          3861,
+          3861,
+          3862,
+          3861
+        ],
+        "completes_from": "the first line of its next storage log, if it has not flown since 2026-10-09"
+      },
+      {
+        "test_id": "RT-004-1",
+        "label": "C1-P4",
+        "uid": "CNHL-2026-004",
+        "suspect_cell": 1,
+        "storage_end_date": "2026-10-09",
+        "storage_end_mV": [
+          3861,
+          3862,
+          3861,
+          3861,
+          3861,
+          3861
+        ],
+        "completes_from": "the first line of its next storage log, if it has not flown since 2026-10-09"
+      }
+    ]
+  },
   "notes": [
-    "Add days since last flight/charge to the upload note.",
-    "One night = one set of 12: C1+C2 (set A) or C3+C4 (set B). Sets do not mix on a night; series never mix on a board.",
-    "One pack per channel per run, in the order listed, for both sets; keep each log file.",
-    "DX8-1 carries C1 (set A) or C3 (set B); DX8-2 carries C2 or C4. CH1 = P1-P3, CH2 = P4-P6.",
-    "Every pack charges on its own parallel board. Watch is a note only.",
-    "Before connecting, check rest V: all packs within 0.60 V (0.1 V per cell) are connected together. A pack outside that range charges alone that night only.",
-    "A pack is taken off its board only for safety (puffing or damage, hot on charge, a resting cell under 3.0 V, or a cell more than 0.20 V off the others) or for repeated trouble (3 of its last 4 storage nights with a cell 100 mV or more low, or average IR up 50% or more from its own starting level).",
-    "IR from both DX8 chargers is validated against their screens."
+    "Charge every series that was flown, all of it, including any packs in it that did not fly. Series that were not flown stay off.",
+    "Each pack has a permanent home channel; empty and pulled slots are skipped and nothing is reordered.",
+    "C1-P1 charges on DX8-1 Channel 1 on the C1 board from the next storage night.",
+    "Add the flown series or packs and the days since last use to the upload note.",
+    "Pull a pack only for fire risk: swelling or pouch damage, charge heat of 45 °C or more or clearly hotter than its siblings, a cell under 1.5 V (or under 2.0 V for about a week), self-discharge, or abnormal behaviour on a solo charge. A pulled pack is not charged.",
+    "Charge a pack alone that night (it stays in rotation) for the board checks: 0.60 V pack spread, a cell 0.10 V from its same-position cell on another pack, 0.10 V spread inside the pack, a cell resting 2.0 to 3.0 V, a damaged connector, or a cell IR step of 2x its own level and the pack median.",
+    "Board warning (HGLRC Thor 6-port): a blown port fuse or a lit balance-pin light means the outlier pack charges alone; a pack that keeps causing it gets a 0.30 V gap of its own.",
+    "Storage nights apply only the pull list.",
+    "IR trend, board IR match and single-cell IR are performance notes only."
   ]
 }

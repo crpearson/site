@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  allChargedNoLog,
   allNa,
   allNotCharged,
   axisNightVisible,
@@ -10,6 +11,7 @@ import {
   missBridges,
   openEndIndices,
   solidFrom,
+  seriesChargedNoLog,
   seriesGap,
   seriesNa,
   seriesNotCharged,
@@ -17,7 +19,7 @@ import {
   type ChartMode,
 } from "@/lib/bridges";
 import { ProvisionalMark } from "@/components/ProvisionalMark";
-import { formatAxis, formatValue } from "@/lib/format";
+import { formatAxis, formatValue, publicSession } from "@/lib/format";
 import { PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "@/lib/ir-validation.mjs";
 import type { Band, Category, ChartSeries, Guide, ValueFormat } from "@/lib/types";
 import { useId, useMemo, useState } from "react";
@@ -58,6 +60,15 @@ function latestValueIndex(values: (number | null)[]): number {
 function yPos(value: number, domain: [number, number]): number {
   const span = domain[1] - domain[0] || 1;
   return ((domain[1] - value) / span) * 100;
+}
+
+/** Keep an edge tick inside the axis. A label centered on 0% or 100% is clipped. */
+function tickPlacement(y: number, height: number): { top: string; transform: string } {
+  const half = 10;
+  const px = (y / 100) * height;
+  if (px <= half) return { top: "1px", transform: "translateY(0)" };
+  if (px >= height - half) return { top: `${height - 1}px`, transform: "translateY(-100%)" };
+  return { top: `${y}%`, transform: "translateY(-50%)" };
 }
 
 function linePaths(series: ChartSeries, domain: [number, number], mode: ChartMode): string[] {
@@ -125,6 +136,7 @@ export function LineChart({
   const nightIds = categories.map((category) => category.id);
   const note = legendNote(shown, nightIds, mode);
   const missed = allNotCharged(shown, nightIds);
+  const noLog = allChargedNoLog(shown, nightIds);
   const naNights = allNa(shown, nightIds);
   const phrase = hover == null ? "" : gapPhrase(shown, nightIds, hover);
   const columnGap =
@@ -140,7 +152,7 @@ export function LineChart({
     hover == null
       ? ""
       : columnGap
-        ? `${categories[hover].id}. ${phrase}.`
+        ? `${publicSession(categories[hover].id)}. ${phrase}.`
         : `${categories[hover].label}${categories[hover].partial ? ", partial night" : ""}. ${
             phrase ? `${phrase}. ` : ""
           }${shown
@@ -151,6 +163,7 @@ export function LineChart({
                 return `${item.label} ${formatValue(format, value)}${mark} ${unit}`;
               }
               if (seriesRest(item, hover)) return `${item.label} Rest pool`;
+              if (seriesChargedNoLog(item, hover)) return `${item.label} charged, no log`;
               if (seriesNotCharged(item, hover)) return `${item.label} not charged`;
               if (seriesNa(item, hover)) return `${item.label} N/A`;
               return `${item.label} no value`;
@@ -201,12 +214,12 @@ export function LineChart({
       <p id={descId} className="sr-only">
         {ariaLabel} Arrow keys and the night labels move between nights.{" "}
         {mode === "aggregate"
-          ? "A solid line joins real readings and runs straight through a night with no reading. No value is filled in there. There is no dotted join and no hollow ring."
-          : "A faint dotted line joins the real readings on either side of a night this pack was not charged. No value is plotted there. A skipped night before the first reading or after the last is a small hollow ring on the bottom edge, also with no value."}{" "}
-        Nights before the pack or series was in service, and nights after a move, are not marked. A
-        single reading is a dot. A star on the night label is a partial night and is separate: a
-        pack that was charged still has a point.
+          ? "A solid line joins every recorded reading and runs straight through a night with no reading, including a night under an earlier label. No value is filled in there."
+          : "A line joins every recorded reading for this pack, including nights under an earlier label. A faint dotted line joins the real readings on either side of a night this pack was not charged. No value is plotted there. Nothing is drawn before the first reading or after the last."}{" "}
+        A pack with only its first reading is a single point. A star on the night label is a partial
+        night and is separate: a pack that was charged still has a point.
         {mode === "pack" && missed.length ? ` Not charged: ${missed.join(", ")}.` : ""}
+        {mode === "pack" && noLog.length ? ` Charged, no log: ${noLog.join(", ")}.` : ""}
         {naNights.length ? ` N/A: ${naNights.join(", ")}.` : ""}
       </p>
       <div className="sr-only" aria-live="polite">
@@ -214,15 +227,14 @@ export function LineChart({
       </div>
       <div className="chart-body">
         <div className="y-axis" style={{ height }}>
-          {ticks.map((tick) => (
-            <span
-              key={tick}
-              className="y-tick"
-              style={{ top: `${yPos(tick, yDomain)}%` }}
-            >
-              {formatAxis(format, tick)} {unit}
-            </span>
-          ))}
+          {ticks.map((tick) => {
+            const place = tickPlacement(yPos(tick, yDomain), height);
+            return (
+              <span key={tick} className="y-tick" style={place}>
+                {formatAxis(format, tick)} {unit}
+              </span>
+            );
+          })}
         </div>
         <div>
           <div
@@ -274,14 +286,18 @@ export function LineChart({
             })}
             <svg
               className="plot-svg"
+              data-chart={ariaLabel}
               viewBox={`0 0 ${n} 100`}
               preserveAspectRatio="none"
               aria-hidden="true"
             >
+              {/* pathLength would scale the dash with the segment, so a steep cell looks dotted and a flat one looks solid. */}
               {shown.map((item) =>
                 bridgePath(item, yDomain, nightIds, mode).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-bridge-${pathIndex}`}
+                    data-series={item.id}
+                    data-join="dotted"
                     d={d}
                     fill="none"
                     stroke={item.color}
@@ -289,8 +305,7 @@ export function LineChart({
                     strokeWidth="1.7"
                     strokeLinejoin="round"
                     strokeLinecap="round"
-                    strokeDasharray="1.2 3.2"
-                    pathLength="28"
+                    strokeDasharray="1.5 7"
                     vectorEffect="non-scaling-stroke"
                   />
                 )),
@@ -299,6 +314,8 @@ export function LineChart({
                 linePaths(item, yDomain, mode).map((d, pathIndex) => (
                   <path
                     key={`${item.id}-${pathIndex}`}
+                    data-series={item.id}
+                    data-join="solid"
                     d={d}
                     fill="none"
                     stroke={item.color}
@@ -375,7 +392,7 @@ export function LineChart({
                 }}
               >
                 <p className="tip-title">
-                  {categories[hover].id}
+                  {publicSession(categories[hover].id)}
                   {!columnGap && categories[hover].partial ? " · partial" : ""}
                 </p>
                 {phrase ? <p className="tip-miss">{phrase}</p> : null}
@@ -384,17 +401,20 @@ export function LineChart({
                     {shown.map((item) => {
                       const value = item.values[hover];
                       const missedNight = seriesNotCharged(item, hover);
+                      const noLogNight = seriesChargedNoLog(item, hover);
                       const naNight = seriesNa(item, hover);
                       return (
                         <li key={item.id}>
                           <span className="swatch" style={{ background: item.color }} />
                           <span>{item.label}</span>
                           <span className="font-mono">
-                            {value != null && !missedNight && !naNight ? (
+                            {value != null && !missedNight && !naNight && !noLogNight ? (
                               <>
                                 {formatValue(format, value)}
                                 {provisionalAt(item, hover, format) ? <ProvisionalMark /> : null} {unit}
                               </>
+                            ) : noLogNight ? (
+                              "charged, no log"
                             ) : missedNight ? (
                               "not charged"
                             ) : naNight ? (
@@ -425,7 +445,10 @@ export function LineChart({
                 shown.length > 0 && shown.every((item) => seriesGap(item, index));
               const title = columnMissed
                 ? columnPhrase
-                : [category.partial ? `${category.id} partial night` : category.id, columnPhrase]
+                : [
+                    category.partial ? `${publicSession(category.id)} partial night` : publicSession(category.id),
+                    columnPhrase,
+                  ]
                     .filter(Boolean)
                     .join(". ");
               const place =
@@ -451,7 +474,7 @@ export function LineChart({
                   onClick={() => setHover(index)}
                   onBlur={() => setHover((current) => (current === index ? null : current))}
                 >
-                  {category.label}
+                  {category.label === "undated" ? "·" : category.label}
                   {category.partial ? "*" : ""}
                 </button>
               );

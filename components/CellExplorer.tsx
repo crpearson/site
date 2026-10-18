@@ -22,6 +22,7 @@ export function CellExplorer({
     cells: (number | null)[][];
     service?: (string | null)[];
     logged?: boolean[];
+    nolog?: boolean[];
     rest?: boolean[];
     unpublished?: boolean[];
     provisional?: boolean[];
@@ -57,6 +58,7 @@ export function CellExplorer({
           values,
           service: pack.service,
           logged: pack.logged,
+          nolog: pack.nolog,
           rest: pack.rest,
           unpublished: pack.unpublished,
           provisional: pack.provisional,

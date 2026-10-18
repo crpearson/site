@@ -14,7 +14,9 @@ import { fileURLToPath } from "node:url";
  * Case-alias pages that only meta-refresh to the canonical URL are skipped;
  * the canonical page is checked.
  *
- * After the layout pass, every exported HTML file is scanned for
+ * After the layout pass, /next-charge/ is opened again with JavaScript on.
+ * Set A, set B, all four, and C1+C3 are ticked, and the same overflow measure
+ * runs on each. Then every exported HTML file is scanned for
  * 2603022837|cliff|pearson|chad. /next-charge/ is part of that scan.
  */
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -210,6 +212,19 @@ function measure() {
       }
     }
   }
+  for (const el of document.querySelectorAll(".y-tick, .x-label, svg text")) {
+    const style = getComputedStyle(el);
+    if (style.display === "none" || style.visibility === "hidden") continue;
+    const raw = el.getBoundingClientRect();
+    if (raw.width < 1 || raw.height < 1) continue;
+    const visible = clippedRect(el);
+    const text = (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 32);
+    if (visible.width < raw.width - 1 || visible.height < raw.height - 1) {
+      const chart = el.closest(".chart");
+      const name = chart?.querySelector(".plot")?.getAttribute("aria-label") || "chart";
+      problems.push(`axis label clipped ${text} (${name.slice(0, 48)})`);
+    }
+  }
   for (const card of document.querySelectorAll(".tile, .stat, .panel")) {
     if (card.closest("[data-scroll-ok]")) continue;
     const box = card.getBoundingClientRect();
@@ -261,6 +276,66 @@ for (const width of [1280, 390]) {
       context = await browser.newContext({
         viewport: { width, height: 900 },
         javaScriptEnabled: false,
+      });
+      page = await context.newPage();
+    }
+  }
+  await context.close().catch(() => {});
+}
+
+const plannerCombos = [
+  { name: "set A", ids: ["fly-C1", "fly-C2"], line: "DX8-1: 6 files, DX8-2: 6 files" },
+  { name: "set B", ids: ["fly-C3", "fly-C4"], line: "DX8-1: 6 files, DX8-2: 6 files" },
+  {
+    name: "all four",
+    ids: ["fly-C1", "fly-C2", "fly-C3", "fly-C4"],
+    line: "DX8-1: 12 files, DX8-2: 12 files",
+  },
+  { name: "C1+C3", ids: ["fly-C1", "fly-C3"], line: "DX8-1: 8 files, DX8-2: 4 files" },
+];
+
+for (const width of [1280, 390]) {
+  let context = await browser.newContext({
+    viewport: { width, height: 900 },
+    javaScriptEnabled: true,
+  });
+  let page = await context.newPage();
+  for (const combo of plannerCombos) {
+    const route = "/next-charge/";
+    try {
+      const response = await Promise.race([
+        page.goto(`http://127.0.0.1:${port}${route}`, { waitUntil: "domcontentloaded", timeout: 8000 }),
+        deadline(10000),
+      ]);
+      if (!response || response.status() >= 400) {
+        failures.push(`${width}px ${route} ${combo.name} HTTP ${response?.status() ?? "none"}`);
+        continue;
+      }
+      await page.waitForSelector("[data-planner-ready]", { timeout: 8000 });
+      if (await page.locator("#fly-D-1").count()) {
+        failures.push(`${width}px ${route} still has a D-1 box`);
+      }
+      for (const id of combo.ids) await page.locator(`#${id}`).check();
+      const line = (await page.locator(".planner-files-live").innerText()).replace(/\s+/g, " ").trim();
+      if (!line.includes(combo.line)) {
+        failures.push(`${width}px ${route} ${combo.name} file count ${JSON.stringify(line)}`);
+      }
+      if (!(await page.locator("#planner-static").isHidden())) {
+        failures.push(`${width}px ${route} ${combo.name} static lists still showing`);
+      }
+      const found = await Promise.race([page.evaluate(measure), deadline(10000)]);
+      const shown = found.slice(0, 8);
+      for (const problem of shown) failures.push(`${width}px ${route} ${combo.name} ${problem}`);
+      if (found.length > shown.length) {
+        failures.push(`${width}px ${route} ${combo.name} +${found.length - shown.length} more`);
+      }
+    } catch (error) {
+      failures.push(`${width}px ${route} ${combo.name} check failed: ${error.message.split("\n")[0]}`);
+      await context.close().catch(() => {});
+      if (!browser.isConnected()) browser = await launchBrowser();
+      context = await browser.newContext({
+        viewport: { width, height: 900 },
+        javaScriptEnabled: true,
       });
       page = await context.newPage();
     }

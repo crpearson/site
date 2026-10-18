@@ -1,4 +1,5 @@
 import { BenchPack, type BenchPackRow } from "@/components/BenchPack";
+import { publicProse } from "@/lib/format";
 import type { DoNotConnectItem } from "@/lib/next-charge.mjs";
 
 function BlockedJack() {
@@ -30,9 +31,9 @@ export function DontConnectList({
           <div className="min-w-0">
             <BenchPack pack={resolve(item.label)} />
             <p className="bench-field">{item.uid}</p>
-            <p className="note mt-2">{item.reason}</p>
+            <p className="note mt-2">{publicProse(item.reason)}</p>
             <p className="bench-return">Pool {item.pool}</p>
-            <p className="bench-return">Returns {item.return_date}</p>
+            <p className="bench-return">7-day reading due {item.return_date}</p>
           </div>
         </li>
       ))}

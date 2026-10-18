@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { BenchPack, type BenchPackRow } from "@/components/BenchPack";
 import { seriesColor } from "@/lib/color";
+import { publicProse } from "@/lib/format";
 import type { ChargeAloneItem, LaidPort } from "@/lib/next-charge.mjs";
 
 function BoardTop() {
@@ -160,7 +161,7 @@ export function ChargeAlone({
             <div className="min-w-0">
               <BenchPack pack={resolve(item.label)} />
               <p className="bench-field">{item.uid}</p>
-              <p className="note mt-1">{item.reason}</p>
+              <p className="note mt-1">{publicProse(item.reason)}</p>
               {item.last_offset_max_V != null && item.last_offset_side ? (
                 <p className="note mt-1">
                   Last night it was up to {item.last_offset_max_V.toFixed(3)} V {item.last_offset_side} the{" "}

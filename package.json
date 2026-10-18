@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/validate-v4.mjs && node scripts/write-redirects.mjs && node scripts/next-build.mjs && node scripts/check-overflow.mjs && node scripts/check-series-board.mjs",
+    "build": "node scripts/validate-v4.mjs && node scripts/write-redirects.mjs && node scripts/next-build.mjs && node scripts/check-overflow.mjs && node scripts/check-series-board.mjs && node scripts/check-session-ids.mjs && node scripts/check-chart-lines.mjs && node scripts/check-chips.mjs && node scripts/check-fleet-names.mjs",
     "start": "next start",
     "lint": "eslint"
   },

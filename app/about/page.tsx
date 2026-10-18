@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Panel } from "@/components/Panel";
+import { publicSession } from "@/lib/format";
 import { categories, chargers, metricLabels, siteMeta, thresholds } from "@/lib/fleet";
 import { formatValue } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
@@ -8,7 +9,7 @@ import { IR_UNIT } from "@/lib/ir";
 export const metadata: Metadata = {
   title: "About the data",
   description:
-    "How this LiPo fleet is measured: DX8 storage charges, charge rules v4, Rule B, and what the logs do not contain.",
+    "How this LiPo fleet is measured: DX8 storage charges, charge rules v5, Rule B, and what the logs do not contain.",
 };
 
 export default function AboutPage() {
@@ -24,12 +25,13 @@ export default function AboutPage() {
         <p className="page-intro mt-4">
           {siteMeta.source}. Logged through {siteMeta.lastIngest}. The record holds{" "}
           {siteMeta.rowCount} measurements across {siteMeta.sessionCount} nights. Rest voltage
-          comes from the start of each storage charge. Charge rules v4 and Rule B use the limits
+          comes from the start of each storage charge. Charge rules v7 (permanent home channels; a pack is pulled only for fire risk; a pack that fails a board check charges alone that night; IR checks are performance notes) and Rule B use the limits
           shown below. 2026-10-09-restday0 is a rest-test day-0 baseline, not a latest IR point and
-          not a series mean. D-1, C1-P4, and C2-P2 are in the Rest pool until 2026-10-16. A Rest pool
-          night is labeled Rest pool. D-1's 2026-10-09 run stays on series D. C3 and C4 are in
+          not a series mean. The rest pool is retired: C1-P4 and C2-P2 are back in rotation, and their rest
+          tests complete as self-discharge checks. C1-P1 passed its 7-day rest test on 2026-10-17 and charges on the C1
+          board from the next storage night; its whole history is shown as C1-P1. A Rest pool night is labeled Rest pool. C3 and C4 are in
           rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13. Storage night 2 was 2026-10-16.
-          Each series has its own board. Watch is a note. C3-P5 is marked check first.
+          Each series has its own board. Watch and performance notes are notes. C3-P5 is marked check first.
         </p>
         <p className="mt-4">
           <Link href="/methodology" className="pack-link">
@@ -55,7 +57,7 @@ export default function AboutPage() {
             key={session.id}
             className={session.partial ? "session-chip is-partial" : "session-chip"}
           >
-            {session.id}
+            {publicSession(session.id)}
             {session.partial ? " · partial" : ""}
           </span>
         ))}
@@ -74,8 +76,8 @@ export default function AboutPage() {
           <p className="note">
             Intra-pack spread: the highest cell IR minus the lowest cell IR in that pack, in
             milliohms. Caution is {formatValue("ir", thresholds.spread_mohm.caution_gte)} {IR_UNIT}{" "}
-            or a hot cell, two nights in a row. Individual only is{" "}
-            {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} on that same pattern.
+            or a hot cell, two nights in a row. Watch note at{" "}
+            {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more on that same pattern.
           </p>
         </Panel>
         <Panel accent="floor" eyebrow="Glossary" title="Floor">
@@ -118,15 +120,15 @@ export default function AboutPage() {
             <li className="text-[var(--ok)]">Go. On its parallel board. This is the default.</li>
             <li className="text-[var(--caution)]">Watch. A note only. The pack stays on its board.</li>
             <li className="text-[var(--off)]">
-              Pulled. Off the board for safety, or for trouble on 3 of the last 4 nights.
+              Pulled. Fire risk only: swelling or damage, heat, a very low cell, self-discharge, or abnormal charging. Not charged.
             </li>
           </ul>
           <p className="note mt-4">
             A spread of {formatValue("ir", spread.caution_gte)} {IR_UNIT} or more, or a cell at{" "}
-            {thresholds.cell_ratio_to_median.caution_gte}× the pack median, is a watch note. A low-cell
-            gap of {thresholds.low_cell_gap_mv.individual_gte} mV or more counts as a trouble night.
-            Service is separate: In service, Watch, D pool, or Retire. A Rest pool pack is off every
-            board until the 7-day reading. A status line reads Parallel, then Service. The words on
+            {thresholds.cell_ratio_to_median.caution_gte}× the pack median, is a performance note. A low-cell
+            gap of {thresholds.low_cell_gap_mv.individual_gte} mV or more is a performance note too.
+            Service is separate: In service, Watch, Pulled, or Retire. Rest pool nights before 2026-10-17
+            are labeled Rest pool. A status line reads Parallel, then Service. The words on
             each pack are the recorded call.
           </p>
         </article>
@@ -147,18 +149,16 @@ export default function AboutPage() {
 
       <Panel accent="signal" eyebrow="Charts" title="A night with no reading">
         <p className="note">
-          No chart is given a made-up value. Fleet charts — the series mean, the pack trends, Rule
-          B, and the bake-off — draw a solid line straight through a night with no reading. Those
-          charts have no dotted join and no hollow ring. A pack page, and the sparkline on a pack
-          tile, still marks a night that pack was not charged: a faint dotted line joins the real
-          readings on either side, and a skipped night before the first reading or after the last
-          is a small hollow ring on the bottom edge, also with no value. Nights before the pack or
-          series existed, and nights after a move, are not marked, and the line is not joined
-          across that move. A single reading is a dot. If the series did run and the metric does
-          not apply, the tooltip says N/A for that night. A star on the night label is a different
-          mark: a partial night, one that did not include every pack. A pack or series that was
-          charged on a partial night still has a solid point. On a pack chart the legend reads:
-          dotted = not charged · ○ = not charged (start/end).
+          No chart is given a made-up value. Every recorded reading for a pack is joined to the
+          next one, including charge-alone nights, rest-test nights, and nights from
+          before a move. Fleet charts — the series mean, the pack trends, Rule B, and the bake-off —
+          draw that line solid through a night with no reading. A pack page, and the sparkline on a
+          pack tile, uses a faint dotted line across a night that pack was not charged. Nothing is
+          drawn before the first reading or after the last. A pack with only its first reading is a
+          single point. If the series did run and the metric does not apply, the tooltip says N/A
+          for that night. A star on the night label is a different mark: a partial night, one that
+          did not include every pack. A pack or series that was charged on a partial night still
+          has a point on the line. On a pack chart the legend reads: dotted = not charged.
         </p>
       </Panel>
 
@@ -203,7 +203,7 @@ export default function AboutPage() {
             A charger is limited to one series only when that limit is turned on. DX8-1 and DX8-2
             are not limited. An existing night and pack is never overwritten. A partial night is
             kept as measured. On the charts that partial night stays starred on the night label,
-            which is separate from a dotted join or a hollow ring on a pack chart for a night that pack was not charged.
+            which is separate from a dotted join on a pack chart for a night that pack was not charged.
             The rest-voltage comparison uses
             only packs that charged in parallel
             that night, and only when at least two of them did.

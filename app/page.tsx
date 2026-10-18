@@ -6,12 +6,14 @@ import { IrFigure } from "@/components/IrFigure";
 import { Lamp } from "@/components/Lamp";
 import { PackTile } from "@/components/PackTile";
 import { LineChart } from "@/components/LineChart";
+import { OutlookBoards } from "@/components/NextChargeNotes";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
 import { StatusChip } from "@/components/StatusChip";
-import { conditionalJoinNote } from "@/lib/lamp";
-import { formatValue } from "@/lib/format";
+import { callChipText, conditionalJoinNote } from "@/lib/lamp";
+import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
+import { loadNextChargeV4 } from "@/lib/next-charge.mjs";
 import {
   allRestTests,
   chargedIndividually,
@@ -34,11 +36,14 @@ export default function Home() {
   const stats = headline();
   const individualPacks = chargedIndividually();
   const restPacks = stats.rest.map((row) => row.label);
-  const ruleOff = stats.off.map((row) => row.label);
   const rows = statusRows();
+  const spreadWatch = rows
+    .filter((row) => !row.excluded && !row.restPool && row.spread >= thresholds.spread_mohm.individual_gte)
+    .map((row) => row.label);
   const blocks = seriesBlocks();
   const model = fleetModel();
   const next = nextParallel();
+  const charge = loadNextChargeV4();
   const heatRows = rows.filter((row) => row.cells.length > 0);
   const heatValues = heatRows.flatMap((row) => row.cells);
   const heatMin = Math.min(...heatValues);
@@ -54,12 +59,11 @@ export default function Home() {
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
             Each series has its own as-of date. The calls below are the latest status. Fleet charts
-            follow a pack through every measured night, including nights under an earlier label. A
-            solid line runs straight through a night with no reading. No value is filled in, and
-            those charts have no dotted join and no hollow ring. Nights before the pack or series
-            existed, and nights after a move, are not marked. A single reading is a dot. A pack's
-            own page, and the sparkline on its tile, still use a dotted join for a night that pack
-            was not charged, and a hollow ring only at a true start or end.
+            follow a pack by serial through every measured night, including nights under an earlier
+            label. A solid line joins those readings and runs straight through a night with no
+            reading. No value is filled in. A series mean with only one reading is a single point.
+            A pack's own page, and the sparkline on its tile, use a dotted join for a night that
+            pack was not charged. Nothing is drawn before the first reading or after the last.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
@@ -90,23 +94,27 @@ export default function Home() {
             </p>
             <p className="stat-sub">{individualPacks.join(" · ") || "None"}</p>
           </article>
-          <article className="stat" data-tone="floor">
-            <p className="eyebrow">Rest pool</p>
-            <p className="stat-value">
-              <span className="num">
-                {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
-              </span>
-            </p>
-            <p className="stat-sub">{restPacks.join(" · ") || "None"}</p>
-          </article>
+          {restPacks.length > 0 ? (
+            <article className="stat" data-tone="floor">
+              <p className="eyebrow">Rest pool</p>
+              <p className="stat-value">
+                <span className="num">
+                  {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
+                </span>
+              </p>
+              <p className="stat-sub">{restPacks.join(" · ")}</p>
+            </article>
+          ) : null}
           <article className="stat" data-tone="off">
-            <p className="eyebrow">Individual only · Rules v3</p>
+            <p className="eyebrow">
+              Watch note at {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more
+            </p>
             <p className="stat-value">
               <span className="num">
-                {ruleOff.length} {ruleOff.length === 1 ? "pack" : "packs"}
+                {spreadWatch.length} {spreadWatch.length === 1 ? "pack" : "packs"}
               </span>
             </p>
-            <p className="stat-sub">Rule outcome. {ruleOff.join(" · ") || "None."}</p>
+            <p className="stat-sub">Spread only. The pack stays on its board. {spreadWatch.join(" · ") || "None."}</p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
@@ -125,29 +133,31 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
-        <p className="eyebrow">Off every board</p>
-        <h2 id="rest-pool-heading" className="panel-title mt-1">
-          Rest pool
-        </h2>
-        <p className="note mt-2">
-          Day 0 {stats.rest[0]?.restDay0 ?? "2026-10-09"}. 7-day reading due {stats.rest[0]?.restDue ?? "2026-10-16"}.
-          These packs are not charged during the test. D-1 stays in series D. C1-P4 and C2-P2 keep their slots.
-        </p>
-        <ul className="mt-3 space-y-2 text-sm">
-          {stats.rest.map((row) => (
-            <li key={row.uid}>
-              <Link href={`/pack/${row.uid}`} className="pack-link">
-                {row.label}
-              </Link>
-              <span className="note">
-                {" "}
-                · day 0 {row.restDay0} · due {row.restDue} · {row.series}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {restPacks.length > 0 ? (
+        <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
+          <p className="eyebrow">Off every board</p>
+          <h2 id="rest-pool-heading" className="panel-title mt-1">
+            Rest pool
+          </h2>
+          <p className="note mt-2">
+            Day 0 {stats.rest[0]?.restDay0}. 7-day reading due {stats.rest[0]?.restDue}. These packs are not charged
+            during the test.
+          </p>
+          <ul className="mt-3 space-y-2 text-sm">
+            {stats.rest.map((row) => (
+              <li key={row.uid}>
+                <Link href={`/pack/${row.uid}`} className="pack-link">
+                  {row.label}
+                </Link>
+                <span className="note">
+                  {" "}
+                  · day 0 {row.restDay0} · due {row.restDue} · {row.series}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <Panel
         accent="signal"
@@ -155,9 +165,10 @@ export default function Home() {
         title="Series mean IR"
         action={
           <span className="note">
-            {IR_UNIT} · one reading is a dot. The line is solid through a night that series was not
-            measured. No value is filled in there. Nights before that series existed are not marked.
-            Rest-test day 0 is left off this mean. D-1 on 10-09 stays on series D.
+            {IR_UNIT} · a series with one reading is a single point. Later readings are a solid
+            line through a night that series was not measured. No value is filled in there. The
+            mean averages only packs measured in that series that night. Rest-test day 0 is left
+            off this mean.
           </span>
         }
       >
@@ -187,6 +198,9 @@ export default function Home() {
             Next parallel
           </h2>
           <p className="note mt-1">{next.note}</p>
+          <div className="mt-3">
+            <OutlookBoards doc={charge} />
+          </div>
           {next.resting.length ? (
             <p className="note mt-1">
               Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
@@ -199,7 +213,7 @@ export default function Home() {
               <p className="eyebrow">
                 {board.series}
                 {" · last public measurement "}
-                {blocks.find((block) => block.id === board.series)?.lastMeasured}
+                {publicSession(blocks.find((block) => block.id === board.series)?.lastMeasured ?? "")}
               </p>
               <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
               <div className="mt-3 flex flex-wrap gap-1.5">
@@ -240,7 +254,7 @@ export default function Home() {
               {" · status as of "}
               {block.asOf}
               {" · last measured "}
-              {block.lastMeasured}
+              {publicSession(block.lastMeasured)}
             </p>
             <div className="pack-grid">
               {block.slots.map((slot) => (
@@ -289,9 +303,8 @@ export default function Home() {
                       </span>
                     </th>
                     <td>
-                      <Lamp status={row.parallel || row.status} />
-                      <p className="mt-1 text-sm">{row.parallel || row.status}</p>
-                      {row.service ? <p className="note mt-1">Service {row.service}</p> : null}
+                      <Lamp status={row.status} />
+                      <p className="mt-1 text-sm">{callChipText(row.status)}</p>
                       {row.restPool ? (
                         <p className="note mt-1">
                           Rest pool · day 0 {row.restDay0} · due {row.restDue}
@@ -299,15 +312,19 @@ export default function Home() {
                       ) : null}
                     </td>
                     <td>
-                      <p className="reason">{row.reason}</p>
+                      <p className="reason">{publicProse(row.reason)}</p>
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
-                      {row.session === row.callDate ? row.callDate : `${row.callDate} · ${row.session}`}
+                      {!isSessionId(row.session) && row.session !== row.callDate
+                        ? `${row.callDate} · ${row.session}`
+                        : shownWhen(row.session, row.callDate)}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
                       <IrFigure value={row.avg} provisional={row.provisional} />
-                      <span className="mt-1 block text-[10px] text-[var(--faint)]">{row.latestSession}</span>
+                      <span className="mt-1 block text-[10px] text-[var(--faint)]">
+                        {publicSession(row.latestSession)}
+                      </span>
                     </td>
                     <td className="font-mono text-sm">
                       <IrFigure value={row.spread} provisional={row.provisional} />
@@ -325,17 +342,16 @@ export default function Home() {
                   <Link href={`/pack/${row.uid}`} className="pack-link">
                     {row.label}
                   </Link>
-                  <Lamp status={row.parallel || row.status} />
+                  <Lamp status={row.status} />
                 </div>
                 <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                <p className="mt-2 text-sm leading-relaxed">{row.reason}</p>
+                <p className="mt-2 text-sm leading-relaxed">{publicProse(row.reason)}</p>
                 {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                 {row.restPool ? (
                   <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
                 ) : null}
                 <p className="note mt-2 font-mono">
-                  {row.parallel || row.status}
-                  {row.service ? ` · Service ${row.service}` : ""} · IR{" "}
+                  {callChipText(row.status)} · IR{" "}
                   <IrFigure value={row.avg} provisional={row.provisional} unit /> · spread{" "}
                   <IrFigure value={row.spread} provisional={row.provisional} unit /> · floor{" "}
                   {row.floor == null ? "—" : `${row.floor} mV`}
@@ -348,7 +364,7 @@ export default function Home() {
 
       <Panel accent="floor" eyebrow="7-day rest" title="Rest tests">
         <p className="note mb-3">
-          Day-0 baselines are recorded. The 7-day reading is not in yet. C1-P3 has
+          Day-0 baselines are recorded. Each test shows its result once the 7-day reading is in. C1-P3 has
           no rest test.
         </p>
         <ul className="space-y-2 text-sm">
@@ -356,7 +372,7 @@ export default function Home() {
             <li key={`${test.id}-${test.uid}`}>
               <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
               day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
-              {test.result === "unread" ? "not read yet" : test.result}
+              {test.result === "unread" ? "not read yet" : `read ${test.readDate} · ${test.result}`}
             </li>
           ))}
         </ul>
@@ -388,11 +404,11 @@ export default function Home() {
           </h2>
           <p className="note mt-1">
             A star marks a partial night: that night did not include every pack, and it is left
-            incomplete. On these fleet charts a solid line runs through a night with no reading. No
-            value is filled in, and there is no dotted join or hollow ring. Nights before the series
-            existed are not marked. A single reading is a dot. A partial night with a reading is
-            still a normal point. A pack that changed labels stays on the series it was measured in.
-            The line is not joined across a move, and nights after the move are not marked.
+            incomplete. On these fleet charts a solid line joins every recorded reading for a pack,
+            including nights under an earlier label, and runs through a night with no reading. No
+            value is filled in. A pack with only its first reading is a single point. A partial
+            night with a reading is still a normal point. The series mean still averages only the
+            packs measured in that series that night.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">
@@ -414,12 +430,12 @@ export default function Home() {
               key={`${fleet.id}-spread`}
               heading="h3"
               accent="rulea"
-              eyebrow={`Rules v3 · ${fleet.id}`}
+              eyebrow={`Rules v5 · ${fleet.id}`}
               title="Intra-pack spread"
               action={
                 <span className="note">
-                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Caution ≥{" "}
-                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Individual ≥{" "}
+                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Watch note ≥{" "}
+                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Watch note, look first ≥{" "}
                   {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT}
                 </span>
               }
@@ -434,7 +450,7 @@ export default function Home() {
                 format="ir"
                 unit={IR_UNIT}
                 mode="aggregate"
-                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with Rules v3 caution and individual guides`}
+                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with watch-note guides`}
               />
             </Panel>
           ))}
@@ -477,8 +493,7 @@ export default function Home() {
               recorded figure. A next-night outlook is not drawn here. On 2026-10-10 the points are
               C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. C3 and C4
               have no board night yet, so they are not on this chart. The rest-test day-0 rows are
-              not a parallel charge and are not on this line. Series D, pack D-1, is charged on its
-              own, so Rule B does not apply and it is not a line here. Series do not share a board.
+              not a parallel charge and are not on this line. Series do not share a board.
             </p>
             <LineChart
               categories={model.categories}
@@ -533,9 +548,10 @@ export default function Home() {
               fleet.packs.map((pack) => ({
                 id: pack.id,
                 tone: pack.tone,
-                cells: pack.cells,
+                cells: pack.historyCells,
                 service: pack.service,
                 logged: pack.logged,
+                nolog: pack.nolog,
                 rest: pack.rest,
                 unpublished: pack.unpublished,
                 provisional: pack.provisional,
