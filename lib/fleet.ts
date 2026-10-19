@@ -2315,7 +2315,18 @@ function assertGapGeometry(model: FleetModel) {
       if (line.values[charge] != null) throw new Error(`${label} storage line includes the 2026-10-18 charge run`);
       if (line.values[storage] == null) throw new Error(`${label} is missing the 2026-10-18 storage point`);
       const into = lineSegments(line, "pack").find((segment) => segment.to === storage);
-      if (!into || into.style !== "solid") throw new Error(`${label} 2026-10-18 storage point is not on the line`);
+      if (!into || lonePointIndices(line, "pack").includes(storage)) {
+        throw new Error(`${label} 2026-10-18 storage point is a dot, not a line`);
+      }
+    }
+  }
+  for (const pack of packs.filter((item) => item.series === "C1" || item.series === "C2")) {
+    const chart = getPack(pack.uid);
+    const storage = indexOf("2026-10-18");
+    const line = chart?.cellSeries[0];
+    const into = line ? lineSegments(line, "pack").find((segment) => segment.to === storage) : undefined;
+    if (!line || line.values[storage] == null || !into || lonePointIndices(line, "pack").includes(storage)) {
+      throw new Error(`${pack.label} 2026-10-18 storage point is not joined to its line`);
     }
   }
 }
