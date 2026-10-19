@@ -55,7 +55,7 @@ Every slot has a permanent home channel. It doesn't change from night to night.
 | C2 and C4 | DX8-2 Channel 1 | DX8-2 Channel 2 | DX8-1 Channel 1 | DX8-1 Channel 2 |
 
 - An **empty slot** or a **pulled pack** is skipped, and nothing is reordered. A pulled pack gets no storage charge.
-- **C1-P1** charges on the C1 board from the next storage night (see *C1-P1* below). The spare pack stays a spare.
+- **C1-P1** is back in its slot from the 2026-10-18 storage night (see *C1-P1* below). The spare pack stays a spare.
 
 ### Each night
 1. Take every series that was flown, and every pack in it.
@@ -183,7 +183,7 @@ Everything else is a performance note: IR trend, board IR match, a single high-I
 ## C1-P1
 
 - C1-P1 (`CNHL-2026-001`) charged on its own from 2026-10-08 to 2026-10-17 because of self-discharge on Cell 6 (a chronic low floor). Its whole history is shown as C1-P1, as one line.
-- **It charges on the C1 board from the next storage night.** It passed its rest test, and under these rules a weak cell's history is a note, not a pull: only a repeat of the self-discharge (see *section 6*) would pull it. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. The spare pack stays a spare.
+- **It is back in rotation as C1-P1 from 2026-10-18.** It passed its rest test, and under these rules a weak cell's history is a note, not a pull: only a repeat of the self-discharge (see *section 6*) would pull it. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. The spare pack stays a spare.
 
 ## Rest pool (retired)
 

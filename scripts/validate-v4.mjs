@@ -75,8 +75,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 238) {
-  console.error(`expected 238 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 250) {
+  console.error(`expected 250 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -224,8 +224,8 @@ if (
 }
 for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
   const pack = packs.find((row) => row.pack_uid === uid);
-  if (!pack || pack.charge_count !== "15") {
-    console.error(`${uid} charge_count should be 15`);
+  if (!pack || pack.charge_count !== "16") {
+    console.error(`${uid} charge_count should be 16`);
     process.exit(1);
   }
 }
@@ -256,15 +256,15 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.669") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.669 mΩ over 24`);
+if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.725") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.725 mΩ over 24`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
-if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
+if (!c1p4 || c1p4.session !== "2026-10-18" || Number(c1p4.avg_mOhm) !== 2.65 || Number(c1p4.spread_mOhm) !== 1.2 || Number(c1p4.pack_SR_mOhm) !== 15.9 || Number(c1p4.floor_mV) !== 3612 || Number(c1p4.low_cell_gap_mV) !== 87) {
   fail(`C1-P4 latest operational row is ${c1p4?.session} ${c1p4?.avg_mOhm}`);
 }
 const c2p2 = latestAvg("CNHL-2026-008");
-if (!c2p2 || c2p2.session !== "2026-09-30" || Number(c2p2.avg_mOhm) !== 3.217) {
+if (!c2p2 || c2p2.session !== "2026-10-18" || Number(c2p2.avg_mOhm) !== 3.133) {
   fail(`C2-P2 latest operational row is ${c2p2?.session} ${c2p2?.avg_mOhm}`);
 }
 // The append-only store keeps the original 2026-10-09 row; the site shows it under C1 through the registry.
@@ -286,10 +286,10 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-10-17" || c1Mean.mean.toFixed(3) !== "2.600") {
+if (c1Mean.session !== "2026-10-18" || c1Mean.mean.toFixed(3) !== "2.786") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
-if (c2Mean.session !== "2026-10-17" || c2Mean.mean.toFixed(3) !== "2.617") {
+if (c2Mean.session !== "2026-10-18" || c2Mean.mean.toFixed(3) !== "2.853") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 const c3Mean = seriesMean("C3");
@@ -362,7 +362,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "cb1289db5f30309a969ef770886a3e45b40555b2e8550f5a0f6c18b3ac0fa900") {
+if (methodologySha !== "3c7d230a2ab182b7e9af2583463be41d47600d2a28162658a47be15b36a90ac7") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");

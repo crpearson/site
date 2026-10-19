@@ -1,7 +1,7 @@
 {
   "schema": "next_charge/v4",
   "rules": "v7",
-  "as_of_session": "2026-10-17",
+  "as_of_session": "2026-10-18",
   "as_of_date_pt": "2026-10-18",
   "measurement": {
     "rest_rule": "Resting voltage is read at least 90 minutes after a charge or flight.",
@@ -1349,8 +1349,7 @@
       "conditions": [
         "Before connecting, read each pack's resting voltage at least 90 minutes after its last charge or flight.",
         "Charge a pack alone that night (it stays in rotation, no status change) if: the board's packs are more than 0.60 V apart; any cell is more than 0.10 V from the same-position cell of another pack on the board; its own cells are more than 0.10 V apart; a cell rests between 2.0 and 3.0 V; or a connector is damaged (fix it first).",
-        "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V.",
-        "C1-P3: no end reading on 2026-10-17; using the end of its 2026-10-11 storage run."
+        "Board warning: if a port fuse blows or a balance-pin light comes on, stop the charge, find the outlier pack and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to 0.30 V."
       ],
       "rest_check_limit_V": 0.6,
       "cell_check_limit_V": 0.1,
@@ -1364,23 +1363,24 @@
       ],
       "last_rule_b_basis": "packs charged together on this board that night (recorded)",
       "outlook_rule_b": {
-        "value_v": 0.18,
+        "value_v": 0.006,
         "packs": [
           "C1-P1",
           "C1-P2",
           "C1-P3",
+          "C1-P4",
           "C1-P5",
           "C1-P6"
         ],
         "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
-        "session": "2026-10-17",
+        "session": "2026-10-18",
         "limit_v": 0.6,
         "call": "GO",
         "check_first": [],
         "value_without_check_first_v": null,
         "packs_without_check_first": null,
         "cell_check": {
-          "session": "2026-10-17",
+          "session": "2026-10-18",
           "limit_mv": 100,
           "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
           "pairs": [],
@@ -1388,8 +1388,8 @@
         },
         "ir_match": {
           "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
-          "session": "2026-10-17",
-          "board_median_mohm": 2.575,
+          "session": "2026-10-18",
+          "board_median_mohm": 2.758,
           "note_pct": 25,
           "strong_note_pct": 35,
           "nights_needed": 2,
@@ -1397,9 +1397,9 @@
           "packs": [
             {
               "label": "C1-P1",
-              "avg_mohm": 2.4,
-              "session": "2026-10-17",
-              "pct_off": -6.8,
+              "avg_mohm": 2.733,
+              "session": "2026-10-18",
+              "pct_off": -0.9,
               "nights_checked": 2,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1407,9 +1407,9 @@
             },
             {
               "label": "C1-P2",
-              "avg_mohm": 2.683,
-              "session": "2026-10-17",
-              "pct_off": 4.2,
+              "avg_mohm": 2.9,
+              "session": "2026-10-18",
+              "pct_off": 5.1,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1417,9 +1417,9 @@
             },
             {
               "label": "C1-P3",
-              "avg_mohm": 2.9,
-              "session": "2026-10-11",
-              "pct_off": 4.5,
+              "avg_mohm": 2.917,
+              "session": "2026-10-18",
+              "pct_off": 5.7,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1427,9 +1427,9 @@
             },
             {
               "label": "C1-P4",
-              "avg_mohm": 2.875,
-              "session": "2026-09-27",
-              "pct_off": -2.0,
+              "avg_mohm": 2.65,
+              "session": "2026-10-18",
+              "pct_off": -3.9,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1437,9 +1437,9 @@
             },
             {
               "label": "C1-P5",
-              "avg_mohm": 2.85,
-              "session": "2026-10-17",
-              "pct_off": 10.7,
+              "avg_mohm": 2.75,
+              "session": "2026-10-18",
+              "pct_off": -0.3,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1447,9 +1447,9 @@
             },
             {
               "label": "C1-P6",
-              "avg_mohm": 2.467,
-              "session": "2026-10-17",
-              "pct_off": -4.2,
+              "avg_mohm": 2.767,
+              "session": "2026-10-18",
+              "pct_off": 0.3,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1488,23 +1488,24 @@
       ],
       "last_rule_b_basis": "packs charged together on this board that night (recorded)",
       "outlook_rule_b": {
-        "value_v": 0.005,
+        "value_v": 0.006,
         "packs": [
           "C2-P1",
+          "C2-P2",
           "C2-P3",
           "C2-P4",
           "C2-P5",
           "C2-P6"
         ],
         "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
-        "session": "2026-10-17",
+        "session": "2026-10-18",
         "limit_v": 0.6,
         "call": "GO",
         "check_first": [],
         "value_without_check_first_v": null,
         "packs_without_check_first": null,
         "cell_check": {
-          "session": "2026-10-17",
+          "session": "2026-10-18",
           "limit_mv": 100,
           "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
           "pairs": [],
@@ -1512,8 +1513,8 @@
         },
         "ir_match": {
           "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
-          "session": "2026-10-17",
-          "board_median_mohm": 2.617,
+          "session": "2026-10-18",
+          "board_median_mohm": 2.792,
           "note_pct": 25,
           "strong_note_pct": 35,
           "nights_needed": 2,
@@ -1521,9 +1522,9 @@
           "packs": [
             {
               "label": "C2-P1",
-              "avg_mohm": 2.617,
-              "session": "2026-10-17",
-              "pct_off": 0.0,
+              "avg_mohm": 2.75,
+              "session": "2026-10-18",
+              "pct_off": -1.5,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1531,9 +1532,9 @@
             },
             {
               "label": "C2-P2",
-              "avg_mohm": 3.217,
-              "session": "2026-09-30",
-              "pct_off": 10.3,
+              "avg_mohm": 3.133,
+              "session": "2026-10-18",
+              "pct_off": 12.2,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1541,9 +1542,9 @@
             },
             {
               "label": "C2-P3",
-              "avg_mohm": 2.667,
-              "session": "2026-10-17",
-              "pct_off": 1.9,
+              "avg_mohm": 2.633,
+              "session": "2026-10-18",
+              "pct_off": -5.7,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1551,9 +1552,9 @@
             },
             {
               "label": "C2-P4",
-              "avg_mohm": 2.583,
-              "session": "2026-10-17",
-              "pct_off": -1.3,
+              "avg_mohm": 2.833,
+              "session": "2026-10-18",
+              "pct_off": 1.5,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1561,9 +1562,9 @@
             },
             {
               "label": "C2-P5",
-              "avg_mohm": 2.567,
-              "session": "2026-10-17",
-              "pct_off": -1.9,
+              "avg_mohm": 2.75,
+              "session": "2026-10-18",
+              "pct_off": -1.5,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1571,9 +1572,9 @@
             },
             {
               "label": "C2-P6",
-              "avg_mohm": 2.65,
-              "session": "2026-10-17",
-              "pct_off": 1.3,
+              "avg_mohm": 3.017,
+              "session": "2026-10-18",
+              "pct_off": 8.1,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -2095,16 +2096,6 @@
   "charge_alone": [],
   "check_before_connecting": [
     {
-      "label": "C1-P4",
-      "uid": "CNHL-2026-004",
-      "note": "Charged full on 10-18 (about 4.20 V per cell). Storage-charge it before it goes back on the C1 board."
-    },
-    {
-      "label": "C2-P2",
-      "uid": "CNHL-2026-008",
-      "note": "Charged full on 10-18 (about 4.20 V per cell). Storage-charge it before it goes back on the C2 board."
-    },
-    {
       "label": "C3-P1",
       "uid": "CNHL-2026-013",
       "note": "Its 10-17 storage run stopped short (about 3.67 V per cell). Top it up to storage before it goes on the C3 board."
@@ -2119,14 +2110,9 @@
   ],
   "performance_notes": [
     {
-      "label": "C1-P1",
-      "uid": "CNHL-2026-001",
-      "note": "Performance note (not a pull or charge-alone reason): lowest cell 3520 mV at the start of 2026-10-17; low-cell gap 172 mV on 2026-10-17."
-    },
-    {
       "label": "C1-P4",
       "uid": "CNHL-2026-004",
-      "note": "Performance note (not a pull or charge-alone reason): low-cell gap 93 mV on 2026-09-27."
+      "note": "Performance note (not a pull or charge-alone reason): low-cell gap 87 mV on 2026-10-18."
     },
     {
       "label": "C1-P5",
@@ -2139,9 +2125,9 @@
       "note": "Performance note (not a pull or charge-alone reason): IR spread."
     },
     {
-      "label": "C2-P2",
-      "uid": "CNHL-2026-008",
-      "note": "Performance note (not a pull or charge-alone reason): lowest cell 3597 mV at the start of 2026-09-30; low-cell gap 98 mV on 2026-09-30."
+      "label": "C2-P4",
+      "uid": "CNHL-2026-010",
+      "note": "Performance note (not a pull or charge-alone reason): lowest cell 3583 mV at the start of 2026-10-18."
     },
     {
       "label": "C3-P2",
