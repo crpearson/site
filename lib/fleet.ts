@@ -2286,10 +2286,37 @@ function assertGapGeometry(model: FleetModel) {
   {
     const trend = chartLine(c1FleetPack.uid, c1FleetPack.historyAvg, c1FleetPack.service, c1FleetPack.logged, c1FleetPack.rest);
     assertJoined(trend, "aggregate", "C1-P1 series trend");
-    const through = lineSegments(trend, "aggregate").find(
+    const trendReadings = readingIndices(trend);
+    const trendSegments = lineSegments(trend, "aggregate");
+    if (trendReadings.length !== 16 || trendSegments.length !== 15) {
+      throw new Error(`C1 series chart C1-P1 has ${trendReadings.length} points and ${trendSegments.length} segments, expected 16 and 15`);
+    }
+    const through = trendSegments.find(
       (segment) => segment.from === indexOf("2026-10-09") && segment.to === indexOf("2026-10-17"),
     );
     if (!through || through.style !== "solid") throw new Error("C1 series chart did not join C1-P1's 2026-10-09 and 2026-10-17 readings");
+    const into18 = trendSegments.find((segment) => segment.to === indexOf("2026-10-18"));
+    if (!into18 || into18.from !== indexOf("2026-10-17") || into18.style !== "solid") {
+      throw new Error("C1 series chart did not draw a line from 2026-10-17 to 2026-10-18");
+    }
+    if (trend.values[indexOf("2026-10-18-charge")] != null) {
+      throw new Error("the 2026-10-18 charge run is on the C1 series line");
+    }
+  }
+  for (const [uid, label] of [
+    ["CNHL-2026-004", "C1-P4"],
+    ["CNHL-2026-008", "C2-P2"],
+  ] as const) {
+    const pack = getPack(uid);
+    if (!pack) throw new Error(`missing ${label}`);
+    const charge = indexOf("2026-10-18-charge");
+    const storage = indexOf("2026-10-18");
+    for (const line of [...pack.cellSeries, ...pack.spreadSeries, ...pack.floorSeries]) {
+      if (line.values[charge] != null) throw new Error(`${label} storage line includes the 2026-10-18 charge run`);
+      if (line.values[storage] == null) throw new Error(`${label} is missing the 2026-10-18 storage point`);
+      const into = lineSegments(line, "pack").find((segment) => segment.to === storage);
+      if (!into || into.style !== "solid") throw new Error(`${label} 2026-10-18 storage point is not on the line`);
+    }
   }
 }
 
