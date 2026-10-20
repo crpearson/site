@@ -55,7 +55,7 @@ Every slot has a permanent home channel. It doesn't change from night to night.
 | C2 and C4 | DX8-2 Channel 1 | DX8-2 Channel 2 | DX8-1 Channel 1 | DX8-1 Channel 2 |
 
 - An **empty slot** or a **pulled pack** is skipped, and nothing is reordered. A pulled pack gets no storage charge.
-- **C1-P1** charges on the C1 board from the next storage night (see *C1-P1* below). The spare pack stays a spare.
+- **C1-P1** is back in its slot from the 2026-10-18 storage night (see *C1-P1* below). The spare pack stays a spare.
 
 ### Each night
 1. Take every series that was flown, and every pack in it.
@@ -131,7 +131,7 @@ Results are also graded, scaled to 7 days, as a performance note:
 | 10–30 mV | Borderline |
 | Over 30 mV | Fail |
 
-A fail grade is a note only; it is never a reason to retire a pack. C1-P1's RT-001-1 was read from a screen photo on day 8 and passed. C1-P4's RT-004-1 and C2-P2's RT-008-1 complete from the first reading of their next storage log, if they haven't flown since 2026-10-09.
+A fail grade is a note only; it is never a reason to retire a pack. C1-P1's RT-001-1 was read from a screen photo on day 8 and passed. C1-P4's RT-004-1 and C2-P2's RT-008-1 were read on 2026-10-18 (day 9) from the first line of that day's charge log; neither pack had flown since 2026-10-09. Both passed: the suspect cell dropped 2 mV (C1-P4, Cell 1) and 1 mV (C2-P2, Cell 6) more than the other cells, and both watches are cleared. That charge was a full charge, not a storage night, so its readings are not plotted as a storage point.
 
 ### 7. Trends over time
 - Each pack's average IR is compared with its own first 3 storage nights (see *section 8*). These are performance notes only.
@@ -183,11 +183,11 @@ Everything else is a performance note: IR trend, board IR match, a single high-I
 ## C1-P1
 
 - C1-P1 (`CNHL-2026-001`) charged on its own from 2026-10-08 to 2026-10-17 because of self-discharge on Cell 6 (a chronic low floor). Its whole history is shown as C1-P1, as one line.
-- **It charges on the C1 board from the next storage night.** It passed its rest test, and under these rules a weak cell's history is a note, not a pull: only a repeat of the self-discharge (see *section 6*) would pull it. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. The spare pack stays a spare.
+- **It is back in rotation as C1-P1 from 2026-10-18.** It passed its rest test, and under these rules a weak cell's history is a note, not a pull: only a repeat of the self-discharge (see *section 6*) would pull it. It charges on DX8-1 Channel 1 and joins the C1 parallel board. Cell 6 is a watch note. The spare pack stays a spare.
 
 ## Rest pool (retired)
 
-The rest pool is retired (2026-10-17). C1-P4 and C2-P2 are back at their home slots, and their rest tests complete as self-discharge checks (see *section 6*).
+The rest pool is retired (2026-10-17). C1-P4 and C2-P2 are back at their home slots, and their rest tests passed as self-discharge checks on 2026-10-18 (see *section 6*).
 
 ## What isn't measured
 

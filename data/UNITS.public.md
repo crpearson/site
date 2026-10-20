@@ -3,7 +3,7 @@
 This covers every column in the public CSVs. Validation means the value was compared against a ground-truth reading.
 
 **Validation key**
-- **Validated**: validated 2026-10-09 against a DX8 screen photo (pack D-1, 2026-10-09: cell IR 3.2 / 2.9 / 2.5 / 2.2 / 3.0 / 2.8 mΩ and pack S_R 16.6 mΩ both match the data row exactly).
+- **Validated**: validated 2026-10-09 against a DX8 screen photo (CNHL-2026-001, 2026-10-09: cell IR 3.2 / 2.9 / 2.5 / 2.2 / 3.0 / 2.8 mΩ and pack S_R 16.6 mΩ both match the data row exactly).
 - **Validated (DX8-2 rows)**: validated 2026-10-11 against two DX8-2 screen photos (start of charge and minute 26, both channels). Exact match on cell IR and pack S_R.
 - **Not validated**: not yet compared with a screen photo or meter. Use it for trends only.
 - **Derived**: computed from other columns. It is only as reliable as its inputs.

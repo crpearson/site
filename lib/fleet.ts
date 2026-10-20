@@ -420,11 +420,11 @@ const EXPECTED_LATEST: Record<string, string> = {
   "CNHL-2026-001": "PARALLEL GO: on the C1 board | SERVICE In service (watch)",
   "CNHL-2026-002": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-003": "PARALLEL GO | SERVICE In service",
-  "CNHL-2026-004": "PARALLEL GO: on the C1 board | SERVICE Watch (self-discharge check RT-004-1)",
+  "CNHL-2026-004": "PARALLEL GO: on the C1 board | SERVICE In service",
   "CNHL-2026-005": "PARALLEL GO: on the C1 board | SERVICE In service",
   "CNHL-2026-006": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-007": "PARALLEL GO: on the C2 board | SERVICE In service",
-  "CNHL-2026-008": "PARALLEL GO: on the C2 board | SERVICE Watch (self-discharge check RT-008-1)",
+  "CNHL-2026-008": "PARALLEL GO: on the C2 board | SERVICE In service",
   "CNHL-2026-009": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-010": "PARALLEL GO | SERVICE In service",
   "CNHL-2026-011": "PARALLEL GO | SERVICE In service",
@@ -444,8 +444,8 @@ const EXPECTED_LATEST: Record<string, string> = {
 };
 
 function assertStore() {
-  if (measurements.length !== 236 || v4Rows.length !== 236) {
-    throw new Error(`Expected 236 measurements, got ${measurements.length}`);
+  if (measurements.length !== 250 || v4Rows.length !== 250) {
+    throw new Error(`Expected 250 measurements, got ${measurements.length}`);
   }
   if (IR_STORE_IS_DX8_INTEGER) {
     throw new Error("ir_store_v4 is already milliohms. IR_STORE_IS_DX8_INTEGER must stay false.");
@@ -465,11 +465,11 @@ function assertStore() {
   if (!restC1 || restC1.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.1,3.4,3.2,3.7,2.8,2.8") {
     throw new Error("C1-P4 rest-day IR spot check failed");
   }
-  if (packByUid("CNHL-2026-004")?.chargeCount !== 14 || packByUid("CNHL-2026-008")?.chargeCount !== 14) {
-    throw new Error("C1-P4 and C2-P2 charge_count should be 14");
+  if (packByUid("CNHL-2026-004")?.chargeCount !== 16 || packByUid("CNHL-2026-008")?.chargeCount !== 16) {
+    throw new Error("C1-P4 and C2-P2 charge_count should be 16 (2026-10-18 charge run and storage night)");
   }
-  if (packByUid("CNHL-2026-005")?.chargeCount !== 17 || packByUid("CNHL-2026-012")?.chargeCount !== 17) {
-    throw new Error("C1-P5 and C2-P6 charge_count should be 17");
+  if (packByUid("CNHL-2026-005")?.chargeCount !== 18 || packByUid("CNHL-2026-012")?.chargeCount !== 18) {
+    throw new Error("C1-P5 and C2-P6 charge_count should be 18");
   }
   const chargeRuns = measurements.filter((row) => row.session === "2026-10-11-charge");
   if (
@@ -490,11 +490,21 @@ function assertStore() {
     throw new Error(`2026-10-11 storage night is ${storageLabels}`);
   }
   if (
-    latestOperational("CNHL-2026-012")?.session !== "2026-10-17" ||
-    latestOperational("CNHL-2026-005")?.session !== "2026-10-17" ||
-    latestOperational("CNHL-2026-007")?.session !== "2026-10-17"
+    latestOperational("CNHL-2026-012")?.session !== "2026-10-18" ||
+    latestOperational("CNHL-2026-005")?.session !== "2026-10-18" ||
+    latestOperational("CNHL-2026-007")?.session !== "2026-10-18"
   ) {
-    throw new Error("2026-10-17 storage rows are the latest readings");
+    throw new Error("2026-10-18 storage rows are the latest readings");
+  }
+  {
+    // 2026-10-18 C1+C2 storage night: 12 single-pack runs on the home channels; CNHL-2026-001's first C1-P1-labelled row.
+    const night = measurements.filter((row) => row.session === "2026-10-18");
+    const want = "C1-P1,C1-P2,C1-P3,C1-P4,C1-P5,C1-P6,C2-P1,C2-P2,C2-P3,C2-P4,C2-P5,C2-P6";
+    if (night.length !== 12 || night.some((row) => isNonStorage(row.sessionType) || row.series !== row.label.slice(0, 2)) || night.map((row) => row.label).sort().join(",") !== want) {
+      throw new Error(`2026-10-18 storage night is ${night.map((row) => row.label).sort().join(",")}`);
+    }
+    const p1 = night.find((row) => row.uid === "CNHL-2026-001");
+    if (!p1 || p1.label !== "C1-P1" || p1.series !== "C1" || p1.avg.toFixed(3) !== "2.733") throw new Error("CNHL-2026-001 2026-10-18 row should be C1-P1 on C1, 2.733 mΩ");
   }
   if (operationalPoints("CNHL-2026-012").some((row) => row.session === "2026-10-11-charge")) {
     throw new Error("the charge run is still in the latest readings");
@@ -1589,23 +1599,23 @@ export function ruleBNote(series: string): string | null {
 
 function assertDerived() {
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.669" || stats.counted !== 24) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.669 mΩ over 24 slotted packs`);
+  if (stats.mean.toFixed(3) !== "2.725" || stats.counted !== 24) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.725 mΩ over 24 slotted packs`);
   }
   const c1p4 = statusRows().find((row) => row.label === "C1-P4");
   if (
     !c1p4 ||
-    c1p4.latestSession !== "2026-09-27" ||
-    c1p4.avg.toFixed(3) !== "2.875" ||
-    c1p4.spread.toFixed(2) !== "0.65" ||
-    c1p4.sr !== 17.25 ||
-    c1p4.floor !== 3603 ||
-    c1p4.lowGap !== 93
+    c1p4.latestSession !== "2026-10-18" ||
+    c1p4.avg.toFixed(3) !== "2.650" ||
+    c1p4.spread.toFixed(2) !== "1.20" ||
+    c1p4.sr !== 15.9 ||
+    c1p4.floor !== 3612 ||
+    c1p4.lowGap !== 87
   ) {
     throw new Error(`C1-P4 card is ${c1p4?.latestSession} ${c1p4?.avg} ${c1p4?.spread} ${c1p4?.sr} ${c1p4?.floor} ${c1p4?.lowGap}`);
   }
   const c2p2 = statusRows().find((row) => row.label === "C2-P2");
-  if (!c2p2 || c2p2.latestSession !== "2026-09-30" || c2p2.avg.toFixed(3) !== "3.217" || c2p2.sr !== 19.3 || c2p2.floor !== 3597 || c2p2.lowGap !== 98) {
+  if (!c2p2 || c2p2.latestSession !== "2026-10-18" || c2p2.avg.toFixed(3) !== "3.133" || c2p2.sr !== 18.8 || c2p2.floor !== 3706 || c2p2.lowGap !== 21) {
     throw new Error(`C2-P2 card is ${c2p2?.latestSession} ${c2p2?.avg}`);
   }
   const model = fleetModel();
@@ -1615,8 +1625,8 @@ function assertDerived() {
   };
   const c1Last = lastOf("C1");
   const c2Last = lastOf("C2");
-  if (c1Last == null || c1Last.toFixed(3) !== "2.600") throw new Error(`C1 series mean last is ${c1Last}`);
-  if (c2Last == null || c2Last.toFixed(3) !== "2.617") throw new Error(`C2 series mean last is ${c2Last}`);
+  if (c1Last == null || c1Last.toFixed(3) !== "2.786") throw new Error(`C1 series mean last is ${c1Last}`);
+  if (c2Last == null || c2Last.toFixed(3) !== "2.853") throw new Error(`C2 series mean last is ${c2Last}`);
   const c3Last = lastOf("C3");
   const c4Last = lastOf("C4");
   if (c3Last == null || c3Last.toFixed(3) !== "2.802") throw new Error(`C3 series mean last is ${c3Last}`);
@@ -1679,7 +1689,7 @@ function assertDerived() {
   if (
     rendered !==
       "C1:C1-P1+C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
-    board.as_of !== "2026-10-17"
+    board.as_of !== "2026-10-18"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
@@ -1774,7 +1784,7 @@ function assertUnpublishedNight(model: FleetModel, index: number) {
   }
   const c2Card = statusRows().find((row) => row.uid === "CNHL-2026-007");
   const c1Card = statusRows().find((row) => row.uid === "CNHL-2026-003");
-  if (!c2Card || c2Card.provisional || c2Card.latestSession !== "2026-10-17" || c2Card.avg.toFixed(3) !== "2.617" || c2Card.spread.toFixed(1) !== "0.9") {
+  if (!c2Card || c2Card.provisional || c2Card.latestSession !== "2026-10-18" || c2Card.avg.toFixed(3) !== "2.750" || c2Card.spread.toFixed(1) !== "0.5") {
     throw new Error(`C2-P1 card is ${c2Card?.latestSession} ${c2Card?.avg} provisional=${c2Card?.provisional}`);
   }
   if (!c1Card || c1Card.provisional) throw new Error("C1-P3 card is marked provisional");
@@ -2237,21 +2247,22 @@ function assertGapGeometry(model: FleetModel) {
     assertNoInteriorRing(line, line.id);
     assertJoined(line, "pack", line.id);
   }
-  // Label registry: CNHL-2026-001 is one continuous C1-P1 line (15 readings) on its page and on the C1 chart.
+  // Label registry: CNHL-2026-001 is one continuous C1-P1 line (16 readings, the 2026-10-18 one its first under the C1-P1 label) on its page and on the C1 chart.
   const p1 = getPack("CNHL-2026-001");
   if (!p1 || p1.label !== "C1-P1" || p1.series !== "C1") throw new Error("missing C1-P1 pack chart");
-  if (p1.points.length !== 15 || p1.points.some((point) => point.label !== "C1-P1" || point.series !== "C1")) {
-    throw new Error(`C1-P1 should have 15 C1-P1 readings, has ${p1.points.length}`);
+  if (p1.points.length !== 16 || p1.points.some((point) => point.label !== "C1-P1" || point.series !== "C1")) {
+    throw new Error(`C1-P1 should have 16 C1-P1 readings, has ${p1.points.length}`);
   }
   for (const line of [...p1.cellSeries, ...p1.spreadSeries, ...p1.floorSeries]) {
     assertJoined(line, "pack", `C1-P1 ${line.label}`);
-    if (readingIndices(line).length !== 15) throw new Error(`C1-P1 ${line.label} has ${readingIndices(line).length} readings`);
+    if (readingIndices(line).length !== 16) throw new Error(`C1-P1 ${line.label} has ${readingIndices(line).length} readings`);
     const segments = lineSegments(line, "pack");
-    if (segments.length !== 14) throw new Error(`C1-P1 ${line.label} has ${segments.length} segments, expected 14`);
+    if (segments.length !== 15) throw new Error(`C1-P1 ${line.label} has ${segments.length} segments, expected 15`);
     const into09 = segments.find((segment) => segment.to === indexOf("2026-10-09"));
     const into17 = segments.find((segment) => segment.to === indexOf("2026-10-17"));
-    if (!into09 || into09.from !== indexOf("2026-09-27") || !into17 || into17.from !== indexOf("2026-10-09")) {
-      throw new Error(`C1-P1 ${line.label} does not join 2026-09-27, 2026-10-09 and 2026-10-17`);
+    const into18 = segments.find((segment) => segment.to === indexOf("2026-10-18"));
+    if (!into09 || into09.from !== indexOf("2026-09-27") || !into17 || into17.from !== indexOf("2026-10-09") || !into18 || into18.from !== indexOf("2026-10-17")) {
+      throw new Error(`C1-P1 ${line.label} does not join 2026-09-27, 2026-10-09, 2026-10-17 and 2026-10-18`);
     }
   }
   const c3p2 = getPack("CNHL-2026-014");
@@ -2275,10 +2286,48 @@ function assertGapGeometry(model: FleetModel) {
   {
     const trend = chartLine(c1FleetPack.uid, c1FleetPack.historyAvg, c1FleetPack.service, c1FleetPack.logged, c1FleetPack.rest);
     assertJoined(trend, "aggregate", "C1-P1 series trend");
-    const through = lineSegments(trend, "aggregate").find(
+    const trendReadings = readingIndices(trend);
+    const trendSegments = lineSegments(trend, "aggregate");
+    if (trendReadings.length !== 16 || trendSegments.length !== 15) {
+      throw new Error(`C1 series chart C1-P1 has ${trendReadings.length} points and ${trendSegments.length} segments, expected 16 and 15`);
+    }
+    const through = trendSegments.find(
       (segment) => segment.from === indexOf("2026-10-09") && segment.to === indexOf("2026-10-17"),
     );
     if (!through || through.style !== "solid") throw new Error("C1 series chart did not join C1-P1's 2026-10-09 and 2026-10-17 readings");
+    const into18 = trendSegments.find((segment) => segment.to === indexOf("2026-10-18"));
+    if (!into18 || into18.from !== indexOf("2026-10-17") || into18.style !== "solid") {
+      throw new Error("C1 series chart did not draw a line from 2026-10-17 to 2026-10-18");
+    }
+    if (trend.values[indexOf("2026-10-18-charge")] != null) {
+      throw new Error("the 2026-10-18 charge run is on the C1 series line");
+    }
+  }
+  for (const [uid, label] of [
+    ["CNHL-2026-004", "C1-P4"],
+    ["CNHL-2026-008", "C2-P2"],
+  ] as const) {
+    const pack = getPack(uid);
+    if (!pack) throw new Error(`missing ${label}`);
+    const charge = indexOf("2026-10-18-charge");
+    const storage = indexOf("2026-10-18");
+    for (const line of [...pack.cellSeries, ...pack.spreadSeries, ...pack.floorSeries]) {
+      if (line.values[charge] != null) throw new Error(`${label} storage line includes the 2026-10-18 charge run`);
+      if (line.values[storage] == null) throw new Error(`${label} is missing the 2026-10-18 storage point`);
+      const into = lineSegments(line, "pack").find((segment) => segment.to === storage);
+      if (!into || lonePointIndices(line, "pack").includes(storage)) {
+        throw new Error(`${label} 2026-10-18 storage point is a dot, not a line`);
+      }
+    }
+  }
+  for (const pack of packs.filter((item) => item.series === "C1" || item.series === "C2")) {
+    const chart = getPack(pack.uid);
+    const storage = indexOf("2026-10-18");
+    const line = chart?.cellSeries[0];
+    const into = line ? lineSegments(line, "pack").find((segment) => segment.to === storage) : undefined;
+    if (!line || line.values[storage] == null || !into || lonePointIndices(line, "pack").includes(storage)) {
+      throw new Error(`${pack.label} 2026-10-18 storage point is not joined to its line`);
+    }
   }
 }
 

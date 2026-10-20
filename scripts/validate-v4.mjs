@@ -75,8 +75,8 @@ if (fleetSource.includes("ir_store_v2")) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 236) {
-  console.error(`expected 236 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 250) {
+  console.error(`expected 250 ir_store_v4 rows, got ${v4.length}`);
   process.exit(1);
 }
 
@@ -212,19 +212,20 @@ const day0Rests = visibleRests.filter((row) => row.reading === "storage_end");
 const d1Seven = visibleRests.filter((row) => row.test_id === "RT-001-1" && row.reading === "7day");
 if (
   day0Rests.length !== 3 ||
-  visibleRests.length !== 4 ||
+  visibleRests.length !== 6 ||
+  ["RT-004-1", "RT-008-1"].some((id) => visibleRests.filter((row) => row.test_id === id && row.reading === "7day" && row.result === "PASS" && row.reading_date === "2026-10-18").length !== 1) ||
   d1Seven.length !== 1 ||
   d1Seven[0].result !== "PASS" ||
   d1Seven[0].excess_mV !== "2" ||
   visibleRests.some((row) => row.pack_uid === "CNHL-2026-003")
 ) {
-  console.error("rest tests should show three day-0 rows, the RT-001-1 7-day PASS, and no C1-P3 test");
+  console.error("rest tests should show three day-0 rows, the RT-001-1, RT-004-1 and RT-008-1 PASS rows, and no C1-P3 test");
   process.exit(1);
 }
 for (const uid of ["CNHL-2026-004", "CNHL-2026-008"]) {
   const pack = packs.find((row) => row.pack_uid === uid);
-  if (!pack || pack.charge_count !== "14") {
-    console.error(`${uid} charge_count should be 14`);
+  if (!pack || pack.charge_count !== "16") {
+    console.error(`${uid} charge_count should be 16`);
     process.exit(1);
   }
 }
@@ -255,15 +256,15 @@ const latestAvg = (uid) => {
 };
 const fleetMean =
   slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.669") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.669 mΩ over 24`);
+if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.725") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.725 mΩ over 24`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
-if (!c1p4 || c1p4.session !== "2026-09-27" || Number(c1p4.avg_mOhm) !== 2.875 || Number(c1p4.spread_mOhm) !== 0.65 || Number(c1p4.pack_SR_mOhm) !== 17.25 || Number(c1p4.floor_mV) !== 3603 || Number(c1p4.low_cell_gap_mV) !== 93) {
+if (!c1p4 || c1p4.session !== "2026-10-18" || Number(c1p4.avg_mOhm) !== 2.65 || Number(c1p4.spread_mOhm) !== 1.2 || Number(c1p4.pack_SR_mOhm) !== 15.9 || Number(c1p4.floor_mV) !== 3612 || Number(c1p4.low_cell_gap_mV) !== 87) {
   fail(`C1-P4 latest operational row is ${c1p4?.session} ${c1p4?.avg_mOhm}`);
 }
 const c2p2 = latestAvg("CNHL-2026-008");
-if (!c2p2 || c2p2.session !== "2026-09-30" || Number(c2p2.avg_mOhm) !== 3.217) {
+if (!c2p2 || c2p2.session !== "2026-10-18" || Number(c2p2.avg_mOhm) !== 3.133) {
   fail(`C2-P2 latest operational row is ${c2p2?.session} ${c2p2?.avg_mOhm}`);
 }
 // The append-only store keeps the original 2026-10-09 row; the site shows it under C1 through the registry.
@@ -285,10 +286,10 @@ function seriesMean(series) {
 }
 const c1Mean = seriesMean("C1");
 const c2Mean = seriesMean("C2");
-if (c1Mean.session !== "2026-10-17" || c1Mean.mean.toFixed(3) !== "2.600") {
+if (c1Mean.session !== "2026-10-18" || c1Mean.mean.toFixed(3) !== "2.786") {
   fail(`C1 last series value is ${c1Mean.session} ${c1Mean.mean}`);
 }
-if (c2Mean.session !== "2026-10-17" || c2Mean.mean.toFixed(3) !== "2.617") {
+if (c2Mean.session !== "2026-10-18" || c2Mean.mean.toFixed(3) !== "2.853") {
   fail(`C2 last series value is ${c2Mean.session} ${c2Mean.mean}`);
 }
 const c3Mean = seriesMean("C3");
@@ -305,8 +306,8 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-// 2026-10-17: latest status call date (C4-P2 watch-note update); latest storage session stays 2026-10-16.
-if (latestPtDate !== "2026-10-17") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-17`);
+// 2026-10-18: latest data date is the C1-P4 / C2-P2 charge run and their self-discharge pass calls.
+if (latestPtDate !== "2026-10-18") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-18`);
 if (pacificCalendarDate(new Date("2026-10-10T06:30:00Z")) !== "2026-10-09") {
   fail("Pacific date helper treated 2026-10-10 06:30 UTC as a Pacific Oct 10");
 }
@@ -324,8 +325,8 @@ if (board.resting.length !== 0) fail("the rest pool is retired (rules v6), but n
 // Rules v7 (2026-10-17): re-grade under the new pull / charge-alone rules.
 for (const [label, series, test] of [["C1-P4", "C1", "RT-004-1"], ["C2-P2", "C2", "RT-008-1"]]) {
   const call = calls.filter((row) => row.label_at_time === label).at(-1);
-  if (!call || call.date !== "2026-10-17" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE Watch (self-discharge check ${test})` || !/rules v7/.test(call.source)) {
-    fail(`${label} latest call should be the rules v7 self-discharge check on the ${series} board`);
+  if (!call || call.date !== "2026-10-18" || call.status !== `PARALLEL GO: on the ${series} board | SERVICE In service` || !/rules v7/.test(call.source) || !call.reason.includes("check passed")) {
+    fail(`${label} latest call should be the 2026-10-18 rules v7 pass (${test}) on the ${series} board`);
   }
   const back = events.filter((row) => row.pack_uid === call.pack_uid && row.event === "rest_pool_exit" && row.date === "2026-10-17");
   if (back.length !== 1) fail(`${label} needs one rest_pool_exit event dated 2026-10-17`);
@@ -361,7 +362,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
 const methodologySha = createHash("sha256")
   .update(fs.readFileSync(path.join(root, "content/methodology.md")))
   .digest("hex");
-if (methodologySha !== "8cbf115edb7e6c2f98732d07f10350e08cba3d73c38ccca37a14374396173fc3") {
+if (methodologySha !== "3c7d230a2ab182b7e9af2583463be41d47600d2a28162658a47be15b36a90ac7") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");

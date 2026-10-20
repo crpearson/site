@@ -1087,36 +1087,6 @@
       "source": "/slot/c4-p6/",
       "destination": "/slot/C4-P6/",
       "permanent": true
-    },
-    {
-      "source": "/pack/D-1",
-      "destination": "/pack/D-1/",
-      "permanent": true
-    },
-    {
-      "source": "/slot/D-1",
-      "destination": "/slot/D-1/",
-      "permanent": true
-    },
-    {
-      "source": "/pack/d-1",
-      "destination": "/pack/D-1/",
-      "permanent": true
-    },
-    {
-      "source": "/pack/d-1/",
-      "destination": "/pack/D-1/",
-      "permanent": true
-    },
-    {
-      "source": "/slot/d-1",
-      "destination": "/slot/D-1/",
-      "permanent": true
-    },
-    {
-      "source": "/slot/d-1/",
-      "destination": "/slot/D-1/",
-      "permanent": true
     }
   ]
 }

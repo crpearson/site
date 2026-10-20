@@ -29,6 +29,18 @@ const chromeCandidates = [
 ].filter(Boolean);
 const chrome = chromeCandidates.find((candidate) => existsSync(candidate));
 
+function checkRetiredRedirects() {
+  const config = JSON.parse(readFileSync(path.join(root, "vercel.json"), "utf8"));
+  const stale = (config.redirects ?? []).filter(
+    (rule) => /D-1/i.test(rule.source) || /D-1/i.test(rule.destination),
+  );
+  if (stale.length) {
+    console.error(`vercel.json still has ${stale.length} D-1 redirects`);
+    process.exit(1);
+  }
+  console.log("D-1 redirects 0");
+}
+
 function checkIdentity() {
   const identity = /2603022837|cliff|pearson|chad/i;
   const identityHits = [];
@@ -55,6 +67,8 @@ function checkIdentity() {
   }
   console.log("identity grep 0 (2603022837|cliff|pearson|chad), including /next-charge/");
 }
+
+checkRetiredRedirects();
 
 if (!existsSync(path.join(outDir, "index.html"))) {
   console.error("overflow check needs out/index.html");

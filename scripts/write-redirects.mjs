@@ -40,12 +40,18 @@ function parseCsv(text) {
 
 const root = process.cwd();
 const packs = parseCsv(fs.readFileSync(path.join(root, "data/v2/packs.csv"), "utf8"));
-const events = parseCsv(fs.readFileSync(path.join(root, "data/v2/pack_events.csv"), "utf8"));
+const registry = parseCsv(fs.readFileSync(path.join(root, "data/v2/label_registry.csv"), "utf8"));
+const hidden = new Set();
+for (const row of registry) {
+  for (const label of (row.hidden_labels || "").split("|")) {
+    if (label.trim()) hidden.add(label.trim());
+  }
+}
+// Public redirects follow the current slot only. A hidden label stays in the
+// event log and does not get a /pack or /slot URL.
 const labels = new Set();
-for (const pack of packs) if (pack.label) labels.add(pack.label);
-for (const event of events) {
-  if (event.from_label) labels.add(event.from_label);
-  if (event.to_label) labels.add(event.to_label);
+for (const pack of packs) {
+  if (pack.label && !hidden.has(pack.label)) labels.add(pack.label);
 }
 
 const redirects = [];
@@ -94,5 +100,12 @@ const config = {
   },
   redirects,
 };
+const stale = redirects.filter(
+  (rule) => /D-1/i.test(rule.source) || /D-1/i.test(rule.destination),
+);
+if (stale.length) {
+  console.error(`write-redirects would emit ${stale.length} retired D-1 redirects`);
+  process.exit(1);
+}
 fs.writeFileSync(file, `${JSON.stringify(config, null, 2)}\n`);
 console.log(`wrote ${redirects.length} redirects to vercel.json`);
