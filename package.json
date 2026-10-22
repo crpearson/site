@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "node scripts/validate-v4.mjs && node scripts/write-redirects.mjs && node scripts/next-build.mjs && node scripts/check-overflow.mjs && node scripts/check-series-board.mjs && node scripts/check-session-ids.mjs && node scripts/check-chart-lines.mjs && node scripts/check-chips.mjs && node scripts/check-fleet-names.mjs && node scripts/check-advisory-notes.mjs",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-snapshot": "node --experimental-strip-types scripts/check-snapshot.mjs"
   },
   "dependencies": {
     "@vercel/functions": "^3.9.11",
