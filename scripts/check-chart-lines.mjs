@@ -135,7 +135,6 @@ if (!fs.existsSync(outDir)) {
 
 const problems = [];
 const rows = [];
-let seriesCount = 0;
 for (const file of walk(outDir)) {
   const html = fs.readFileSync(file, "utf8");
   const rel = path.relative(root, file);
@@ -147,7 +146,6 @@ for (const file of walk(outDir)) {
     for (const [id, group] of seriesInSvg(svg)) {
       const points = new Set(group.points).size;
       const segments = group.segments.length;
-      seriesCount += 1;
       rows.push({ rel, chart, id, points, segments });
     }
   });
