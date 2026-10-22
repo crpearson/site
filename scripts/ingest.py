@@ -13,6 +13,15 @@ Stdlib only (Python 3.9+). Usage:
   # only rebuild data/*.json from data/store.csv
   python3 scripts/ingest.py --rebuild
 
+What this writes: only the retired data/store.csv, then the JSON rebuilt from
+that CSV. The site does not read those files. It reads
+data/v2/ir_store_v4.public.csv, which this script does not write. Once
+store.csv contains an old-format ;130; row (a cell value above 20), a run that
+would append refuses and exits non-zero, and the file is left untouched. On
+this repo that is the normal case, so ingest is a parse-and-check step. Use
+--dry-run. That refusal is the behaviour; do not append milliohm rows onto the
+retired archive.
+
 The raw DX8 header still carries SN:<serial>. Pass --charger-map PATH, or set
 LIPO_CHARGER_MAP, to a JSON object of serial -> alias (DX8-1, DX8-2). Keys that
 start with "_" are ignored. The real map stays off this repo. Ingest maps each
@@ -30,10 +39,13 @@ Mapping (see data/README or the site "About the data" page):
     charger and channel's files by NNN ascending and map them onto `slots` in
     order. Parallel and individual use the same order. File count must equal
     slot count; otherwise ingest exits non-zero and does not assign.
-  * With no session manifest, a new night uses the default split: DX8-1 CH1 =
-    C1-P1..P3, DX8-1 CH2 = C1-P4..P6, DX8-2 CH1 = C2-P1..P3, DX8-2 CH2 =
-    C2-P4..P6. The same count check applies. Blank-NNN manifest rows apply
-    only when --session matches that row.
+  * With no session manifest, a new night uses the home-channel slot map in
+    data/v2/next_charge.json: active slots, ordered by planner_rules.series_order
+    then pack number, grouped by charger and channel (Rules v6/v7, one pack
+    per run on its home channel). If that file is missing or unreadable, the
+    fallback is that same map, not the retired C1/C2 3+3 split. The count
+    check still applies. Blank-NNN manifest rows apply only when --session
+    matches that row.
   * Each label resolves to a pack_uid from data/v2/packs.csv and pack_events.csv
     as of the session date. Rows carry pack_uid, label_at_time, series_at_time,
     charger alias, channel, file_nnn, charge_mode_at_time, and session_type.
@@ -50,7 +62,9 @@ Mapping (see data/README or the site "About the data" page):
     not 6S, negative or implausible IR (over MAX_PLAUSIBLE_IR mΩ after the ÷10),
     non-Storage, LiHV. The 10 mΩ cap is a sanity limit, not a Rules v3 cut.
   * data/store.csv is the retired ;130; archive. This script will not append
-    true-mΩ rows onto it. The site reads data/v2/ir_store_v4.public.csv.
+    true-mΩ rows onto it, and refuses once an old-format row is already there.
+    The site reads data/v2/ir_store_v4.public.csv. A normal run here is a
+    parse-and-check (--dry-run), not a writer for the live store.
   * Dedupe by sha256 of decompressed content, and by (charger alias, NNN, CH).
   * Store is append-only: an existing (session, pack) row is never overwritten.
   * Do not invent a row for a pack that did not run. The site treats that night as
@@ -98,12 +112,67 @@ STORE_COLS = [
     "pack_uid", "label_at_time", "series_at_time", "charge_mode_at_time", "session_type",
 ]
 
-DEFAULT_SLOTS = {
-    ("DX8-1", "CH1"): ["C1-P1", "C1-P2", "C1-P3"],
-    ("DX8-1", "CH2"): ["C1-P4", "C1-P5", "C1-P6"],
-    ("DX8-2", "CH1"): ["C2-P1", "C2-P2", "C2-P3"],
-    ("DX8-2", "CH2"): ["C2-P4", "C2-P5", "C2-P6"],
+NEXT_CHARGE = DATA / "v2" / "next_charge.json"
+# Used only when next_charge.json cannot be read. Same order as the Rules v6/v7
+# home channels (series, then pack number). Not the retired C1/C2 3+3 split.
+FALLBACK_SLOTS = {
+    ("DX8-1", "CH1"): ["C1-P1", "C1-P2", "C2-P5", "C3-P1", "C3-P2", "C4-P5"],
+    ("DX8-1", "CH2"): ["C1-P3", "C1-P4", "C2-P6", "C3-P3", "C3-P4", "C4-P6"],
+    ("DX8-2", "CH1"): ["C1-P5", "C2-P1", "C2-P2", "C3-P5", "C4-P1", "C4-P2"],
+    ("DX8-2", "CH2"): ["C1-P6", "C2-P3", "C2-P4", "C3-P6", "C4-P3", "C4-P4"],
 }
+
+
+def _copy_slots(slots: dict) -> dict:
+    return {key: list(labels) for key, labels in slots.items()}
+
+
+def slots_from_home_channels(doc: dict) -> dict:
+    """(charger alias, CHn) -> labels in run order. Active slots only."""
+    if not isinstance(doc, dict):
+        return {}
+    rules = doc.get("planner_rules") if isinstance(doc.get("planner_rules"), dict) else {}
+    order = rules.get("series_order") if isinstance(rules.get("series_order"), list) else []
+    rank = {series: index for index, series in enumerate(order) if isinstance(series, str)}
+    include = rules.get("include_states") if isinstance(rules.get("include_states"), list) else ["active"]
+    include = {state for state in include if isinstance(state, str)} or {"active"}
+    grouped: dict = {}
+    rows = doc.get("home_channels")
+    if not isinstance(rows, list):
+        return {}
+    for row in rows:
+        if not isinstance(row, dict) or row.get("state") not in include:
+            continue
+        label, charger, channel = row.get("label"), row.get("charger"), row.get("channel")
+        if not isinstance(label, str) or not label or not isinstance(charger, str) or not charger:
+            continue
+        if not isinstance(channel, int):
+            continue
+        grouped.setdefault((charger, f"CH{channel}"), []).append(row)
+    slots = {}
+    for key, items in grouped.items():
+        items.sort(key=lambda row: (
+            rank.get(row.get("series"), len(rank)),
+            row.get("slot") if isinstance(row.get("slot"), int) else 0,
+            row.get("label") or "",
+        ))
+        slots[key] = [row["label"] for row in items]
+    return slots
+
+
+def load_default_slots(path: Optional[Path] = None) -> dict:
+    """Home-channel slot map from next_charge.json, or the current-rules fallback."""
+    source = NEXT_CHARGE if path is None else path
+    if not source.is_file():
+        return _copy_slots(FALLBACK_SLOTS)
+    try:
+        doc = json.loads(source.read_text())
+    except (OSError, json.JSONDecodeError):
+        return _copy_slots(FALLBACK_SLOTS)
+    return _copy_slots(slots_from_home_channels(doc) or FALLBACK_SLOTS)
+
+
+DEFAULT_SLOTS = load_default_slots()
 PACKS_CSV = DATA / "v2" / "packs.csv"
 EVENTS_CSV = DATA / "v2" / "pack_events.csv"
 
