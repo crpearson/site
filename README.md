@@ -80,7 +80,7 @@ The public historical manifest is `data/v2/session_manifest.public.csv`. The sto
 
 - Only LiPo Storage logs named `LiPo[Storage_NNN_CHx].txt` or `.txt.gz` are auto-mapped. NNN is per charger alias. Do not merge NNN streams across chargers.
 - For each manifest row, sort that charger and channel by NNN ascending and map the files onto `slots` in order. The lowest NNN is the first label. Parallel and individual nights use the same order. If the file count does not equal the slot count, ingest exits non-zero and assigns nothing for that row.
-- The manifest `slots` column always wins. With no session manifest, a new night uses the default split: DX8-1 CH1 = C1-P1..P3, DX8-1 CH2 = C1-P4..P6, DX8-2 CH1 = C2-P1..P3, DX8-2 CH2 = C2-P4..P6. The same count check applies, so a legacy 6-file channel without the manifest is refused rather than reshuffled. Rows with a blank NNN range apply only when `--session` matches.
+- The manifest `slots` column always wins. With no session manifest, a new night uses the home-channel map in `data/v2/next_charge.json`: each active slot, ordered by `planner_rules.series_order` then pack number, grouped by charger and channel. That is the Rules v6/v7 layout (one pack per run on its home channel; today, six slots on each of the four channels). If that file cannot be read, ingest falls back to the same layout, not the retired C1/C2 3+3 split. The count check still applies, so a channel whose file count is not the slot count is refused rather than reshuffled. Rows with a blank NNN range apply only when `--session` matches.
 - Each label resolves to a `pack_uid` from `data/v2/packs.csv` and `data/v2/pack_events.csv` as of the session date.
 - The usual low cell, taken from `ir_store_v4`, is advisory only. A mismatch is printed and does not remap. The old `;130;` fingerprint gate is retired.
 - `fleet_lock`. A charger alias is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-1 and DX8-2 are unlocked.
@@ -102,7 +102,7 @@ The real map stays off this repo. Do not commit it. `.gitignore` ignores `*charg
 
 ### Smoke test
 
-Fixtures under `fixtures/` are trimmed DX8 samples. Dry-run does not modify the store. Historical nights use the public session manifest, because those channels are six files and the default split is three.
+Fixtures under `fixtures/` are trimmed DX8 samples. Dry-run does not modify the store. Historical nights use the public session manifest, because those channels are not the current home-channel queue.
 
 ```bash
 python3 scripts/ingest.py fixtures/night-S386 --charger-map fixtures/charger-map.test.json --manifest data/v2/session_manifest.public.csv --dry-run
@@ -113,7 +113,17 @@ python3 scripts/ingest.py fixtures/v2-gap --charger-map fixtures/charger-map.tes
 python3 scripts/ingest.py fixtures/v2-individual-d --charger-map fixtures/charger-map.test.json --manifest fixtures/v2-individual-d/manifest.csv --session 2026-10-09 --dry-run
 ```
 
-`fixtures/night-S386` is a full 12-file night and assigns all 12 packs to S386. Those rows are already in the store, so a dry run reports them as append-only skips. `fixtures/c2-only-20260930` assigns C2-P1 through C2-P6 to session `2026-09-30`. `fixtures/edge-cases` discards LiHV, Charge, Discharge, a short log, a non-6S log, and an implausible IR, and leaves the renamed file with no NNN unassigned. `fixtures/v2-split` is a new 12-pack night on the default 3+3+3+3 split and does not pass a manifest. `fixtures/v2-gap` maps two files to C1-P2 and C1-P3. `fixtures/v2-individual-d` maps one file to a single slot. `fixtures/v2-mismatch` has three files and two slots and must exit non-zero.
+`fixtures/night-S386` is a full 12-file night and assigns all 12 packs to S386. Those rows are already in the store, so a dry run reports them as append-only skips. `fixtures/c2-only-20260930` assigns C2-P1 through C2-P6 to session `2026-09-30`. `fixtures/edge-cases` discards LiHV, Charge, Discharge, a short log, a non-6S log, and an implausible IR, and leaves the renamed file with no NNN unassigned. `fixtures/v2-split` is the old 3-per-channel night and does not pass a manifest. The default map is now six home-channel slots per channel, so that dry run exits non-zero on the count check. `fixtures/v2-gap` maps two files to C1-P2 and C1-P3. `fixtures/v2-individual-d` maps one file to a single slot. `fixtures/v2-mismatch` has three files and two slots and must exit non-zero (`3 files for 2 slots`).
+
+`scripts/ingest.py` only writes the retired `data/store.csv` (and the JSON rebuilt from it). Once that CSV has old-format rows, a real run refuses to append. Against this repo it is a parse-and-check step. Use `--dry-run`.
+
+### Tests
+
+```bash
+npm test
+```
+
+That runs `python3 -m unittest tests/test_ingest.py` and `node scripts/sane-range.test.mjs`. The Python test covers the ÷10 IR conversion, readings over the 10 mΩ cap, runs under 60 s, LiHV logs, the slot-count refusal, and the charger serial staying out of the output. The Node checks cover the sane-range bounds in `lib/bounds.mjs`. No extra test framework. Snapshot numbers stay in `npm run check-snapshot`, off the production build.
 
 ## Routes
 

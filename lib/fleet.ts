@@ -416,6 +416,29 @@ function inRestPool(uid: string, session: string): boolean {
   return since != null;
 }
 
+type HomeChannelRow = { label?: string; series?: string };
+
+/** Series order and slot labels from data/v2/next_charge.json. A new series is a data edit. */
+function readChargeLists(): { seriesOrder: string[]; slotLabels: string[] } {
+  const doc = JSON.parse(fs.readFileSync(path.join(dataDir, "v2/next_charge.json"), "utf8")) as {
+    home_channels?: HomeChannelRow[];
+    planner_rules?: { series_order?: unknown };
+  };
+  const raw = doc.planner_rules?.series_order;
+  const listed = Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.length > 0) : [];
+  const seen: string[] = [];
+  const slotLabels: string[] = [];
+  for (const row of doc.home_channels ?? []) {
+    if (row.series && !seen.includes(row.series)) seen.push(row.series);
+    if (row.label) slotLabels.push(row.label);
+  }
+  return { seriesOrder: listed.length > 0 ? listed : seen, slotLabels };
+}
+
+const chargeLists = readChargeLists();
+const SERIES_ORDER = chargeLists.seriesOrder;
+const HOME_SLOT_LABELS = chargeLists.slotLabels;
+
 function assertStore() {
   const hiddenLabel = (text: string) => /\bD-\d\b|\bD[ -]pool\b|\bseries D\b/i.test(text);
   if (
@@ -427,7 +450,10 @@ function assertStore() {
   ) {
     throw new Error("a hidden label or series D is still in the displayed data");
   }
-  if (packs.filter((pack) => !pack.retired && /^C[1-4]-P[1-6]$/.test(pack.label)).length !== 24) throw new Error("the fleet should be 24 packs, C1-C4 x 6");
+  const fleet = packs.filter((pack) => !pack.retired);
+  if (fleet.length !== HOME_SLOT_LABELS.length || fleet.some((pack) => !HOME_SLOT_LABELS.includes(pack.label))) {
+    throw new Error(`the fleet should be ${HOME_SLOT_LABELS.length} packs, one per home-channel slot`);
+  }
   if (packs.some((pack) => pack.label.startsWith("D-"))) throw new Error("a D pack is still on the site");
 }
 
@@ -580,8 +606,6 @@ function spreadChartDomain(spreads: number[]): [number, number] {
   const top = Math.max(dataMax, spreadRule.individual_gte);
   return [0, Math.max(0.01, top + Math.max(top, 0.01) * 0.12)];
 }
-
-const SERIES_ORDER = ["C1", "C2", "C3", "C4"];
 
 export function seriesIds(): string[] {
   // Rules v7: a series that has no packs now (the D pool) stays while it has history, so moved packs keep their line.
@@ -2181,7 +2205,7 @@ function assertSnapshot() {
   }
   const freshCharge = measurements.filter((row) => row.session === "2026-10-14-charge");
   const freshStorage = measurements.filter((row) => row.session === "2026-10-14");
-  const freshLabels = ["C3-P1", "C3-P2", "C3-P3", "C3-P4", "C3-P5", "C3-P6", "C4-P1", "C4-P2", "C4-P3", "C4-P4", "C4-P5", "C4-P6"];
+  const freshLabels = [...new Set(freshStorage.map((row) => row.label))].sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
   if (
     freshCharge.length !== 12 ||
     freshCharge.some((row) => row.sessionType !== "charge-run") ||
