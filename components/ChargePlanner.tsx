@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { planRuns } from "@/lib/plan-runs.mjs";
 import type { PlanRow, PlanRules } from "@/lib/plan-runs.mjs";
 import { FileCount, RunSheet } from "@/components/RunSheet";
+
+const subscribeToHydration = () => () => {};
+const hydratedOnClient = () => true;
+const notHydratedOnServer = () => false;
 
 export function ChargePlanner({
   rows,
@@ -15,13 +19,9 @@ export function ChargePlanner({
   series: string[];
 }) {
   const [flown, setFlown] = useState<string[]>([]);
-  const [ready, setReady] = useState(false);
+  const ready = useSyncExternalStore(subscribeToHydration, hydratedOnClient, notHydratedOnServer);
   const plan = planRuns(rows, rules, flown);
   const selected = flown.length > 0;
-
-  useEffect(() => {
-    setReady(true);
-  }, []);
 
   useEffect(() => {
     const node = document.getElementById("planner-static");

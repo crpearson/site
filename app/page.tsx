@@ -62,7 +62,7 @@ export default function Home() {
             follow a pack by serial through every measured night, including nights under an earlier
             label. A solid line joins those readings and runs straight through a night with no
             reading. No value is filled in. A series mean with only one reading is a single point.
-            A pack's own page, and the sparkline on its tile, use a dotted join for a night that
+            A pack&apos;s own page, and the sparkline on its tile, use a dotted join for a night that
             pack was not charged. Nothing is drawn before the first reading or after the last.
           </p>
         </div>
@@ -488,8 +488,8 @@ export default function Home() {
           >
             <p className="note mb-3">
               One line per series. The line is solid through a night that series did not run. No
-              value is filled in there. Nights before that series existed are not marked.               Rule B needs two packs charged together on that night's board. A night the series did
-              run, but not as a board, is not a point. A recorded board night uses that night's
+              value is filled in there. Nights before that series existed are not marked.               Rule B needs two packs charged together on that night&apos;s board. A night the series did
+              run, but not as a board, is not a point. A recorded board night uses that night&apos;s
               recorded figure. A next-night outlook is not drawn here. On 2026-10-10 the points are
               C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. C3 and C4
               have no board night yet, so they are not on this chart. The rest-test day-0 rows are

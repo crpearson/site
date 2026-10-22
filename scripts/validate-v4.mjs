@@ -130,7 +130,6 @@ function outlookBoards(value, out = []) {
   return out;
 }
 for (const board of outlookBoards(chargeSheet)) {
-  const where = `${board.series} outlook`;
   const outlook = board.outlook_rule_b;
   within({ session: board.series, pack: "outlook" }, "value_v", outlook.value_v, [0, 2], "V");
   within({ session: board.series, pack: "outlook" }, "limit_v", outlook.limit_v, [0.01, 2], "V");
