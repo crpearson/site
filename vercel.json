@@ -4,9 +4,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "out",
   "trailingSlash": true,
-  "proxy": {
-    "entrypoint": "middleware.js"
-  },
   "redirects": [
     {
       "source": "/pack/CNHL-2026-001",

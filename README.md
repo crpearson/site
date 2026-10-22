@@ -67,7 +67,7 @@ Rebuild JSON from the CSV without parsing logs:
 python3 scripts/ingest.py --rebuild
 ```
 
-`--manifest` accepts two shapes. A session manifest has a `slots` column (pipe-separated labels in slot order) plus `session`, `charger_alias`, `channel`, `series`, `mode` (`parallel` or `individual`), and optional `nnn_first` / `nnn_last`. Extra private columns are ignored and must not be committed. A legacy file manifest has `filename`, `pack`, and optional `session` (`data/legacy-manifest.csv`).
+`--manifest` accepts two shapes. A session manifest has a `slots` column (pipe-separated labels in slot order) plus `session`, `charger_alias`, `channel`, `series`, `mode` (`parallel` or `individual`), and optional `nnn_first` / `nnn_last`. Extra private columns are ignored and must not be committed. A legacy file manifest has `filename`, `pack`, and optional `session`.
 
 ```bash
 python3 scripts/ingest.py path/to/new.tgz --charger-map path/to/map.json --manifest path/to/session-manifest.csv --session YYYY-MM-DD
@@ -138,16 +138,3 @@ That runs `python3 -m unittest tests/test_ingest.py` and `node scripts/sane-rang
 ## Deploy
 
 This is a static Next.js export. Publish `out/` or connect the repo to a host that runs `npm run build`. No environment variables are required.
-
-## Maintenance mode
-
-`MAINTENANCE` in `middleware.js` is `false`, so wtfpv.com serves the site. The 503 page runs only when `MAINTENANCE` is `true` and `process.env.VERCEL_ENV === "production"`. Preview deployments (`VERCEL_ENV=preview`) and any other environment skip it and serve the site. Static assets the maintenance page needs (fonts, favicon) still load. Next.js middleware does not run on a static export of `out/`.
-
-To turn maintenance on for wtfpv.com:
-
-1. In `middleware.js`, set `const MAINTENANCE = true;`.
-2. Deploy that change to production (`main`). No other file needs to change.
-
-Production then returns HTTP 503 with `Retry-After: 3600` and a short LostPennyFPV page. Opening a preview does not change wtfpv.com. Do not promote a preview deployment onto production to bypass the page.
-
-To turn it back off, set `const MAINTENANCE = false` and deploy production again.
