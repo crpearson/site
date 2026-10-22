@@ -43,9 +43,9 @@ Mapping (see data/README or the site "About the data" page):
     gate is gone.
   * IR is the per-run median of the ;128; cell columns, divided by 10 (those
     samples are 0.1 mΩ steps). The ;130; line is charge taken per cell in mAh
-    and is not IR. IR_STORE_IS_DX8_INTEGER is false, matching lib/ir.ts, so the
-    site does not divide a parsed row again. IR_SCALE = 0.01 remains only as
-    the historical DX8-integer factor.
+    and is not IR. Stored v4 rows are already milliohms; the site does not
+    divide a parsed row again. IR_SCALE, IR_128_DIVISOR, and the 10 mΩ cap
+    match lib/bounds.mjs.
   * Discard from the numeric store: 0-byte, no ;128; IR samples, duration < 60 s,
     not 6S, negative or implausible IR (over MAX_PLAUSIBLE_IR mΩ after the ÷10),
     non-Storage, LiHV. The 10 mΩ cap is a sanity limit, not a Rules v3 cut.
@@ -85,10 +85,10 @@ REGISTRY = DATA / "pack-registry.json"
 
 NAME_RE = re.compile(r"(LiPo|LiHV)\[([A-Za-z ]+)_(\d+)_(CH[12])\]\.txt(?:\.gz)?$")
 MIN_DURATION_MS = 60_000
-# Keep IR_SCALE and IR_STORE_IS_DX8_INTEGER identical to lib/ir.ts.
-# ;128; samples are 0.1 mΩ, so a raw log is divided by 10 once here.
+# Keep these identical to lib/bounds.mjs (Python cannot import that module).
+# IR_SCALE is the historical DX8-integer factor and is not applied here.
+# ;128; samples are 0.1 mΩ, so a raw log is divided by IR_128_DIVISOR once.
 IR_SCALE = 0.01
-IR_STORE_IS_DX8_INTEGER = False
 IR_128_DIVISOR = 10
 MAX_PLAUSIBLE_IR = 10
 STORE_COLS = [

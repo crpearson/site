@@ -84,7 +84,7 @@ The public historical manifest is `data/v2/session_manifest.public.csv`. The sto
 - Each label resolves to a `pack_uid` from `data/v2/packs.csv` and `data/v2/pack_events.csv` as of the session date.
 - The usual low cell, taken from `ir_store_v4`, is advisory only. A mismatch is printed and does not remap. The old `;130;` fingerprint gate is retired.
 - `fleet_lock`. A charger alias is locked to one fleet only when that charger in `data/pack-registry.json` has `"fleet_lock": true`. Both DX8-1 and DX8-2 are unlocked.
-- Cell IR on a raw DX8 log is the median of the `;128;` samples, in 0.1 mΩ steps. Ingest divides that median by 10 once. `IR_STORE_IS_DX8_INTEGER` is false in `lib/ir.ts` and `scripts/ingest.py`, so v4 rows are not divided again. `IR_SCALE` (0.01) is only the old integer factor. The `;130;` line is mAh and is not stored as IR.
+- Cell IR on a raw DX8 log is the median of the `;128;` samples, in 0.1 mΩ steps. Ingest divides that median by 10 once. v4 rows are already milliohms and are not divided again. `IR_SCALE` (0.01), the ÷10 divisor, and the 10 mΩ cap live in `lib/bounds.mjs`; `scripts/ingest.py` copies those numbers. The `;130;` line is mAh and is not stored as IR.
 - Discarded from a numeric ingest: 0-byte files, logs with no `;128;` IR samples, duration under 60 s, not 6S, negative or implausible IR (over 10 mΩ after the ÷10), non-Storage programs, and LiHV chemistry. The 10 mΩ cap is a sanity limit, not a Rules v3 cut. Ingest will not append those milliohm rows onto `data/store.csv`, which is the retired archive.
 - Dedupe is by sha256 of the decompressed log, and by `(charger alias, NNN, channel)`.
 
