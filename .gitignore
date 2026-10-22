@@ -22,7 +22,6 @@ venv/
 /coverage
 /.next/
 /out/
-middleware.js.__next_build
 /build
 *.pem
 npm-debug.log*

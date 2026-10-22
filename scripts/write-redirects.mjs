@@ -86,18 +86,14 @@ for (const label of labels) {
 }
 
 const file = path.join(root, "vercel.json");
-// Static export does not run Next.js middleware. framework null selects the
-// Other preset so Vercel builds middleware.js as Routing Middleware in front
-// of out/. outputDirectory must stay "out" (the Next preset would look at public/).
+// framework null selects the Other preset. outputDirectory must stay "out"
+// (the Next preset would look at public/).
 const config = {
   $schema: "https://openapi.vercel.sh/vercel.json",
   framework: null,
   buildCommand: "npm run build",
   outputDirectory: "out",
   trailingSlash: true,
-  proxy: {
-    entrypoint: "middleware.js",
-  },
   redirects,
 };
 const stale = redirects.filter(

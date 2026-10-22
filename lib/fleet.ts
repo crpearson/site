@@ -6,13 +6,12 @@ import statusDoc from "@/data/status.json";
 import { allNotCharged, axisNightVisible, gapPhrase, interiorRingIndices, legendNote, lineSegments, lonePointIndices, missBridges, openEndIndices, readingIndices, seriesNotCharged, solidFrom, type ChartMode } from "@/lib/bridges";
 import { packColor, seriesColor } from "@/lib/color";
 import { parseCsv } from "@/lib/csv";
-import { formatValue, occupancyLabel, publicProse, publicSession, shortSession, shownWhen } from "@/lib/format";
+import { formatValue, publicProse, publicSession, shortSession, shownWhen } from "@/lib/format";
 import { IR_UNIT, scaleStoredIr } from "@/lib/ir";
 import { irValidationIsProvisional } from "@/lib/ir-validation.mjs";
 import {
   lampTone,
   splitCall,
-  isGoWatch,
   statusChip,
   STATUS_CHIPS,
   type LampTone,
