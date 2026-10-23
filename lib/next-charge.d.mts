@@ -280,7 +280,7 @@ export type SelfDischargeOpen = {
 export type NoteItem = { label: string; uid: string; note: string };
 
 export type NextChargeV4 = {
-  schema: "next_charge/v4";
+  schema: "next_charge/v4" | "next_charge/v4.1";
   rules: "v7";
   as_of_session: string;
   as_of_date_pt: string;
@@ -322,9 +322,17 @@ export type SuggestedChannel = {
   packs: string[];
 };
 
+export type SuggestedAdvisory = {
+  pack: string;
+  text: string;
+  chip: string;
+  tone: "caution" | "off";
+  anchor: "check-before-connecting" | "pulled" | "charge-alone";
+};
+
 export type SuggestedPlan = {
   channels: SuggestedChannel[];
-  advisories: { pack: string; text: string }[];
+  advisories: SuggestedAdvisory[];
 };
 
 export type SuggestedSeriesRow = {
@@ -346,6 +354,8 @@ export type SuggestedAlt = {
 export type SuggestedNext = {
   basis: "lifetime_storage_cycles_per_pack";
   suggestion_only: true;
+  status: "ok";
+  as_of_date: string;
   pick: [string, string];
   reason: string;
   sets: SuggestedSeriesRow[];

@@ -2481,10 +2481,15 @@ svg {
 }
 
 .suggest-advisories li {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.65rem;
   min-width: 0;
+}
+
+.suggest-advisory-text {
+  flex-basis: 100%;
 }
 
 .suggest-pack {

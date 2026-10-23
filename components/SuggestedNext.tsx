@@ -33,8 +33,10 @@ function StoragePlan({ plan }: { plan: SuggestedPlan }) {
           <h3 className="panel-title">Advisories</h3>
           <ul className="suggest-advisories">
             {plan.advisories.map((item) => (
-              <li key={`${item.pack}-${item.text}`}>
+              <li key={`${item.pack}-${item.chip}`}>
                 <span className="suggest-pack">{item.pack}</span>
+                <span className={`status-chip status-chip-${item.tone === "caution" ? "caution" : "alone"}`}>{item.chip}</span>
+                <a href={`#${item.anchor}`}>Details</a>
                 <span className="suggest-advisory-text">{item.text}</span>
               </li>
             ))}
@@ -60,7 +62,7 @@ export function SuggestedNext({ doc }: { doc: NextChargeV4 }) {
       <p className="suggest-reason">{block.reason}</p>
       <p className="note suggest-basis">
         Suggestion only. This does not change the charge rules. The planner still follows the series that flew.
-        Basis: lifetime storage cycles per pack.
+        Basis: lifetime storage cycles per pack, through <span className="nw">{block.as_of_date}</span>.
       </p>
       <table className="suggest-counts">
         <caption className="sr-only">Lifetime storage cycles by series</caption>
