@@ -107,6 +107,11 @@ const types = {
   ".woff2": "font/woff2",
   ".ttf": "font/ttf",
   ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".zip": "application/zip",
   ".ico": "image/x-icon",
   ".json": "application/json",
 };
