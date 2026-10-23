@@ -61,9 +61,9 @@ function subCurrent(href: string, pathname: string) {
   return path === target || path.startsWith(`${target}/`);
 }
 
-function MainNav({ pathname, label }: { pathname: string; label: string }) {
+function MainNav({ pathname, label, scroll = false }: { pathname: string; label: string; scroll?: boolean }) {
   return (
-    <nav className="topnav" aria-label={label}>
+    <nav className="topnav" aria-label={label} data-scroll-ok={scroll ? "" : undefined}>
       {links.map((link) => {
         const current = topCurrent(link.href, pathname);
         return (
@@ -98,14 +98,14 @@ export function SiteHeader({ lastIngest, sessionCount }: { lastIngest: string; s
           <MainNav pathname={pathname} label="Main" />
         </div>
         <div className="navrow">
-          <MainNav pathname={pathname} label="Main (phone)" />
+          <MainNav pathname={pathname} label="Main (phone)" scroll />
         </div>
       </header>
       {showBatteryNav ? (
         <nav className="subnav" aria-label="Batteries">
           <div className="row">
             <span className="label">Battery tracker</span>
-            <div className="tabs">
+            <div className="tabs" data-scroll-ok="">
               {batteryLinks.map((link) => {
                 const current = subCurrent(link.href, pathname);
                 return (
