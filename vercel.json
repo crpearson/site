@@ -3,7 +3,6 @@
   "framework": null,
   "buildCommand": "npm run build",
   "outputDirectory": "out",
-  "trailingSlash": true,
   "redirects": [
     {
       "source": "/pack/:serial",
@@ -43,6 +42,11 @@
     {
       "source": "/methodology/",
       "destination": "/batteries/methodology/",
+      "permanent": true
+    },
+    {
+      "source": "/:path((?:[^/]+/)*[^/.]+)",
+      "destination": "/:path/",
       "permanent": true
     }
   ]

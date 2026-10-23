@@ -11,8 +11,9 @@ function add(source, destination) {
   redirects.push({ source, destination, permanent: true });
 }
 
-// Printed serial QRs: one hop from /pack/<serial> to the canonical page.
-// Label URLs and every /slot/* URL are not redirected.
+// Printed serial QRs: one hop from /pack/<serial> to the canonical page,
+// with or without a trailing slash. Label URLs and every /slot/* URL are not redirected.
+// These two rules must stay ahead of the generic slash rule below.
 add("/pack/:serial", "/batteries/pack/:serial/");
 add("/pack/:serial/", "/batteries/pack/:serial/");
 
@@ -27,6 +28,12 @@ for (const [source, destination] of [
 ]) {
   add(source, destination);
 }
+
+// Vercel's trailingSlash:true inserts a 308 to the slashed path before any
+// redirect, so /pack/:serial would stop at /pack/:serial/ and then hop again.
+// This rule is the same normalization, listed after the serial rules, and it
+// skips files (a dot in the last segment) the way trailingSlash does.
+add("/:path((?:[^/]+/)*[^/.]+)", "/:path/");
 
 const slotRedirects = redirects.filter(
   (rule) => rule.source.startsWith("/slot/") || rule.source === "/slot" || rule.destination.startsWith("/slot/"),
@@ -53,7 +60,6 @@ const config = {
   framework: null,
   buildCommand: "npm run build",
   outputDirectory: "out",
-  trailingSlash: true,
   redirects,
 };
 const stale = redirects.filter(

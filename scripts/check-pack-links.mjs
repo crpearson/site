@@ -174,6 +174,9 @@ else {
 }
 
 const vercel = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+if (vercel.trailingSlash === true) {
+  fail("trailingSlash:true redirects /pack/:serial to /pack/:serial/ before the serial rule, so the printed QR is two hops");
+}
 const rules = vercel.redirects ?? [];
 const slotRules = rules.filter(
   (rule) => rule.source.startsWith("/slot/") || rule.source === "/slot" || String(rule.destination).startsWith("/slot/"),

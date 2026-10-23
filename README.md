@@ -137,7 +137,7 @@ That runs `python3 -m unittest tests/test_ingest.py` and `node scripts/sane-rang
 - `/builds/`, `/gear/`, `/howtos/` section stubs
 - `/batteries/pack/CNHL-2026-001/` (and every other serial) is the pack page. The header shows the current slot label and the serial. A pack with no current series still has this page. History stays here. The next serial is CNHL-2026-025 and a serial is never reused.
 - `/batteries/slot/C1-P1/` (and the other current labels) is the position page: the pack in that slot, linked to its serial, plus past occupants with dates.
-- `/pack/:serial` and `/pack/:serial/` redirect in one hop to `/batteries/pack/:serial/`. There is no `/slot/*` redirect. Old `/pack/<label>` and `/slot/<label>` URLs are not redirected.
+- `/pack/:serial` and `/pack/:serial/` redirect in one hop to `/batteries/pack/:serial/`. `trailingSlash` is left unset in `vercel.json` so that hop is not preceded by a slash-only redirect; other extension-less paths still gain a trailing slash from a later rule. There is no `/slot/*` redirect. Old `/pack/<label>` and `/slot/<label>` URLs are not redirected.
 - `/next-charge`, `/bakeoff`, and `/methodology` (each with and without a trailing slash) redirect to the matching `/batteries/` path.
 
 ## Deploy
