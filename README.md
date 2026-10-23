@@ -134,7 +134,9 @@ That runs `python3 -m unittest tests/test_ingest.py` and `node scripts/sane-rang
 - `/batteries/methodology/` how packs are charged, logged, and judged
 - `/batteries/terms-and-rules/` glossary, rules, and gaps
 - `/about/` about Lost Penny
-- `/builds/`, `/gear/`, `/howtos/` section stubs
+- `/howtos/` guide index, including the EdgeTX color-screen theme
+- `/downloads/lost_penny.zip` Lost Penny EdgeTX theme
+- `/builds/`, `/gear/` section stubs
 - `/batteries/pack/CNHL-2026-001/` (and every other serial) is the pack page. The header shows the current slot label and the serial. A pack with no current series still has this page. History stays here. The next serial is CNHL-2026-025 and a serial is never reused.
 - `/batteries/slot/C1-P1/` (and the other current labels) is the position page: the pack in that slot, linked to its serial, plus past occupants with dates.
 - `/pack/:serial` and `/pack/:serial/` redirect in one hop to `/batteries/pack/:serial/`. `trailingSlash` is left unset in `vercel.json` so that hop is not preceded by a slash-only redirect; other extension-less paths still gain a trailing slash from a later rule. There is no `/slot/*` redirect. Old `/pack/<label>` and `/slot/<label>` URLs are not redirected.
