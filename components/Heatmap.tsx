@@ -43,7 +43,7 @@ export function Heatmap({
         <p className="mb-3 text-xs leading-relaxed text-[var(--muted)]">{caption}</p>
       ) : null}
       {rows.some((row) => row.provisional) ? <ProvisionalLegend /> : null}
-      <div className="overflow-x-auto" data-scroll-ok="">
+      <div className="overflow-x-auto scroll-cue" data-scroll-ok="">
         <div
           className="grid min-w-[36rem] gap-1"
           style={{

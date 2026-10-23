@@ -62,6 +62,59 @@ function yPos(value: number, domain: [number, number]): number {
   return ((domain[1] - value) / span) * 100;
 }
 
+/** Undated session ids render as a dot. They are not dates, so the axis skips them. */
+function isDatedTick(label: string): boolean {
+  return /\d/.test(label);
+}
+
+/**
+ * Pick evenly spaced category indexes. minGap is in category slots so neighboring
+ * date strings are not drawn on top of each other. The first and last stay.
+ * endGap is wider because the last label is pinned to the right edge and extends
+ * left over the previous column.
+ */
+function pickSpaced(indices: number[], max: number, minGap: number, endGap = minGap): number[] {
+  if (indices.length === 0) return [];
+  const first = indices[0];
+  const last = indices[indices.length - 1];
+  if (first === last) return [first];
+  const span = last - first;
+  const room = Math.floor(span / Math.max(1, minGap)) + 1;
+  const count = Math.max(2, Math.min(max, room, indices.length));
+  const picked: number[] = [];
+  for (let step = 0; step < count; step += 1) {
+    const target = first + (span * step) / (count - 1);
+    let best = -1;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (const index of indices) {
+      if (picked.includes(index)) continue;
+      const tooClose = picked.some((kept) => Math.abs(kept - index) < minGap);
+      if (tooClose && index !== last) continue;
+      const dist = Math.abs(index - target);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = index;
+      }
+    }
+    if (best >= 0) picked.push(best);
+  }
+  if (!picked.includes(last)) picked.push(last);
+  picked.sort((a, b) => a - b);
+  // Drop an interior tick that still sits on its neighbor, keeping both ends.
+  const spaced: number[] = [];
+  for (const index of picked) {
+    const prev = spaced[spaced.length - 1];
+    if (prev == null || index - prev >= minGap || index === last) {
+      if (prev != null && index - prev < minGap && spaced.length > 1) spaced.pop();
+      spaced.push(index);
+    }
+  }
+  while (spaced.length >= 3 && last - spaced[spaced.length - 2] < endGap) {
+    spaced.splice(spaced.length - 2, 1);
+  }
+  return spaced;
+}
+
 /** Keep an edge tick inside the axis. A label centered on 0% or 100% is clipped. */
 function tickPlacement(y: number, height: number): { top: string; transform: string } {
   const half = 10;
@@ -432,56 +485,56 @@ export function LineChart({
             ) : null}
           </div>
           <div className="x-axis">
-            {categories.map((category, index) => {
-              if (!axisNightVisible(shown, index, category.id)) return null;
+            {(() => {
               const visible = categories.flatMap((item, itemIndex) =>
-                axisNightVisible(shown, itemIndex, item.id) ? [itemIndex] : [],
+                axisNightVisible(shown, itemIndex, item.id) && isDatedTick(item.label) ? [itemIndex] : [],
               );
-              const firstTick = visible[0];
-              const lastTick = visible[visible.length - 1];
-              const edge = index === firstTick || index === lastTick;
-              const columnPhrase = gapPhrase(shown, nightIds, index);
-              const columnMissed =
-                shown.length > 0 && shown.every((item) => seriesGap(item, index));
-              const title = columnMissed
-                ? columnPhrase
-                : [
-                    category.partial ? `${publicSession(category.id)} partial night` : publicSession(category.id),
-                    columnPhrase,
-                  ]
-                    .filter(Boolean)
-                    .join(". ");
-              const place =
-                index === firstTick ? " x-label-start" : index === lastTick ? " x-label-end" : "";
-              const fromEnd = visible.length - 1 - visible.indexOf(index);
-              // Thin by position among the visible ticks, not the raw column index, so hidden
-              // columns (rest-baseline or charge-run nights) cannot leave two neighbours unthinned.
-              const tick = visible.indexOf(index);
-              // The last label is pinned to the right edge, so the date just
-              // before it overlaps on a long axis. The one before that overlaps
-              // once the chart is narrow.
-              const beforeEnd = !edge && fromEnd === 1;
-              const nearEnd = !edge && fromEnd === 2;
-              const thin = edge
-                ? ""
-                : `${tick % 2 === 1 ? " x-label-alt" : ""}${tick % 3 !== 0 ? " x-label-third" : ""}${nearEnd ? " x-label-tail" : ""}${beforeEnd ? " x-label-before-end" : ""}`;
-              return (
-                <button
-                  key={category.id}
-                  type="button"
-                  className={`x-label${thin}${place}`}
-                  style={{ left: `${((index + 0.5) / n) * 100}%` }}
-                  title={title}
-                  aria-label={title}
-                  onFocus={() => setHover(index)}
-                  onClick={() => setHover(index)}
-                  onBlur={() => setHover((current) => (current === index ? null : current))}
-                >
-                  {category.label === "undated" ? "·" : category.label}
-                  {category.partial ? "*" : ""}
-                </button>
-              );
-            })}
+              // Wide charts can take about eight dates. Narrow charts, including the
+              // half-width trend cards, keep a sparser subset so the strings do not collide.
+              const wide = pickSpaced(visible, 8, 2, 4);
+              const narrow = new Set(pickSpaced(wide, 4, 5));
+              const shownTicks = new Set(wide);
+              const firstShown = wide[0];
+              const lastShown = wide[wide.length - 1];
+              return categories.map((category, index) => {
+                if (!shownTicks.has(index)) return null;
+                const columnPhrase = gapPhrase(shown, nightIds, index);
+                const columnMissed =
+                  shown.length > 0 && shown.every((item) => seriesGap(item, index));
+                const title = columnMissed
+                  ? columnPhrase
+                  : [
+                      category.partial ? `${publicSession(category.id)} partial night` : publicSession(category.id),
+                      columnPhrase,
+                    ]
+                      .filter(Boolean)
+                      .join(". ");
+                const frac = (index + 0.5) / n;
+                const place =
+                  index === lastShown && frac > 0.88
+                    ? " x-label-end"
+                    : index === firstShown && frac < 0.08
+                      ? " x-label-start"
+                      : "";
+                const wideOnly = narrow.has(index) ? "" : " x-label-wide-only";
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    className={`x-label${wideOnly}${place}`}
+                    style={{ left: `${frac * 100}%` }}
+                    title={title}
+                    aria-label={title}
+                    onFocus={() => setHover(index)}
+                    onClick={() => setHover(index)}
+                    onBlur={() => setHover((current) => (current === index ? null : current))}
+                  >
+                    {category.label}
+                    {category.partial ? "*" : ""}
+                  </button>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>
