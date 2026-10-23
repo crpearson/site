@@ -311,29 +311,46 @@ export type NextChargeV4 = {
     open: SelfDischargeOpen[];
   };
   notes: string[];
-  /** Optional until the committed block lands. Always an object when present, never null. */
-  suggested_next?: SuggestedNext;
+  /** Absent or null omits the card. The object is a suggestion and does not drive the planner. */
+  suggested_next?: SuggestedNext | null;
 };
 
-export type SuggestedSet = {
-  id?: string;
-  label?: string;
-  title?: string;
-  name?: string;
-  series?: string[];
-  packs?: string[];
-  labels?: string[];
-  last_flown?: string | null;
+export type SuggestedChannel = {
+  charger: "DX8-1" | "DX8-2";
+  /** Full label, for example "DX8-1 Channel 1". */
+  channel: string;
+  packs: string[];
+};
+
+export type SuggestedPlan = {
+  channels: SuggestedChannel[];
+  advisories: { pack: string; text: string }[];
+};
+
+export type SuggestedSeriesRow = {
+  series: string;
+  packs: number;
+  lifetime_storage_cycles: number;
+  avg_cycles_per_pack: number;
+  last_flown: string | null;
+  eligible: boolean;
+  skip_reason: string | null;
+};
+
+export type SuggestedAlt = {
+  pick: [string, string];
+  reason: string;
+  plan_if_flown: SuggestedPlan;
 };
 
 export type SuggestedNext = {
-  status: "ok" | "tie" | "missing";
-  as_of_date: string;
+  basis: "lifetime_storage_cycles_per_pack";
+  suggestion_only: true;
+  pick: [string, string];
   reason: string;
-  sets: SuggestedSet[];
-  pick: SuggestedSet | null;
-  alt_pick: SuggestedSet | null;
-  plan_if_flown: PlannerPlan | null;
+  sets: SuggestedSeriesRow[];
+  plan_if_flown: SuggestedPlan;
+  alt_pick: SuggestedAlt | null;
 };
 
 export const PLANNER_SERIES: readonly string[];
