@@ -127,13 +127,18 @@ That runs `python3 -m unittest tests/test_ingest.py` and `node scripts/sane-rang
 
 ## Routes
 
-- `/` fleet overview, one block per series in the registry, status calls, and time-series panels
+- `/` Lost Penny home: wordmark, section cards, a battery snapshot, and what’s new
+- `/batteries/` fleet overview, one block per series, status calls, and time-series panels
+- `/batteries/next-charge/` run order and the next-charge planner
+- `/batteries/bakeoff/` brand comparison
+- `/batteries/methodology/` how packs are charged, logged, and judged
+- `/batteries/terms-and-rules/` glossary, rules, and gaps
+- `/about/` about Lost Penny
+- `/builds/`, `/gear/`, `/howtos/` section stubs
 - `/pack/CNHL-2026-001/` (and the other pack uids) drill-down. Lowercase `/pack/cnhl-2026-001` redirects here. The path works with or without the trailing slash.
 - `/slot/C1-P1/` (and the other labels) current occupant, or empty, plus past occupants
 - `/pack/C1-P1/` and the other label URLs show that same slot view. An empty slot says it was vacated and links to the pack that moved.
-- `/methodology` how packs are charged, logged, and judged
-- `/bakeoff` brand and series prices
-- `/about` glossary, Rules v3, Rule B, and gaps
+- `/next-charge`, `/bakeoff`, and `/methodology` (each with and without a trailing slash) redirect to the matching `/batteries/` path. Pack and slot URLs stay at the root.
 
 ## Deploy
 

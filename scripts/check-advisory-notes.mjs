@@ -9,7 +9,7 @@ import path from "node:path";
 
 const LIMIT = 30;
 const root = process.cwd();
-const pagePath = path.join(root, "out", "next-charge", "index.html");
+const pagePath = path.join(root, "out", "batteries", "next-charge", "index.html");
 
 function decode(text) {
   return text
@@ -85,7 +85,7 @@ function selfTest() {
 selfTest();
 
 if (!fs.existsSync(pagePath)) {
-  console.error("advisory note check needs out/next-charge/index.html");
+  console.error("advisory note check needs out/batteries/next-charge/index.html");
   process.exit(1);
 }
 

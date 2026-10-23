@@ -1,21 +1,31 @@
 import type { Metadata, Viewport } from "next";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { siteMeta } from "@/lib/fleet";
 import "./fonts.css";
 import "./globals.css";
 
 const description =
-  "Health over time for 12 LiPo packs: internal resistance, intra-pack spread, start floor, and inter-pack rest delta from iCharger DX8 storage charges.";
+  "Lost Penny FPV: my drones, my batteries, and what I've learned the hard way.";
 
 const title = {
-  default: "LostPennyFPV · LiPo fleet health",
-  template: "%s · LiPo fleet health",
+  default: "Lost Penny FPV — wtfpv.com",
+  template: "%s — Lost Penny FPV",
 } as const;
 
 export const metadata: Metadata = {
   title,
   applicationName: "LostPennyFPV",
   description,
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon-180.png",
+  },
   openGraph: {
     title,
     description,
@@ -30,42 +40,27 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080b10",
+  themeColor: "#0b0b0b",
   colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full font-sans text-[var(--ink)]">
+      <body className="min-h-full bg-[var(--bg)] font-sans text-[var(--ink)]">
         <a className="skip" href="#content">
           Skip to content
         </a>
-        <SiteHeader
+        <SiteHeader lastIngest={siteMeta.lastIngest} sessionCount={siteMeta.sessionCount} />
+        <main id="content" className="site-main">
+          {children}
+        </main>
+        <SiteFooter
+          source={siteMeta.source}
           lastIngest={siteMeta.lastIngest}
           rowCount={siteMeta.rowCount}
           sessionCount={siteMeta.sessionCount}
         />
-        <main id="content" className="mx-auto w-full max-w-[1180px] px-4 pt-6 pb-16 sm:px-6">
-          {children}
-        </main>
-        <footer className="mx-auto w-full max-w-[1180px] px-4 pb-10 sm:px-6">
-          <p className="text-xs leading-relaxed text-[var(--muted)]">
-            {siteMeta.source}. Logged through {siteMeta.lastIngest}. {siteMeta.rowCount}{" "}
-            measurements across {siteMeta.sessionCount} nights. A partial night is left incomplete.
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-[var(--muted)]">
-            Data processing and site production by Grok Bot and{" "}
-            <a
-              href="https://cursor.com"
-              rel="noopener"
-              className="underline decoration-[var(--faint)] underline-offset-2 hover:text-[var(--ink)]"
-            >
-              Cursor
-            </a>
-            .
-          </p>
-        </footer>
       </body>
     </html>
   );

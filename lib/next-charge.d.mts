@@ -311,6 +311,29 @@ export type NextChargeV4 = {
     open: SelfDischargeOpen[];
   };
   notes: string[];
+  /** Optional until the committed block lands. Always an object when present, never null. */
+  suggested_next?: SuggestedNext;
+};
+
+export type SuggestedSet = {
+  id?: string;
+  label?: string;
+  title?: string;
+  name?: string;
+  series?: string[];
+  packs?: string[];
+  labels?: string[];
+  last_flown?: string | null;
+};
+
+export type SuggestedNext = {
+  status: "ok" | "tie" | "missing";
+  as_of_date: string;
+  reason: string;
+  sets: SuggestedSet[];
+  pick: SuggestedSet | null;
+  alt_pick: SuggestedSet | null;
+  plan_if_flown: PlannerPlan | null;
 };
 
 export const PLANNER_SERIES: readonly string[];

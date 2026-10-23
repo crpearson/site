@@ -1,564 +1,162 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { CellExplorer } from "@/components/CellExplorer";
-import { seriesColor } from "@/lib/color";
-import { Heatmap } from "@/components/Heatmap";
-import { IrFigure } from "@/components/IrFigure";
-import { Lamp } from "@/components/Lamp";
-import { PackTile } from "@/components/PackTile";
-import { LineChart } from "@/components/LineChart";
-import { OutlookBoards } from "@/components/NextChargeNotes";
-import { Panel } from "@/components/Panel";
-import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
-import { StatusChip } from "@/components/StatusChip";
-import { callChipText, conditionalJoinNote } from "@/lib/lamp";
-import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
+import { UcButton } from "@/components/UnderConstruction";
+import { ProvisionalMark } from "@/components/ProvisionalMark";
+import { chargedIndividually, headline, siteMeta, statusRows } from "@/lib/fleet";
 import { IR_UNIT } from "@/lib/ir";
-import { loadNextChargeV4 } from "@/lib/next-charge.mjs";
-import {
-  allRestTests,
-  chargedIndividually,
-  fleetModel,
-  floorBands,
-  floorGuide,
-  headline,
-  nextParallel,
-  ruleABands,
-  ruleAGuides,
-  ruleBBands,
-  ruleBGuides,
-  seriesBlocks,
-  seriesOf,
-  statusRows,
-  thresholds,
-} from "@/lib/fleet";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: { absolute: "Lost Penny FPV — wtfpv.com" },
+  description: "Lost Penny FPV: my drones, my batteries, and what I've learned the hard way.",
+};
+
+function heroWordmark() {
+  const raw = readFileSync(path.join(process.cwd(), "public/assets/lostpenny-wordmark-on-dark.svg"), "utf8").trim();
+  return raw.replace("<svg ", '<svg class="hero-wm" role="img" aria-label="Lost Penny" ');
+}
+
+export default function HomePage() {
   const stats = headline();
   const individualPacks = chargedIndividually();
-  const restPacks = stats.rest.map((row) => row.label);
   const rows = statusRows();
-  const spreadWatch = rows
-    .filter((row) => !row.excluded && !row.restPool && row.spread >= thresholds.spread_mohm.individual_gte)
-    .map((row) => row.label);
-  const blocks = seriesBlocks();
-  const model = fleetModel();
-  const next = nextParallel();
-  const charge = loadNextChargeV4();
-  const heatRows = rows.filter((row) => row.cells.length > 0);
-  const heatValues = heatRows.flatMap((row) => row.cells);
-  const heatMin = Math.min(...heatValues);
-  const heatMax = Math.max(...heatValues);
-  const measured = model.fleets.filter((fleet) => fleet.packs.length > 0);
   const fleetIncludesProvisional = rows.some((row) => !row.excluded && row.provisional);
+  const wordmark = heroWordmark();
 
   return (
-    <div className="space-y-10">
-      <header className="space-y-5">
-        <div>
-          <p className="eyebrow">{blocks.map((block) => block.id).join(" · ")} · CNHL Black Series V2</p>
-          <h1 className="h1 mt-2">Fleet health</h1>
-          <p className="page-intro mt-4">
-            Each series has its own as-of date. The calls below are the latest status. Fleet charts
-            follow a pack by serial through every measured night, including nights under an earlier
-            label. A solid line joins those readings and runs straight through a night with no
-            reading. No value is filled in. A series mean with only one reading is a single point.
-            A pack&apos;s own page, and the sparkline on its tile, use a dotted join for a night that
-            pack was not charged. Nothing is drawn before the first reading or after the last.
+    <div className="home">
+      <section className="hero" aria-label="Lost Penny FPV">
+        <div dangerouslySetInnerHTML={{ __html: wordmark }} />
+        <h1 className="h1">Lost Penny FPV: my drones, my batteries, and what I&apos;ve learned the hard way.</h1>
+        <p className="lead">
+          This is where I keep track of my LiPo packs, my builds, the gear I actually use, and how-tos for the
+          stuff I had to figure out.
+        </p>
+      </section>
+
+      <section className="home-section">
+        <h2 className="section-title">Pick a section</h2>
+        <div className="grid g4 collapse">
+          <Link className="card section-card" href="/batteries/">
+            <h3>Batteries</h3>
+            <p>Battery tracker: fleet health, the next charge plan, and how I test.</p>
+            <span className="go">Open Batteries →</span>
+          </Link>
+          <Link className="card section-card is-stub" href="/builds/">
+            <h3>Drone Builds</h3>
+            <UcButton />
+            <p>Build logs are on the way.</p>
+            <span className="go">Preview →</span>
+          </Link>
+          <Link className="card section-card is-stub" href="/gear/">
+            <h3>Suggested Equipment</h3>
+            <UcButton />
+            <p>A short list of gear I&apos;d actually recommend.</p>
+            <span className="go">Preview →</span>
+          </Link>
+          <Link className="card section-card is-stub" href="/howtos/">
+            <h3>HOWTOs</h3>
+            <UcButton />
+            <p>Step-by-step guides for the jobs I do over and over.</p>
+            <span className="go">Preview →</span>
+          </Link>
+        </div>
+      </section>
+
+      <section className="home-section">
+        <div className="section-head">
+          <div>
+            <h2 className="section-title">Battery snapshot</h2>
+            <p className="page-intro" style={{ marginTop: 6 }}>
+              Where the packs stand right now.
+            </p>
+          </div>
+          <p className="faint" style={{ color: "var(--faint)" }}>
+            Updated through{" "}
+            <span className="mono">
+              <span className="nw">{siteMeta.lastIngest}</span>
+            </span>{" "}
+            · {siteMeta.sessionCount} charge nights
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+        <div className="grid g4">
           <article className="stat" data-tone="ok">
             <p className="eyebrow">Parallel Go</p>
-            <p className="stat-value">
-              <span className="num">
-                {stats.ok.length} {stats.ok.length === 1 ? "pack" : "packs"}
-              </span>
-            </p>
-            <p className="stat-sub">{stats.ok.map((row) => row.label).join(" · ") || "None"}</p>
+            <p className="stat-value">{stats.ok.length}</p>
+            <p className="stat-sub">packs</p>
           </article>
           <article className="stat" data-tone="caution">
             <p className="eyebrow">Parallel Caution</p>
-            <p className="stat-value">
-              <span className="num">
-                {stats.caution.length} {stats.caution.length === 1 ? "pack" : "packs"}
-              </span>
-            </p>
-            <p className="stat-sub">{stats.caution.map((row) => row.label).join(" · ") || "None"}</p>
+            <p className="stat-value">{stats.caution.length}</p>
+            <p className="stat-sub">packs</p>
           </article>
           <article className="stat" data-tone="off">
             <p className="eyebrow">Charged individually</p>
-            <p className="stat-value">
-              <span className="num">
-                {individualPacks.length} {individualPacks.length === 1 ? "pack" : "packs"}
-              </span>
-            </p>
-            <p className="stat-sub">{individualPacks.join(" · ") || "None"}</p>
-          </article>
-          {restPacks.length > 0 ? (
-            <article className="stat" data-tone="floor">
-              <p className="eyebrow">Rest pool</p>
-              <p className="stat-value">
-                <span className="num">
-                  {restPacks.length} {restPacks.length === 1 ? "pack" : "packs"}
-                </span>
-              </p>
-              <p className="stat-sub">{restPacks.join(" · ")}</p>
-            </article>
-          ) : null}
-          <article className="stat" data-tone="off">
-            <p className="eyebrow">
-              Watch note at {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT} or more
-            </p>
-            <p className="stat-value">
-              <span className="num">
-                {spreadWatch.length} {spreadWatch.length === 1 ? "pack" : "packs"}
-              </span>
-            </p>
-            <p className="stat-sub">Spread only. The pack stays on its board. {spreadWatch.join(" · ") || "None."}</p>
+            <p className="stat-value">{individualPacks.length}</p>
+            <p className="stat-sub">packs</p>
           </article>
           <article className="stat" data-tone="signal">
             <p className="eyebrow">Mean IR</p>
             <p className="stat-value">
-              <span className="num">
+              <span className="nw">
                 {stats.mean.toFixed(2)}
                 {fleetIncludesProvisional ? <ProvisionalMark /> : null} {IR_UNIT}
               </span>
             </p>
-            <p className="stat-sub">
-              <IrFigure value={stats.mean} provisional={fleetIncludesProvisional} unit /> across {stats.counted}{" "}
-              packs still in a slot. Rest-test day 0 is not included.
-              {fleetIncludesProvisional ? <ProvisionalLegend /> : null}
-            </p>
+            <p className="stat-sub">across {stats.counted} packs</p>
           </article>
         </div>
-      </header>
-
-      {restPacks.length > 0 ? (
-        <section className="panel" data-accent="floor" aria-labelledby="rest-pool-heading">
-          <p className="eyebrow">Off every board</p>
-          <h2 id="rest-pool-heading" className="panel-title mt-1">
-            Rest pool
-          </h2>
-          <p className="note mt-2">
-            Day 0 {stats.rest[0]?.restDay0}. 7-day reading due {stats.rest[0]?.restDue}. These packs are not charged
-            during the test.
-          </p>
-          <ul className="mt-3 space-y-2 text-sm">
-            {stats.rest.map((row) => (
-              <li key={row.uid}>
-                <Link href={`/pack/${row.uid}`} className="pack-link">
-                  {row.label}
-                </Link>
-                <span className="note">
-                  {" "}
-                  · day 0 {row.restDay0} · due {row.restDue} · {row.series}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      <Panel
-        accent="signal"
-        eyebrow="Measured packs only"
-        title="Series mean IR"
-        action={
-          <span className="note">
-            {IR_UNIT} · a series with one reading is a single point. Later readings are a solid
-            line through a night that series was not measured. No value is filled in there. The
-            mean averages only packs measured in that series that night. Rest-test day 0 is left
-            off this mean.
-          </span>
-        }
-      >
-        <LineChart
-          categories={model.categories}
-          series={model.mean.map((fleet) => ({
-            id: fleet.id,
-            label: fleet.id,
-            color: fleet.color,
-            values: fleet.values,
-            service: fleet.service,
-            unpublished: fleet.unpublished,
-            provisional: fleet.provisional,
-          }))}
-          yDomain={model.meanDomain}
-          format="ir"
-          unit={IR_UNIT}
-          height={200}
-          mode="aggregate"
-          ariaLabel="Mean pack IR by series across nights, true milliohms"
-        />
-      </Panel>
-
-      <section className="space-y-3" aria-labelledby="boards-heading">
-        <div>
-          <h2 id="boards-heading" className="section-title">
-            Next parallel
-          </h2>
-          <p className="note mt-1">{next.note}</p>
-          <div className="mt-3">
-            <OutlookBoards doc={charge} />
-          </div>
-          {next.resting.length ? (
-            <p className="note mt-1">
-              Rest pool until {next.resting[0]?.until}: {next.resting.map((pack) => pack.label).join(", ")}.
-            </p>
-          ) : null}
-        </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {next.series.map((board) => (
-            <article key={board.series} className="panel" data-accent="signal">
-              <p className="eyebrow">
-                {board.series}
-                {" · last public measurement "}
-                {publicSession(blocks.find((block) => block.id === board.series)?.lastMeasured ?? "")}
-              </p>
-              <h3 className="panel-title mt-1">{board.labels.join(" + ")}</h3>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {board.labels.map((label) => {
-                  const row = rows.find((item) => item.label === label);
-                  const condition = row ? conditionalJoinNote(row.status) : null;
-                  return (
-                    <Link key={label} href={`/slot/${label}`} className="chip-btn">
-                      <span>{label}</span>
-                      {condition && row ? (
-                        <>
-                          <StatusChip status={row.status} chargeMode={row.chargeMode} />
-                          <span className="chip-condition">{condition}</span>
-                        </>
-                      ) : null}
-                    </Link>
-                  );
-                })}
-              </div>
-            </article>
-          ))}
+        <div className="btn-row" style={{ marginTop: "var(--space-5)" }}>
+          <Link className="btn btn-primary" href="/batteries/">
+            Open Batteries
+          </Link>
+          <Link className="btn btn-ghost" href="/batteries/next-charge/">
+            Next charge
+          </Link>
         </div>
       </section>
 
-      <section className="space-y-4" aria-labelledby="packs-heading">
-        <h2 id="packs-heading" className="section-title">
-          Packs
-        </h2>
-        <p className="note">
-          Each card shows one status word. The full note from the latest check is under the small
-          chart, and in full on the pack page.
-        </p>
-        {blocks.map((block) => (
-          <div key={block.id}>
-            <p className="eyebrow mb-2">
-              {block.id}
-              {block.individual ? " · individual, not parallel" : ""}
-              {" · status as of "}
-              {block.asOf}
-              {" · last measured "}
-              {publicSession(block.lastMeasured)}
-            </p>
-            <div className="pack-grid">
-              {block.slots.map((slot) => (
-                <PackTile key={slot.label} slot={slot} />
-              ))}
-            </div>
-            {block.slots.some((slot) => slot.provisional) ? <ProvisionalLegend /> : null}
-          </div>
-        ))}
-      </section>
-
-      <section className="space-y-3" aria-labelledby="calls-heading">
-        <div>
-          <h2 id="calls-heading" className="section-title">
-            Status calls
-          </h2>
-          <p className="note mt-1">
-            Latest call per pack, in the analyst&apos;s own words. Morning and evening of the same day
-            stay separate. Lamp colour follows the wording.
-          </p>
-        </div>
-        <div className="panel" data-accent="off">
-          {rows.some((row) => row.provisional) ? <ProvisionalLegend /> : null}
-          <div className="table-wrap hidden md:block" data-scroll-ok="">
-            <table className="status-table">
-              <thead>
-                <tr>
-                  <th scope="col">Pack</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Reason</th>
-                  <th scope="col">Call</th>
-                  <th scope="col">Latest IR ({IR_UNIT})</th>
-                  <th scope="col">Spread ({IR_UNIT})</th>
-                  <th scope="col">Floor (mV)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.uid} className={row.excluded ? "opacity-70" : undefined}>
-                    <th scope="row">
-                      <Link href={`/pack/${row.uid}`} className="pack-link">
-                        {row.label}
-                      </Link>
-                      <span className="mt-1 block font-mono text-[10px] font-normal text-[var(--faint)]">
-                        {row.uid}
-                      </span>
-                    </th>
-                    <td>
-                      <Lamp status={row.status} />
-                      <p className="mt-1 text-sm">{callChipText(row.status)}</p>
-                      {row.restPool ? (
-                        <p className="note mt-1">
-                          Rest pool · day 0 {row.restDay0} · due {row.restDue}
-                        </p>
-                      ) : null}
-                    </td>
-                    <td>
-                      <p className="reason">{publicProse(row.reason)}</p>
-                      {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
-                    </td>
-                    <td className="font-mono text-sm whitespace-nowrap">
-                      {!isSessionId(row.session) && row.session !== row.callDate
-                        ? `${row.callDate} · ${row.session}`
-                        : shownWhen(row.session, row.callDate)}
-                    </td>
-                    <td className="font-mono text-sm whitespace-nowrap">
-                      <IrFigure value={row.avg} provisional={row.provisional} />
-                      <span className="mt-1 block text-[10px] text-[var(--faint)]">
-                        {publicSession(row.latestSession)}
-                      </span>
-                    </td>
-                    <td className="font-mono text-sm">
-                      <IrFigure value={row.spread} provisional={row.provisional} />
-                    </td>
-                    <td className="font-mono text-sm">{row.floor ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="cards md:hidden">
-            {rows.map((row) => (
-              <article key={row.uid} className="rounded-xl border border-[var(--line)] p-3">
-                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                  <Link href={`/pack/${row.uid}`} className="pack-link">
-                    {row.label}
-                  </Link>
-                  <Lamp status={row.status} />
-                </div>
-                <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                <p className="mt-2 text-sm leading-relaxed">{publicProse(row.reason)}</p>
-                {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
-                {row.restPool ? (
-                  <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
-                ) : null}
-                <p className="note mt-2 font-mono">
-                  {callChipText(row.status)} · IR{" "}
-                  <IrFigure value={row.avg} provisional={row.provisional} unit /> · spread{" "}
-                  <IrFigure value={row.spread} provisional={row.provisional} unit /> · floor{" "}
-                  {row.floor == null ? "—" : `${row.floor} mV`}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <Panel accent="floor" eyebrow="7-day rest" title="Rest tests">
-        <p className="note mb-3">
-          Day-0 baselines are recorded. Each test shows its result once the 7-day reading is in. C1-P3 has
-          no rest test.
-        </p>
-        <ul className="space-y-2 text-sm">
-          {allRestTests().map((test) => (
-            <li key={`${test.id}-${test.uid}`}>
-              <span className="font-mono">{test.label}</span> cell {test.cell} · started {test.start} ·
-              day-0 {test.readingDate || test.start} · 7-day due {test.due} ·{" "}
-              {test.result === "unread" ? "not read yet" : `read ${test.readDate} · ${test.result}`}
-            </li>
-          ))}
+      <section className="home-section">
+        <h2 className="section-title">What&apos;s new</h2>
+        <ul className="updates">
+          <li>
+            <time dateTime={siteMeta.lastIngest}>
+              <span className="nw">{siteMeta.lastIngest}</span>
+            </time>
+            <span>
+              Battery log updated through <span className="nw">{siteMeta.lastIngest}</span>: {siteMeta.rowCount}{" "}
+              measurements across {siteMeta.sessionCount} nights. <Link href="/batteries/">Fleet</Link>
+            </span>
+          </li>
+          <li>
+            <time dateTime="2026-10-18">
+              <span className="nw">2026-10-18</span>
+            </time>
+            <span>
+              Rest tests passed: <span className="nw">C2-P2</span> cell 6 and <span className="nw">C1-P4</span> cell
+              1 (<span className="nw">C1-P1</span> cell 6 passed on <span className="nw">2026-10-17</span>).{" "}
+              <span className="nw">C1-P4</span> and <span className="nw">C2-P2</span> are back in rotation.
+            </span>
+          </li>
+          <li>
+            <time dateTime="2026-10-17">
+              <span className="nw">2026-10-17</span>
+            </time>
+            <span>
+              Charge rules updated to v7. <Link href="/batteries/methodology/">How I test</Link>
+            </span>
+          </li>
+          <li>
+            <time dateTime="2026-10-13">
+              <span className="nw">2026-10-13</span>
+            </time>
+            <span>
+              C3 and C4 join the rotation: CNHL V2 6S 1300 Black.{" "}
+              <Link href="/batteries/bakeoff/">Brand comparison</Link>
+            </span>
+          </li>
         </ul>
-      </Panel>
-
-      <Panel accent="signal" eyebrow="Latest night per pack" title="Cell IR heatmap">
-        <Heatmap
-          columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
-          min={heatMin}
-          max={heatMax}
-          caption="Color is the latest-cell range on this page. A pack that moved keeps the measurement from its last storage charge. DX8 absolute IR is not a manufacturer rating."
-          rows={heatRows.map((row) => ({
-            key: row.uid,
-            label: (
-              <Link href={`/pack/${row.uid}`} className="pack-link">
-                {row.label}
-              </Link>
-            ),
-            values: row.cells,
-            provisional: row.provisional,
-          }))}
-        />
-      </Panel>
-
-      <section className="space-y-3" aria-labelledby="trends-heading">
-        <div>
-          <h2 id="trends-heading" className="section-title">
-            Trends
-          </h2>
-          <p className="note mt-1">
-            A star marks a partial night: that night did not include every pack, and it is left
-            incomplete. On these fleet charts a solid line joins every recorded reading for a pack,
-            including nights under an earlier label, and runs through a night with no reading. No
-            value is filled in. A pack with only its first reading is a single point. A partial
-            night with a reading is still a normal point. The series mean still averages only the
-            packs measured in that series that night.
-          </p>
-        </div>
-        <div className="grid gap-3 lg:grid-cols-2">
-          {measured.map((fleet) => (
-            <Panel key={fleet.id} heading="h3" accent="signal" eyebrow={fleet.id} title="Pack average IR">
-              <LineChart
-                categories={model.categories}
-                series={seriesOf(fleet.packs, "avg")}
-                yDomain={model.irDomain}
-                format="ir"
-                unit={IR_UNIT}
-                mode="aggregate"
-                ariaLabel={`${fleet.id} pack average internal resistance, true milliohms`}
-              />
-            </Panel>
-          ))}
-          {measured.map((fleet) => (
-            <Panel
-              key={`${fleet.id}-spread`}
-              heading="h3"
-              accent="rulea"
-              eyebrow={`Rules v5 · ${fleet.id}`}
-              title="Intra-pack spread"
-              action={
-                <span className="note">
-                  Go under {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Watch note ≥{" "}
-                  {formatValue("ir", thresholds.spread_mohm.caution_gte)} · Watch note, look first ≥{" "}
-                  {formatValue("ir", thresholds.spread_mohm.individual_gte)} {IR_UNIT}
-                </span>
-              }
-            >
-              <p className="note mb-3">Inside one pack. Max cell IR minus min cell IR. Applies to every pack.</p>
-              <LineChart
-                categories={model.categories}
-                series={seriesOf(fleet.packs, "spread")}
-                guides={ruleAGuides}
-                bands={ruleABands}
-                yDomain={model.spreadDomain}
-                format="ir"
-                unit={IR_UNIT}
-                mode="aggregate"
-                ariaLabel={`${fleet.id} intra-pack IR spread in milliohms, with watch-note guides`}
-              />
-            </Panel>
-          ))}
-          {measured.map((fleet) => (
-            <Panel
-              key={`${fleet.id}-floor`}
-              heading="h3"
-              accent="floor"
-              eyebrow={fleet.id}
-              title="Start floor"
-              action={<span className="note">{thresholds.floor_eye_mv} mV watch</span>}
-            >
-              <LineChart
-                categories={model.categories}
-                series={seriesOf(fleet.packs, "floor")}
-                guides={floorGuide}
-                bands={floorBands}
-                yDomain={model.floorDomain}
-                format="int"
-                unit="mV"
-                mode="aggregate"
-                ariaLabel={`${fleet.id} start floor voltage with a 3600 millivolt watch line`}
-              />
-            </Panel>
-          ))}
-        </div>
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(16rem,0.7fr)]">
-          <Panel
-            accent="ruleb"
-            eyebrow="Rule B"
-            title="Inter-pack rest-Δ"
-            action={
-              <span className="note">Go ≤ {thresholds.inter_pack_rest_delta_v.go_lte.toFixed(2)} V</span>
-            }
-          >
-            <p className="note mb-3">
-              One line per series. The line is solid through a night that series did not run. No
-              value is filled in there. Nights before that series existed are not marked.               Rule B needs two packs charged together on that night&apos;s board. A night the series did
-              run, but not as a board, is not a point. A recorded board night uses that night&apos;s
-              recorded figure. A next-night outlook is not drawn here. On 2026-10-10 the points are
-              C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. C3 and C4
-              have no board night yet, so they are not on this chart. The rest-test day-0 rows are
-              not a parallel charge and are not on this line. Series do not share a board.
-            </p>
-            <LineChart
-              categories={model.categories}
-              series={model.fleets
-                .filter((fleet) => fleet.rest.some((value) => value != null))
-                .map((fleet) => ({
-                  id: fleet.id,
-                  label: fleet.id,
-                  color: seriesColor(fleet.id),
-                  values: fleet.rest,
-                  na: fleet.restNa,
-                  service: fleet.restService,
-                  unpublished: fleet.unpublished,
-                }))}
-              guides={ruleBGuides}
-              bands={ruleBBands}
-              yDomain={model.restDomain}
-              format="volt"
-              unit="V"
-              mode="aggregate"
-              ariaLabel="Inter-pack rest voltage delta by series with Rule B guides"
-            />
-            <ul className="note mt-3 space-y-1">
-              {model.fleets
-                .filter((fleet) => fleet.id !== "C3" && fleet.id !== "C4")
-                .filter((fleet) => fleet.individual || fleet.rest.every((value) => value == null))
-                .map((fleet) => (
-                  <li key={fleet.id}>
-                    {fleet.id}: N/A, charged individually
-                  </li>
-                ))}
-            </ul>
-          </Panel>
-          <Panel accent="muted" eyebrow="Reserved" title="Capacity in / out">
-            <div className="empty-slot">
-              <div>
-                <p className="font-mono text-sm text-[var(--ink)]">not in the storage-charge logs yet</p>
-                <p className="note mt-2">
-                  Storage logs are IR and voltage only. No capacity in, capacity out, or cost per
-                  cycle.
-                </p>
-              </div>
-            </div>
-          </Panel>
-        </div>
-        <Panel accent="signal" eyebrow="Six cells" title="Per-cell IR">
-          <CellExplorer
-            categories={model.categories}
-            mode="aggregate"
-            domain={model.irDomain}
-              packs={measured.flatMap((fleet) =>
-              fleet.packs.map((pack) => ({
-                id: pack.id,
-                tone: pack.tone,
-                cells: pack.historyCells,
-                service: pack.service,
-                logged: pack.logged,
-                nolog: pack.nolog,
-                rest: pack.rest,
-                unpublished: pack.unpublished,
-                provisional: pack.provisional,
-              })),
-            )}
-          />
-        </Panel>
       </section>
     </div>
   );

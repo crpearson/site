@@ -1084,6 +1084,36 @@
       "source": "/slot/c4-p6/",
       "destination": "/slot/C4-P6/",
       "permanent": true
+    },
+    {
+      "source": "/next-charge",
+      "destination": "/batteries/next-charge/",
+      "permanent": true
+    },
+    {
+      "source": "/next-charge/",
+      "destination": "/batteries/next-charge/",
+      "permanent": true
+    },
+    {
+      "source": "/bakeoff",
+      "destination": "/batteries/bakeoff/",
+      "permanent": true
+    },
+    {
+      "source": "/bakeoff/",
+      "destination": "/batteries/bakeoff/",
+      "permanent": true
+    },
+    {
+      "source": "/methodology",
+      "destination": "/batteries/methodology/",
+      "permanent": true
+    },
+    {
+      "source": "/methodology/",
+      "destination": "/batteries/methodology/",
+      "permanent": true
     }
   ]
 }

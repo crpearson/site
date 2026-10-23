@@ -85,6 +85,31 @@ for (const label of labels) {
   }
 }
 
+// Section pages moved under /batteries/. Pack and slot URLs stay at the root.
+for (const [source, destination] of [
+  ["/next-charge", "/batteries/next-charge/"],
+  ["/next-charge/", "/batteries/next-charge/"],
+  ["/bakeoff", "/batteries/bakeoff/"],
+  ["/bakeoff/", "/batteries/bakeoff/"],
+  ["/methodology", "/batteries/methodology/"],
+  ["/methodology/", "/batteries/methodology/"],
+]) {
+  add(source, destination);
+}
+
+for (const rule of redirects) {
+  const source = rule.source;
+  if (!source.startsWith("/pack/") && !source.startsWith("/slot/")) continue;
+  const destination = rule.destination;
+  const stays =
+    (source.startsWith("/pack/") && destination.startsWith("/pack/")) ||
+    (source.startsWith("/slot/") && destination.startsWith("/slot/"));
+  if (!stays) {
+    console.error(`redirect leaves the pack/slot prefix: ${source} -> ${destination}`);
+    process.exit(1);
+  }
+}
+
 const file = path.join(root, "vercel.json");
 // framework null selects the Other preset. outputDirectory must stay "out"
 // (the Next preset would look at public/).

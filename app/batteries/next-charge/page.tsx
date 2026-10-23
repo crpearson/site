@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ChargePlanner } from "@/components/ChargePlanner";
 import { NextChargeNotes } from "@/components/NextChargeNotes";
-import { FileCount, RunSheet } from "@/components/RunSheet";
+import { RunSheet, fileCountLine } from "@/components/RunSheet";
+import { SuggestedNext } from "@/components/SuggestedNext";
 import { loadNextChargeV4, planRuns } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
@@ -46,17 +47,22 @@ export default function NextChargePage() {
           Channel 2, each on its home channel. Empty slots and pulled packs are skipped and nothing is reordered.
         </p>
       </header>
-      <ChargePlanner rows={rows} rules={rules} series={series} />
+      <SuggestedNext doc={doc} />
+      <div id="charge-planner">
+        <ChargePlanner rows={rows} rules={rules} series={series} />
+      </div>
       <div id="planner-static" className="space-y-8">
-        <h2 className="section-title">Common run lists</h2>
+        <h2 className="section-title">Run order</h2>
         {cases.map((item) => (
-          <section key={item.id} className="space-y-3" aria-labelledby={`${item.id}-heading`}>
-            <h3 id={`${item.id}-heading`} className="section-title">
-              {item.title}
-            </h3>
-            <FileCount files={item.plan.files} />
+          <details key={item.id} className="runset" open aria-labelledby={`${item.id}-heading`}>
+            <summary>
+              <span className="set-name" id={`${item.id}-heading`}>
+                {item.title}
+              </span>
+              <span className="files">{fileCountLine(item.plan.files)}</span>
+            </summary>
             <RunSheet plan={item.plan} />
-          </section>
+          </details>
         ))}
       </div>
       <NextChargeNotes doc={doc} />

@@ -349,7 +349,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       ) : null}
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel accent="muted" eyebrow="History" title="Label history">
+        <Panel accent="muted" eyebrow="History" title="Slot history">
           <ol className="space-y-3">
             {pack.events.map((event) => (
               <li key={`${event.date}-${event.event}`} className="text-sm">
@@ -362,7 +362,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             ))}
           </ol>
         </Panel>
-        <Panel accent="signal" eyebrow="Calls" title="Status timeline">
+        <Panel accent="signal" eyebrow="Calls" title="Status over time">
           <ol className="space-y-3" data-status-history="">
             {pack.calls.map((call, index) => (
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
@@ -378,7 +378,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </Panel>
       </div>
 
-      <Panel accent="signal" eyebrow={publicSession(pack.row.latestSession)} title="Latest IR cell heatmap">
+      <Panel accent="signal" eyebrow={publicSession(pack.row.latestSession)} title="Latest cell IR">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...latestCells)}
@@ -444,7 +444,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </Panel>
       </div>
 
-      <Panel accent="muted" eyebrow="All measured nights" title="Night by cell IR">
+      <Panel accent="muted" eyebrow="All measured nights" title="Cell IR by night">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...historyValues)}

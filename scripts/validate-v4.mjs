@@ -202,7 +202,7 @@ for (const file of ["data/v2/next_charge.json", "data/v2/NEXT_CHARGE.md"]) {
   if (hit) fail(`${file} carries a log number field (${hit[0]})`);
   if (/\bCH[12]\b/.test(body)) fail(`${file} uses a short channel tag; write "DX8-1 Channel 1" in full`);
 }
-const nextChargePage = fs.readFileSync(path.join(root, "app/next-charge/page.tsx"), "utf8");
+const nextChargePage = fs.readFileSync(path.join(root, "app/batteries/next-charge/page.tsx"), "utf8");
 const chargePlanner = fs.readFileSync(path.join(root, "components/ChargePlanner.tsx"), "utf8");
 const runSheet = fs.readFileSync(path.join(root, "components/RunSheet.tsx"), "utf8");
 const notes = fs.readFileSync(path.join(root, "components/NextChargeNotes.tsx"), "utf8");
@@ -220,7 +220,7 @@ if (chargePlanner.includes("fly-D-1") || chargePlanner.includes("D-1") || nextCh
 if (!plannerSource.includes("DX8-1 Channel 1") || !plannerSource.includes("DX8-1: ")) {
   fail("the next charge page must show full channel names and file counts");
 }
-if (!notes.includes("Pulled") || !notes.includes("Performance notes") || !notes.includes("Self-discharge") || !notes.includes("Measurement") || !notes.includes("Per-cell check")) {
+if (!notes.includes("Out of rotation") || !notes.includes("Notes") || !notes.includes("Self-discharge") || !notes.includes("Measurement") || !notes.includes("Per-cell check")) {
   fail("the next charge page must show pulled packs, performance notes, self-discharge checks, measurement and the per-cell check");
 }
 if (/\bCH[12]\b/.test(plannerSource) || /series board|series parallel/i.test(plannerSource)) {
