@@ -1,58 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let field = "";
-  let quoted = false;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    if (quoted) {
-      if (char === '"') {
-        if (text[i + 1] === '"') {
-          field += '"';
-          i += 1;
-        } else quoted = false;
-      } else field += char;
-      continue;
-    }
-    if (char === '"') quoted = true;
-    else if (char === ",") {
-      row.push(field);
-      field = "";
-    } else if (char === "\n") {
-      row.push(field);
-      rows.push(row);
-      row = [];
-      field = "";
-    } else if (char !== "\r") field += char;
-  }
-  if (field.length || row.length) {
-    row.push(field);
-    rows.push(row);
-  }
-  const [header, ...body] = rows.filter((cells) => cells.some((cell) => cell.length));
-  return body.map((cells) =>
-    Object.fromEntries(header.map((key, index) => [key, cells[index] ?? ""])),
-  );
-}
-
 const root = process.cwd();
-const packs = parseCsv(fs.readFileSync(path.join(root, "data/v2/packs.csv"), "utf8"));
-const registry = parseCsv(fs.readFileSync(path.join(root, "data/v2/label_registry.csv"), "utf8"));
-const hidden = new Set();
-for (const row of registry) {
-  for (const label of (row.hidden_labels || "").split("|")) {
-    if (label.trim()) hidden.add(label.trim());
-  }
-}
-// Public redirects follow the current slot only. A hidden label stays in the
-// event log and does not get a /pack or /slot URL.
-const labels = new Set();
-for (const pack of packs) {
-  if (pack.label && !hidden.has(pack.label)) labels.add(pack.label);
-}
 
 const redirects = [];
 const seen = new Set();
@@ -62,30 +11,12 @@ function add(source, destination) {
   redirects.push({ source, destination, permanent: true });
 }
 
-for (const pack of packs) {
-  const uid = pack.pack_uid;
-  const canonical = `/pack/${uid}/`;
-  add(`/pack/${uid}`, canonical);
-  const lower = uid.toLowerCase();
-  if (lower !== uid) {
-    add(`/pack/${lower}`, canonical);
-    add(`/pack/${lower}/`, canonical);
-  }
-}
+// Printed serial QRs: one hop from /pack/<serial> to the canonical page.
+// Label URLs and every /slot/* URL are not redirected.
+add("/pack/:serial", "/batteries/pack/:serial/");
+add("/pack/:serial/", "/batteries/pack/:serial/");
 
-for (const label of labels) {
-  add(`/pack/${label}`, `/pack/${label}/`);
-  add(`/slot/${label}`, `/slot/${label}/`);
-  const lower = label.toLowerCase();
-  if (lower !== label) {
-    add(`/pack/${lower}`, `/pack/${label}/`);
-    add(`/pack/${lower}/`, `/pack/${label}/`);
-    add(`/slot/${lower}`, `/slot/${label}/`);
-    add(`/slot/${lower}/`, `/slot/${label}/`);
-  }
-}
-
-// Section pages moved under /batteries/. Pack and slot URLs stay at the root.
+// Section pages moved under /batteries/.
 for (const [source, destination] of [
   ["/next-charge", "/batteries/next-charge/"],
   ["/next-charge/", "/batteries/next-charge/"],
@@ -97,17 +28,21 @@ for (const [source, destination] of [
   add(source, destination);
 }
 
-for (const rule of redirects) {
-  const source = rule.source;
-  if (!source.startsWith("/pack/") && !source.startsWith("/slot/")) continue;
-  const destination = rule.destination;
-  const stays =
-    (source.startsWith("/pack/") && destination.startsWith("/pack/")) ||
-    (source.startsWith("/slot/") && destination.startsWith("/slot/"));
-  if (!stays) {
-    console.error(`redirect leaves the pack/slot prefix: ${source} -> ${destination}`);
-    process.exit(1);
-  }
+const slotRedirects = redirects.filter(
+  (rule) => rule.source.startsWith("/slot/") || rule.source === "/slot" || rule.destination.startsWith("/slot/"),
+);
+if (slotRedirects.length) {
+  console.error(`write-redirects still emits ${slotRedirects.length} /slot redirects`);
+  process.exit(1);
+}
+const packRedirects = redirects.filter((rule) => rule.source.startsWith("/pack/") || rule.source === "/pack");
+const packOk =
+  packRedirects.length === 2 &&
+  packRedirects.every((rule) => rule.destination === "/batteries/pack/:serial/" && rule.permanent === true);
+if (!packOk) {
+  console.error("write-redirects pack rules must be the single /pack/:serial hop");
+  console.error(JSON.stringify(packRedirects, null, 2));
+  process.exit(1);
 }
 
 const file = path.join(root, "vercel.json");

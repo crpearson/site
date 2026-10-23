@@ -13,10 +13,12 @@ export function ChargePlanner({
   rows,
   rules,
   series,
+  serialByLabel,
 }: {
   rows: PlanRow[];
   rules: PlanRules;
   series: string[];
+  serialByLabel: Record<string, string>;
 }) {
   const [flown, setFlown] = useState<string[]>([]);
   const ready = useSyncExternalStore(subscribeToHydration, hydratedOnClient, notHydratedOnServer);
@@ -48,7 +50,7 @@ export function ChargePlanner({
       <FileCount files={plan.files} live />
       {selected ? (
         <div className="planner-live">
-          <RunSheet plan={plan} />
+          <RunSheet plan={plan} serialByLabel={serialByLabel} />
         </div>
       ) : (
         <p className="note">No series ticked. Set A, set B, and all four are listed below.</p>

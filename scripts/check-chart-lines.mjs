@@ -139,7 +139,8 @@ for (const file of walk(outDir)) {
   const html = fs.readFileSync(file, "utf8");
   const rel = path.relative(root, file);
   problems.push(...auditSvg(html, rel));
-  if (!rel.startsWith("out/pack/") || !html.includes("plot-svg")) continue;
+  if (!rel.includes(`${path.sep}batteries${path.sep}pack${path.sep}`) && !rel.includes("/batteries/pack/")) continue;
+  if (!html.includes("plot-svg")) continue;
   const svgs = html.match(/<svg\b[^>]*class="[^"]*\bplot-svg\b[^>]*>[\s\S]*?<\/svg>/gi) ?? [];
   svgs.forEach((svg, chartIndex) => {
     const chart = svg.match(/\bdata-chart="([^"]*)"/)?.[1] ?? `chart ${chartIndex + 1}`;
@@ -155,7 +156,7 @@ const packRows = rows.filter((row) => /\/CNHL-/.test(row.rel));
 console.log("pack chart audit (points vs segments)");
 console.log("pack\tchart\tseries\tpoints\tsegments");
 for (const row of packRows) {
-  const pack = row.rel.split("/")[2];
+  const pack = row.rel.split(/[/\\]/).find((part) => /^CNHL-/.test(part)) ?? row.rel;
   const chart = row.chart.replace(/\s+/g, " ").slice(0, 42);
   console.log(`${pack}\t${chart}\t${row.id}\t${row.points}\t${row.segments}`);
 }

@@ -174,7 +174,12 @@ export function SuggestedNext({ doc }: { doc: NextChargeV4 }) {
       {ok && plan ? (
         <div className="suggest-plan">
           <FileCount files={plan.files} />
-          <RunSheet plan={plan} />
+          <RunSheet
+            plan={plan}
+            serialByLabel={Object.fromEntries(
+              doc.home_channels.filter((row) => row.label && row.uid).map((row) => [row.label, row.uid as string]),
+            )}
+          />
         </div>
       ) : null}
       {ok && !plan ? (

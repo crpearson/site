@@ -4,6 +4,7 @@ import { StatusChip } from "@/components/StatusChip";
 import { seriesColor } from "@/lib/color";
 import type { StatusRow } from "@/lib/fleet";
 import { conditionalJoinNote } from "@/lib/lamp";
+import { packPath } from "@/lib/pack-url";
 
 export type BenchPackRow = Pick<StatusRow, "uid" | "label" | "series" | "status" | "chargeMode">;
 
@@ -11,7 +12,7 @@ export function BenchPack({ pack, note }: { pack: BenchPackRow; note?: string })
   const condition = conditionalJoinNote(pack.status);
   return (
     <Link
-      href={`/pack/${pack.uid}`}
+      href={packPath(pack.uid)}
       className="bench-pack"
       style={{ "--series": seriesColor(pack.series) } as CSSProperties}
     >

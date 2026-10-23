@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/validate-v4.mjs && node scripts/write-redirects.mjs && next build && node scripts/check-overflow.mjs && node scripts/check-series-board.mjs && node scripts/check-session-ids.mjs && node scripts/check-chart-lines.mjs && node scripts/check-chips.mjs && node scripts/check-fleet-names.mjs && node scripts/check-advisory-notes.mjs",
+    "build": "node scripts/validate-v4.mjs && node scripts/write-redirects.mjs && next build && node scripts/check-overflow.mjs && node scripts/check-series-board.mjs && node scripts/check-session-ids.mjs && node scripts/check-chart-lines.mjs && node scripts/check-chips.mjs && node scripts/check-fleet-names.mjs && node scripts/check-advisory-notes.mjs && node scripts/check-pack-links.mjs",
     "start": "next start",
     "lint": "eslint",
     "check-snapshot": "node --experimental-strip-types scripts/check-snapshot.mjs",

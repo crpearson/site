@@ -15,6 +15,7 @@ import { callChipText, conditionalJoinNote } from "@/lib/lamp";
 import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { loadNextChargeV4 } from "@/lib/next-charge.mjs";
+import { packPath, slotPath } from "@/lib/pack-url";
 import {
   allRestTests,
   chargedIndividually,
@@ -152,7 +153,7 @@ export default function BatteriesPage() {
           <ul className="mt-3 space-y-2 text-sm">
             {stats.rest.map((row) => (
               <li key={row.uid}>
-                <Link href={`/pack/${row.uid}`} className="pack-link">
+                <Link href={packPath(row.uid)} className="pack-link">
                   {row.label}
                 </Link>
                 <span className="note">
@@ -227,7 +228,7 @@ export default function BatteriesPage() {
                   const row = rows.find((item) => item.label === label);
                   const condition = row ? conditionalJoinNote(row.status) : null;
                   return (
-                    <Link key={label} href={`/slot/${label}`} className="chip-btn">
+                    <Link key={label} href={row ? packPath(row.uid) : slotPath(label)} className="chip-btn">
                       <span>{label}</span>
                       {condition && row ? (
                         <>
@@ -301,7 +302,7 @@ export default function BatteriesPage() {
                 {rows.map((row) => (
                   <tr key={row.uid} className={row.excluded ? "opacity-70" : undefined}>
                     <th scope="row">
-                      <Link href={`/pack/${row.uid}`} className="pack-link">
+                      <Link href={packPath(row.uid)} className="pack-link">
                         {row.label}
                       </Link>
                       <span className="mt-1 block font-mono text-[10px] font-normal text-[var(--faint)]">
@@ -345,7 +346,7 @@ export default function BatteriesPage() {
             {rows.map((row) => (
               <article key={row.uid} className="rounded-xl border border-[var(--line)] p-3">
                 <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                  <Link href={`/pack/${row.uid}`} className="pack-link">
+                  <Link href={packPath(row.uid)} className="pack-link">
                     {row.label}
                   </Link>
                   <Lamp status={row.status} />
@@ -393,7 +394,7 @@ export default function BatteriesPage() {
           rows={heatRows.map((row) => ({
             key: row.uid,
             label: (
-              <Link href={`/pack/${row.uid}`} className="pack-link">
+              <Link href={packPath(row.uid)} className="pack-link">
                 {row.label}
               </Link>
             ),

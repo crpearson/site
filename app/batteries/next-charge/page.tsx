@@ -32,6 +32,10 @@ export default function NextChargePage() {
     include_states: doc.planner_rules.include_states,
   };
   const series = rules.series_order.filter((id) => rows.some((row) => row.series === id));
+  const serialByLabel: Record<string, string> = {};
+  for (const row of doc.home_channels) {
+    if (row.label && row.uid) serialByLabel[row.label] = row.uid;
+  }
   const cases = STATIC_CASES.map((item) => ({
     ...item,
     plan: planRuns(doc.home_channels, doc.planner_rules, [...item.series]),
@@ -49,7 +53,7 @@ export default function NextChargePage() {
       </header>
       <SuggestedNext doc={doc} />
       <div id="charge-planner">
-        <ChargePlanner rows={rows} rules={rules} series={series} />
+        <ChargePlanner rows={rows} rules={rules} series={series} serialByLabel={serialByLabel} />
       </div>
       <div id="planner-static" className="space-y-8">
         <h2 className="section-title">Run order</h2>
@@ -61,7 +65,7 @@ export default function NextChargePage() {
               </span>
               <span className="files">{fileCountLine(item.plan.files)}</span>
             </summary>
-            <RunSheet plan={item.plan} />
+            <RunSheet plan={item.plan} serialByLabel={serialByLabel} />
           </details>
         ))}
       </div>

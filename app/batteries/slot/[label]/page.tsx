@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AliasStub } from "@/components/AliasStub";
 import { SlotDetail } from "@/components/SlotDetail";
 import { getSlot, slotLabels } from "@/lib/fleet";
+import { slotPath } from "@/lib/pack-url";
 
 export const dynamicParams = false;
 
@@ -17,11 +18,11 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps<"/slot/[label]">): Promise<Metadata> {
+}: PageProps<"/batteries/slot/[label]">): Promise<Metadata> {
   const { label } = await params;
   const canonicalLabel = slotLabels().find((item) => item.toLowerCase() === label.toLowerCase());
   if (!canonicalLabel) return { title: label };
-  const canonical = `/slot/${canonicalLabel}/`;
+  const canonical = slotPath(canonicalLabel);
   return {
     title: canonicalLabel,
     description: `Current and past occupants of slot ${canonicalLabel}.`,
@@ -30,12 +31,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function SlotPage({ params }: PageProps<"/slot/[label]">) {
+export default async function SlotPage({ params }: PageProps<"/batteries/slot/[label]">) {
   const { label } = await params;
   const canonicalLabel = slotLabels().find((item) => item.toLowerCase() === label.toLowerCase());
   if (!canonicalLabel || !getSlot(canonicalLabel)) notFound();
   if (canonicalLabel !== label) {
-    return <AliasStub href={`/slot/${canonicalLabel}/`} title={canonicalLabel} />;
+    return <AliasStub href={slotPath(canonicalLabel)} title={canonicalLabel} />;
   }
   return <SlotDetail label={canonicalLabel} />;
 }

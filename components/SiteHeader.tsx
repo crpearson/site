@@ -39,9 +39,9 @@ function inBatterySection(pathname: string) {
   const path = normalize(pathname);
   return (
     path === "/batteries" ||
-    path.startsWith("/batteries/") ||
-    path.startsWith("/pack/") ||
-    path.startsWith("/slot/")
+    path.startsWith("/batteries/pack/") ||
+    path.startsWith("/batteries/slot/") ||
+    path.startsWith("/batteries/")
   );
 }
 
