@@ -280,7 +280,7 @@ export type SelfDischargeOpen = {
 export type NoteItem = { label: string; uid: string; note: string };
 
 export type NextChargeV4 = {
-  schema: "next_charge/v4";
+  schema: "next_charge/v4" | "next_charge/v4.1";
   rules: "v7";
   as_of_session: string;
   as_of_date_pt: string;
@@ -311,6 +311,56 @@ export type NextChargeV4 = {
     open: SelfDischargeOpen[];
   };
   notes: string[];
+  /** Absent or null omits the card. The object is a suggestion and does not drive the planner. */
+  suggested_next?: SuggestedNext | null;
+};
+
+export type SuggestedChannel = {
+  charger: "DX8-1" | "DX8-2";
+  /** Full label, for example "DX8-1 Channel 1". */
+  channel: string;
+  packs: string[];
+};
+
+export type SuggestedAdvisory = {
+  pack: string;
+  text: string;
+  chip: string;
+  tone: "caution" | "off";
+  anchor: "check-before-connecting" | "pulled" | "charge-alone";
+};
+
+export type SuggestedPlan = {
+  channels: SuggestedChannel[];
+  advisories: SuggestedAdvisory[];
+};
+
+export type SuggestedSeriesRow = {
+  series: string;
+  packs: number;
+  lifetime_storage_cycles: number;
+  avg_cycles_per_pack: number;
+  last_flown: string | null;
+  eligible: boolean;
+  skip_reason: string | null;
+};
+
+export type SuggestedAlt = {
+  pick: [string, string];
+  reason: string;
+  plan_if_flown: SuggestedPlan;
+};
+
+export type SuggestedNext = {
+  basis: "lifetime_storage_cycles_per_pack";
+  suggestion_only: true;
+  status: "ok";
+  as_of_date: string;
+  pick: [string, string];
+  reason: string;
+  sets: SuggestedSeriesRow[];
+  plan_if_flown: SuggestedPlan;
+  alt_pick: SuggestedAlt | null;
 };
 
 export const PLANNER_SERIES: readonly string[];

@@ -1,5 +1,5 @@
 {
-  "schema": "next_charge/v4",
+  "schema": "next_charge/v4.1",
   "rules": "v7",
   "as_of_session": "2026-10-18",
   "as_of_date_pt": "2026-10-18",
@@ -2163,6 +2163,160 @@
     "longer_gaps": "if more than 72 hours passed, a relative drop under 0.05 V clears the check; 0.05 V or more is not proof, so it is an advisory to recheck within 48 to 72 hours.",
     "performance_grade": "scaled to 7 days: 10 mV or less pass, 10 to 30 mV borderline, over 30 mV fail. The grade is a note only, never a reason to retire a pack.",
     "open": []
+  },
+  "suggested_next": {
+    "basis": "lifetime_storage_cycles_per_pack",
+    "suggestion_only": true,
+    "status": "ok",
+    "as_of_date": "2026-10-18",
+    "pick": [
+      "C3",
+      "C4"
+    ],
+    "reason": "Fewest cycles per pack: C3 3.0, C4 3.0 vs C1 16.2, C2 16.5.",
+    "sets": [
+      {
+        "series": "C3",
+        "packs": 6,
+        "lifetime_storage_cycles": 18,
+        "avg_cycles_per_pack": 3.0,
+        "last_flown": "2026-10-17",
+        "eligible": true,
+        "skip_reason": null
+      },
+      {
+        "series": "C4",
+        "packs": 6,
+        "lifetime_storage_cycles": 18,
+        "avg_cycles_per_pack": 3.0,
+        "last_flown": "2026-10-17",
+        "eligible": true,
+        "skip_reason": null
+      },
+      {
+        "series": "C1",
+        "packs": 6,
+        "lifetime_storage_cycles": 97,
+        "avg_cycles_per_pack": 16.2,
+        "last_flown": "2026-10-18",
+        "eligible": true,
+        "skip_reason": null
+      },
+      {
+        "series": "C2",
+        "packs": 6,
+        "lifetime_storage_cycles": 99,
+        "avg_cycles_per_pack": 16.5,
+        "last_flown": "2026-10-18",
+        "eligible": true,
+        "skip_reason": null
+      }
+    ],
+    "plan_if_flown": {
+      "channels": [
+        {
+          "charger": "DX8-1",
+          "channel": "DX8-1 Channel 1",
+          "packs": [
+            "C3-P1",
+            "C3-P2",
+            "C4-P5"
+          ]
+        },
+        {
+          "charger": "DX8-1",
+          "channel": "DX8-1 Channel 2",
+          "packs": [
+            "C3-P3",
+            "C3-P4",
+            "C4-P6"
+          ]
+        },
+        {
+          "charger": "DX8-2",
+          "channel": "DX8-2 Channel 1",
+          "packs": [
+            "C3-P5",
+            "C4-P1",
+            "C4-P2"
+          ]
+        },
+        {
+          "charger": "DX8-2",
+          "channel": "DX8-2 Channel 2",
+          "packs": [
+            "C3-P6",
+            "C4-P3",
+            "C4-P4"
+          ]
+        }
+      ],
+      "advisories": [
+        {
+          "pack": "C3-P1",
+          "text": "Its 10-17 storage run stopped short (about 3.67 V per cell). Top it up to storage before it goes on the C3 board.",
+          "chip": "CHECK FIRST",
+          "tone": "caution",
+          "anchor": "check-before-connecting"
+        }
+      ]
+    },
+    "alt_pick": {
+      "pick": [
+        "C3",
+        "C1"
+      ],
+      "reason": "Next-best pair: C3 3.0, C1 16.2.",
+      "plan_if_flown": {
+        "channels": [
+          {
+            "charger": "DX8-1",
+            "channel": "DX8-1 Channel 1",
+            "packs": [
+              "C1-P1",
+              "C1-P2",
+              "C3-P1",
+              "C3-P2"
+            ]
+          },
+          {
+            "charger": "DX8-1",
+            "channel": "DX8-1 Channel 2",
+            "packs": [
+              "C1-P3",
+              "C1-P4",
+              "C3-P3",
+              "C3-P4"
+            ]
+          },
+          {
+            "charger": "DX8-2",
+            "channel": "DX8-2 Channel 1",
+            "packs": [
+              "C1-P5",
+              "C3-P5"
+            ]
+          },
+          {
+            "charger": "DX8-2",
+            "channel": "DX8-2 Channel 2",
+            "packs": [
+              "C1-P6",
+              "C3-P6"
+            ]
+          }
+        ],
+        "advisories": [
+          {
+            "pack": "C3-P1",
+            "text": "Its 10-17 storage run stopped short (about 3.67 V per cell). Top it up to storage before it goes on the C3 board.",
+            "chip": "CHECK FIRST",
+            "tone": "caution",
+            "anchor": "check-before-connecting"
+          }
+        ]
+      }
+    }
   },
   "notes": [
     "Charge every series that was flown, all of it, including any packs in it that did not fly. Series that were not flown stay off.",

@@ -58,10 +58,10 @@ if (!fs.existsSync(outDir)) {
   process.exit(1);
 }
 
-const home = path.join(outDir, "index.html");
-const homeText = visibleText(fs.readFileSync(home, "utf8"));
-if (!/across 24 packs still in a slot/.test(homeText)) {
-  console.error("fleet-name check: home does not count 24 packs still in a slot");
+const fleet = path.join(outDir, "batteries", "index.html");
+const fleetText = visibleText(fs.readFileSync(fleet, "utf8"));
+if (!/across 24 packs still in a slot/.test(fleetText)) {
+  console.error("fleet-name check: batteries dashboard does not count 24 packs still in a slot");
   process.exit(1);
 }
 

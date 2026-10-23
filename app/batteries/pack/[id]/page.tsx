@@ -8,8 +8,8 @@ import { StatusChip } from "@/components/StatusChip";
 import { LineChart } from "@/components/LineChart";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend } from "@/components/ProvisionalMark";
-import { SlotDetail } from "@/components/SlotDetail";
 import { formatValue, isSessionId, publicProse, publicSession, shownWhen, volts } from "@/lib/format";
+import { packPath } from "@/lib/pack-url";
 import { callChipText, goNewText, watchRecheckText } from "@/lib/lamp";
 import { IR_UNIT } from "@/lib/ir";
 import {
@@ -60,40 +60,26 @@ export function generateStaticParams() {
 
 export async function generateMetadata({
   params,
-}: PageProps<"/pack/[id]">): Promise<Metadata> {
+}: PageProps<"/batteries/pack/[id]">): Promise<Metadata> {
   const { id } = await params;
   const route = resolvePackRoute(id);
   if (!route) return { title: id };
-  if (route.type === "pack") {
-    const pack = getPack(route.uid);
-    const canonical = `/pack/${route.uid}/`;
-    return {
-      title: pack ? `${pack.label} · ${pack.uid}` : route.uid,
-      description: `Cell IR, spread, start floor, and status calls for ${route.uid}.`,
-      alternates: { canonical },
-      ...(route.alias ? { other: { refresh: `0; url=${canonical}` } } : {}),
-    };
-  }
-  const canonical = `/pack/${route.label}/`;
+  const pack = getPack(route.uid);
+  const canonical = packPath(route.uid);
   return {
-    title: route.label,
-    description: `Current and past occupants of ${route.label}.`,
+    title: pack ? `${pack.label} · ${pack.uid}` : route.uid,
+    description: `Cell IR, spread, start floor, and status calls for ${route.uid}.`,
     alternates: { canonical },
     ...(route.alias ? { other: { refresh: `0; url=${canonical}` } } : {}),
   };
 }
 
-export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
+export default async function PackPage({ params }: PageProps<"/batteries/pack/[id]">) {
   const { id } = await params;
   const route = resolvePackRoute(id);
   if (!route) notFound();
   if (route.alias) {
-    const href = route.type === "pack" ? `/pack/${route.uid}/` : `/pack/${route.label}/`;
-    const title = route.type === "pack" ? route.uid : route.label;
-    return <AliasStub href={href} title={title} />;
-  }
-  if (route.type === "slot") {
-    return <SlotDetail label={route.label} />;
+    return <AliasStub href={packPath(route.uid)} title={route.uid} />;
   }
   const pack = getPack(route.uid);
   if (!pack) notFound();
@@ -118,7 +104,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           return (
             <Link
               key={uid}
-              href={`/pack/${uid}`}
+              href={packPath(uid)}
               className={uid === pack.uid ? "switch-link is-on" : "switch-link"}
               aria-current={uid === pack.uid ? "page" : undefined}
             >
@@ -130,18 +116,21 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
 
       <header className="space-y-3">
         <p className="eyebrow">
-          <Link href="/" className="pack-link">
+          <Link href="/batteries/" className="pack-link">
             Fleet
           </Link>
           {" · "}
-          <Link href={`/slot/${pack.label}`} className="pack-link">
+          <Link href={packPath(pack.uid)} className="pack-link">
             {pack.label}
           </Link>
           {" · "}
           {pack.brand} {pack.model} · {pack.capacityMah} mAh · {pack.series}
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="h1">{pack.label}</h1>
+          <h1 className="h1">
+            {pack.label}
+            <span className="pack-serial"> · {pack.uid}</span>
+          </h1>
           <StatusChip status={pack.call.status} chargeMode={pack.chargeMode} />
           {pack.badge ? <span className="badge">{pack.badge}</span> : null}
         </div>
@@ -150,7 +139,6 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
           <p className="note">Go (watch). {watchRecheckText(pack.call.status, pack.call.reason)}</p>
         ) : null}
         {goNewText(pack.call.status) ? <p className="note">{goNewText(pack.call.status)}</p> : null}
-        <p className="font-mono text-sm text-[var(--muted)]">Pack ID {pack.uid}</p>
         {pack.lineage ? <p className="text-lg">{pack.lineage}</p> : null}
         <p className="max-w-3xl text-lg leading-relaxed">{publicProse(pack.call.reason)}</p>
         <p className="note">
@@ -349,7 +337,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
       ) : null}
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel accent="muted" eyebrow="History" title="Label history">
+        <Panel accent="muted" eyebrow="History" title="Slot history">
           <ol className="space-y-3">
             {pack.events.map((event) => (
               <li key={`${event.date}-${event.event}`} className="text-sm">
@@ -362,7 +350,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
             ))}
           </ol>
         </Panel>
-        <Panel accent="signal" eyebrow="Calls" title="Status timeline">
+        <Panel accent="signal" eyebrow="Calls" title="Status over time">
           <ol className="space-y-3" data-status-history="">
             {pack.calls.map((call, index) => (
               <li key={`${call.date}-${call.session}-${call.status}-${index}`} className="text-sm">
@@ -378,7 +366,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </Panel>
       </div>
 
-      <Panel accent="signal" eyebrow={publicSession(pack.row.latestSession)} title="Latest IR cell heatmap">
+      <Panel accent="signal" eyebrow={publicSession(pack.row.latestSession)} title="Latest cell IR">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...latestCells)}
@@ -444,7 +432,7 @@ export default async function PackPage({ params }: PageProps<"/pack/[id]">) {
         </Panel>
       </div>
 
-      <Panel accent="muted" eyebrow="All measured nights" title="Night by cell IR">
+      <Panel accent="muted" eyebrow="All measured nights" title="Cell IR by night">
         <Heatmap
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...historyValues)}

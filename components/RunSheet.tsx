@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PLANNER_CHANNELS, channelName } from "@/lib/plan-runs.mjs";
 import type { PlanResult } from "@/lib/plan-runs.mjs";
+import { packPath } from "@/lib/pack-url";
 
 const CHARGERS = ["DX8-1", "DX8-2"] as const;
 
@@ -16,15 +17,16 @@ export function FileCount({ files, live = false }: { files: PlanResult["files"];
   );
 }
 
-function PackLink({ label }: { label: string }) {
+function PackLink({ label, serial }: { label: string; serial?: string }) {
+  if (!serial) return <span className="font-mono">{label}</span>;
   return (
-    <Link href={`/pack/${label}`} className="pack-link">
+    <Link href={packPath(serial)} className="pack-link">
       {label}
     </Link>
   );
 }
 
-export function RunSheet({ plan }: { plan: PlanResult }) {
+export function RunSheet({ plan, serialByLabel }: { plan: PlanResult; serialByLabel: Record<string, string> }) {
   return (
     <div className="planner-sheet">
       <div className="planner-columns">
@@ -40,7 +42,7 @@ export function RunSheet({ plan }: { plan: PlanResult }) {
                 <ol className="planner-order">
                   {packs.map((label) => (
                     <li key={label}>
-                      <PackLink label={label} />
+                      <PackLink label={label} serial={serialByLabel[label]} />
                     </li>
                   ))}
                 </ol>
@@ -60,7 +62,13 @@ export function RunSheet({ plan }: { plan: PlanResult }) {
               ) : (
                 <ol className="planner-round-list">
                   {rounds.map((pair, index) => (
-                    <RoundLine key={`${charger}-${index}`} charger={charger} pair={pair} index={index} />
+                    <RoundLine
+                      key={`${charger}-${index}`}
+                      charger={charger}
+                      pair={pair}
+                      index={index}
+                      serialByLabel={serialByLabel}
+                    />
                   ))}
                 </ol>
               )}
@@ -76,10 +84,12 @@ function RoundLine({
   charger,
   pair,
   index,
+  serialByLabel,
 }: {
   charger: "DX8-1" | "DX8-2";
   pair: [string | null, string | null];
   index: number;
+  serialByLabel: Record<string, string>;
 }) {
   const items = [
     pair[0] ? { channel: 1 as const, label: pair[0] } : null,
@@ -91,7 +101,7 @@ function RoundLine({
       {items.map((item, itemIndex) => (
         <span key={item.channel}>
           {itemIndex > 0 ? ", " : ""}
-          {channelName(charger, item.channel)} <PackLink label={item.label} />
+          {channelName(charger, item.channel)} <PackLink label={item.label} serial={serialByLabel[item.label]} />
         </span>
       ))}
       {items.length === 1 ? " alone" : ""}

@@ -78,13 +78,13 @@ export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
     <div className="space-y-6">
       <section className="space-y-3" aria-labelledby="outlook-heading">
         <h2 id="outlook-heading" className="section-title">
-          Next-night outlook
+          Next night at a glance
         </h2>
         <OutlookBoards doc={doc} />
       </section>
-      <section className="panel" data-accent="off" aria-labelledby="pulled-heading">
+      <section id="pulled" className="panel" data-accent="off" aria-labelledby="pulled-heading">
         <h2 id="pulled-heading" className="panel-title">
-          Pulled
+          Out of rotation
         </h2>
         {doc.pulled.length === 0 ? (
           <p className="note mt-2">None.</p>
@@ -100,11 +100,29 @@ export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
         )}
       </section>
 
-      <section className="panel" data-accent="rulea" aria-labelledby="advisory-heading">
+      <section id="check-before-connecting" className="panel" data-accent="rulea" aria-labelledby="advisory-heading">
         <h2 id="advisory-heading" className="panel-title">
           Check before connecting
         </h2>
         <NoteList items={doc.check_before_connecting} />
+      </section>
+
+      <section id="charge-alone" className="panel" data-accent="off" aria-labelledby="charge-alone-heading">
+        <h2 id="charge-alone-heading" className="panel-title">
+          Charge alone
+        </h2>
+        {doc.charge_alone.length === 0 ? (
+          <p className="note mt-2">None.</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {doc.charge_alone.map((item) => (
+              <li key={item.label}>
+                <p className="font-mono text-sm">{item.label}</p>
+                <p className="note mt-1">{item.reason}</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       {gapLines.length === 0 ? null : (
@@ -124,7 +142,7 @@ export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
 
       <section className="panel" data-accent="signal" aria-labelledby="performance-heading">
         <h2 id="performance-heading" className="panel-title">
-          Performance notes
+          Notes
         </h2>
         <NoteList items={doc.performance_notes} />
       </section>

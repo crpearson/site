@@ -4,20 +4,21 @@ import { Sparkline } from "@/components/Sparkline";
 import { StatusChip } from "@/components/StatusChip";
 import { callChipText, chipTone, goNewText, statusChip, watchRecheckText } from "@/lib/lamp";
 import { vacationFrom, type SlotTile } from "@/lib/fleet";
+import { packPath, slotPath } from "@/lib/pack-url";
 
 export function PackTile({ slot }: { slot: SlotTile }) {
   if (slot.empty || !slot.uid) {
     const moved = vacationFrom(slot.label);
     if (moved) {
       return (
-        <Link href={`/pack/${moved.uid}`} className="tile is-vacated">
+        <Link href={packPath(moved.uid)} className="tile is-vacated">
           <span className="tile-label font-mono text-sm">{slot.label}</span>
           <span className="vacated-note">Vacated: moved to {moved.to}</span>
         </Link>
       );
     }
     return (
-      <Link href={`/slot/${slot.label}`} className="tile is-empty">
+      <Link href={slotPath(slot.label)} className="tile is-empty">
         <span className="tile-label font-mono text-sm">{slot.label}</span>
         <span className="vacated-note">empty</span>
       </Link>
@@ -26,7 +27,7 @@ export function PackTile({ slot }: { slot: SlotTile }) {
 
   const chip = slot.status ? statusChip(slot.status, slot.chargeMode) : null;
   return (
-    <Link href={`/pack/${slot.uid}`} className="tile" data-tone={chip ? chipTone(chip) : "pool"}>
+    <Link href={packPath(slot.uid)} className="tile" data-tone={chip ? chipTone(chip) : "pool"}>
       <span className="tile-head">
         <span className="tile-label font-mono text-sm">{slot.label}</span>
         {slot.status ? <StatusChip status={slot.status} chargeMode={slot.chargeMode} /> : null}

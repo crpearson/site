@@ -14,10 +14,10 @@ import { fileURLToPath } from "node:url";
  * Case-alias pages that only meta-refresh to the canonical URL are skipped;
  * the canonical page is checked.
  *
- * After the layout pass, /next-charge/ is opened again with JavaScript on.
+ * After the layout pass, /batteries/next-charge/ is opened again with JavaScript on.
  * Set A, set B, all four, and C1+C3 are ticked, and the same overflow measure
  * runs on each. Then every exported HTML file is scanned for
- * 2603022837|cliff|pearson|chad. /next-charge/ is part of that scan.
+ * 2603022837|cliff|pearson|chad. /batteries/next-charge/ is part of that scan.
  */
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = path.join(root, "out");
@@ -54,9 +54,9 @@ function checkIdentity() {
       }
     }
   }
-  const nextChargeHtml = path.join(outDir, "next-charge", "index.html");
+  const nextChargeHtml = path.join(outDir, "batteries", "next-charge", "index.html");
   if (!existsSync(nextChargeHtml)) {
-    console.error("identity grep needs out/next-charge/index.html");
+    console.error("identity grep needs out/batteries/next-charge/index.html");
     process.exit(1);
   }
   scanIdentity(outDir);
@@ -65,7 +65,7 @@ function checkIdentity() {
     console.error(identityHits.join("\n"));
     process.exit(1);
   }
-  console.log("identity grep 0 (2603022837|cliff|pearson|chad), including /next-charge/");
+  console.log("identity grep 0 (2603022837|cliff|pearson|chad), including /batteries/next-charge/");
 }
 
 checkRetiredRedirects();
@@ -90,7 +90,7 @@ function pages(dir, found = []) {
       if (/http-equiv="refresh"/i.test(html)) continue;
       const rel = path.relative(outDir, dir).split(path.sep).join("/");
       const route = `/${rel ? `${rel}/` : ""}`;
-      if (route === "/" || /^\/(bakeoff|about|methodology|next-charge|pack|slot)(\/|$)/.test(route)) found.push(route);
+      if (route === "/" || /^\/(about|builds|gear|howtos|batteries|pack|slot)(\/|$)/.test(route)) found.push(route);
     }
   }
   return found;
@@ -315,7 +315,7 @@ for (const width of [1280, 390]) {
   });
   let page = await context.newPage();
   for (const combo of plannerCombos) {
-    const route = "/next-charge/";
+    const route = "/batteries/next-charge/";
     try {
       const response = await Promise.race([
         page.goto(`http://127.0.0.1:${port}${route}`, { waitUntil: "domcontentloaded", timeout: 8000 }),

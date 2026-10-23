@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { ChargePlanner } from "@/components/ChargePlanner";
 import { NextChargeNotes } from "@/components/NextChargeNotes";
-import { FileCount, RunSheet } from "@/components/RunSheet";
+import { RunSheet, fileCountLine } from "@/components/RunSheet";
+import { SuggestedNext } from "@/components/SuggestedNext";
 import { loadNextChargeV4, planRuns } from "@/lib/next-charge.mjs";
 
 export const metadata: Metadata = {
@@ -31,6 +32,10 @@ export default function NextChargePage() {
     include_states: doc.planner_rules.include_states,
   };
   const series = rules.series_order.filter((id) => rows.some((row) => row.series === id));
+  const serialByLabel: Record<string, string> = {};
+  for (const row of doc.home_channels) {
+    if (row.label && row.uid) serialByLabel[row.label] = row.uid;
+  }
   const cases = STATIC_CASES.map((item) => ({
     ...item,
     plan: planRuns(doc.home_channels, doc.planner_rules, [...item.series]),
@@ -46,17 +51,22 @@ export default function NextChargePage() {
           Channel 2, each on its home channel. Empty slots and pulled packs are skipped and nothing is reordered.
         </p>
       </header>
-      <ChargePlanner rows={rows} rules={rules} series={series} />
+      <SuggestedNext doc={doc} />
+      <div id="charge-planner">
+        <ChargePlanner rows={rows} rules={rules} series={series} serialByLabel={serialByLabel} />
+      </div>
       <div id="planner-static" className="space-y-8">
-        <h2 className="section-title">Common run lists</h2>
+        <h2 className="section-title">Run order</h2>
         {cases.map((item) => (
-          <section key={item.id} className="space-y-3" aria-labelledby={`${item.id}-heading`}>
-            <h3 id={`${item.id}-heading`} className="section-title">
-              {item.title}
-            </h3>
-            <FileCount files={item.plan.files} />
-            <RunSheet plan={item.plan} />
-          </section>
+          <details key={item.id} className="runset" open aria-labelledby={`${item.id}-heading`}>
+            <summary>
+              <span className="set-name" id={`${item.id}-heading`}>
+                {item.title}
+              </span>
+              <span className="files">{fileCountLine(item.plan.files)}</span>
+            </summary>
+            <RunSheet plan={item.plan} serialByLabel={serialByLabel} />
+          </details>
         ))}
       </div>
       <NextChargeNotes doc={doc} />

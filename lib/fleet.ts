@@ -144,16 +144,31 @@ const packs: PackRec[] = readCsv("v2/packs.csv").map((row) => ({
  * The stores are untouched (append-only); the site shows the mapped label, drops the move events and
  * status rows that only concern a hidden label, and rewrites hidden-label wording in displayed text.
  */
-type LabelMap = { uid: string; label: string; series: string; hidden: string[] };
+type LabelMap = {
+  date: string;
+  uid: string;
+  label: string;
+  series: string;
+  appliesTo: string;
+  hidden: string[];
+};
 const labelRegistry: LabelMap[] = readCsv("v2/label_registry.csv").map((row) => ({
+  date: row.date,
   uid: row.pack_uid,
   label: row.display_label,
   series: row.display_series,
+  appliesTo: row.applies_to,
   hidden: row.hidden_labels.split("|").map((item) => item.trim()).filter(Boolean),
 }));
 const hiddenPool = /\b(?:the\s+)?D[ -]pool\b/gi;
+/** Latest dated registry row for this serial. S-session ids sort before calendar dates. */
 function mapOf(uid: string): LabelMap | undefined {
-  return labelRegistry.find((item) => item.uid === uid);
+  let latest: LabelMap | undefined;
+  for (const item of labelRegistry) {
+    if (item.uid !== uid) continue;
+    if (!latest || compareTime(item.date, latest.date) > 0) latest = item;
+  }
+  return latest;
 }
 function shownLabel(uid: string, label: string): string {
   const map = mapOf(uid);
@@ -179,7 +194,12 @@ for (const pack of packs) {
   pack.notes = scrubText(pack.uid, pack.notes);
   pack.parallelCall = scrubText(pack.uid, pack.parallelCall);
   pack.serviceStatus = scrubText(pack.uid, pack.serviceStatus);
-  if (mapOf(pack.uid)) pack.pool = "";
+  const current = mapOf(pack.uid);
+  if (!current) continue;
+  // Current slot comes from the latest registry override. Packs with no row keep packs.csv.
+  pack.label = current.label;
+  pack.series = current.series;
+  pack.pool = "";
 }
 
 const events: PackEvent[] = readCsv("v2/pack_events.csv")
@@ -1344,16 +1364,13 @@ export function getSlot(label: string): SlotView | null {
   };
 }
 
-export type PackRoute =
-  | { type: "pack"; uid: string; alias: boolean }
-  | { type: "slot"; label: string; alias: boolean };
+export type PackRoute = { uid: string; alias: boolean };
 
+/** Serial pages only. A slot label is not a pack URL. */
 export function resolvePackRoute(id: string): PackRoute | null {
   const uid = packUids().find((item) => item.toLowerCase() === id.toLowerCase());
-  if (uid) return { type: "pack", uid, alias: uid !== id };
-  const label = slotLabels().find((item) => item.toLowerCase() === id.toLowerCase());
-  if (label) return { type: "slot", label, alias: label !== id };
-  return null;
+  if (!uid) return null;
+  return { uid, alias: uid !== id };
 }
 
 export function packRouteIds(): string[] {
@@ -1361,10 +1378,6 @@ export function packRouteIds(): string[] {
   for (const uid of packUids()) {
     ids.add(uid);
     ids.add(uid.toLowerCase());
-  }
-  for (const label of slotLabels()) {
-    ids.add(label);
-    ids.add(label.toLowerCase());
   }
   return [...ids];
 }
