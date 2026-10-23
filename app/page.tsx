@@ -37,7 +37,7 @@ export default function HomePage() {
 
       <section className="home-section">
         <h2 className="section-title">Pick a section</h2>
-        <div className="grid g4 stack">
+        <div className="grid g4 cols-collapse">
           <Link className="card section-card" href="/batteries/">
             <h3>Batteries</h3>
             <p>Battery tracker: fleet health, the next charge plan, and how I test.</p>

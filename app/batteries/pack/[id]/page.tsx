@@ -246,7 +246,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
             This full charge is not the latest IR, not a fleet or series mean, and not a Rule B night.
             Start voltage, floor, gap, and rest come from the charge start and are not shown here.
           </p>
-          <div className="table-wrap" data-scroll-ok="">
+          <div className="table-wrap scroll-cue" data-scroll-ok="">
             <table className="status-table">
               <thead>
                 <tr>
@@ -285,7 +285,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
             This individual top-up is the day-0 baseline. It is not the latest IR, not a fleet or series
             mean, and not a Rule B night.
           </p>
-          <div className="table-wrap" data-scroll-ok="">
+          <div className="table-wrap scroll-cue" data-scroll-ok="">
             <table className="status-table">
               <thead>
                 <tr>
@@ -469,7 +469,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
           Nights before this pack was commissioned are not marked. Readings from before a move stay
           on this line.
         </p>
-        <div className="table-wrap mt-3" data-scroll-ok="">
+        <div className="table-wrap scroll-cue mt-3" data-scroll-ok="">
           <table className="status-table">
             <thead>
               <tr>

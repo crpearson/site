@@ -1038,6 +1038,13 @@ body {
   }
 }
 
+/* Half-width trend cards and phones cannot fit the wide date set. */
+@container chart (max-width: 640px) {
+  .x-label-wide-only {
+    display: none;
+  }
+}
+
 @media (max-width: 760px) {
   .header-meta {
     width: 100%;
@@ -1147,17 +1154,35 @@ body {
 }
 
 .methodology .table-wrap {
+  display: block;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
   overflow-x: auto;
+  contain: inline-size;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.methodology .table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.methodology .table-wrap::-webkit-scrollbar-thumb {
+  border-radius: 99px;
+  background: var(--line-strong);
 }
 
 .methodology table {
   width: 100%;
-  min-width: 32rem;
+  min-width: 36rem;
   border-collapse: collapse;
   font-size: 0.92rem;
   line-height: 1.45;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .methodology th,
@@ -1166,7 +1191,15 @@ body {
   padding: 0.65rem 0.7rem;
   text-align: left;
   vertical-align: top;
-  overflow-wrap: anywhere;
+  min-width: 7.25rem;
+  overflow-wrap: break-word;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.methodology th:first-child,
+.methodology td:first-child {
+  min-width: 11.5rem;
 }
 
 .methodology thead th {
@@ -1877,6 +1910,56 @@ svg {
   }
 }
 
+/* Phone-only hint that a row still has content to the right. Desktop layout stays put. */
+@media (max-width: 760px) {
+  .scroll-cue,
+  .methodology .table-wrap.scroll-cue {
+    display: flex;
+    align-items: stretch;
+    container-type: scroll-state;
+    --cue: var(--bg);
+  }
+
+  .panel .scroll-cue,
+  .methodology .table-wrap.scroll-cue {
+    --cue: var(--panel);
+  }
+
+  .scroll-cue > * {
+    flex: 0 0 auto;
+  }
+
+  /* Right padding would leave a bright strip past the fade. */
+  .navrow .topnav.scroll-cue {
+    padding-right: 0;
+  }
+
+  .scroll-cue::after {
+    content: "";
+    opacity: 0;
+    position: sticky;
+    right: 0;
+    flex: 0 0 auto;
+    width: 3.25rem;
+    margin-left: -3.25rem;
+    align-self: stretch;
+    pointer-events: none;
+    z-index: 2;
+    background: linear-gradient(to left, var(--cue) 0%, transparent);
+  }
+
+  @container scroll-state(scrollable: inline-end) {
+    .scroll-cue::after {
+      opacity: 1;
+    }
+  }
+
+  /* Author display:flex would otherwise beat the closed-details hiding. */
+  details:not([open]) .scroll-cue {
+    display: none;
+  }
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -2064,8 +2147,8 @@ svg {
 }
 
 @media (max-width: 640px) {
-  .g4.stack,
-  .g2.stack {
+  .g4.cols-collapse,
+  .g2.cols-collapse {
     grid-template-columns: 1fr;
   }
 
