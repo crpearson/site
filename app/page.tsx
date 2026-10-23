@@ -37,7 +37,7 @@ export default function HomePage() {
 
       <section className="home-section">
         <h2 className="section-title">Pick a section</h2>
-        <div className="grid g4 collapse">
+        <div className="grid g4 stack">
           <Link className="card section-card" href="/batteries/">
             <h3>Batteries</h3>
             <p>Battery tracker: fleet health, the next charge plan, and how I test.</p>
@@ -55,11 +55,10 @@ export default function HomePage() {
             <p>A short list of gear I&apos;d actually recommend.</p>
             <span className="go">Preview →</span>
           </Link>
-          <Link className="card section-card is-stub" href="/howtos/">
+          <Link className="card section-card" href="/howtos/">
             <h3>HOWTOs</h3>
-            <UcButton />
             <p>Step-by-step guides for the jobs I do over and over.</p>
-            <span className="go">Preview →</span>
+            <span className="go">Open HOWTOs →</span>
           </Link>
         </div>
       </section>
@@ -120,6 +119,15 @@ export default function HomePage() {
       <section className="home-section">
         <h2 className="section-title">What&apos;s new</h2>
         <ul className="updates">
+          <li>
+            <time dateTime="2026-10-23">
+              <span className="nw">2026-10-23</span>
+            </time>
+            <span>
+              New guide: how to make an EdgeTX color-screen theme.{" "}
+              <Link href="/howtos/edgetx-color-screen-theme/">Read the HOWTO</Link>
+            </span>
+          </li>
           <li>
             <time dateTime={siteMeta.lastIngest}>
               <span className="nw">{siteMeta.lastIngest}</span>

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type PanelAccent = "signal" | "rulea" | "floor" | "ruleb" | "muted" | "off";
+export type PanelAccent = "signal" | "rulea" | "floor" | "ruleb" | "muted" | "off" | "copper";
 
 export function Panel({
   id,
