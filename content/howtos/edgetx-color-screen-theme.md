@@ -131,6 +131,7 @@ Mine are 480x272. The easiest way to make them is the simulator in EdgeTX Compan
 
 The same menu has **Edit**, so you can tweak colors on the radio itself.
 
+![Themes page with Lost Penny selected](images/radio-themes-menu.jpg) <!-- IMAGE: photo of the radio's Themes page with Lost Penny highlighted -->
 
 ## 7. Lessons I learned the hard way
 

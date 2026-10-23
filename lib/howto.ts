@@ -25,13 +25,13 @@ type Figure = {
   full?: boolean;
 };
 
-/** Alt text and captions for the nine figures in the EdgeTX theme guide. */
+/** Alt text and captions for the figures in the EdgeTX theme guide. */
 const FIGURES: Record<string, Figure> = {
   "hero-radio-photo.jpg": {
     alt: "The Lost Penny theme on an EdgeTX radio: copper top bar, timer, channel bars and the L-dot model image",
     caption: "Lost Penny running on the real radio.",
-    width: 1600,
-    height: 1000,
+    width: 1248,
+    height: 780,
     full: true,
   },
   "palette-swatches.png": {
@@ -60,6 +60,13 @@ const FIGURES: Record<string, Figure> = {
     caption: "screenshot1-3.png: main screen, model setup, model select.",
     width: 1500,
     height: 316,
+    full: true,
+  },
+  "radio-themes-menu.jpg": {
+    alt: "Themes page with Lost Penny selected",
+    caption: "The radio's Themes page with Lost Penny highlighted.",
+    width: 1200,
+    height: 800,
     full: true,
   },
   "banding-vs-smoke.jpg": {
@@ -169,10 +176,6 @@ function figureHtml(file: string, figure: Figure): string {
 }
 
 export function parseHowto(markdown: string): HowtoDoc {
-  if (markdown.includes("radio-themes-menu")) {
-    throw new Error("Remove the radio-themes-menu image from the HOWTO. That photo is not in the set.");
-  }
-
   const source = markdown.replace(/<!--[\s\S]*?-->/g, "");
   const usedIds = new Set<string>();
   const usedFigures = new Set<string>();
@@ -210,9 +213,6 @@ export function parseHowto(markdown: string): HowtoDoc {
       },
       image({ href }) {
         const file = fileName(href);
-        if (file === "radio-themes-menu.jpg") {
-          throw new Error("Remove the radio-themes-menu image from the HOWTO. That photo is not in the set.");
-        }
         const figure = FIGURES[file];
         if (!figure) throw new Error(`HOWTO image is not in the figure set: ${file}`);
         usedFigures.add(file);
