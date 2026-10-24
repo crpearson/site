@@ -67,7 +67,7 @@ Rebuild JSON from the CSV without parsing logs:
 python3 scripts/ingest.py --rebuild
 ```
 
-`--manifest` accepts two shapes. A session manifest has a `slots` column (pipe-separated labels in slot order) plus `session`, `charger_alias`, `channel`, `series`, `mode` (`parallel` or `individual`), and optional `nnn_first` / `nnn_last`. Extra private columns are ignored and must not be committed. A legacy file manifest has `filename`, `pack`, and optional `session`.
+`--manifest` accepts two shapes. A session manifest has a `slots` column (pipe-separated labels in slot order) plus `session`, `charger_alias`, `channel` (`CH1` / `CH2`), `series`, `mode` (`parallel` or `individual`), and optional `nnn_first` / `nnn_last`. The public `data/v2/session_manifest.public.csv` shape also works: `channel` is the full name (`DX8-1 Channel 1`), there is no `charger_alias`, and with no log-number range a row applies only when `--session` matches it. Extra private columns are ignored and must not be committed. A legacy file manifest has `filename`, `pack`, and optional `session`.
 
 ```bash
 python3 scripts/ingest.py path/to/new.tgz --charger-map path/to/map.json --manifest path/to/session-manifest.csv --session YYYY-MM-DD

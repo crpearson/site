@@ -151,6 +151,40 @@ class TestIngest(unittest.TestCase):
             self.assertEqual(ingest.load_default_slots(missing), ingest.FALLBACK_SLOTS)
             self.assertNotEqual(ingest.FALLBACK_SLOTS[("DX8-1", "CH1")], ["C1-P1", "C1-P2", "C1-P3"])
 
+    def test_public_shape(self):
+        ingest = self.ingest
+        self.assertEqual(ingest.full_channel("DX8-2", "CH1"), "DX8-2 Channel 1")
+        self.assertEqual(ingest.full_channel("DX8-1", "DX8-1 Channel 2"), "DX8-1 Channel 2")
+        self.assertEqual(ingest.full_channel(None, "CH1"), "")
+        self.assertEqual(ingest.split_channel("DX8-1 Channel 2"), ("DX8-1", "CH2"))
+        self.assertNotIn("file_nnn", ingest.STORE_COLS)
+        self.assertNotIn("charger", ingest.STORE_COLS)
+        raw = (ROOT / "fixtures" / "v2-gap" / "LiPo[Storage_901_CH1].txt").read_bytes()
+        log, _serial = ingest.parse("LiPo[Storage_901_CH1].txt", raw)
+        log.charger = "DX8-1"
+        row = ingest.to_row(log)
+        self.assertEqual(row["channel"], "DX8-1 Channel 1")
+        self.assertNotIn("file_nnn", row)
+        self.assertNotIn("901", json.dumps(row))
+
+        with self.subTest("public manifest shape maps with --session"):
+            with tempfile.TemporaryDirectory() as tmp:
+                manifest = Path(tmp) / "manifest.csv"
+                manifest.write_text(
+                    "session,channel,series,mode,slots,days_since_last_use,notes\n"
+                    "2026-10-09,DX8-1 Channel 1,C1,parallel,C1-P2|C1-P3,,gap night\n"
+                )
+                result = self._run([
+                    "fixtures/v2-gap",
+                    "--charger-map", "fixtures/charger-map.test.json",
+                    "--manifest", str(manifest),
+                    "--session", "2026-10-09",
+                    "--dry-run",
+                ])
+                self.assertEqual(result.returncode, 0, result.stderr)
+                summary = json.loads(result.stdout.split("dry run:")[0])
+                self.assertEqual(summary["by_session"].get("2026-10-09"), ["C1-P2", "C1-P3"])
+
     def _run(self, args: list[str]) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, str(INGEST_PATH), *args],

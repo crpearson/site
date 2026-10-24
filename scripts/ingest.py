@@ -48,7 +48,8 @@ Mapping (see data/README or the site "About the data" page):
     matches that row.
   * Each label resolves to a pack_uid from data/v2/packs.csv and pack_events.csv
     as of the session date. Rows carry pack_uid, label_at_time, series_at_time,
-    charger alias, channel, file_nnn, charge_mode_at_time, and session_type.
+    channel (full name, e.g. "DX8-1 Channel 1"), charge_mode_at_time, and
+    session_type. Written rows carry no log file number.
   * Charger/fleet lock applies only when that alias has "fleet_lock": true.
   * The usual low cell, from ir_store_v4, is a soft check only. A mismatch is
     printed and does not refuse or remap. The retired ;130; cell fingerprint
@@ -108,7 +109,7 @@ MAX_PLAUSIBLE_IR = 10
 STORE_COLS = [
     "session", "pack", "c1", "c2", "c3", "c4", "c5", "c6", "avg", "spread",
     "start_floor_mV", "start_imbalance_mV", "rest_V", "end_avg_mV", "duration_s",
-    "charger", "channel", "file_nnn", "source_sha256", "note",
+    "channel", "source_sha256", "note",
     "pack_uid", "label_at_time", "series_at_time", "charge_mode_at_time", "session_type",
 ]
 
@@ -121,6 +122,23 @@ FALLBACK_SLOTS = {
     ("DX8-2", "CH1"): ["C1-P5", "C2-P1", "C2-P2", "C3-P5", "C4-P1", "C4-P2"],
     ("DX8-2", "CH2"): ["C1-P6", "C2-P3", "C2-P4", "C3-P6", "C4-P3", "C4-P4"],
 }
+
+
+FULL_CHANNEL_RE = re.compile(r"(DX8-[12]) Channel ([12])")
+
+
+def full_channel(charger: Optional[str], channel: Optional[str]) -> str:
+    """("DX8-1", "CH1") -> "DX8-1 Channel 1", the public channel name. Blank if either part is missing."""
+    if channel and FULL_CHANNEL_RE.fullmatch(channel):
+        return channel
+    m = re.fullmatch(r"CH([12])", channel or "")
+    return f"{charger} Channel {m.group(1)}" if charger and m else ""
+
+
+def split_channel(value: Optional[str]) -> tuple:
+    """"DX8-1 Channel 1" -> ("DX8-1", "CH1"). Anything else -> (None, value)."""
+    m = FULL_CHANNEL_RE.fullmatch(value or "")
+    return (m.group(1), f"CH{m.group(2)}") if m else (None, value)
 
 
 def _copy_slots(slots: dict) -> dict:
@@ -613,8 +631,7 @@ def to_row(l: Log) -> dict:
         "rest_V": f"{sum(sc)/1000:.3f}" if sc else "",
         "end_avg_mV": round(statistics.mean(l.end_cells)) if l.end_cells else "",
         "duration_s": l.duration_ms // 1000 if l.duration_ms else "",
-        "charger": l.charger or "", "channel": l.channel or "",
-        "file_nnn": l.nnn if l.nnn is not None else "",
+        "channel": full_channel(l.charger, l.channel),
         "source_sha256": l.sha256[:16], "note": l.assign_note or "",
         "pack_uid": l.pack_uid or "",
         "label_at_time": l.label_at_time or "",
@@ -659,7 +676,7 @@ def rebuild_json(rows: list[dict], last_ingest: Optional[str] = None):
                 "pack_uid": r.get("pack_uid") or "",
                 "label_at_time": r.get("label_at_time") or r.get("pack") or "",
                 "series_at_time": r.get("series_at_time") or "",
-                "charger": r.get("charger") or "",
+                "charger": r.get("charger") or split_channel(r.get("channel"))[0] or "",
                 "cells_chg_mah": [num(r[f"c{i}"]) for i in range(1, 7)],
                 "avg_chg_mah": num(r["avg"]),
                 "spread_chg_mah": num(r["spread"]),
@@ -704,6 +721,11 @@ def load_manifest(p: Optional[Path]):
         rows = list(reader)
         fields = reader.fieldnames or []
     if "slots" in fields:
+        # Public shape: channel is the full name and there is no charger_alias column.
+        for row in rows:
+            charger, channel = split_channel(row.get("channel"))
+            if charger and not row.get("charger_alias"):
+                row["charger_alias"], row["channel"] = charger, channel
         return {}, rows
     if "filename" in fields:
         return {row["filename"]: (row["pack"], row.get("session") or None) for row in rows}, []

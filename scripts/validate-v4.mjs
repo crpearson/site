@@ -5,6 +5,7 @@ import { buildNextBoard } from "../lib/next-board.mjs";
 import { irValidationIsProvisional, PROVISIONAL_LEGEND, PROVISIONAL_MARK } from "../lib/ir-validation.mjs";
 import { checkNextCharge } from "../lib/next-charge.mjs";
 import { latestCalendarDate, pacificCalendarDate } from "../lib/pacific-date.mjs";
+import { publicCsvProblems } from "../lib/public-csv.mjs";
 function parseCsv(text) {
   const rows = [];
   let row = [];
@@ -195,6 +196,27 @@ const labelRegistry = parseCsv(fs.readFileSync(path.join(root, "data/v2/label_re
 for (const row of labelRegistry) {
   if (row.display_series === "D" || /^D-/.test(row.display_label)) fail(`label registry displays series D for ${row.pack_uid}`);
 }
+// Public CSV downloads (every CSV under data/, history included): no log-number columns, channel is the
+// full name ("DX8-1 Channel 1"), and no log numbers or CH1/CH2 tags in any field.
+function csvFiles(dir, out = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) csvFiles(full, out);
+    else if (entry.name.endsWith(".csv")) out.push(full);
+  }
+  return out;
+}
+const publicCsvs = csvFiles(path.join(root, "data"));
+for (const file of publicCsvs) {
+  const text = fs.readFileSync(file, "utf8");
+  for (const problem of publicCsvProblems(path.relative(root, file), text, parseCsv(text))) fail(problem);
+}
+for (const file of ["data/sessions.json", "data/packs-timeseries.json", "data/meta.json", "data/pack-registry.json", "data/status.json"]) {
+  const text = fs.readFileSync(path.join(root, file), "utf8");
+  const hit = text.match(/file_nnn|\bNNN\b|Storage_\d+|\bCH[12]\b|#\d+ =|2603022837|2604012839/);
+  if (hit) fail(`${file} carries a log number, serial or short channel tag (${hit[0]})`);
+}
+console.log(`public csv shape passed (${publicCsvs.length} files)`);
 // Planner data: run order and file counts only; no log numbers and no short channel tags in next_charge.
 for (const file of ["data/v2/next_charge.json", "data/v2/NEXT_CHARGE.md"]) {
   const body = fs.readFileSync(path.join(root, file), "utf8");

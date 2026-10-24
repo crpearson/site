@@ -19,7 +19,7 @@ This covers every column in the public CSVs. Validation means the value was comp
 |---|---|---|---|
 | session | — | storage night (PT date or S-number) | Label |
 | pack, label_at_time, series_at_time, pack_uid | — | slot label at the time / permanent pack ID | Label |
-| charger_alias, channel, file_nnn | — | charger alias (DX8-1 / DX8-2), channel, log file number | Label |
+| channel | — | full charger channel name: `DX8-1 Channel 1`, `DX8-1 Channel 2`, `DX8-2 Channel 1`, or `DX8-2 Channel 2`. The charger is the first part of the name, so there is no separate charger column. Public files carry no log file numbers | Label |
 | charge_mode_at_time, session_type | — | parallel / individual; night type (`rest-test-day0` = rest-test baseline, not a regular night) | Label |
 | c1_mOhm … c6_mOhm | mΩ, cell IR | `;128;` cell fields, median over the run | **Validated** (DX8 IR is best used for relative/trend comparison) | DX8-2 rows: validated 2026-10-11.
 | avg_mOhm | mΩ | mean of the six cell IRs | Derived from validated |
@@ -46,7 +46,7 @@ This covers every column in the public CSVs. Validation means the value was comp
 |---|---|---|
 | c1 … c6, avg, spread | **mAh, charge taken per cell** (`;130;` line). Earlier versions mislabelled these as IR in mΩ. **They are not IR** | Not validated |
 | start_floor_mV | mV, lowest start cell | Not validated |
-| session, pack, note, pack_uid, label_at_time, series_at_time, charger_alias, channel, file_nnn, charge_mode_at_time, session_type | — | Label |
+| session, pack, note, pack_uid, label_at_time, series_at_time, channel (full name, as in ir_store_v4), charge_mode_at_time, session_type | — | Label |
 
 ## packs.csv
 
@@ -74,7 +74,7 @@ date, pack_uid, event (commission, move, rest_test_start, rest_pool_enter, rest_
 | sibling_median_drop_mV, suspect_drop_mV, excess_mV | mV (result PASS ≤10, BORDERLINE 10–30, FAIL >30) | Derived (not validated) |
 
 ## session_manifest.public.csv
-session, charger_alias, channel, series, mode, slots, notes: labels. nnn_first, nnn_last: log file numbers. days_since_last_use: days, owner-reported ("unknown" allowed).
+session, channel (full name, e.g. `DX8-2 Channel 1`), series, mode, slots, notes: labels. slots is the run order on that channel. days_since_last_use: days, owner-reported ("unknown" allowed).
 
 ## status_calls.csv
 date, pack_uid, label_at_time, status, reason, source, ir_basis: text. Numbers inside `reason` carry their own units. Rows whose `ir_basis` begins "pre-v3" quote `;130;` charge-per-cell mAh values that were mislabelled IR at the time. **Those numbers are not IR.**
