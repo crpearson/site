@@ -6,7 +6,7 @@ import { publicProse } from "@/lib/format";
 import { parseMethodology } from "@/lib/methodology";
 
 export const metadata: Metadata = {
-  title: "Methodology",
+  title: "How I test",
 };
 
 const accents: PanelAccent[] = [

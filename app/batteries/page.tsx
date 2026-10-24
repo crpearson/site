@@ -65,12 +65,13 @@ export default function BatteriesPage() {
           <p className="eyebrow">{blocks.map((block) => block.id).join(" · ")} · CNHL Black Series V2</p>
           <h1 className="h1 mt-2">Fleet health</h1>
           <p className="page-intro mt-4">
-            Each series has its own as-of date. The calls below are the latest status. Fleet charts
-            follow a pack by serial through every measured night, including nights under an earlier
-            label. A solid line joins those readings and runs straight through a night with no
-            reading. No value is filled in. A series mean with only one reading is a single point.
-            A pack&apos;s own page, and the sparkline on its tile, use a dotted join for a night that
-            pack was not charged. Nothing is drawn before the first reading or after the last.
+            The calls below are the latest status for each pack. Each series has its own as-of date, so
+            the dates can differ. The fleet charts follow a pack by serial through every night I measured
+            it, including nights when it had an earlier label. A solid line joins the readings and runs
+            straight through a night with no reading. I don&apos;t fill in missing values. A series mean with
+            only one reading shows as a single point. On a pack&apos;s own page, and in the sparkline on its
+            tile, a dotted join marks a night that pack wasn&apos;t charged. Nothing is drawn before the first
+            reading or after the last.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
@@ -133,7 +134,7 @@ export default function BatteriesPage() {
             </p>
             <p className="stat-sub">
               <IrFigure value={stats.mean} provisional={fleetIncludesProvisional} unit /> across {stats.counted}{" "}
-              packs still in a slot. Rest-test day 0 is not included.
+              packs still in a slot, not counting rest-test day 0.
               {fleetIncludesProvisional ? <ProvisionalLegend /> : null}
             </p>
           </article>
@@ -147,8 +148,8 @@ export default function BatteriesPage() {
             Rest pool
           </h2>
           <p className="note mt-2">
-            Day 0 {stats.rest[0]?.restDay0}. 7-day reading due {stats.rest[0]?.restDue}. These packs are not charged
-            during the test.
+            Day 0 {stats.rest[0]?.restDay0}. 7-day reading due {stats.rest[0]?.restDue}. These packs don&apos;t get
+            charged during the test.
           </p>
           <ul className="mt-3 space-y-2 text-sm">
             {stats.rest.map((row) => (
@@ -172,10 +173,9 @@ export default function BatteriesPage() {
         title="Series mean IR"
         action={
           <span className="note">
-            {IR_UNIT} · a series with one reading is a single point. Later readings are a solid
-            line through a night that series was not measured. No value is filled in there. The
-            mean averages only packs measured in that series that night. Rest-test day 0 is left
-            off this mean.
+            {IR_UNIT} · A series with one reading is a single point. After that, the line runs solid
+            through any night the series wasn&apos;t measured, with nothing filled in. The mean only averages
+            packs measured in that series that night, and it leaves out rest-test day 0.
           </span>
         }
       >
@@ -250,8 +250,8 @@ export default function BatteriesPage() {
           Packs
         </h2>
         <p className="note">
-          Each card shows one status word. The full note from the latest check is under the small
-          chart, and in full on the pack page.
+          Each card shows one status word. The note from the latest check is under the small chart, and
+          the full version is on the pack page.
         </p>
         {blocks.map((block) => (
           <div key={block.id} id={block.id.toLowerCase()}>
@@ -279,8 +279,8 @@ export default function BatteriesPage() {
             Status calls
           </h2>
           <p className="note mt-1">
-            Latest call per pack, in the analyst&apos;s own words. Morning and evening of the same day
-            stay separate. Lamp colour follows the wording.
+            The latest call for each pack, worded as it was recorded. Morning and evening calls on the
+            same day stay separate. The lamp color follows the wording.
           </p>
         </div>
         <div className="panel" data-accent="off">
@@ -390,7 +390,7 @@ export default function BatteriesPage() {
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={heatMin}
           max={heatMax}
-          caption="Color is the latest-cell range on this page. A pack that moved keeps the measurement from its last storage charge. DX8 absolute IR is not a manufacturer rating."
+          caption="The color scale covers the range of latest cell readings on this page. A pack that moved keeps the reading from its last storage charge. DX8 IR isn't a manufacturer rating."
           rows={heatRows.map((row) => ({
             key: row.uid,
             label: (
@@ -410,12 +410,12 @@ export default function BatteriesPage() {
             Trends
           </h2>
           <p className="note mt-1">
-            A star marks a partial night: that night did not include every pack, and it is left
-            incomplete. On these fleet charts a solid line joins every recorded reading for a pack,
-            including nights under an earlier label, and runs through a night with no reading. No
-            value is filled in. A pack with only its first reading is a single point. A partial
-            night with a reading is still a normal point. The series mean still averages only the
-            packs measured in that series that night.
+            A star marks a partial night, one that didn&apos;t include every pack. It&apos;s left incomplete. On
+            these fleet charts, a solid line joins every recorded reading for a pack, including nights
+            under an earlier label, and runs through any night with no reading. Nothing is filled in. A
+            pack with only its first reading is a single point. A partial night with a reading is still a
+            normal point, and the series mean still averages only the packs measured in that series that
+            night.
           </p>
         </div>
         <div className="grid gap-3 lg:grid-cols-2">

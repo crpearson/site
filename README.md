@@ -133,7 +133,7 @@ That runs `python3 -m unittest tests/test_ingest.py` and `node scripts/sane-rang
 - `/batteries/bakeoff/` brand comparison
 - `/batteries/methodology/` how packs are charged, logged, and judged
 - `/batteries/terms-and-rules/` glossary, rules, and gaps
-- `/about/` about Lost Penny
+- `/about/` about page
 - `/howtos/` guide index, including the EdgeTX color-screen theme
 - `/downloads/lost_penny.zip` Lost Penny EdgeTX theme
 - `/builds/`, `/gear/` section stubs

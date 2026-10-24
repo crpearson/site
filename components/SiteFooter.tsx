@@ -17,11 +17,11 @@ export function SiteFooter({
           <strong>LostPennyFPV</strong>
           <span>wtfpv.com</span>
           <a href="/about/">About</a>
-          <span>© 2026 Lost Penny FPV</span>
+          <span>© 2026</span>
         </div>
         <p className="credit">
-          {source}. Logged through {lastIngest}. {rowCount} measurements across {sessionCount} nights. A
-          partial night is left incomplete.
+          {source}, logged through {lastIngest}: {rowCount} measurements across {sessionCount} nights. Partial
+          nights are left as they are.
         </p>
         <p className="credit">
           Data processing and site production by Grok Bot and{" "}

@@ -47,8 +47,9 @@ export default function NextChargePage() {
         <p className="eyebrow">Rules v7</p>
         <h1 className="h1 mt-2">Next charge</h1>
         <p className="page-intro mt-4">
-          Tick every series that flew. Packs run on DX8-1 Channel 1, DX8-1 Channel 2, DX8-2 Channel 1 and DX8-2
-          Channel 2, each on its home channel. Empty slots and pulled packs are skipped and nothing is reordered.
+          Tick every series that flew, and you&apos;ll get the run order and file count for each charger. Each pack
+          runs on its home channel: DX8-1 Channel 1, DX8-1 Channel 2, DX8-2 Channel 1 or DX8-2 Channel 2. Empty
+          slots and pulled packs are skipped, and nothing gets reordered.
         </p>
       </header>
       <SuggestedNext doc={doc} />

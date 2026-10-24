@@ -32,8 +32,8 @@ export default function HowtosPage() {
             <span className="tag">Guide</span>
             <h2>{doc.title}</h2>
             <p>
-              A copper-and-black theme for EdgeTX color-screen radios: the folder, theme.yml, and the
-              mistakes I made.
+              How I made a copper-and-black theme for EdgeTX color-screen radios: the folder, theme.yml, and
+              the mistakes I made.
             </p>
             <span className="go">Read the guide →</span>
           </Link>

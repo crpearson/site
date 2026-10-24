@@ -5,11 +5,11 @@ import Link from "next/link";
 import { marked } from "marked";
 
 export const metadata: Metadata = {
-  title: "About Lost Penny",
-  description: "I fly FPV as Lost Penny. Online I'm LostPennyFPV. This site is where I keep my notes.",
+  title: "About",
+  description: "I'm LostPennyFPV, and this site is where I keep my FPV notes.",
 };
 
-export default function AboutLostPennyPage() {
+export default function AboutPage() {
   const raw = readFileSync(path.join(process.cwd(), "content/about.md"), "utf8");
   const html = marked.parse(raw, { async: false });
 
@@ -21,7 +21,7 @@ export default function AboutLostPennyPage() {
           <Link href="/batteries/terms-and-rules/">Batteries › Terms and rules</Link>.
         </p>
         <div className="title-row">
-          <h1 className="h1">About Lost Penny</h1>
+          <h1 className="h1">About</h1>
           <span className="tag">DRAFT</span>
         </div>
       </header>

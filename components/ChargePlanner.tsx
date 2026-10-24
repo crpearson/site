@@ -53,7 +53,7 @@ export function ChargePlanner({
           <RunSheet plan={plan} serialByLabel={serialByLabel} />
         </div>
       ) : (
-        <p className="note">No series ticked. Set A, set B, and all four are listed below.</p>
+        <p className="note">Nothing ticked yet. Set A, Set B and all four are listed below.</p>
       )}
     </section>
   );

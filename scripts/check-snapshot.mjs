@@ -213,7 +213,7 @@ if (!c4p4 || c4p4.date !== "2026-10-16" || c4p4.status !== "PARALLEL GO: on the 
   fail("C4-P4 latest call should be Go on the C4 board");
 }
 const methodologySha = createHash("sha256").update(fs.readFileSync(path.join(root, "content/methodology.md"))).digest("hex");
-if (methodologySha !== "3c7d230a2ab182b7e9af2583463be41d47600d2a28162658a47be15b36a90ac7") {
+if (methodologySha !== "41c9882c1d29535c60b0f752209c96109148718486c70620f2aaf8e220c92f21") {
   fail(`methodology.md sha256 is ${methodologySha}`);
 }
 

@@ -9,7 +9,7 @@ import { IR_UNIT } from "@/lib/ir";
 
 export const metadata: Metadata = {
   title: { absolute: "Lost Penny FPV — wtfpv.com" },
-  description: "Lost Penny FPV: my drones, my batteries, and what I've learned the hard way.",
+  description: "My drones, my batteries, and what I've learned the hard way.",
 };
 
 function heroWordmark() {
@@ -28,10 +28,10 @@ export default function HomePage() {
     <div className="home">
       <section className="hero" aria-label="Lost Penny FPV">
         <div dangerouslySetInnerHTML={{ __html: wordmark }} />
-        <h1 className="h1">Lost Penny FPV: my drones, my batteries, and what I&apos;ve learned the hard way.</h1>
+        <h1 className="h1">My drones, my batteries, and what I&apos;ve learned the hard way.</h1>
         <p className="lead">
-          This is where I keep track of my LiPo packs, my builds, the gear I actually use, and how-tos for the
-          stuff I had to figure out.
+          I keep my FPV notes here: my LiPo packs, my builds, the gear I actually use, and how-tos for the stuff
+          I had to figure out. Right now it&apos;s mostly batteries.
         </p>
       </section>
 
@@ -40,7 +40,7 @@ export default function HomePage() {
         <div className="grid g4 cols-collapse">
           <Link className="card section-card" href="/batteries/">
             <h3>Batteries</h3>
-            <p>Battery tracker: fleet health, the next charge plan, and how I test.</p>
+            <p>How each pack is holding up, what to charge next, and how I test.</p>
             <span className="go">Open Batteries →</span>
           </Link>
           <Link className="card section-card is-stub" href="/builds/">
@@ -57,7 +57,7 @@ export default function HomePage() {
           </Link>
           <Link className="card section-card" href="/howtos/">
             <h3>HOWTOs</h3>
-            <p>Step-by-step guides for the jobs I do over and over.</p>
+            <p>Guides for the jobs I do over and over.</p>
             <span className="go">Open HOWTOs →</span>
           </Link>
         </div>

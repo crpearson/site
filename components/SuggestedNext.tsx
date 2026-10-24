@@ -61,8 +61,8 @@ export function SuggestedNext({ doc }: { doc: NextChargeV4 }) {
       </h2>
       <p className="suggest-reason">{block.reason}</p>
       <p className="note suggest-basis">
-        Suggestion only. This does not change the charge rules. The planner still follows the series that flew.
-        Basis: lifetime storage cycles per pack, through <span className="nw">{block.as_of_date}</span>.
+        This doesn&apos;t change the charge rules. The planner still follows the series that actually flew. It&apos;s
+        based on lifetime storage cycles per pack, through <span className="nw">{block.as_of_date}</span>.
       </p>
       <table className="suggest-counts">
         <caption className="sr-only">Lifetime storage cycles by series</caption>
