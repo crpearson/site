@@ -206,7 +206,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
         <article className="stat" data-tone="signal">
           <p className="eyebrow">Last storage</p>
           <p className="stat-value text-[1.15rem]">
-            {pack.points.length ? publicSession(pack.points[pack.points.length - 1].session) : "—"}
+            {pack.lastStorage ? publicSession(pack.lastStorage) : "—"}
           </p>
           <p className="stat-sub">
             {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
