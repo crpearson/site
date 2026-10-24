@@ -437,7 +437,7 @@ export default function BatteriesPage() {
               key={`${fleet.id}-spread`}
               heading="h3"
               accent="rulea"
-              eyebrow={`Rules v5 · ${fleet.id}`}
+              eyebrow={`Rules v7 · ${fleet.id}`}
               title="Intra-pack spread"
               action={
                 <span className="note">
@@ -498,8 +498,9 @@ export default function BatteriesPage() {
               value is filled in there. Nights before that series existed are not marked.               Rule B needs two packs charged together on that night&apos;s board. A night the series did
               run, but not as a board, is not a point. A recorded board night uses that night&apos;s
               recorded figure. A next-night outlook is not drawn here. On 2026-10-10 the points are
-              C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. C3 and C4
-              have no board night yet, so they are not on this chart. The rest-test day-0 rows are
+              C1 0.135 V and C2 0.479 V. On 2026-10-11 they are C1 0.186 V and C2 0.230 V. Since
+              2026-10-17 every pack charges on its own, so there are no new points. C3 and C4 have only
+              charged on their own, so they are not on this chart. The rest-test day-0 rows are
               not a parallel charge and are not on this line. Series do not share a board.
             </p>
             <LineChart

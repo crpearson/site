@@ -203,10 +203,11 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
               : `Floor watch ${thresholds.floor_eye_mv} mV`}
           </p>
         </article>
-        {pack.series === "C3" || pack.series === "C4" ? (
         <article className="stat" data-tone="signal">
-          <p className="eyebrow">Storage night</p>
-          <p className="stat-value text-[1.15rem]">Night 1 of 2</p>
+          <p className="eyebrow">Last storage</p>
+          <p className="stat-value text-[1.15rem]">
+            {pack.points.length ? publicSession(pack.points[pack.points.length - 1].session) : "—"}
+          </p>
           <p className="stat-sub">
             {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
@@ -220,24 +221,6 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
             )}
           </p>
         </article>
-        ) : (
-        <article className="stat" data-tone="ruleb">
-          <p className="eyebrow">Rule B · rest</p>
-          <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
-          <p className="stat-sub">
-            {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
-            {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
-            {pack.row.sr != null ? (
-              <>
-                {" "}
-                · S_R <IrFigure value={pack.row.sr} provisional={pack.row.provisional} unit />
-              </>
-            ) : (
-              ""
-            )}
-          </p>
-        </article>
-        )}
       </div>
 
       {pack.chargeRuns.length ? (
@@ -404,7 +387,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel heading="h3" accent="rulea" eyebrow="Rules v5" title="Intra-pack spread">
+        <Panel heading="h3" accent="rulea" eyebrow="Rules v7" title="Intra-pack spread">
           <LineChart
             categories={pack.categories}
             series={pack.spreadSeries}

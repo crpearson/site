@@ -9,7 +9,7 @@ import { IR_UNIT } from "@/lib/ir";
 export const metadata: Metadata = {
   title: "Terms and rules",
   description:
-    "How I measure my LiPo fleet: DX8 storage charges, charge rules v5, Rule B, and what the logs don't contain.",
+    "How I measure my LiPo fleet: DX8 storage charges, charge rules v7, Rule B, and what the logs don't contain.",
 };
 
 export default function TermsAndRulesPage() {
