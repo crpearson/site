@@ -202,6 +202,54 @@ for (const pack of packs) {
   pack.pool = "";
 }
 
+/**
+ * Last storage comes from the session manifest, not the IR store. A held IR row
+ * still has a storage slot. Slot labels resolve through the label registry
+ * (display label and hidden labels, when that row covers the session) and
+ * otherwise through the current packs.csv label.
+ */
+const manifestRows = readCsv("v2/session_manifest.public.csv");
+
+function registryCovers(row: LabelMap, session: string): boolean {
+  if (row.appliesTo.trim().toLowerCase() === "all dates") return true;
+  const day = session.match(/^(\d{4}-\d{2}-\d{2})/)?.[1] ?? session;
+  return row.date === session || row.date === day;
+}
+
+function serialForSlot(label: string, session: string): string | null {
+  const claimed = new Set<string>();
+  for (const row of labelRegistry) {
+    if (!registryCovers(row, session)) continue;
+    if (row.label === label || row.hidden.includes(label)) claimed.add(row.uid);
+  }
+  if (claimed.size === 1) return [...claimed][0];
+  if (claimed.size > 1) return null;
+  return packs.find((pack) => pack.label === label)?.uid ?? null;
+}
+
+/** Manifest storage modes. `single-series` counts if it appears; this file uses individual and parallel. */
+function manifestIsStorage(session: string, mode: string): boolean {
+  if (session.endsWith("-restday0")) return false;
+  const normalized = mode.trim().toLowerCase();
+  if (normalized === "individual charge" || normalized === "charge-run") return false;
+  return normalized === "individual" || normalized === "parallel" || normalized === "single-series";
+}
+
+const lastStorageByUid = new Map<string, string>();
+for (const row of manifestRows) {
+  if (!manifestIsStorage(row.session, row.mode)) continue;
+  for (const label of row.slots.split("|").map((item) => item.trim()).filter(Boolean)) {
+    const uid = serialForSlot(label, row.session);
+    if (!uid) continue;
+    const prev = lastStorageByUid.get(uid);
+    if (!prev || compareTime(row.session, prev) > 0) lastStorageByUid.set(uid, row.session);
+  }
+}
+
+export function lastStorageSession(uid: string): string | null {
+  return lastStorageByUid.get(uid) ?? null;
+}
+
 const events: PackEvent[] = readCsv("v2/pack_events.csv")
   .map((row) => ({
     date: row.date,
@@ -1235,6 +1283,7 @@ export type PackView = {
   points: Measurement[];
   restDays: Measurement[];
   chargeRuns: Measurement[];
+  lastStorage: string | null;
   categories: Category[];
   cellSeries: ChartSeries[];
   spreadSeries: ChartSeries[];
@@ -1282,6 +1331,7 @@ export function getPack(uid: string): PackView | null {
     points,
     restDays: pointsFor(uid).filter((point) => point.sessionType === "rest-test-day0"),
     chargeRuns: pointsFor(uid).filter((point) => point.sessionType === "charge-run"),
+    lastStorage: lastStorageSession(uid),
     categories,
     cellSeries: [0, 1, 2, 3, 4, 5].map((index) => ({
       id: `c${index + 1}`,

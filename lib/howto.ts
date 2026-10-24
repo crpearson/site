@@ -28,14 +28,14 @@ type Figure = {
 /** Alt text and captions for the figures in the EdgeTX theme guide. */
 const FIGURES: Record<string, Figure> = {
   "hero-radio-photo.jpg": {
-    alt: "The Lost Penny theme on an EdgeTX radio: copper top bar, timer, channel bars and the L-dot model image",
-    caption: "Lost Penny running on the real radio.",
+    alt: "My copper-and-black theme on an EdgeTX radio: copper top bar, timer, channel bars and the L-dot model image",
+    caption: "The theme running on my radio.",
     width: 1248,
     height: 780,
     full: true,
   },
   "palette-swatches.png": {
-    alt: "The 11 Lost Penny theme.yml colours as swatches with key names and hex values",
+    alt: "The 11 theme.yml colors as swatches with key names and hex values",
     caption: "The whole palette: 11 keys, SECONDARY1 and EDIT share #C66521.",
     width: 1200,
     height: 500,
@@ -49,29 +49,29 @@ const FIGURES: Record<string, Figure> = {
     pixel: true,
   },
   "logo-2x.png": {
-    alt: "The Lost Penny theme logo tile: L-dot above the LOST PENNY wordmark",
+    alt: "The theme's logo tile: the L-dot above the wordmark",
     caption: "logo.png at 2x.",
     width: 450,
     height: 256,
     pixel: true,
   },
   "screenshots-strip.png": {
-    alt: "Three Lost Penny screenshots: main screen, model setup and model select",
+    alt: "Three theme screenshots: main screen, model setup and model select",
     caption: "screenshot1-3.png: main screen, model setup, model select.",
     width: 1500,
     height: 316,
     full: true,
   },
   "radio-themes-menu.jpg": {
-    alt: "Themes page with Lost Penny selected",
-    caption: "The radio's Themes page with Lost Penny highlighted.",
+    alt: "The radio's Themes page with my theme selected",
+    caption: "The radio's Themes page with my theme highlighted.",
     width: 1200,
     height: 800,
     full: true,
   },
   "banding-vs-smoke.jpg": {
     alt: "Simulation: a smooth dark gradient breaks into rings at RGB565, next to the dithered smoke background",
-    caption: "Simulation: a smooth gradient banding on a 16-bit screen vs dithered smoke.",
+    caption: "Simulation: a smooth gradient bands on a 16-bit screen; the dithered smoke doesn't.",
     width: 1600,
     height: 600,
     full: true,
@@ -84,7 +84,7 @@ const FIGURES: Record<string, Figure> = {
     full: true,
   },
   "center-clear-before-after.jpg": {
-    alt: "Before: a faint L-dot logo in the background behind the channel values. After: a clear centre with only the model image",
+    alt: "Before: a faint L-dot logo in the background behind the channel values. After: a clear center with only the model image",
     caption: "Before and after: taking the logo out of the middle.",
     width: 1600,
     height: 600,

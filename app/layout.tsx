@@ -6,7 +6,7 @@ import "./fonts.css";
 import "./globals.css";
 
 const description =
-  "Lost Penny FPV: my drones, my batteries, and what I've learned the hard way.";
+  "My drones, my batteries, and what I've learned the hard way.";
 
 const title = {
   default: "Lost Penny FPV — wtfpv.com",

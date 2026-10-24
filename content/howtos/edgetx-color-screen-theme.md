@@ -1,12 +1,12 @@
-# How to make an EdgeTX color-screen theme (the Lost Penny way)
+# How to make an EdgeTX color-screen theme
 
-Hi, Lost Penny here (LostPennyFPV). This is how I built **Lost Penny**, a copper-and-black theme for EdgeTX color-screen radios. I'll walk you through the real files, then share the mistakes I made so you can skip them.
+A theme for an EdgeTX color-screen radio is just a folder of PNGs and one small text file. No coding, no firmware flashing.
 
-A theme is just a folder of PNGs and one small text file. No coding, no firmware flashing.
+I made a copper-and-black one called **Lost Penny**. Below are the real files, then the mistakes I made so you can skip them.
 
-![The Lost Penny theme running on my radio](images/hero-radio-photo.jpg) <!-- IMAGE: hero photo of the real radio showing the Lost Penny main screen -->
+![The theme running on my radio](images/hero-radio-photo.jpg) <!-- IMAGE: hero photo of the real radio showing the Lost Penny main screen -->
 
-## Download and install the Lost Penny theme
+## Download and install the theme
 
 Just want the theme? Grab it here:
 
@@ -16,11 +16,11 @@ Just want the theme? Grab it here:
 2. Copy that folder into the `THEMES` folder on your radio's SD card, so you end up with `THEMES/lost_penny/theme.yml`.
 3. Select it on the radio (see [Select it on the radio](#select-it-on-the-radio) below).
 
-Lost Penny started from the **IG_Coffee** theme by InGage FPV in the [EdgeTX themes repo](https://github.com/EdgeTX/themes). I kept the file layout and swapped in my own colors and artwork.
+I started from the **IG_Coffee** theme by InGage FPV in the [EdgeTX themes repo](https://github.com/EdgeTX/themes). I kept the file layout and swapped in my own colors and artwork. Thanks to InGage FPV for the head start.
 
 ## 1. The folder layout
 
-Every theme lives in its own folder under `/THEMES/` on the SD card. Here is Lost Penny exactly as it ships:
+Every theme lives in its own folder under `/THEMES/` on the SD card. Here's mine exactly as it ships:
 
 ```
 THEMES/
@@ -37,11 +37,11 @@ THEMES/
     └── background_800x480.png
 ```
 
-`theme.yml`, `logo.png` and the three screenshots are the required files. The backgrounds are optional, but your theme looks unfinished without them. Keep the folder name short, lowercase, no spaces, and no hidden files (Macs love to sneak `._` files onto SD cards).
+`theme.yml`, `logo.png` and the three screenshots are required. The backgrounds are optional, but your theme will look unfinished without them. Keep the folder name short, lowercase, no spaces, and no hidden files (Macs love to sneak `._` files onto SD cards).
 
 ## 2. theme.yml: the colors
 
-This is the whole Lost Penny `theme.yml`:
+Here's my whole `theme.yml`:
 
 ```yaml
 ---
@@ -79,13 +79,13 @@ What each color does (from the EdgeTX theme docs):
 - **WARNING**: warning text. Red-orange, because warnings should look like warnings.
 - **DISABLED**: greyed-out items.
 
-EdgeTX 2.12 added two optional keys, **QM_BG** and **QM_FG**, for the Quick Menu background and foreground. Lost Penny doesn't set them yet. Add them if you want full control on 2.12.
+EdgeTX 2.12 added two optional keys, **QM_BG** and **QM_FG**, for the Quick Menu background and foreground. Mine doesn't set them yet. Add them if you want full control on 2.12.
 
-![The Lost Penny palette as swatches](images/palette-swatches.png) <!-- IMAGE: the 11 theme.yml colors as labelled swatches -->
+![The theme palette as swatches](images/palette-swatches.png) <!-- IMAGE: the 11 theme.yml colors as labelled swatches -->
 
 ## 3. Backgrounds: one per screen size
 
-The radio looks for `background_<width>x<height>.png` that matches its own screen. If that file is missing, it tries `background.png` in your theme folder, and then falls back to the stock EdgeTX background. So ship all five:
+The radio looks for `background_<width>x<height>.png` that matches its own screen. If that file is missing, it tries `background.png` in your theme folder, then falls back to the stock EdgeTX background. So I'd ship all five:
 
 | File | Example radios (per EdgeTX docs) |
 |---|---|
@@ -97,13 +97,13 @@ The radio looks for `background_<width>x<height>.png` that matches its own scree
 
 My backgrounds are dark copper smoke with a touch of verdigris green around the edges, saved as plain RGB PNGs (no transparency).
 
-![Lost Penny background at 480x272](images/background-480x272.png) <!-- IMAGE: the 480x272 smoke background, shown at 2x -->
+![The background at 480x272](images/background-480x272.png) <!-- IMAGE: the 480x272 smoke background, shown at 2x -->
 
 ## 4. logo.png (225x128)
 
-This is the tile you see in the theme picker. Make it 225x128 to match the EdgeTX example theme. Mine is the stacked Lost Penny logo on black.
+This is the tile you see in the theme picker. Make it 225x128 to match the EdgeTX example theme. Mine is my stacked logo on black.
 
-![The Lost Penny theme logo tile](images/logo-2x.png) <!-- IMAGE: logo.png at 2x (optional) -->
+![The theme logo tile](images/logo-2x.png) <!-- IMAGE: logo.png at 2x (optional) -->
 
 ## 5. Screenshots
 
@@ -115,7 +115,7 @@ The three screenshots are previews of your theme, used in the theme picker and i
 
 Mine are 480x272. The easiest way to make them is the simulator in EdgeTX Companion, which has a screenshot button.
 
-![Three Lost Penny screenshots: main screen, model setup and model select](images/screenshots-strip.png) <!-- IMAGE: screenshot1-3 side by side -->
+![Three theme screenshots: main screen, model setup and model select](images/screenshots-strip.png) <!-- IMAGE: screenshot1-3 side by side -->
 
 ## 6. Install it and select it on the radio
 
@@ -131,7 +131,7 @@ Mine are 480x272. The easiest way to make them is the simulator in EdgeTX Compan
 
 The same menu has **Edit**, so you can tweak colors on the radio itself.
 
-![Themes page with Lost Penny selected](images/radio-themes-menu.jpg) <!-- IMAGE: photo of the radio's Themes page with Lost Penny highlighted -->
+![Themes page with my theme selected](images/radio-themes-menu.jpg) <!-- IMAGE: photo of the radio's Themes page with Lost Penny highlighted -->
 
 ## 7. Lessons I learned the hard way
 
@@ -145,7 +145,7 @@ The same menu has **Edit**, so you can tweak colors on the radio itself.
 
 ![#B57131 vs #C66521 on the real screen](images/copper-comparison.jpg) <!-- IMAGE: photo of the radio showing the old #B57131 copper next to #C66521 -->
 
-**Test on the real radio and take a photo.** The PC preview and Companion simulator lie about color. Load the theme, look at it outside and indoors, and take a photo so you can compare versions.
+**Test on the real radio and take a photo.** The PC preview and the Companion simulator lie about color. Load the theme, look at it outside and indoors, and take a photo so you can compare versions.
 
 **Keep the middle of the background clear.** I had a logo in the center of the background. It fought with the widgets and the model image, so I took it out. Busy stuff goes at the edges.
 
@@ -153,13 +153,11 @@ The same menu has **Edit**, so you can tweak colors on the radio itself.
 
 **Model images are 192x114 PNGs with transparency.** That's the size EdgeTX suggests for the Model Info widget. With a transparent background they sit cleanly on the theme. Put them in `/IMAGES/` and keep the file name short. EdgeTX says 9 characters max, so mine is `lostpenny.png`.
 
-![Lost Penny model image](images/model-image.png) <!-- IMAGE: the 192x114 L-dot model image on a checkerboard and on black -->
+![The model image](images/model-image.png) <!-- IMAGE: the 192x114 L-dot model image on a checkerboard and on black -->
 
 ## That's it
 
-A folder, a YAML file, some PNGs, and a few trips between your computer and the radio. Make something that looks like *you*, then go fly.
-
-— LostPennyFPV
+Anyhow, that's the whole thing: a folder, a YAML file, some PNGs, and a few trips between your computer and the radio. Make something that looks like *you*, then go fly.
 
 ## Sources
 

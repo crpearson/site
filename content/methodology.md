@@ -1,14 +1,14 @@
-# Methodology — LostPennyFPV LiPo Fleet Health
+# How I test
 
-*How this fleet is charged, logged, and judged. These are one hobbyist's working rules for one fleet, not manufacturer guidance. Version: 2026-10-17 (rules v7; pack registry v2).*
+*How I charge, log and judge my packs. These are my working rules for my own fleet, not manufacturer guidance. Version: 2026-10-17 (rules v7; pack registry v2).*
 
 ## Why track packs at all
 
-5" FPV packs usually fail one cell at a time. When packs are parallel-charged, one bad cell can put the whole board at risk. The goal here is to catch a weak pack early, pull it only when it is a real fire risk, and follow every pack's health over months and years.
+5" FPV packs usually fail one cell at a time, and when packs are parallel-charged, one bad cell can put the whole board at risk. I want to catch a weak pack early, pull it only when it's a real fire risk, and follow every pack's health over months and years.
 
 ## Hardware
 
-| Item | What's used |
+| Item | What I use |
 | --- | --- |
 | Packs | CNHL V2 6S ~1300 mAh (Black). Four series of six in rotation (**C1**, **C2**, **C3** and **C4**). C3 and C4 were added 2026-10-14 (purchased 2026-10-13) |
 | Chargers | Two Junsi iCharger DX8s, **DX8-1** and **DX8-2**. Every pack has a permanent home channel for its storage log (see *Home channels*) |
@@ -16,7 +16,7 @@
 | Parallel boards | HGLRC Thor 6-port, fused |
 | Extra charger | HOTA D6 Pro on the same PSU. It handles extra parallel work only and **isn't used for tracking logs**. Packs stored on the HOTA (e.g. while travelling) sit slightly below the DX8's 3.85 V/cell storage target, so the next DX8 storage run is a short top-up |
 
-A pack is only ever parallel-charged with its own series. Series are never mixed on a board, and brands are never mixed in a series.
+A pack only ever parallel-charges with its own series. I never mix series on a board, or brands within a series.
 
 ## Pack identity
 
@@ -30,7 +30,7 @@ A pack is only ever parallel-charged with its own series. Series are never mixed
 1. **Before a flying session, parallel-charge by series** at about 1.5C per pack (the board current is that times the number of packs on the board). Every pack charges on its own parallel board, one six-pack parallel board per series. Before connecting, each pack's resting voltage is checked (see *Checks before connecting*). A pack that fails a check charges alone that night; a pulled pack isn't charged at all.
 2. **Fly.**
 3. **After flying, storage-charge each pack on its own** on its home DX8 channel, in **Storage mode, 3.85 V/cell**. Every series that was flown is charged, all of it, including any packs in it that didn't fly. Series that weren't flown stay off. Charging one pack at a time is what exposes a weak cell that a parallel board would hide.
-4. **Upload the DX8 Storage logs** with their original file names, plus a short note of **which series or packs were flown**, and **how many days since each pack was last flown or charged** ("unknown" is allowed). Resting voltage depends on that, so it's recorded with the night. Every raw log is kept permanently. Nothing is ever deleted, and new data is only ever added.
+4. **Upload the DX8 Storage logs** with their original file names, plus a short note of **which series or packs were flown**, and **how many days since each pack was last flown or charged** ("unknown" is allowed). Resting voltage depends on that, so it's recorded with the night. I keep every raw log permanently. Nothing is ever deleted; new data is only ever added.
 
 ### What gets logged
 From each DX8 Storage log:
@@ -94,13 +94,13 @@ These checks apply only when packs are actually connected in parallel. They are 
 | Connectors | A damaged main lead, XT60 or balance plug. Fix it before any charging |
 | Board warning | A port fuse blows or a balance-pin light comes on: stop the charge, find the outlier pack, and charge it alone. If the same pack keeps causing it, its own gap to the board tightens to **0.30 V** |
 
-**The boards.** The HGLRC Thor 6-port has a **15 A blade fuse on each port** and **no main input fuse**, a **2 A self-resetting fuse on each balance pin** with a light that shows when it trips, and a **40 A** maximum input. Its manual asks for each cell within 0.1 V, main lead first, then balance. So the 0.60 V and 0.10 V limits stay as they are, now backed by the board maker. At a **0.60 V** gap, the first rush of current into one pack joining five matched packs is about **13 A** for typical packs and about **21 A** for fresh, warm ones. It fades within about a minute. A **storage pack next to a full pack** draws about **46 A**, which blows the port fuse.
+**The boards.** The HGLRC Thor 6-port has a **15 A blade fuse on each port** and **no main input fuse**, a **2 A self-resetting fuse on each balance pin** with a light that shows when it trips, and a **40 A** maximum input. Its manual asks for each cell within 0.1 V, main lead first, then balance. So I'm keeping the 0.60 V and 0.10 V limits, and now the board maker backs them up. At a **0.60 V** gap, the first rush of current into one pack joining five matched packs is about **13 A** for typical packs and about **21 A** for fresh, warm ones. It fades within about a minute. A **storage pack next to a full pack** draws about **46 A**, which blows the port fuse.
 
 The cell-against-cell check matters because on a parallel board each cell is tied to the same-position cell of every other pack through the balance wires. Two packs can match on total voltage and still push current through those thin wires.
 
 The site shows two figures per board for the pack spread. The **recorded** figure is history: the packs actually charged together on that series' last board night, judged by the rule in force that night, and it never changes afterwards. The **next-night outlook** uses the latest rest voltage of every pack on the board and names any pack that was outside 0.60 V, so it can be checked first. A series that hasn't had a board night yet has no recorded figure. The pack spread shows **N/A** for a pulled pack (not charged; its slot is skipped) and for a series with fewer than two packs on the board.
 
-**What the logs can and can't show here.** The next board connection comes after the storage charge, so the board checks use the voltages at the end of each pack's latest storage run. If a run has no end reading, or the pack was charged with no log, we use the end of its previous storage run and say so. When those end voltages show packs more than 0.60 V apart, cells more than 0.10 V apart, a cell more than 0.10 V from the same cell of another pack, or a cell between 2.0 and 3.0 V, it becomes an advisory: **check resting voltage before connecting**. It is never a status change. The check itself is done at the board.
+**What the logs can and can't show here.** The next board connection comes after the storage charge, so the board checks use the voltages at the end of each pack's latest storage run. If a run has no end reading, or the pack was charged with no log, I use the end of its previous storage run and say so. When those end voltages show packs more than 0.60 V apart, cells more than 0.10 V apart, a cell more than 0.10 V from the same cell of another pack, or a cell between 2.0 and 3.0 V, it becomes an advisory: **check resting voltage before connecting**. It is never a status change. The check itself is done at the board.
 
 Rule A looks at one pack's IR, and the board checks look at which packs can share a board. The two are tracked separately and never lumped together as "spread."
 
@@ -118,7 +118,7 @@ The lowest cell on the first log line, as the pack arrives.
 ### 6. Self-discharge check
 Self-discharge is the one voltage sign that points to fire risk: a weak separator lets a small current run inside the cell, and that can turn into a short. **A pack is pulled** if, after a balanced storage charge, one cell drops **0.05 V or more more than its other cells within 48 to 72 hours**, or any cell loses **about 0.10 V within 24 hours**.
 
-We check it from the logs for a pack that hasn't flown in between: compare the first reading of its next storage log with the end of its last storage run, and take the suspect cell's drop minus the middle drop of the other cells. The upload note has to list the series or packs that were flown.
+I check it from the logs for a pack that hasn't flown in between: compare the first reading of its next storage log with the end of its last storage run, and take the suspect cell's drop minus the middle drop of the other cells. The upload note has to list the series or packs that were flown.
 - **48 to 72 hours:** the pull rule applies directly.
 - **Longer gaps:** an extra drop under 0.05 V clears the check. 0.05 V or more over a longer gap isn't proof, so it's an advisory to recheck within 48 to 72 hours.
 - The storage end is read as the charge finishes, not 90 minutes later. That lifts every cell's drop a little, and about equally, so the extra drop of one cell over the others still holds.
@@ -193,8 +193,8 @@ The rest pool is retired (2026-10-17). C1-P4 and C2-P2 are back at their home sl
 
 - **Pack temperature:** not in the logs. The temperature the DX8 logs and shows is the charger's own, not the pack's. Heat on charge is reported by hand.
 - **Swelling, pouch damage, connector damage and abnormal charging:** not in the logs. Reported by hand.
-- **Flight times:** not in the logs, so we can't tell whether a first log reading was 90 minutes or more after a flight. Voltage signs from the logs are advisories.
-- **The board checks:** read at the board before connecting, not from our logs.
+- **Flight times:** not in the logs, so I can't tell whether a first log reading was 90 minutes or more after a flight. Voltage signs from the logs are advisories.
+- **The board checks:** read at the board before connecting, not from my logs.
 - **Capacity in/out (mAh) over time:** not tracked. Storage runs are top-ups, not capacity tests.
 - **Charge count:** each pack's number of logged storage sessions is tracked. Older flights and charges before logging began aren't counted.
 - **Purchase date:** unknown for the older packs; recorded for new packs.
@@ -225,13 +225,13 @@ The pull and charge-alone rules come from a 2026-10-17 review of the published g
 
 ## Safety notes
 
-- **Where charging happens:** parallel charges are done on a concrete floor, away from anything flammable, and are never left unattended. Storage charges are done in a fireproof BatBox.
+- **Where charging happens:** I parallel-charge on a concrete floor, away from anything flammable, and never leave it unattended. Storage charges happen in a fireproof BatBox.
 - Parallel-charge only within one series, on fused boards, and only packs that pass the board checks at the time: main lead first, then the balance plug.
 - A swollen, damaged or hot pack, or one with a cell under 1.5 V, is pulled and not charged.
 - Storage-charge each pack on its own after flying so one bad cell can't hide in a group.
 - A pack whose cell collapses or can't hold storage voltage comes out of service. *(Example: an original C2-P5 had a cell drop from about 3.78 V to 1.8 V. The pack was retired and a qualified replacement took the C2-P5 slot.)*
 - Watch and performance notes are notes, not a reason to panic. A pull is a signal to act.
-- These are one hobbyist's rules for one fleet. Follow your manufacturer's guidance and your own judgment.
+- These are my rules for my fleet. Follow your manufacturer's guidance and your own judgment.
 
 ## New packs
 
@@ -240,4 +240,4 @@ The pull and charge-alone rules come from a 2026-10-17 review of the published g
 - A pulled pack may retire. A new pack can take a freed slot under a new permanent ID.
 
 ---
-*Fleet: LostPennyFPV. Data and status calls are updated after each Storage night.*
+*I update the data and status calls after each Storage night.*

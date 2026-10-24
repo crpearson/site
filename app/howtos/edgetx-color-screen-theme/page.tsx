@@ -8,7 +8,7 @@ import { EDGE_TX_THEME_SLUG, parseHowto } from "@/lib/howto";
 export const metadata: Metadata = {
   title: "EdgeTX color-screen theme",
   description:
-    "How I built Lost Penny, a copper-and-black theme for EdgeTX color-screen radios.",
+    "How I built a copper-and-black theme for EdgeTX color-screen radios.",
 };
 
 export default function EdgeTxThemeHowtoPage() {

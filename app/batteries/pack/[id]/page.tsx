@@ -36,10 +36,10 @@ function historyNote(event: { event: string; to: string; date: string; reason: s
   const replacement = /replacement/i.test(event.reason);
   const when = isSessionId(event.date) ? null : event.date;
   const base = when
-    ? `Commissioned into ${event.to} at ${when}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`
-    : `Commissioned into ${event.to}, the first night with measurements. Earlier catalog nights are not in this record. The pack ID was assigned on 2026-10-08.`;
+    ? `Commissioned into ${event.to} on ${when}, its first night with measurements. Earlier catalog nights aren't in this record. The pack ID was assigned on 2026-10-08.`
+    : `Commissioned into ${event.to}, its first night with measurements. Earlier catalog nights aren't in this record. The pack ID was assigned on 2026-10-08.`;
   return replacement
-    ? `${base} This pack replaced an earlier one in the same slot, which is not in this record.`
+    ? `${base} It replaced an earlier pack in the same slot, and that pack isn't in this record.`
     : base;
 }
 
@@ -203,10 +203,11 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
               : `Floor watch ${thresholds.floor_eye_mv} mV`}
           </p>
         </article>
-        {pack.series === "C3" || pack.series === "C4" ? (
         <article className="stat" data-tone="signal">
-          <p className="eyebrow">Storage night</p>
-          <p className="stat-value text-[1.15rem]">Night 1 of 2</p>
+          <p className="eyebrow">Last storage</p>
+          <p className="stat-value text-[1.15rem]">
+            {pack.lastStorage ? publicSession(pack.lastStorage) : "—"}
+          </p>
           <p className="stat-sub">
             {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
             {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
@@ -220,31 +221,13 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
             )}
           </p>
         </article>
-        ) : (
-        <article className="stat" data-tone="ruleb">
-          <p className="eyebrow">Rule B · rest</p>
-          <p className="stat-value text-[1.15rem]">{pack.ruleB ?? "Charged in parallel"}</p>
-          <p className="stat-sub">
-            {pack.row.lowGap != null ? `Low-cell gap ${pack.row.lowGap} mV` : "Low-cell gap —"}
-            {pack.row.rest != null ? ` · rest ${volts(pack.row.rest)} V` : ""}
-            {pack.row.sr != null ? (
-              <>
-                {" "}
-                · S_R <IrFigure value={pack.row.sr} provisional={pack.row.provisional} unit />
-              </>
-            ) : (
-              ""
-            )}
-          </p>
-        </article>
-        )}
       </div>
 
       {pack.chargeRuns.length ? (
         <Panel accent="signal" eyebrow="Not a storage night" title="Charge run">
           <p className="note mb-3">
-            This full charge is not the latest IR, not a fleet or series mean, and not a Rule B night.
-            Start voltage, floor, gap, and rest come from the charge start and are not shown here.
+            This full charge isn&apos;t the latest IR, a fleet or series mean, or a Rule B night. Its start
+            voltage, floor, gap and rest come from the charge start and aren&apos;t shown here.
           </p>
           <div className="table-wrap scroll-cue" data-scroll-ok="">
             <table className="status-table">
@@ -282,8 +265,8 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
       {pack.restDays.length ? (
         <Panel accent="floor" eyebrow="Not a parallel charge" title="Rest test day 0">
           <p className="note mb-3">
-            This individual top-up is the day-0 baseline. It is not the latest IR, not a fleet or series
-            mean, and not a Rule B night.
+            This individual top-up is the day-0 baseline. It isn&apos;t the latest IR, a fleet or series mean, or
+            a Rule B night.
           </p>
           <div className="table-wrap scroll-cue" data-scroll-ok="">
             <table className="status-table">
@@ -378,12 +361,12 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
 
       <Panel accent="signal" eyebrow="Every night for this pack" title="Cell IR across nights">
         <p className="note mb-3">
-          The line follows this pack under whatever label it had that night, keyed by serial. Every
-          recorded reading is joined to the next one, including charge-alone nights,
-          and nights from before a move. A night it was not charged, between two readings, is a faint
-          dotted line with no value on that night. Nothing is drawn before the first reading or after
-          the last. A pack with only its first reading is a single point. A star on the night label
-          is a partial night and is separate.
+          The line follows this pack by serial, under whatever label it had that night. Every recorded
+          reading is joined to the next one, including charge-alone nights and nights from before a move.
+          A night it wasn&apos;t charged, between two readings, shows as a faint dotted line with no value.
+          Nothing is drawn before the first reading or after the last, and a pack with only its first
+          reading is a single point. A star on the night label means a partial night, which is a separate
+          thing.
           {pack.nights.some((night) => night.kind === "charged-no-log")
             ? ` Charged, no log: ${pack.nights
                 .filter((night) => night.kind === "charged-no-log")
@@ -404,7 +387,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
       </Panel>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <Panel heading="h3" accent="rulea" eyebrow="Rules v5" title="Intra-pack spread">
+        <Panel heading="h3" accent="rulea" eyebrow="Rules v7" title="Intra-pack spread">
           <LineChart
             categories={pack.categories}
             series={pack.spreadSeries}
@@ -437,7 +420,7 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
           columnLabels={["Cell 1", "Cell 2", "Cell 3", "Cell 4", "Cell 5", "Cell 6"]}
           min={Math.min(...historyValues)}
           max={Math.max(...historyValues)}
-          caption="Each night is one row. A dash is a night this pack was not charged. On the line chart, a faint dotted join connects the readings on either side, with no value filled in. Nothing is drawn before the first reading or after the last."
+          caption="Each night is one row. A dash means this pack wasn't charged that night. On the line chart, a faint dotted join connects the readings on either side, with no value filled in. Nothing is drawn before the first reading or after the last."
           rows={pack.categories.flatMap((category, index) =>
             nightUnpublished(category.id, pack.series) || nonStorageSession(category.id)
               ? []
@@ -461,13 +444,12 @@ export default async function PackPage({ params }: PageProps<"/batteries/pack/[i
       <details className="panel" data-accent="muted">
         <summary className="cursor-pointer font-medium">Night table</summary>
         <p className="note mt-3">
-          Cell, average, and spread figures are {IR_UNIT}. A Rest pool night is labeled Rest
-          pool: the pack is off every board and is not charged. Not charged means this pack was in
-          service and was not logged that night. On the charts, a faint dotted line joins the
-          readings on either side of that night, and that night has no value. Nothing is drawn
-          before the first reading or after the last. A star is a partial night, which is different.
-          Nights before this pack was commissioned are not marked. Readings from before a move stay
-          on this line.
+          Cell, average and spread figures are in {IR_UNIT}. A Rest pool night is labeled Rest pool: the
+          pack was off every board and wasn&apos;t charged. Not charged means the pack was in service and
+          wasn&apos;t logged that night. On the charts, a faint dotted line joins the readings on either side
+          of that night, and that night has no value. Nothing is drawn before the first reading or after
+          the last. A star is a partial night, which is different. Nights before this pack was
+          commissioned aren&apos;t marked, and readings from before a move stay on this line.
         </p>
         <div className="table-wrap scroll-cue mt-3" data-scroll-ok="">
           <table className="status-table">

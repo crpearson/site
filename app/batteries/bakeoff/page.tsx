@@ -9,7 +9,7 @@ import { callChipText } from "@/lib/lamp";
 export const metadata: Metadata = {
   title: "Brand bake-off",
   description:
-    "Catalog prices for CNHL Black Series V2 and bake-off candidates, checked 2026-09-23. No cost per cycle.",
+    "Catalog prices for my CNHL Black Series V2 packs and the brands I'm comparing them with, checked 2026-09-23. No cost per cycle yet.",
 };
 
 function PriceBar({
@@ -61,11 +61,11 @@ export default function BakeoffPage() {
         <p className="eyebrow">Catalog comparison · prices checked {checked}</p>
         <h1 className="h1 mt-2">Brand bake-off</h1>
         <p className="page-intro mt-4">
-          Owned series are the ones in service. Catalog prices are shop prices, not what was paid
-          for a pack. Purchase date, price, and vendor are blank until they are supplied. C3 and C4
-          are in rotation: CNHL V2 6S 1300 Black, purchased 2026-10-13, storage night 2 on
-          2026-10-16. Charts stay one series at a time. Bars share one scale. Cost per
-          cycle is omitted: there is no cycle count yet.
+          This puts the packs I own next to brands I haven&apos;t bought. The owned series are the ones in
+          service. Catalog prices are shop prices, not what I paid, and purchase date, price and vendor stay
+          blank until they&apos;re filled in. C3 and C4 (CNHL V2 6S 1300 Black, purchased 2026-10-13) are in
+          rotation, and their storage night 2 was 2026-10-16. Charts show one series at a time, and the price
+          bars share one scale. I&apos;ve left out cost per cycle because there&apos;s no cycle count yet.
         </p>
       </header>
 
@@ -116,8 +116,8 @@ export default function BakeoffPage() {
           <div className="mt-4">
             <p className="eyebrow">Measured IR by series</p>
             <p className="note mt-1">
-              The line is solid through a night that series was not measured. No value is filled in
-              there. A series with one reading is a single point. Later readings stay on one line.
+              The line runs solid through a night that series wasn&apos;t measured, with nothing filled in. A
+              series with one reading is a single point, and later readings stay on one line.
             </p>
             <div className="mt-2">
               <LineChart
