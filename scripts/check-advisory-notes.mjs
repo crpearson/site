@@ -93,9 +93,13 @@ const html = fs.readFileSync(pagePath, "utf8");
 const failures = [];
 const counted = [];
 
+// The per-cell section renders only when a board has an over-limit cell pair (none after the 2026-10-23 storage night).
+const chargeDoc = JSON.parse(fs.readFileSync(path.join(root, "data", "v2", "next_charge.json"), "utf8"));
+const hasCellPairs = chargeDoc.parallel_boards.some((board) => (board.outlook_rule_b?.cell_check?.pairs ?? []).length > 0);
 for (const id of ["advisory-heading", "cell-check-heading"]) {
   const section = sliceSection(html, id);
   if (!section) {
+    if (id === "cell-check-heading" && !hasCellPairs) continue;
     failures.push(`missing #${id}`);
     continue;
   }

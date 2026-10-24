@@ -82,7 +82,7 @@ function compareTime(a, b) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 250) fail(`expected 250 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 261) fail(`expected 261 ir_store_v4 rows, got ${v4.length}`);
 
 const spot = v4.find((row) => row.pack_uid === "CNHL-2026-001" && row.session === "2026-10-09");
 const spotCells = spot ? [1, 2, 3, 4, 5, 6].map((index) => Number(spot[`c${index}_mOhm`]).toFixed(1)).join(",") : "";
@@ -127,8 +127,8 @@ const latestAvg = (uid) => {
   return rows[rows.length - 1];
 };
 const fleetMean = slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.725") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.725 mΩ over 24`);
+if (slotted.length !== 24 || fleetMean.toFixed(3) !== "2.773") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 2.773 mΩ over 24`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-10-18" || Number(c1p4.avg_mOhm) !== 2.65 || Number(c1p4.spread_mOhm) !== 1.2 || Number(c1p4.pack_SR_mOhm) !== 15.9 || Number(c1p4.floor_mV) !== 3612 || Number(c1p4.low_cell_gap_mV) !== 87) {
@@ -157,8 +157,9 @@ function seriesMean(series) {
 const expectedMeans = [
   ["C1", "2026-10-18", "2.786"],
   ["C2", "2026-10-18", "2.853"],
-  ["C3", "2026-10-17", "2.802"],
-  ["C4", "2026-10-17", "2.483"],
+  ["C3", "2026-10-23", "2.728"],
+  // 2026-10-23 C4 mean is over five packs: the C4-P4 row is held (Cell 6 IR 0.4 mΩ, under the 0.5 mΩ bound).
+  ["C4", "2026-10-23", "2.787"],
 ];
 for (const [series, session, mean] of expectedMeans) {
   const got = seriesMean(series);
@@ -170,7 +171,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-10-18") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-18`);
+if (latestPtDate !== "2026-10-23") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-10-23`);
 
 const expectedBoards = [
   { series: "C1", labels: ["C1-P1", "C1-P2", "C1-P3", "C1-P4", "C1-P5", "C1-P6"] },
@@ -181,7 +182,7 @@ const expectedBoards = [
 const board = buildNextBoard();
 const rendered = board.series.map((item) => item.labels.join("+")).join(" | ");
 const expected = expectedBoards.map((item) => item.labels.join("+")).join(" | ");
-if (rendered !== expected || board.as_of !== "2026-10-18") fail(`next parallel ${board.as_of} ${rendered}, expected 2026-10-18 ${expected}`);
+if (rendered !== expected || board.as_of !== "2026-10-23") fail(`next parallel ${board.as_of} ${rendered}, expected 2026-10-23 ${expected}`);
 
 for (const [label, series, test] of [["C1-P4", "C1", "RT-004-1"], ["C2-P2", "C2", "RT-008-1"]]) {
   const call = calls.filter((row) => row.label_at_time === label).at(-1);
@@ -218,7 +219,7 @@ if (methodologySha !== "3c7d230a2ab182b7e9af2583463be41d47600d2a28162658a47be15b
 
 const chargeFile = fs.readFileSync(path.join(root, "data/v2/next_charge.json"));
 const chargeSha = createHash("sha256").update(chargeFile).digest("hex");
-if (chargeSha !== "5e3d6c77f8d58be7d4f62254656c539c58dd4ab9b21def4e395476bc62cca1eb") {
+if (chargeSha !== "84e53d20ef22c6be6918ab9c49beef261d41adf015e65c42509373e1f5a5b03c") {
   fail(`next_charge.json sha256 is ${chargeSha}`);
 }
 const doc = loadNextChargeV4(root);
@@ -249,15 +250,13 @@ if (doc.planner_fixtures.length !== 16) fail(`planner_fixtures has ${doc.planner
 if (doc.pulled.length !== 0 || doc.charge_alone.length !== 0) fail("pulled and charge_alone must be empty on the real data");
 const labels = (list) => list.map((item) => item.label).join("+");
 if (labels(doc.watch) !== "C1-P1") fail(`watch is ${labels(doc.watch)}`);
-if (labels(doc.check_before_connecting) !== "C3-P1") fail(`check_before_connecting is ${labels(doc.check_before_connecting)}`);
-if (doc.check_before_connecting[0]?.note !== "Its 10-17 storage run stopped short (about 3.67 V per cell). Top it up to storage before it goes on the C3 board.") {
-  fail(`check_before_connecting wording changed: ${doc.check_before_connecting[0]?.note}`);
-}
-if (labels(doc.performance_notes) !== "C1-P4+C1-P5+C2-P1+C2-P4+C3-P2+C3-P5+C3-P6+C4-P2") fail(`performance_notes is ${labels(doc.performance_notes)}`);
+// 2026-10-23: C3-P1 reached storage (3.86 V per cell), so its top-up advisory is cleared.
+if (labels(doc.check_before_connecting) !== "") fail(`check_before_connecting is ${labels(doc.check_before_connecting)}`);
+if (labels(doc.performance_notes) !== "C1-P4+C1-P5+C2-P1+C2-P4+C3-P2+C3-P5+C3-P6+C4-P2+C4-P6") fail(`performance_notes is ${labels(doc.performance_notes)}`);
 if (doc.self_discharge_checks.open.map((item) => item.test_id).sort().join("+") !== "") fail("open self-discharge checks changed (RT-004-1 and RT-008-1 passed 2026-10-18)");
 const boards = doc.parallel_boards.map((item) => `${item.series}:${item.packs.length}:${item.outlook_rule_b.value_v}:${item.outlook_rule_b.call}:${item.outlook_rule_b.cell_check.labels.join("+")}`).join(" ");
-if (boards !== "C1:6:0.006:GO: C2:6:0.006:GO: C3:6:1.158:CHECK FIRST:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 C4:6:0.005:GO:") fail(`boards are ${boards}`);
-if (doc.parallel_boards[2].outlook_rule_b.check_first.map((item) => item.label).join("+") !== "C3-P1") fail("C3 check-first changed");
+if (boards !== "C1:6:0.006:GO: C2:6:0.006:GO: C3:6:0.008:GO: C4:6:0.011:GO:") fail(`boards are ${boards}`);
+if (doc.parallel_boards[2].outlook_rule_b.check_first.map((item) => item.label).join("+") !== "") fail("C3 check-first changed");
 
 const view = loadNextCharge(root);
 const summary = storageSummary(view.storage_runs).map((item) => item.line).join("\n");
