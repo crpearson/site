@@ -119,39 +119,39 @@ S400,C2-P3,584,583,558,576,582,588,578.5,30,3625,,DX8-1
 S400,C2-P4,538,542,522,543,527,528,533.3,21,3679,,DX8-1
 S400,C2-P5,552,553,535,548,533,540,543.5,20,3663,,DX8-1
 S400,C2-P6,520,527,510,525,528,523,522.2,18,3651,,DX8-1
-2026-09-26,C1-P1,562,548,533,533,559,547,547.0,29,3509,DX8-1; C1-only; SD Cell6 floor 3509 imb184; vsS413 floor+2 spread45→29; file C1-ch1-0554773ec89b,DX8-1
-2026-09-26,C1-P2,582,570,556,563,570,562,567.2,26,3648,DX8-1; C1-only; GO spread26; vsS413 avg+39.7; file C1-ch2-785a4eb9792f,DX8-1
-2026-09-26,C1-P3,521,519,500,514,504,489,507.8,32,3622,DX8-1; C1-only; GO spread32; vsS413 avg-10.5 floor same 3622; file C1-ch3-cbf4ec1bc29a,DX8-1
-2026-09-26,C1-P4,592,556,547,558,561,546,560.0,46,3479,DX8-1; C1-only; NEW SD Cell1 floor3479 imb191 + spread46 Caution + Cell1 IR592 pack-max; escalate OFF vs S413 Caution-onboard (floor3640); file C1-ch4-eba7a92ad632,DX8-1
-2026-09-26,C1-P5,553,536,531,541,539,525,537.5,28,3648,DX8-1; C1-only; GO spread28; vsS413 spread38→28; file C1-ch5-cf455800a43c,DX8-1
-2026-09-26,C1-P6,575,583,576,571,584,560,574.8,24,3594,DX8-1; C1-only; CAUTION watch floor3594 (<3600 EYE) spread24 Go; vsS413 floor3577→3594; file C1-ch6-d38acf4201b6,DX8-1
-2026-09-26-eve,C1-P1,561,546,528,536,557,545,545.5,33,3543,DX8-1; eve full night; OFF SD Cell6 floor3543 imb155; vs morning floor3509→3543 imb184→155 still OFF; file CH1-slot1-16146371668d,DX8-1
-2026-09-26-eve,C1-P2,581,571,558,561,566,562,566.5,23,3647,DX8-1; eve full night; GO spread23; vs morning spr26→23 avg567.2→566.5; file CH1-slot2-8b7ed83fd1ce,DX8-1
-2026-09-26-eve,C1-P3,522,514,491,512,500,485,504.0,37,3632,DX8-1; eve full night; GO spread37 imb71 not SD; vs morning spr32→37 avg507.8→504.0; file CH1-slot3-b19b24c36e81,DX8-1
-2026-09-26-eve,C1-P4,550,530,514,526,521,518,526.5,36,3654,DX8-1; eve full night; SD CLEARED floor3654 imb50 (was morning OFF floor3479 imb191); spread36 Go; Cell1 still pack-max IR550 → CAUTION onboard reduced C1 A; file CH1-slot4-2c3c93f740bc,DX8-1
-2026-09-26-eve,C1-P5,546,534,525,538,532,524,533.2,22,3663,DX8-1; eve full night; GO spread22; vs morning spr28→22; file CH1-slot5-d2719e731d29,DX8-1
-2026-09-26-eve,C1-P6,554,551,535,547,553,534,545.7,20,3658,DX8-1; eve full night; GO spread20 floor3658 improved vs morning 3594 EYE; file CH1-slot6-c74bf3a70ffa,DX8-1
-2026-09-26-eve,C2-P1,574,572,568,566,566,551,566.2,23,3612,DX8-1; eve full night; GO spread23; lowest C2 rest V 21.820; file CH2-slot1-0074bf933b46,DX8-1
-2026-09-26-eve,C2-P2,536,545,517,525,539,539,533.5,28,3596,DX8-1; eve full night; GO spread28; Cell3 pack-min IR517 FP PASS; floor3596 EYE imb101 (not SD≥150) CAUTION watch floor ON; file CH2-slot2-8c0270933573,DX8-1
-2026-09-26-eve,C2-P3,579,579,553,568,573,578,571.7,26,3643,DX8-1; eve full night; GO spread26; vsS413 avg586.3→571.7; file CH2-slot3-14fd11404b34,DX8-1
-2026-09-26-eve,C2-P4,560,566,550,564,550,553,557.2,16,3646,DX8-1; eve full night; GO spread16; soft FP advisory FAIL (P5 spr14 tighter) — do NOT remap; file CH2-slot4-9a99936086ab,DX8-1
-2026-09-26-eve,C2-P5,550,547,537,541,536,537,541.3,14,3663,DX8-1; eve full night; GO spread14 (tightest C2 tonight); file CH2-slot5-6f1bb527f7ca,DX8-1
-2026-09-26-eve,C2-P6,525,521,515,529,530,525,524.2,15,3649,DX8-1; eve full night; GO spread15; lowest C2 pack avg524.2 FP PASS; floor3649 OK; file CH2-slot6-04662ac86f27,DX8-1
-2026-09-27,C1-P1,569,549,527,542,562,551,550.0,42,3509,DX8-1; C1+C2 night; file_nnn=455; OFF SD Cell6 floor3509 imb191; vs eve floor3543→3509 imb155→191 still OFF; spr42 Caution band — off is SD,DX8-1
-2026-09-27,C1-P2,580,569,554,568,560,554,564.2,26,3634,DX8-1; C1+C2 night; file_nnn=457; GO spread26; vs eve spr23→26 avg566.5→564.2,DX8-1
-2026-09-27,C1-P3,528,523,502,518,514,488,512.2,40,3578,DX8-1; C1+C2 night; file_nnn=459; CAUTION spread40 + floor3578 EYE (<3600); imb122 not SD≥150; vs eve spr37→40 floor3632→3578,DX8-1
-2026-09-27,C1-P4,561,540,516,529,536,521,533.8,45,3603,DX8-1; C1+C2 night; file_nnn=461; CAUTION onboard Cell1 pack-max IR561 spr45; floor3603 imb98 (not SD); vs eve floor3654→3603 spr36→45 Cell1 550→561; reduced C1 A,DX8-1
-2026-09-27,C1-P5,587,570,563,573,570,554,569.5,33,3539,DX8-1; C1+C2 night; file_nnn=463; GO spr33 but floor3539 EYE + low rest 21.523V; imb71 not SD; vs eve floor3663→3539,DX8-1
-2026-09-27,C1-P6,558,554,547,544,560,547,551.7,16,3644,DX8-1; C1+C2 night; file_nnn=465; GO spread16 floor3644; vs eve spr20→16,DX8-1
-2026-09-27,C2-P1,531,523,521,531,522,499,521.2,32,3694,DX8-1; C1+C2 night; file_nnn=456; GO spread32; vs eve spr23→32 avg566.2→521.2,DX8-1
-2026-09-27,C2-P2,487,493,451,472,478,495,479.3,44,3684,DX8-1; C1+C2 night; file_nnn=458; CAUTION spread44; Cell3 pack-min IR451 FP PASS; floor3684 OK (eve EYE 3596 cleared); vs eve spr28→44 avg533.5→479.3,DX8-1
-2026-09-27,C2-P3,534,535,517,529,524,532,528.5,18,3701,DX8-1; C1+C2 night; file_nnn=460; GO spread18; vs eve spr26→18 avg571.7→528.5,DX8-1
-2026-09-27,C2-P4,530,535,526,531,524,524,528.3,11,3691,DX8-1; C1+C2 night; file_nnn=462; GO spread11 tightest C2 FP PASS; vs eve spr16→11,DX8-1
-2026-09-27,C2-P5,569,567,557,563,547,550,558.8,22,3631,DX8-1; C1+C2 night; file_nnn=464; GO spread22; lowest C2 rest 21.914V; vs eve spr14→22,DX8-1
-2026-09-27,C2-P6,433,436,422,447,439,432,434.8,25,3712,DX8-1; C1+C2 night; file_nnn=466; GO spread25; lowest C2 pack avg434.8 FP PASS; vs eve avg524.2→434.8,DX8-1
-2026-09-30,C2-P1,494,503,492,509,501,493,498.7,17,3698,DX8-1; C2-only night; file_nnn=474; GO spread17; vs 2026-09-27 spr32→17 avg521.2→498.7,DX8-1
-2026-09-30,C2-P2,528,537,514,518,532,540,528.2,26,3597,DX8-1; C2-only night; file_nnn=475; CAUTION floor3597 EYE; Cell3 pack-min IR514 FP PASS; spr26 Go (was44); vs 2026-09-27 fl3684→3597 spr44→26 avg479.3→528.2,DX8-1
-2026-09-30,C2-P3,568,570,545,564,563,571,563.5,26,3661,DX8-1; C2-only night; file_nnn=476; GO spread26; vs 2026-09-27 spr18→26 avg528.5→563.5,DX8-1
-2026-09-30,C2-P4,538,548,531,542,532,544,539.2,17,3686,DX8-1; C2-only night; file_nnn=477; GO spread17 tied-tightest w/P1 (soft FP advisory uniqueness FAIL; no remap); vs 2026-09-27 spr11→17,DX8-1
-2026-09-30,C2-P5,545,544,526,545,526,530,536.0,19,3681,DX8-1; C2-only night; file_nnn=478; GO spread19; vs 2026-09-27 spr22→19 avg558.8→536.0,DX8-1
-2026-09-30,C2-P6,493,497,483,501,497,501,495.3,18,3694,DX8-1; C2-only night; file_nnn=479; GO spread18; lowest C2 pack avg495.3 FP PASS; vs 2026-09-27 avg434.8→495.3,DX8-1
+2026-09-26,C1-P1,562,548,533,533,559,547,547.0,29,3509,"DX8-1; C1-only; SD Cell6 floor 3509 imb184; vsS413 floor+2 spread45→29; upload C1 slot 1, 0554773ec89b",DX8-1
+2026-09-26,C1-P2,582,570,556,563,570,562,567.2,26,3648,"DX8-1; C1-only; GO spread26; vsS413 avg+39.7; upload C1 slot 2, 785a4eb9792f",DX8-1
+2026-09-26,C1-P3,521,519,500,514,504,489,507.8,32,3622,"DX8-1; C1-only; GO spread32; vsS413 avg-10.5 floor same 3622; upload C1 slot 3, cbf4ec1bc29a",DX8-1
+2026-09-26,C1-P4,592,556,547,558,561,546,560.0,46,3479,"DX8-1; C1-only; NEW SD Cell1 floor3479 imb191 + spread46 Caution + Cell1 IR592 pack-max; escalate OFF vs S413 Caution-onboard (floor3640); upload C1 slot 4, eba7a92ad632",DX8-1
+2026-09-26,C1-P5,553,536,531,541,539,525,537.5,28,3648,"DX8-1; C1-only; GO spread28; vsS413 spread38→28; upload C1 slot 5, cf455800a43c",DX8-1
+2026-09-26,C1-P6,575,583,576,571,584,560,574.8,24,3594,"DX8-1; C1-only; CAUTION watch floor3594 (<3600 EYE) spread24 Go; vsS413 floor3577→3594; upload C1 slot 6, d38acf4201b6",DX8-1
+2026-09-26-eve,C1-P1,561,546,528,536,557,545,545.5,33,3543,"DX8-1; eve full night; OFF SD Cell6 floor3543 imb155; vs morning floor3509→3543 imb184→155 still OFF; upload Channel 1 slot 1, 16146371668d",DX8-1
+2026-09-26-eve,C1-P2,581,571,558,561,566,562,566.5,23,3647,"DX8-1; eve full night; GO spread23; vs morning spr26→23 avg567.2→566.5; upload Channel 1 slot 2, 8b7ed83fd1ce",DX8-1
+2026-09-26-eve,C1-P3,522,514,491,512,500,485,504.0,37,3632,"DX8-1; eve full night; GO spread37 imb71 not SD; vs morning spr32→37 avg507.8→504.0; upload Channel 1 slot 3, b19b24c36e81",DX8-1
+2026-09-26-eve,C1-P4,550,530,514,526,521,518,526.5,36,3654,"DX8-1; eve full night; SD CLEARED floor3654 imb50 (was morning OFF floor3479 imb191); spread36 Go; Cell1 still pack-max IR550 → CAUTION onboard reduced C1 A; upload Channel 1 slot 4, 2c3c93f740bc",DX8-1
+2026-09-26-eve,C1-P5,546,534,525,538,532,524,533.2,22,3663,"DX8-1; eve full night; GO spread22; vs morning spr28→22; upload Channel 1 slot 5, d2719e731d29",DX8-1
+2026-09-26-eve,C1-P6,554,551,535,547,553,534,545.7,20,3658,"DX8-1; eve full night; GO spread20 floor3658 improved vs morning 3594 EYE; upload Channel 1 slot 6, c74bf3a70ffa",DX8-1
+2026-09-26-eve,C2-P1,574,572,568,566,566,551,566.2,23,3612,"DX8-1; eve full night; GO spread23; lowest C2 rest V 21.820; upload Channel 2 slot 1, 0074bf933b46",DX8-1
+2026-09-26-eve,C2-P2,536,545,517,525,539,539,533.5,28,3596,"DX8-1; eve full night; GO spread28; Cell3 pack-min IR517 FP PASS; floor3596 EYE imb101 (not SD≥150) CAUTION watch floor ON; upload Channel 2 slot 2, 8c0270933573",DX8-1
+2026-09-26-eve,C2-P3,579,579,553,568,573,578,571.7,26,3643,"DX8-1; eve full night; GO spread26; vsS413 avg586.3→571.7; upload Channel 2 slot 3, 14fd11404b34",DX8-1
+2026-09-26-eve,C2-P4,560,566,550,564,550,553,557.2,16,3646,"DX8-1; eve full night; GO spread16; soft FP advisory FAIL (P5 spr14 tighter) — do NOT remap; upload Channel 2 slot 4, 9a99936086ab",DX8-1
+2026-09-26-eve,C2-P5,550,547,537,541,536,537,541.3,14,3663,"DX8-1; eve full night; GO spread14 (tightest C2 tonight); upload Channel 2 slot 5, 6f1bb527f7ca",DX8-1
+2026-09-26-eve,C2-P6,525,521,515,529,530,525,524.2,15,3649,"DX8-1; eve full night; GO spread15; lowest C2 pack avg524.2 FP PASS; floor3649 OK; upload Channel 2 slot 6, 04662ac86f27",DX8-1
+2026-09-27,C1-P1,569,549,527,542,562,551,550.0,42,3509,DX8-1; C1+C2 night; OFF SD Cell6 floor3509 imb191; vs eve floor3543→3509 imb155→191 still OFF; spr42 Caution band — off is SD,DX8-1
+2026-09-27,C1-P2,580,569,554,568,560,554,564.2,26,3634,DX8-1; C1+C2 night; GO spread26; vs eve spr23→26 avg566.5→564.2,DX8-1
+2026-09-27,C1-P3,528,523,502,518,514,488,512.2,40,3578,DX8-1; C1+C2 night; CAUTION spread40 + floor3578 EYE (<3600); imb122 not SD≥150; vs eve spr37→40 floor3632→3578,DX8-1
+2026-09-27,C1-P4,561,540,516,529,536,521,533.8,45,3603,DX8-1; C1+C2 night; CAUTION onboard Cell1 pack-max IR561 spr45; floor3603 imb98 (not SD); vs eve floor3654→3603 spr36→45 Cell1 550→561; reduced C1 A,DX8-1
+2026-09-27,C1-P5,587,570,563,573,570,554,569.5,33,3539,DX8-1; C1+C2 night; GO spr33 but floor3539 EYE + low rest 21.523V; imb71 not SD; vs eve floor3663→3539,DX8-1
+2026-09-27,C1-P6,558,554,547,544,560,547,551.7,16,3644,DX8-1; C1+C2 night; GO spread16 floor3644; vs eve spr20→16,DX8-1
+2026-09-27,C2-P1,531,523,521,531,522,499,521.2,32,3694,DX8-1; C1+C2 night; GO spread32; vs eve spr23→32 avg566.2→521.2,DX8-1
+2026-09-27,C2-P2,487,493,451,472,478,495,479.3,44,3684,DX8-1; C1+C2 night; CAUTION spread44; Cell3 pack-min IR451 FP PASS; floor3684 OK (eve EYE 3596 cleared); vs eve spr28→44 avg533.5→479.3,DX8-1
+2026-09-27,C2-P3,534,535,517,529,524,532,528.5,18,3701,DX8-1; C1+C2 night; GO spread18; vs eve spr26→18 avg571.7→528.5,DX8-1
+2026-09-27,C2-P4,530,535,526,531,524,524,528.3,11,3691,DX8-1; C1+C2 night; GO spread11 tightest C2 FP PASS; vs eve spr16→11,DX8-1
+2026-09-27,C2-P5,569,567,557,563,547,550,558.8,22,3631,DX8-1; C1+C2 night; GO spread22; lowest C2 rest 21.914V; vs eve spr14→22,DX8-1
+2026-09-27,C2-P6,433,436,422,447,439,432,434.8,25,3712,DX8-1; C1+C2 night; GO spread25; lowest C2 pack avg434.8 FP PASS; vs eve avg524.2→434.8,DX8-1
+2026-09-30,C2-P1,494,503,492,509,501,493,498.7,17,3698,DX8-1; C2-only night; GO spread17; vs 2026-09-27 spr32→17 avg521.2→498.7,DX8-1
+2026-09-30,C2-P2,528,537,514,518,532,540,528.2,26,3597,DX8-1; C2-only night; CAUTION floor3597 EYE; Cell3 pack-min IR514 FP PASS; spr26 Go (was44); vs 2026-09-27 fl3684→3597 spr44→26 avg479.3→528.2,DX8-1
+2026-09-30,C2-P3,568,570,545,564,563,571,563.5,26,3661,DX8-1; C2-only night; GO spread26; vs 2026-09-27 spr18→26 avg528.5→563.5,DX8-1
+2026-09-30,C2-P4,538,548,531,542,532,544,539.2,17,3686,DX8-1; C2-only night; GO spread17 tied-tightest w/P1 (soft FP advisory uniqueness FAIL; no remap); vs 2026-09-27 spr11→17,DX8-1
+2026-09-30,C2-P5,545,544,526,545,526,530,536.0,19,3681,DX8-1; C2-only night; GO spread19; vs 2026-09-27 spr22→19 avg558.8→536.0,DX8-1
+2026-09-30,C2-P6,493,497,483,501,497,501,495.3,18,3694,DX8-1; C2-only night; GO spread18; lowest C2 pack avg495.3 FP PASS; vs 2026-09-27 avg434.8→495.3,DX8-1

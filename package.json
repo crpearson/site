@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "check-snapshot": "node --experimental-strip-types scripts/check-snapshot.mjs",
-    "test": "python3 -m unittest tests/test_ingest.py && node scripts/sane-range.test.mjs"
+    "test": "python3 -m unittest tests/test_ingest.py && node scripts/sane-range.test.mjs && node scripts/public-csv.test.mjs"
   },
   "dependencies": {
     "marked": "^18.1.0",

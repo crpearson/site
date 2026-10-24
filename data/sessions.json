@@ -1,7 +1,7 @@
 {
  "meta": {
   "last_ingest": "2026-09-30",
-  "ingest_note": "Normalized from Lipo Lary ir_store.csv (canonical). Do not invent capacity series.",
+  "ingest_note": "Normalized from the private fleet ir_store.csv (canonical). Do not invent capacity series.",
   "data_source": "iCharger DX8 Storage logs (individual pack storage charges)",
   "metrics_available": [
    "per_cell_chg_mah",
@@ -35,7 +35,7 @@
    "2026-09-27",
    "2026-09-30"
   ],
-  "unassigned_note": "LiHV logs and non-Storage (Charge/Discharge/Balance) and short/orphan Storage_412 etc. are catalogued by Lary but not in IR store \u2014 keep unassigned if re-ingested without map confidence.",
+  "unassigned_note": "LiHV logs and non-Storage (Charge/Discharge/Balance) and short/orphan Storage logs are catalogued in the private fleet log but not in IR store \u2014 keep unassigned if re-ingested without map confidence.",
   "sessions": [
    "S263",
    "S287",
@@ -1748,7 +1748,7 @@
      "start_floor_mV": 3608,
      "start_imbalance_mV": 99,
      "rest_V": 22.083,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C1-P2",
@@ -1766,7 +1766,7 @@
      "start_floor_mV": 3694,
      "start_imbalance_mV": 11,
      "rest_V": 22.181,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C1-P3",
@@ -1784,7 +1784,7 @@
      "start_floor_mV": 3634,
      "start_imbalance_mV": 70,
      "rest_V": 22.054,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C1-P4",
@@ -1802,7 +1802,7 @@
      "start_floor_mV": 3657,
      "start_imbalance_mV": 49,
      "rest_V": 22.146,
-     "note": "Cell1 high; start_floor backfilled from raw first line (not in Lary store)"
+     "note": "Cell1 high; start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C1-P5",
@@ -1820,7 +1820,7 @@
      "start_floor_mV": 3598,
      "start_imbalance_mV": 47,
      "rest_V": 21.767,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C1-P6",
@@ -1838,7 +1838,7 @@
      "start_floor_mV": 3660,
      "start_imbalance_mV": 35,
      "rest_V": 22.105,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C2-P1",
@@ -1856,7 +1856,7 @@
      "start_floor_mV": 3695,
      "start_imbalance_mV": 9,
      "rest_V": 22.205,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C2-P2",
@@ -1874,7 +1874,7 @@
      "start_floor_mV": 3695,
      "start_imbalance_mV": 11,
      "rest_V": 22.21,
-     "note": "Cell3 low fingerprint; start_floor backfilled from raw first line (not in Lary store)"
+     "note": "Cell3 low fingerprint; start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C2-P3",
@@ -1892,7 +1892,7 @@
      "start_floor_mV": 3697,
      "start_imbalance_mV": 5,
      "rest_V": 22.201,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C2-P4",
@@ -1910,7 +1910,7 @@
      "start_floor_mV": 3686,
      "start_imbalance_mV": 14,
      "rest_V": 22.16,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C2-P5",
@@ -1928,7 +1928,7 @@
      "start_floor_mV": 3678,
      "start_imbalance_mV": 25,
      "rest_V": 22.14,
-     "note": "replacement pack; start_floor backfilled from raw first line (not in Lary store)"
+     "note": "replacement pack; start_floor backfilled from raw first line (not in the earlier store)"
     },
     {
      "pack": "C2-P6",
@@ -1946,7 +1946,7 @@
      "start_floor_mV": 3701,
      "start_imbalance_mV": 5,
      "rest_V": 22.218,
-     "note": "start_floor backfilled from raw first line (not in Lary store)"
+     "note": "start_floor backfilled from raw first line (not in the earlier store)"
     }
    ]
   },
@@ -2454,7 +2454,7 @@
      "start_floor_mV": 3509,
      "start_imbalance_mV": 184,
      "rest_V": 21.755,
-     "note": "DX8-1; C1-only; SD Cell6 floor 3509 imb184; vsS413 floor+2 spread45\u219229; file C1-ch1-0554773ec89b"
+     "note": "DX8-1; C1-only; SD Cell6 floor 3509 imb184; vsS413 floor+2 spread45\u219229; upload C1 slot 1, 0554773ec89b"
     },
     {
      "pack": "C1-P2",
@@ -2472,7 +2472,7 @@
      "start_floor_mV": 3648,
      "start_imbalance_mV": 32,
      "rest_V": 21.988,
-     "note": "DX8-1; C1-only; GO spread26; vsS413 avg+39.7; file C1-ch2-785a4eb9792f"
+     "note": "DX8-1; C1-only; GO spread26; vsS413 avg+39.7; upload C1 slot 2, 785a4eb9792f"
     },
     {
      "pack": "C1-P3",
@@ -2490,7 +2490,7 @@
      "start_floor_mV": 3622,
      "start_imbalance_mV": 78,
      "rest_V": 22.044,
-     "note": "DX8-1; C1-only; GO spread32; vsS413 avg-10.5 floor same 3622; file C1-ch3-cbf4ec1bc29a"
+     "note": "DX8-1; C1-only; GO spread32; vsS413 avg-10.5 floor same 3622; upload C1 slot 3, cbf4ec1bc29a"
     },
     {
      "pack": "C1-P4",
@@ -2508,7 +2508,7 @@
      "start_floor_mV": 3479,
      "start_imbalance_mV": 191,
      "rest_V": 21.642,
-     "note": "DX8-1; C1-only; NEW SD Cell1 floor3479 imb191 + spread46 Caution + Cell1 IR592 pack-max; escalate OFF vs S413 Caution-onboard (floor3640); file C1-ch4-eba7a92ad632"
+     "note": "DX8-1; C1-only; NEW SD Cell1 floor3479 imb191 + spread46 Caution + Cell1 IR592 pack-max; escalate OFF vs S413 Caution-onboard (floor3640); upload C1 slot 4, eba7a92ad632"
     },
     {
      "pack": "C1-P5",
@@ -2526,7 +2526,7 @@
      "start_floor_mV": 3648,
      "start_imbalance_mV": 41,
      "rest_V": 22.047,
-     "note": "DX8-1; C1-only; GO spread28; vsS413 spread38\u219228; file C1-ch5-cf455800a43c"
+     "note": "DX8-1; C1-only; GO spread28; vsS413 spread38\u219228; upload C1 slot 5, cf455800a43c"
     },
     {
      "pack": "C1-P6",
@@ -2544,7 +2544,7 @@
      "start_floor_mV": 3594,
      "start_imbalance_mV": 67,
      "rest_V": 21.815,
-     "note": "DX8-1; C1-only; CAUTION watch floor3594 (<3600 EYE) spread24 Go; vsS413 floor3577\u21923594; file C1-ch6-d38acf4201b6"
+     "note": "DX8-1; C1-only; CAUTION watch floor3594 (<3600 EYE) spread24 Go; vsS413 floor3577\u21923594; upload C1 slot 6, d38acf4201b6"
     }
    ]
   },
@@ -2583,7 +2583,7 @@
      "start_floor_mV": 3543,
      "start_imbalance_mV": 155,
      "rest_V": 21.882,
-     "note": "DX8-1; eve full night; OFF SD Cell6 floor3543 imb155; vs morning floor3509\u21923543 imb184\u2192155 still OFF; file CH1-slot1-16146371668d"
+     "note": "DX8-1; eve full night; OFF SD Cell6 floor3543 imb155; vs morning floor3509\u21923543 imb184\u2192155 still OFF; upload Channel 1 slot 1, 16146371668d"
     },
     {
      "pack": "C1-P2",
@@ -2601,7 +2601,7 @@
      "start_floor_mV": 3647,
      "start_imbalance_mV": 33,
      "rest_V": 21.986,
-     "note": "DX8-1; eve full night; GO spread23; vs morning spr26\u219223 avg567.2\u2192566.5; file CH1-slot2-8b7ed83fd1ce"
+     "note": "DX8-1; eve full night; GO spread23; vs morning spr26\u219223 avg567.2\u2192566.5; upload Channel 1 slot 2, 8b7ed83fd1ce"
     },
     {
      "pack": "C1-P3",
@@ -2619,7 +2619,7 @@
      "start_floor_mV": 3632,
      "start_imbalance_mV": 71,
      "rest_V": 22.09,
-     "note": "DX8-1; eve full night; GO spread37 imb71 not SD; vs morning spr32\u219237 avg507.8\u2192504.0; file CH1-slot3-b19b24c36e81"
+     "note": "DX8-1; eve full night; GO spread37 imb71 not SD; vs morning spr32\u219237 avg507.8\u2192504.0; upload Channel 1 slot 3, b19b24c36e81"
     },
     {
      "pack": "C1-P4",
@@ -2637,7 +2637,7 @@
      "start_floor_mV": 3654,
      "start_imbalance_mV": 50,
      "rest_V": 22.125,
-     "note": "DX8-1; eve full night; SD CLEARED floor3654 imb50 (was morning OFF floor3479 imb191); spread36 Go; Cell1 still pack-max IR550 \u2192 CAUTION onboard reduced C1 A; file CH1-slot4-2c3c93f740bc"
+     "note": "DX8-1; eve full night; SD CLEARED floor3654 imb50 (was morning OFF floor3479 imb191); spread36 Go; Cell1 still pack-max IR550 \u2192 CAUTION onboard reduced C1 A; upload Channel 1 slot 4, 2c3c93f740bc"
     },
     {
      "pack": "C1-P5",
@@ -2655,7 +2655,7 @@
      "start_floor_mV": 3663,
      "start_imbalance_mV": 34,
      "rest_V": 22.113,
-     "note": "DX8-1; eve full night; GO spread22; vs morning spr28\u219222; file CH1-slot5-d2719e731d29"
+     "note": "DX8-1; eve full night; GO spread22; vs morning spr28\u219222; upload Channel 1 slot 5, d2719e731d29"
     },
     {
      "pack": "C1-P6",
@@ -2673,7 +2673,7 @@
      "start_floor_mV": 3658,
      "start_imbalance_mV": 40,
      "rest_V": 22.115,
-     "note": "DX8-1; eve full night; GO spread20 floor3658 improved vs morning 3594 EYE; file CH1-slot6-c74bf3a70ffa"
+     "note": "DX8-1; eve full night; GO spread20 floor3658 improved vs morning 3594 EYE; upload Channel 1 slot 6, c74bf3a70ffa"
     },
     {
      "pack": "C2-P1",
@@ -2691,7 +2691,7 @@
      "start_floor_mV": 3612,
      "start_imbalance_mV": 40,
      "rest_V": 21.82,
-     "note": "DX8-1; eve full night; GO spread23; lowest C2 rest V 21.820; file CH2-slot1-0074bf933b46"
+     "note": "DX8-1; eve full night; GO spread23; lowest C2 rest V 21.820; upload Channel 2 slot 1, 0074bf933b46"
     },
     {
      "pack": "C2-P2",
@@ -2709,7 +2709,7 @@
      "start_floor_mV": 3596,
      "start_imbalance_mV": 101,
      "rest_V": 22.019,
-     "note": "DX8-1; eve full night; GO spread28; Cell3 pack-min IR517 FP PASS; floor3596 EYE imb101 (not SD\u2265150) CAUTION watch floor ON; file CH2-slot2-8c0270933573"
+     "note": "DX8-1; eve full night; GO spread28; Cell3 pack-min IR517 FP PASS; floor3596 EYE imb101 (not SD\u2265150) CAUTION watch floor ON; upload Channel 2 slot 2, 8c0270933573"
     },
     {
      "pack": "C2-P3",
@@ -2727,7 +2727,7 @@
      "start_floor_mV": 3643,
      "start_imbalance_mV": 43,
      "rest_V": 21.95,
-     "note": "DX8-1; eve full night; GO spread26; vsS413 avg586.3\u2192571.7; file CH2-slot3-14fd11404b34"
+     "note": "DX8-1; eve full night; GO spread26; vsS413 avg586.3\u2192571.7; upload Channel 2 slot 3, 14fd11404b34"
     },
     {
      "pack": "C2-P4",
@@ -2745,7 +2745,7 @@
      "start_floor_mV": 3646,
      "start_imbalance_mV": 47,
      "rest_V": 21.996,
-     "note": "DX8-1; eve full night; GO spread16; soft FP advisory FAIL (P5 spr14 tighter) \u2014 do NOT remap; file CH2-slot4-9a99936086ab"
+     "note": "DX8-1; eve full night; GO spread16; soft FP advisory FAIL (P5 spr14 tighter) \u2014 do NOT remap; upload Channel 2 slot 4, 9a99936086ab"
     },
     {
      "pack": "C2-P5",
@@ -2763,7 +2763,7 @@
      "start_floor_mV": 3663,
      "start_imbalance_mV": 36,
      "rest_V": 22.061,
-     "note": "DX8-1; eve full night; GO spread14 (tightest C2 tonight); file CH2-slot5-6f1bb527f7ca"
+     "note": "DX8-1; eve full night; GO spread14 (tightest C2 tonight); upload Channel 2 slot 5, 6f1bb527f7ca"
     },
     {
      "pack": "C2-P6",
@@ -2781,7 +2781,7 @@
      "start_floor_mV": 3649,
      "start_imbalance_mV": 51,
      "rest_V": 22.132,
-     "note": "DX8-1; eve full night; GO spread15; lowest C2 pack avg524.2 FP PASS; floor3649 OK; file CH2-slot6-04662ac86f27"
+     "note": "DX8-1; eve full night; GO spread15; lowest C2 pack avg524.2 FP PASS; floor3649 OK; upload Channel 2 slot 6, 04662ac86f27"
     }
    ]
   },
@@ -2820,7 +2820,7 @@
      "start_floor_mV": 3509,
      "start_imbalance_mV": 191,
      "rest_V": 21.826,
-     "note": "DX8-1; C1+C2 night; file_nnn=455; OFF SD Cell6 floor3509 imb191; vs eve floor3543\u21923509 imb155\u2192191 still OFF; spr42 Caution band \u2014 off is SD"
+     "note": "DX8-1; C1+C2 night; OFF SD Cell6 floor3509 imb191; vs eve floor3543\u21923509 imb155\u2192191 still OFF; spr42 Caution band \u2014 off is SD"
     },
     {
      "pack": "C1-P2",
@@ -2838,7 +2838,7 @@
      "start_floor_mV": 3634,
      "start_imbalance_mV": 42,
      "rest_V": 21.944,
-     "note": "DX8-1; C1+C2 night; file_nnn=457; GO spread26; vs eve spr23\u219226 avg566.5\u2192564.2"
+     "note": "DX8-1; C1+C2 night; GO spread26; vs eve spr23\u219226 avg566.5\u2192564.2"
     },
     {
      "pack": "C1-P3",
@@ -2856,7 +2856,7 @@
      "start_floor_mV": 3578,
      "start_imbalance_mV": 122,
      "rest_V": 21.915,
-     "note": "DX8-1; C1+C2 night; file_nnn=459; CAUTION spread40 + floor3578 EYE (<3600); imb122 not SD\u2265150; vs eve spr37\u219240 floor3632\u21923578"
+     "note": "DX8-1; C1+C2 night; CAUTION spread40 + floor3578 EYE (<3600); imb122 not SD\u2265150; vs eve spr37\u219240 floor3632\u21923578"
     },
     {
      "pack": "C1-P4",
@@ -2874,7 +2874,7 @@
      "start_floor_mV": 3603,
      "start_imbalance_mV": 98,
      "rest_V": 22.025,
-     "note": "DX8-1; C1+C2 night; file_nnn=461; CAUTION onboard Cell1 pack-max IR561 spr45; floor3603 imb98 (not SD); vs eve floor3654\u21923603 spr36\u219245 Cell1 550\u2192561; reduced C1 A"
+     "note": "DX8-1; C1+C2 night; CAUTION onboard Cell1 pack-max IR561 spr45; floor3603 imb98 (not SD); vs eve floor3654\u21923603 spr36\u219245 Cell1 550\u2192561; reduced C1 A"
     },
     {
      "pack": "C1-P5",
@@ -2892,7 +2892,7 @@
      "start_floor_mV": 3539,
      "start_imbalance_mV": 71,
      "rest_V": 21.523,
-     "note": "DX8-1; C1+C2 night; file_nnn=463; GO spr33 but floor3539 EYE + low rest 21.523V; imb71 not SD; vs eve floor3663\u21923539"
+     "note": "DX8-1; C1+C2 night; GO spr33 but floor3539 EYE + low rest 21.523V; imb71 not SD; vs eve floor3663\u21923539"
     },
     {
      "pack": "C1-P6",
@@ -2910,7 +2910,7 @@
      "start_floor_mV": 3644,
      "start_imbalance_mV": 50,
      "rest_V": 22.045,
-     "note": "DX8-1; C1+C2 night; file_nnn=465; GO spread16 floor3644; vs eve spr20\u219216"
+     "note": "DX8-1; C1+C2 night; GO spread16 floor3644; vs eve spr20\u219216"
     },
     {
      "pack": "C2-P1",
@@ -2928,7 +2928,7 @@
      "start_floor_mV": 3694,
      "start_imbalance_mV": 13,
      "rest_V": 22.213,
-     "note": "DX8-1; C1+C2 night; file_nnn=456; GO spread32; vs eve spr23\u219232 avg566.2\u2192521.2"
+     "note": "DX8-1; C1+C2 night; GO spread32; vs eve spr23\u219232 avg566.2\u2192521.2"
     },
     {
      "pack": "C2-P2",
@@ -2946,7 +2946,7 @@
      "start_floor_mV": 3684,
      "start_imbalance_mV": 22,
      "rest_V": 22.201,
-     "note": "DX8-1; C1+C2 night; file_nnn=458; CAUTION spread44; Cell3 pack-min IR451 FP PASS; floor3684 OK (eve EYE 3596 cleared); vs eve spr28\u219244 avg533.5\u2192479.3"
+     "note": "DX8-1; C1+C2 night; CAUTION spread44; Cell3 pack-min IR451 FP PASS; floor3684 OK (eve EYE 3596 cleared); vs eve spr28\u219244 avg533.5\u2192479.3"
     },
     {
      "pack": "C2-P3",
@@ -2964,7 +2964,7 @@
      "start_floor_mV": 3701,
      "start_imbalance_mV": 3,
      "rest_V": 22.213,
-     "note": "DX8-1; C1+C2 night; file_nnn=460; GO spread18; vs eve spr26\u219218 avg571.7\u2192528.5"
+     "note": "DX8-1; C1+C2 night; GO spread18; vs eve spr26\u219218 avg571.7\u2192528.5"
     },
     {
      "pack": "C2-P4",
@@ -2982,7 +2982,7 @@
      "start_floor_mV": 3691,
      "start_imbalance_mV": 10,
      "rest_V": 22.182,
-     "note": "DX8-1; C1+C2 night; file_nnn=462; GO spread11 tightest C2 FP PASS; vs eve spr16\u219211"
+     "note": "DX8-1; C1+C2 night; GO spread11 tightest C2 FP PASS; vs eve spr16\u219211"
     },
     {
      "pack": "C2-P5",
@@ -3000,7 +3000,7 @@
      "start_floor_mV": 3631,
      "start_imbalance_mV": 63,
      "rest_V": 21.914,
-     "note": "DX8-1; C1+C2 night; file_nnn=464; GO spread22; lowest C2 rest 21.914V; vs eve spr14\u219222"
+     "note": "DX8-1; C1+C2 night; GO spread22; lowest C2 rest 21.914V; vs eve spr14\u219222"
     },
     {
      "pack": "C2-P6",
@@ -3018,7 +3018,7 @@
      "start_floor_mV": 3712,
      "start_imbalance_mV": 18,
      "rest_V": 22.329,
-     "note": "DX8-1; C1+C2 night; file_nnn=466; GO spread25; lowest C2 pack avg434.8 FP PASS; vs eve avg524.2\u2192434.8"
+     "note": "DX8-1; C1+C2 night; GO spread25; lowest C2 pack avg434.8 FP PASS; vs eve avg524.2\u2192434.8"
     }
    ]
   },
@@ -3052,7 +3052,7 @@
      "start_floor_mV": 3698,
      "start_imbalance_mV": 7,
      "rest_V": 22.203,
-     "note": "DX8-1; C2-only night; file_nnn=474; GO spread17; vs 2026-09-27 spr32\u219217 avg521.2\u2192498.7"
+     "note": "DX8-1; C2-only night; GO spread17; vs 2026-09-27 spr32\u219217 avg521.2\u2192498.7"
     },
     {
      "pack": "C2-P2",
@@ -3070,7 +3070,7 @@
      "start_floor_mV": 3597,
      "start_imbalance_mV": 103,
      "rest_V": 22.055,
-     "note": "DX8-1; C2-only night; file_nnn=475; CAUTION floor3597 EYE; Cell3 pack-min IR514 FP PASS; spr26 Go (was44); vs 2026-09-27 fl3684\u21923597 spr44\u219226 avg479.3\u2192528.2"
+     "note": "DX8-1; C2-only night; CAUTION floor3597 EYE; Cell3 pack-min IR514 FP PASS; spr26 Go (was44); vs 2026-09-27 fl3684\u21923597 spr44\u219226 avg479.3\u2192528.2"
     },
     {
      "pack": "C2-P3",
@@ -3088,7 +3088,7 @@
      "start_floor_mV": 3661,
      "start_imbalance_mV": 35,
      "rest_V": 22.062,
-     "note": "DX8-1; C2-only night; file_nnn=476; GO spread26; vs 2026-09-27 spr18\u219226 avg528.5\u2192563.5"
+     "note": "DX8-1; C2-only night; GO spread26; vs 2026-09-27 spr18\u219226 avg528.5\u2192563.5"
     },
     {
      "pack": "C2-P4",
@@ -3106,7 +3106,7 @@
      "start_floor_mV": 3686,
      "start_imbalance_mV": 15,
      "rest_V": 22.161,
-     "note": "DX8-1; C2-only night; file_nnn=477; GO spread17 tied-tightest w/P1 (soft FP advisory uniqueness FAIL; no remap); vs 2026-09-27 spr11\u219217"
+     "note": "DX8-1; C2-only night; GO spread17 tied-tightest w/P1 (soft FP advisory uniqueness FAIL; no remap); vs 2026-09-27 spr11\u219217"
     },
     {
      "pack": "C2-P5",
@@ -3124,7 +3124,7 @@
      "start_floor_mV": 3681,
      "start_imbalance_mV": 20,
      "rest_V": 22.147,
-     "note": "DX8-1; C2-only night; file_nnn=478; GO spread19; vs 2026-09-27 spr22\u219219 avg558.8\u2192536.0"
+     "note": "DX8-1; C2-only night; GO spread19; vs 2026-09-27 spr22\u219219 avg558.8\u2192536.0"
     },
     {
      "pack": "C2-P6",
@@ -3142,7 +3142,7 @@
      "start_floor_mV": 3694,
      "start_imbalance_mV": 12,
      "rest_V": 22.209,
-     "note": "DX8-1; C2-only night; file_nnn=479; GO spread18; lowest C2 pack avg495.3 FP PASS; vs 2026-09-27 avg434.8\u2192495.3"
+     "note": "DX8-1; C2-only night; GO spread18; lowest C2 pack avg495.3 FP PASS; vs 2026-09-27 avg434.8\u2192495.3"
     }
    ]
   }

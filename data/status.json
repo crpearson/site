@@ -2,7 +2,7 @@
   "call_date": "2026-10-09",
   "call_date_c1": "2026-09-27",
   "call_date_c2": "2026-09-30",
-  "status_source": "Lipo Lary Rules v3, approved 2026-10-09",
+  "status_source": "Fleet Rules v3, approved 2026-10-09",
   "thresholds": {
     "spread_mohm": {
       "caution_gte": 2.0,
