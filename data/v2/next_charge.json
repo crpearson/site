@@ -1910,22 +1910,22 @@
     "status": "ok",
     "as_of_date": "2026-10-31",
     "pick": [
-      "C4",
-      "C3"
+      "C3",
+      "C4"
     ],
-    "reason": "Fewest cycles per pack: C4 5.8, C3 6.0 vs C1 16.2, C2 16.5.",
+    "reason": "Fewest cycles per pack: C3 6.0, C4 6.0 vs C1 16.2, C2 16.5.",
     "sets": [
       {
-        "series": "C4",
+        "series": "C3",
         "packs": 6,
-        "lifetime_storage_cycles": 35,
-        "avg_cycles_per_pack": 5.8,
+        "lifetime_storage_cycles": 36,
+        "avg_cycles_per_pack": 6.0,
         "last_flown": "2026-10-31",
         "eligible": true,
         "skip_reason": null
       },
       {
-        "series": "C3",
+        "series": "C4",
         "packs": 6,
         "lifetime_storage_cycles": 36,
         "avg_cycles_per_pack": 6.0,
@@ -1995,10 +1995,10 @@
     },
     "alt_pick": {
       "pick": [
-        "C4",
+        "C3",
         "C1"
       ],
-      "reason": "Next-best pair: C4 5.8, C1 16.2.",
+      "reason": "Next-best pair: C3 6.0, C1 16.2.",
       "plan_if_flown": {
         "channels": [
           {
@@ -2007,7 +2007,8 @@
             "packs": [
               "C1-P1",
               "C1-P2",
-              "C4-P5"
+              "C3-P1",
+              "C3-P2"
             ]
           },
           {
@@ -2016,7 +2017,8 @@
             "packs": [
               "C1-P3",
               "C1-P4",
-              "C4-P6"
+              "C3-P3",
+              "C3-P4"
             ]
           },
           {
@@ -2024,8 +2026,7 @@
             "channel": "DX8-2 Channel 1",
             "packs": [
               "C1-P5",
-              "C4-P1",
-              "C4-P2"
+              "C3-P5"
             ]
           },
           {
@@ -2033,8 +2034,7 @@
             "channel": "DX8-2 Channel 2",
             "packs": [
               "C1-P6",
-              "C4-P3",
-              "C4-P4"
+              "C3-P6"
             ]
           }
         ],
