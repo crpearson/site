@@ -219,7 +219,7 @@ if (methodologySha !== "41c9882c1d29535c60b0f752209c96109148718486c70620f2aaf8e2
 
 const chargeFile = fs.readFileSync(path.join(root, "data/v2/next_charge.json"));
 const chargeSha = createHash("sha256").update(chargeFile).digest("hex");
-if (chargeSha !== "f24cc6321564bd4dae11025943b35ba96f1ac04eb10eb5bf5ef974cf876d02d8") {
+if (chargeSha !== "c393263f8524aab3adbfdfdf56a6e2d39419c0e5a534540e5b425daff1331136") {
   fail(`next_charge.json sha256 is ${chargeSha}`);
 }
 const doc = loadNextChargeV4(root);
