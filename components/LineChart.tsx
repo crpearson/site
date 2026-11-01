@@ -492,7 +492,9 @@ export function LineChart({
               // Wide charts can take about eight dates. Narrow charts, including the
               // half-width trend cards, keep a sparser subset so the strings do not collide.
               const wide = pickSpaced(visible, 8, 2, 4);
-              const narrow = new Set(pickSpaced(wide, 4, 5));
+              // The last tick is right-aligned (x-label-end), so it reaches about one label
+              // width further left than a centered tick; keep its neighbour six nights away.
+              const narrow = new Set(pickSpaced(wide, 4, 5, 6));
               const shownTicks = new Set(wide);
               const firstShown = wide[0];
               const lastShown = wide[wide.length - 1];
