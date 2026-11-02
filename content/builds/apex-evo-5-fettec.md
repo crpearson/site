@@ -83,7 +83,9 @@ All further comparisons will be against the original Impulse frame. Only the ori
 
 SoloGood is now producing an abomination that is 4mm taller than the original. They stretched the frame so the obnoxious, huge DJI O4 Pro could fit on it. Sure. Take a frame people actually liked and extrude it until a brick of a camera is comfortable. Amazing use of the design.
 
-The moral of the story: every single new frame on the planet accommodates the obnoxiously sized O4 Pro camera. Most of the people who want to fly the Apex Evo frame don't fly that camera, and SoloGood is moronic for pandering to accommodate it in their new, massively vertically increased O4 frame. I have messaged them about it and they have not responded. Therefore, it is on, motherfuckers.
+The moral of the story: every single new frame on the planet accommodates the obnoxiously sized O4 Pro camera. Most of the people who want to fly the Apex Evo frame don't fly that camera, and SoloGood is moronic for pandering to accommodate it in their new, massively vertically increased O4 frame.
+
+I have asked them to reconsider. They have responded with silence. I believe they are wrong.
 
 - **VTX couch / mount.** TPU. The Freestyle V2 stays electrically isolated, squished in by the top plate, with the power leads run underneath.
 - **VTX antenna mount.** A remix of the official Impulse antenna mount. It routes the coax and leaves room so the power leads are not crushed against the top plate.
