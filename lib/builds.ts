@@ -122,6 +122,7 @@ function assertApex(entry: BuildEntry) {
     "deprecated and completely useless version of the SoloGood Apex Evo frame",
     "2mm higher than the original Impulse Apex Evo",
     "All further comparisons will be against the original Impulse frame",
+    "removing all of my models that depart from the original Apex Evo hole spacing or vertical dimensions",
     "abomination that is 4mm taller than the original",
     "obnoxious, huge DJI O4 Pro",
     "every single new frame on the planet accommodates the obnoxiously sized O4 Pro",

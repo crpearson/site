@@ -79,7 +79,7 @@ I hope you like my build. You can download my STL and STEP files from my GrabCAD
 
 The parts I designed are linked to a deprecated and completely useless version of the SoloGood Apex Evo frame. They are meant for that frame. That version is 2mm higher than the original Impulse Apex Evo.
 
-All further comparisons will be against the original Impulse frame. Only the original.
+All further comparisons will be against the original Impulse frame. Only the original. I will be removing all of my models that depart from the original Apex Evo hole spacing or vertical dimensions.
 
 SoloGood is now producing an abomination that is 4mm taller than the original. They stretched the frame so the obnoxious, huge DJI O4 Pro could fit on it. Sure. Take a frame people actually liked and extrude it until a brick of a camera is comfortable. Amazing use of the design.
 
