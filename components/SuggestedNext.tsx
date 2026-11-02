@@ -47,6 +47,14 @@ function StoragePlan({ plan }: { plan: SuggestedPlan }) {
   );
 }
 
+/** A pick has already flown when every series in it has a last-flown date. */
+function alreadyFlown(block: SuggestedNextBlock, pick: readonly string[]): boolean {
+  return pick.every((series) => {
+    const row = block.sets.find((item) => item.series === series);
+    return row != null && row.last_flown != null;
+  });
+}
+
 /** Suggestion only. Renders suggested_next as given. Null or absent omits the card. */
 export function SuggestedNext({ doc }: { doc: NextChargeV4 }) {
   const block: SuggestedNextBlock | null | undefined = doc.suggested_next;
@@ -91,12 +99,12 @@ export function SuggestedNext({ doc }: { doc: NextChargeV4 }) {
           ))}
         </tbody>
       </table>
-      <StoragePlan plan={block.plan_if_flown} />
+      {alreadyFlown(block, block.pick) ? null : <StoragePlan plan={block.plan_if_flown} />}
       {alt ? (
         <details className="suggest-alt">
           <summary>Other pairing: fly {pairTitle(alt.pick)}</summary>
           <p className="suggest-reason">{alt.reason}</p>
-          <StoragePlan plan={alt.plan_if_flown} />
+          {alreadyFlown(block, alt.pick) ? null : <StoragePlan plan={alt.plan_if_flown} />}
         </details>
       ) : null}
     </section>

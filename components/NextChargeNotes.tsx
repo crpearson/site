@@ -14,32 +14,62 @@ function NoteList({ items }: { items: { label: string; note: string }[] }) {
   );
 }
 
+/** Lines that are the same on every series. Stated once, not once per board. */
+function sharedBoardCheck(boards: NextChargeV4["parallel_boards"]): string[] {
+  const [first] = boards;
+  if (!first) return [];
+  return first.conditions.filter((line) => boards.every((board) => board.conditions.includes(line)));
+}
+
+const NO_LOG_END =
+  /^[A-Z]\d-P\d+: charged \d{4}-\d{2}-\d{2} with no log; using the end of its (\d{4}-\d{2}-\d{2}) storage run\.$/;
+
+/** Provenance already written on the board. No pack voltage is invented when the line is absent. */
+function endVoltageClause(board: NextChargeV4["parallel_boards"][number]): string | null {
+  const counts = new Map<string, number>();
+  for (const line of board.conditions) {
+    const match = line.match(NO_LOG_END);
+    if (!match) continue;
+    const day = match[1].slice(5);
+    counts.set(day, (counts.get(day) ?? 0) + 1);
+  }
+  if (counts.size === 0) return null;
+  return [...counts.entries()]
+    .map(([day, count]) => `${count} ${count === 1 ? "pack" : "packs"} using ${day} end V`)
+    .join(", ");
+}
+
+function glanceLine(board: NextChargeV4["parallel_boards"][number]): string {
+  const head = `${board.series} ${board.outlook_rule_b.call}`;
+  const endV = endVoltageClause(board);
+  return endV ? `${head} · ${endV}` : head;
+}
+
 export function OutlookBoards({ doc }: { doc: NextChargeV4 }) {
+  const shared = sharedBoardCheck(doc.parallel_boards);
   return (
-    <div className="space-y-4">
-      {doc.parallel_boards.map((board) => {
-        const outlook = board.outlook_rule_b;
-        return (
-          <article key={board.series} className="panel" data-accent={outlook.call === "CHECK FIRST" ? "rulea" : "signal"}>
-            <h3 className="panel-title">
-              {board.series} {outlook.call}
-            </h3>
-            <p className="note mt-2">{outlook.basis}</p>
-            <ul className="mt-2 space-y-1">
-              {board.conditions.map((line) => (
-                <li key={line} className="note">
-                  {line}
-                </li>
-              ))}
-            </ul>
-            {outlook.check_first.map((item) => (
-              <p key={item.label} className="note mt-2">
+    <div className="space-y-3">
+      {shared.length === 0 ? null : (
+        <ul className="space-y-1">
+          {shared.map((line) => (
+            <li key={line} className="note">
+              {line}
+            </li>
+          ))}
+        </ul>
+      )}
+      <ul className="space-y-1">
+        {doc.parallel_boards.map((board) => (
+          <li key={board.series}>
+            <p className="font-mono text-sm">{glanceLine(board)}</p>
+            {board.outlook_rule_b.check_first.map((item) => (
+              <p key={item.label} className="note">
                 {item.note}
               </p>
             ))}
-          </article>
-        );
-      })}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -60,6 +90,25 @@ export function SlotNightNotes({ label }: { label: string }) {
       ))}
     </div>
   );
+}
+
+const PERFORMANCE_PREFIX = /^Performance note \(not a pull or charge-alone reason\):\s*/i;
+
+/** Drop the repeated disclaimer. Keep the recorded gaps and the first-to-last dates. */
+function tersePerformanceNote(note: string): string {
+  const text = note.replace(PERFORMANCE_PREFIX, "").trim();
+  const series = text.match(
+    /^low Cell (\d+) \(started ([0-9, and]+) mV below the other cells on ([^;)]+?)(?:;[^)]*)?\)\.?$/i,
+  );
+  if (!series) return text.replace(/\b20\d{2}-(\d{2}-\d{2})\b/g, "$1").replace(/\.$/, "");
+  const gaps = series[2]
+    .split(/,| and /)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join("/");
+  const dates = [...series[3].matchAll(/\d{4}-(\d{2}-\d{2})/g)].map((match) => match[1]);
+  const span = dates.length > 1 ? `${dates[0]}→${dates[dates.length - 1]}` : (dates[0] ?? "");
+  return `low Cell ${series[1]} (${gaps} mV${span ? `, ${span}` : ""})`;
 }
 
 /** One line when every per-cell gap on a board names the same pack. No pair list. */
@@ -142,9 +191,19 @@ export function NextChargeNotes({ doc }: { doc: NextChargeV4 }) {
 
       <section className="panel" data-accent="signal" aria-labelledby="performance-heading">
         <h2 id="performance-heading" className="panel-title">
-          Notes
+          Performance notes: never a pull or charge-alone reason
         </h2>
-        <NoteList items={doc.performance_notes} />
+        {doc.performance_notes.length === 0 ? (
+          <p className="note mt-2">None.</p>
+        ) : (
+          <ul className="mt-3 space-y-1">
+            {doc.performance_notes.map((item) => (
+              <li key={item.label} className="note">
+                <span className="font-mono">{item.label}:</span> {tersePerformanceNote(item.note)}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="panel" data-accent="floor" aria-labelledby="self-discharge-heading">

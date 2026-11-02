@@ -11,7 +11,7 @@ import { OutlookBoards } from "@/components/NextChargeNotes";
 import { Panel } from "@/components/Panel";
 import { ProvisionalLegend, ProvisionalMark } from "@/components/ProvisionalMark";
 import { StatusChip } from "@/components/StatusChip";
-import { callChipText, conditionalJoinNote } from "@/lib/lamp";
+import { callChipText, conditionalJoinNote, fleetStatusAdvisory } from "@/lib/lamp";
 import { formatValue, isSessionId, publicProse, publicSession, shownWhen } from "@/lib/format";
 import { IR_UNIT } from "@/lib/ir";
 import { loadNextChargeV4 } from "@/lib/next-charge.mjs";
@@ -250,8 +250,8 @@ export default function BatteriesPage() {
           Packs
         </h2>
         <p className="note">
-          Each card shows one status word. The note from the latest check is under the small chart, and
-          the full version is on the pack page.
+          Each card shows one status word. Status calls adds one advisory when the latest check has one.
+          The full note is on the pack page.
         </p>
         {blocks.map((block) => (
           <div key={block.id} id={block.id.toLowerCase()}>
@@ -279,19 +279,20 @@ export default function BatteriesPage() {
             Status calls
           </h2>
           <p className="note mt-1">
-            The latest call for each pack, worded as it was recorded. Morning and evening calls on the
-            same day stay separate. The lamp color follows the wording.
+            The latest call for each pack. One advisory when that check has one; the recorded note stays
+            on the pack page. Morning and evening calls on the same day stay separate. The lamp color
+            follows the wording.
           </p>
         </div>
         <div className="panel" data-accent="off">
           {rows.some((row) => row.provisional) ? <ProvisionalLegend /> : null}
-          <div className="table-wrap hidden md:block" data-scroll-ok="">
+          <div className="table-wrap" data-scroll-ok="">
             <table className="status-table">
               <thead>
                 <tr>
                   <th scope="col">Pack</th>
                   <th scope="col">Status</th>
-                  <th scope="col">Reason</th>
+                  <th scope="col">Advisory</th>
                   <th scope="col">Call</th>
                   <th scope="col">Latest IR ({IR_UNIT})</th>
                   <th scope="col">Spread ({IR_UNIT})</th>
@@ -299,7 +300,9 @@ export default function BatteriesPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {rows.map((row) => {
+                  const advisory = fleetStatusAdvisory(row.reason);
+                  return (
                   <tr key={row.uid} className={row.excluded ? "opacity-70" : undefined}>
                     <th scope="row">
                       <Link href={packPath(row.uid)} className="pack-link">
@@ -319,7 +322,7 @@ export default function BatteriesPage() {
                       ) : null}
                     </td>
                     <td>
-                      <p className="reason">{publicProse(row.reason)}</p>
+                      {advisory ? <p className="reason">{publicProse(advisory)}</p> : null}
                       {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
                     </td>
                     <td className="font-mono text-sm whitespace-nowrap">
@@ -338,33 +341,10 @@ export default function BatteriesPage() {
                     </td>
                     <td className="font-mono text-sm">{row.floor ?? "—"}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
-          </div>
-          <div className="cards md:hidden">
-            {rows.map((row) => (
-              <article key={row.uid} className="rounded-xl border border-[var(--line)] p-3">
-                <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-                  <Link href={packPath(row.uid)} className="pack-link">
-                    {row.label}
-                  </Link>
-                  <Lamp status={row.status} />
-                </div>
-                <p className="mt-1 font-mono text-[10px] text-[var(--faint)]">{row.uid}</p>
-                <p className="mt-2 text-sm leading-relaxed">{publicProse(row.reason)}</p>
-                {row.badge ? <p className="note mt-1">{row.badge}</p> : null}
-                {row.restPool ? (
-                  <p className="note mt-1">Rest pool · day 0 {row.restDay0} · due {row.restDue}</p>
-                ) : null}
-                <p className="note mt-2 font-mono">
-                  {callChipText(row.status)} · IR{" "}
-                  <IrFigure value={row.avg} provisional={row.provisional} unit /> · spread{" "}
-                  <IrFigure value={row.spread} provisional={row.provisional} unit /> · floor{" "}
-                  {row.floor == null ? "—" : `${row.floor} mV`}
-                </p>
-              </article>
-            ))}
           </div>
         </div>
       </section>
