@@ -123,6 +123,7 @@ function assertApex(entry: BuildEntry) {
     "2mm higher than the original Impulse Apex Evo",
     "All further comparisons will be against the original Impulse frame",
     "removing any models that do not have the original Apex Evo hole spacing or vertical dimensions",
+    "removing anything that accommodates the stupid changes they tried to make over time",
     "Basically none of my work going forward will match anything other than the original ImpulseRC Apex Evo dimensions",
     "abomination that is 4mm taller than the original",
     "obnoxious, huge DJI O4 Pro",
