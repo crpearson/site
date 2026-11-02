@@ -77,7 +77,11 @@ I hope you like my build. You can download my STL and STEP files from my GrabCAD
 
 ## Parts I designed
 
-The parts I designed are linked to a deprecated and completely useless version of the SoloGood Apex Evo frame. They are meant for that frame.
+The parts I designed are linked to a deprecated and completely useless version of the SoloGood Apex Evo frame. They are meant for that frame. That version is 2mm higher than the original Impulse Apex Evo.
+
+All further comparisons will be against the original Impulse frame. Only the original.
+
+SoloGood is now producing an abomination that is 4mm taller than the original. They stretched the frame so the obnoxious, huge DJI O4 Pro could fit on it. Sure. Take a frame people actually liked and extrude it until a brick of a camera is comfortable. Amazing use of the design.
 
 - **VTX couch / mount.** TPU. The Freestyle V2 stays electrically isolated, squished in by the top plate, with the power leads run underneath.
 - **VTX antenna mount.** A remix of the official Impulse antenna mount. It routes the coax and leaves room so the power leads are not crushed against the top plate.
