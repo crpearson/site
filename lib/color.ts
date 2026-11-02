@@ -51,11 +51,11 @@ function lerp(
   ];
 }
 
-/** Low IR is cool teal, high IR runs through amber into rose. */
+/** Low IR is cool teal, mid-range IR is light green, and high IR is rose. */
 export function heatRgb(t: number): [number, number, number] {
   const x = Math.min(1, Math.max(0, t));
   const low: [number, number, number] = [16, 118, 112];
-  const mid: [number, number, number] = [244, 186, 72];
+  const mid: [number, number, number] = [168, 210, 120];
   const high: [number, number, number] = [224, 68, 96];
   if (x < 0.55) return lerp(low, mid, x / 0.55);
   return lerp(mid, high, (x - 0.55) / 0.45);
