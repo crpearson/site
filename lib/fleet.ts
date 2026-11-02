@@ -2200,8 +2200,8 @@ assertDerived();
  * sets CHECK_SNAPSHOT and loads this module. The site build does not.
  */
 function assertSnapshot() {
-  if (measurements.length !== 267 || v4Rows.length !== 267) {
-    throw new Error(`Expected 267 measurements, got ${measurements.length}`);
+  if (measurements.length !== 301 || v4Rows.length !== 301) {
+    throw new Error(`Expected 301 measurements, got ${measurements.length}`);
   }
   const sample = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "2026-10-09");
   if (!sample || sample.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.2,2.9,2.5,2.2,3.0,2.8") {
@@ -2218,11 +2218,11 @@ function assertSnapshot() {
   if (!restC1 || restC1.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.1,3.4,3.2,3.7,2.8,2.8") {
     throw new Error("C1-P4 rest-day IR spot check failed");
   }
-  if (packByUid("CNHL-2026-004")?.chargeCount !== 16 || packByUid("CNHL-2026-008")?.chargeCount !== 16) {
-    throw new Error("C1-P4 and C2-P2 charge_count should be 16 (2026-10-18 charge run and storage night)");
+  if (packByUid("CNHL-2026-004")?.chargeCount !== 17 || packByUid("CNHL-2026-008")?.chargeCount !== 17) {
+    throw new Error("C1-P4 and C2-P2 charge_count should be 17 (2026-10-18 charge run and storage night, 2026-11-01 storage night)");
   }
-  if (packByUid("CNHL-2026-005")?.chargeCount !== 18 || packByUid("CNHL-2026-012")?.chargeCount !== 18) {
-    throw new Error("C1-P5 and C2-P6 charge_count should be 18");
+  if (packByUid("CNHL-2026-005")?.chargeCount !== 19 || packByUid("CNHL-2026-012")?.chargeCount !== 19) {
+    throw new Error("C1-P5 and C2-P6 charge_count should be 19");
   }
   const chargeRuns = measurements.filter((row) => row.session === "2026-10-11-charge");
   if (
@@ -2243,11 +2243,11 @@ function assertSnapshot() {
     throw new Error(`2026-10-11 storage night is ${storageLabels}`);
   }
   if (
-    latestOperational("CNHL-2026-012")?.session !== "2026-10-18" ||
-    latestOperational("CNHL-2026-005")?.session !== "2026-10-18" ||
-    latestOperational("CNHL-2026-007")?.session !== "2026-10-18"
+    latestOperational("CNHL-2026-012")?.session !== "2026-11-01" ||
+    latestOperational("CNHL-2026-005")?.session !== "2026-11-01" ||
+    latestOperational("CNHL-2026-007")?.session !== "2026-11-01"
   ) {
-    throw new Error("2026-10-18 storage rows are the latest readings");
+    throw new Error("2026-11-01 storage rows are the latest readings");
   }
   {
     const night = measurements.filter((row) => row.session === "2026-10-18");
@@ -2278,6 +2278,25 @@ function assertSnapshot() {
     const c4p6 = night.find((row) => row.uid === "CNHL-2026-024");
     if (!c4p6 || c4p6.label !== "C4-P6" || c4p6.avg.toFixed(3) !== "3.133") throw new Error("CNHL-2026-024 2026-10-24 row should be C4-P6, 3.133 mΩ");
   }
+  {
+    // 2026-10-31 C3+C4 storage night: all 12 packs were charged; ten have a log. C4-P2's log holds only a first reading (no IR, private only) and C4-P4 has no log.
+    const night = measurements.filter((row) => row.session === "2026-10-31");
+    const want = "C3-P1,C3-P2,C3-P3,C3-P4,C3-P5,C3-P6,C4-P1,C4-P3,C4-P5,C4-P6";
+    if (night.length !== 10 || night.some((row) => isNonStorage(row.sessionType) || row.series !== row.label.slice(0, 2)) || night.map((row) => row.label).sort().join(",") !== want) {
+      throw new Error(`2026-10-31 storage night is ${night.map((row) => row.label).sort().join(",")}`);
+    }
+    const c3p6 = night.find((row) => row.uid === "CNHL-2026-018");
+    if (!c3p6 || c3p6.label !== "C3-P6" || c3p6.avg.toFixed(3) !== "2.900") throw new Error("CNHL-2026-018 2026-10-31 row should be C3-P6, 2.900 mΩ");
+  }
+  {
+    // 2026-11-01 full-fleet storage night: all 24 packs charged one pack per run on their home channels, every log has IR.
+    const night = measurements.filter((row) => row.session === "2026-11-01");
+    if (night.length !== 24 || night.some((row) => isNonStorage(row.sessionType) || row.series !== row.label.slice(0, 2)) || new Set(night.map((row) => row.uid)).size !== 24) {
+      throw new Error(`2026-11-01 storage night is ${night.map((row) => row.label).sort().join(",")}`);
+    }
+    const c4p4 = night.find((row) => row.uid === "CNHL-2026-022");
+    if (!c4p4 || c4p4.label !== "C4-P4" || c4p4.avg.toFixed(3) !== "3.125") throw new Error("CNHL-2026-022 2026-11-01 row should be C4-P4, 3.125 mΩ");
+  }
   if (operationalPoints("CNHL-2026-012").some((row) => row.session === "2026-10-11-charge")) {
     throw new Error("the charge run is still in the latest readings");
   }
@@ -2304,8 +2323,11 @@ function assertSnapshot() {
     const pack = packs.find((item) => item.label === label);
     // 2026-10-24: only the DX8-1 packs have a log that night; charge_count counts logged storage nights.
     const logged1024 = ["C3-P1", "C3-P2", "C3-P3", "C3-P4", "C4-P5", "C4-P6"].includes(label);
-    const count = (label === "C3-P2" ? 4 : 5) + (logged1024 ? 1 : 0);
-    const latest = logged1024 ? "2026-10-24" : label === "C4-P4" ? "2026-10-17" : "2026-10-23";
+    // 2026-10-31: ten packs have a log; C4-P2's log holds only a first reading (not counted) and C4-P4 has no log.
+    const logged1031 = label !== "C4-P2" && label !== "C4-P4";
+    // 2026-11-01: all twelve C3 and C4 packs have a full log (+1 each) and it is every pack's latest storage night.
+    const count = (label === "C3-P2" ? 4 : 5) + (logged1024 ? 1 : 0) + (logged1031 ? 1 : 0) + 1;
+    const latest = "2026-11-01";
     if (!pack || pack.chargeCount !== count || pack.chargeMode !== "parallel" || pack.purchaseDate !== "2026-10-13") {
       throw new Error(`${label} should be charge count ${count}, parallel, purchased 2026-10-13`);
     }
@@ -2362,20 +2384,20 @@ function assertSnapshot() {
   if (movedEvent("CNHL-2026-001")) throw new Error("CNHL-2026-001 should have no move on the site");
 
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "2.791" || stats.counted !== 24) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 2.791 mΩ over 24 slotted packs`);
+  if (stats.mean.toFixed(3) !== "3.060" || stats.counted !== 24) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 3.060 mΩ over 24 slotted packs`);
   }
   const rows = statusRows();
   const c1p4 = rows.find((row) => row.label === "C1-P4");
-  if (!c1p4 || c1p4.latestSession !== "2026-10-18" || c1p4.avg.toFixed(3) !== "2.650" || c1p4.spread.toFixed(2) !== "1.20" || c1p4.sr !== 15.9 || c1p4.floor !== 3612 || c1p4.lowGap !== 87) {
+  if (!c1p4 || c1p4.latestSession !== "2026-11-01" || c1p4.avg.toFixed(3) !== "2.833" || c1p4.spread.toFixed(2) !== "2.10" || c1p4.sr !== 17 || c1p4.floor !== 3708 || c1p4.lowGap !== 22) {
     throw new Error(`C1-P4 card is ${c1p4?.latestSession} ${c1p4?.avg} ${c1p4?.spread} ${c1p4?.sr} ${c1p4?.floor} ${c1p4?.lowGap}`);
   }
   const c2p2 = rows.find((row) => row.label === "C2-P2");
-  if (!c2p2 || c2p2.latestSession !== "2026-10-18" || c2p2.avg.toFixed(3) !== "3.133" || c2p2.sr !== 18.8 || c2p2.floor !== 3706 || c2p2.lowGap !== 21) {
+  if (!c2p2 || c2p2.latestSession !== "2026-11-01" || c2p2.avg.toFixed(3) !== "3.667" || c2p2.sr !== 22.5 || c2p2.floor !== 3693 || c2p2.lowGap !== 14) {
     throw new Error(`C2-P2 card is ${c2p2?.latestSession} ${c2p2?.avg}`);
   }
   const c2Card = rows.find((row) => row.uid === "CNHL-2026-007");
-  if (!c2Card || c2Card.latestSession !== "2026-10-18" || c2Card.avg.toFixed(3) !== "2.750" || c2Card.spread.toFixed(1) !== "0.5") {
+  if (!c2Card || c2Card.latestSession !== "2026-11-01" || c2Card.avg.toFixed(3) !== "2.933" || c2Card.spread.toFixed(1) !== "0.6") {
     throw new Error(`C2-P1 card is ${c2Card?.latestSession} ${c2Card?.avg}`);
   }
   const model = fleetModel();
@@ -2383,10 +2405,11 @@ function assertSnapshot() {
     const line = model.mean.find((item) => item.id === id);
     return [...(line?.values ?? [])].reverse().find((value) => value != null);
   };
-  if (lastOf("C1")?.toFixed(3) !== "2.786") throw new Error(`C1 series mean last is ${lastOf("C1")}`);
-  if (lastOf("C2")?.toFixed(3) !== "2.853") throw new Error(`C2 series mean last is ${lastOf("C2")}`);
-  if (lastOf("C3")?.toFixed(3) !== "2.817") throw new Error(`C3 series mean last is ${lastOf("C3")}`);
-  if (lastOf("C4")?.toFixed(3) !== "2.908") throw new Error(`C4 series mean last is ${lastOf("C4")}`);
+  // C1 2026-11-01 mean is exactly 3.0125 mΩ; float order makes toFixed(3) flip between 3.012 and 3.013, so pin four places.
+  if (lastOf("C1")?.toFixed(4) !== "3.0125") throw new Error(`C1 series mean last is ${lastOf("C1")}`);
+  if (lastOf("C2")?.toFixed(3) !== "3.119") throw new Error(`C2 series mean last is ${lastOf("C2")}`);
+  if (lastOf("C3")?.toFixed(3) !== "3.036") throw new Error(`C3 series mean last is ${lastOf("C3")}`);
+  if (lastOf("C4")?.toFixed(3) !== "3.071") throw new Error(`C4 series mean last is ${lastOf("C4")}`);
   const at = (id: string) => model.categories.findIndex((category) => category.id === id);
   const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
   const c2Fleet = model.fleets.find((fleet) => fleet.id === "C2");
@@ -2425,7 +2448,7 @@ function assertSnapshot() {
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (
     rendered !== "C1:C1-P1+C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
-    board.as_of !== "2026-10-24"
+    board.as_of !== "2026-11-01"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
@@ -2459,13 +2482,13 @@ function assertSnapshot() {
     }
   }
   const packChart = getPack("CNHL-2026-001");
-  if (!packChart || packChart.points.length !== 16) throw new Error(`C1-P1 should have 16 readings, has ${packChart?.points.length}`);
+  if (!packChart || packChart.points.length !== 17) throw new Error(`C1-P1 should have 17 readings, has ${packChart?.points.length}`);
   for (const line of [...(packChart?.cellSeries ?? []), ...(packChart?.spreadSeries ?? []), ...(packChart?.floorSeries ?? [])]) {
-    if (readingIndices(line).length !== 16) throw new Error(`C1-P1 ${line.label} has ${readingIndices(line).length} readings`);
+    if (readingIndices(line).length !== 17) throw new Error(`C1-P1 ${line.label} has ${readingIndices(line).length} readings`);
   }
   const c3p2 = getPack("CNHL-2026-014");
   for (const line of [...(c3p2?.cellSeries ?? []), ...(c3p2?.spreadSeries ?? []), ...(c3p2?.floorSeries ?? [])]) {
-    if (readingIndices(line).length !== 4) throw new Error(`C3-P2 ${line.label} should have four readings (2026-10-14, 2026-10-16, 2026-10-23, 2026-10-24)`);
+    if (readingIndices(line).length !== 6) throw new Error(`C3-P2 ${line.label} should have six readings (2026-10-14, 2026-10-16, 2026-10-23, 2026-10-24, 2026-10-31, 2026-11-01)`);
   }
   const c1p1Slot = getSlot("C1-P1");
   if (!c1p1Slot || c1p1Slot.past.length !== 0) throw new Error(`C1-P1 should have no past occupant, has ${c1p1Slot?.past.length}`);
