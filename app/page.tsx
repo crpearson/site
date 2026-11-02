@@ -31,7 +31,7 @@ export default function HomePage() {
         <h1 className="h1">My drones, my batteries, and what I&apos;ve learned the hard way.</h1>
         <p className="lead">
           I keep my FPV notes here: my LiPo packs, my builds, the gear I actually use, and how-tos for the stuff
-          I had to figure out. Right now it&apos;s mostly batteries.
+          I had to figure out. The battery tracker is still the big piece.
         </p>
       </section>
 
@@ -43,11 +43,10 @@ export default function HomePage() {
             <p>How each pack is holding up, what to charge next, and how I test.</p>
             <span className="go">Open Batteries →</span>
           </Link>
-          <Link className="card section-card is-stub" href="/builds/">
+          <Link className="card section-card" href="/builds/">
             <h3>Drone Builds</h3>
-            <UcButton />
-            <p>Build logs are on the way.</p>
-            <span className="go">Preview →</span>
+            <p>Notes on what I fly, and the experiments that did not work out.</p>
+            <span className="go">Open Drone Builds →</span>
           </Link>
           <Link className="card section-card is-stub" href="/gear/">
             <h3>Suggested Equipment</h3>
@@ -119,6 +118,15 @@ export default function HomePage() {
       <section className="home-section">
         <h2 className="section-title">What&apos;s new</h2>
         <ul className="updates">
+          <li>
+            <time dateTime="2026-11-02">
+              <span className="nw">2026-11-02</span>
+            </time>
+            <span>
+              Apex Evo 5 + FETtec is filed as a dead end. SoloGood&apos;s frame stretch, kept as history.{" "}
+              <Link href="/builds/apex-evo-5-fettec/">The dead end</Link>
+            </span>
+          </li>
           <li>
             <time dateTime="2026-10-23">
               <span className="nw">2026-10-23</span>

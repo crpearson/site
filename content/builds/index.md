@@ -1,1 +1,7 @@
-I haven't posted any build logs yet. When I do, each one will list every part, the specs, photos, and what I'd do differently next time.
+Quads I fly. Story, parts, photos, and where each one stands.
+
+## Dead ends
+
+Not every airframe experiment earns a build log. Some are history — useful as a warning, not as a template.
+
+- [Apex Evo 5 + FETtec (SoloGood dead end)](/builds/apex-evo-5-fettec/) — what SoloGood’s frame stretch cost me.
