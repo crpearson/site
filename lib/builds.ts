@@ -100,13 +100,24 @@ function statusOf(value: string, file: string): BuildStatus {
 
 function assertApex(entry: BuildEntry) {
   const html = `${entry.doc.introHtml}\n${entry.doc.sections.map((section) => section.html).join("\n")}`;
-  const text = html.replace(/<[^>]+>/g, " ");
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&");
   const required = [
     "First Lost Penny Apex. Iteration 1.",
+    "This is not a great build. It still needs work. It's rev 1.",
     "This thing still does not fly right.",
     "micro desyncs",
     "Brian White",
     "motor wire routing",
+    "Glow-in-the-dark TPU looks cool. It is also likely to crack on impact. Something I've learned along the way.",
+    "deprecated SoloGood Apex Evo that sits 2mm higher than the original Impulse",
+    "only original ImpulseRC Apex Evo hole spacing and vertical dims",
+    "SoloGood's new O4 stretch is 4mm taller",
+    "an abomination",
+    "I asked them to reconsider. Silence. I believe they are wrong.",
     "GrabCAD",
     "ImpulseRC Apex EVO 5",
     "Fettec G4-N V1.7",
@@ -119,19 +130,7 @@ function assertApex(entry: BuildEntry) {
     "RadioMaster RP1 V2",
     "Tattu R-Line Version 5.0",
     "High Speed TPU Filament",
-    "deprecated and completely useless version of the SoloGood Apex Evo frame",
-    "2mm higher than the original Impulse Apex Evo",
-    "All further comparisons will be against the original Impulse frame",
-    "removing any models that do not have the original Apex Evo hole spacing or vertical dimensions",
-    "removing anything that accommodates the stupid changes they tried to make over time",
-    "Basically none of my work going forward will match anything other than the original ImpulseRC Apex Evo dimensions",
-    "abomination that is 4mm taller than the original",
-    "obnoxious, huge DJI O4 Pro",
-    "every single new frame on the planet accommodates the obnoxiously sized O4 Pro",
-    "SoloGood is moronic for pandering",
-    "I have asked them to reconsider",
-    "They have responded with silence",
-    "I believe they are wrong",
+    "Radiocommande RadioMaster TX15",
     "VTX couch / mount",
     "VTX antenna mount",
     "Spike Absorber / capacitor plaque",
@@ -140,8 +139,8 @@ function assertApex(entry: BuildEntry) {
   for (const phrase of required) {
     if (!text.includes(phrase)) throw new Error(`Apex build is missing: ${phrase}`);
   }
-  if (/depart from the original/i.test(text)) {
-    throw new Error("Apex model note must say models do not have the original spacing");
+  if (/Sure\. this is not a great build/i.test(text)) {
+    throw new Error("Apex status must not open with Sure.");
   }
   if (!html.includes(`href="${entry.source}"`)) throw new Error("Apex build is missing the RotorBuilds link");
   if (entry.doc.sections[0]?.title !== "Status (2026-11-01)") {

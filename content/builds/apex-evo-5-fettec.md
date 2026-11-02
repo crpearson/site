@@ -7,7 +7,7 @@ status: flying
 size: 5-inch
 iteration: 1
 line: "Lost Penny signature Apex"
-summary: "I wanted to do a kind of Apex Evo reference build based on the Evo and FETtec electronics."
+summary: "Apex Evo reference build on FETtec. Iteration 1. Still does not fly right."
 cover: /images/builds/apex-evo-5-fettec/cover.jpg
 coverAlt: "Apex Evo 5 on the workbench with pink and clear props, the camera up front, and a battery strap over the top."
 source: https://rotorbuilds.com/build/36919/
@@ -20,84 +20,33 @@ First Lost Penny Apex. Iteration 1.
 
 ## Status (2026-11-01)
 
+This is not a great build. It still needs work. It's rev 1.
+
 This thing still does not fly right.
 
-It has what is probably micro desyncs on throttle punches, which is likely caused by my fancy motor wire routing (the wires run around and under the ESC).
-
-I am working with Brian White on finding the root cause.
+Probably micro desyncs on throttle punches. Fancy motor wire routing under the ESC is the likely cause. Working with Brian White on the root cause.
 
 ## The build
 
-I wanted to do a kind of Apex Evo reference build based on the Evo and FETtec electronics. This frame and these electronics have a long history of working well together, and I thought I'd see what all the fuss was about.
+Apex Evo + FETtec reference build. Long history of working well together. I wanted to see what the fuss was about.
 
-**Some Factors**
+FETtec ESC is fragile — Spike Absorber and chonky 50 V caps required. HDZero Freestyle V2 on a TPU couch, electrically isolated, power leads under the VTX. Custom antenna mount, Spike Absorber / cap plaque, clean harnesses. Alien / 1950s sci-fi TPU vibe. Glow-in-the-dark TPU looks cool. It is also likely to crack on impact. Something I've learned along the way.
 
-- FETtec ESC is fragile. You need a Spike Absorber and some chonky 50 V caps.
-- ImpulseRC went out of business. I have a few new kits, so I made a full 3D model of the frame. I wish I could open-source it. Email your friends at Impulse and ask if they'll let me (I don't know them).
-- Some parts are difficult to source.
-- Carbon is easy to cut because I have a CNC VMC :P
-- Original plan was to use legacy KISS firmware, but research showed the digital OSD was buggy. I would need to use Alpha firmware. See ya, DShot -- hello 2SM+OneWire!
-
-**Criteria**
-
-- Needs to use HDZero Freestyle V2.
-- Chonker VTX must remain electrically isolated from the frame and situated on a TPU couch to provide protection.
-- I would need to design parts for this. This is good because it slows me down and causes me to build fewer drones. Makes my wife happy.
-- Custom mounts should also be used for the power-lead capacitor and FETtec Spike Absorber.
-- A custom VTX antenna mount should also be made to match the VTX mount aesthetic and provide protection.
-- Wiring should be clean, with custom-crimped harnesses where needed.
-- Power leads should run underneath the VTX.
-
-**Aesthetic Requirements**
-
-- Custom parts should reflect the Alien aesthetic from ImpulseRC. They should look like they have been abducted by aliens.
-- Curves and ovals should be used to reflect a cheesy 1950s sci-fi vibe.
-- Parts should speak to each other, requiring remixing and redesign.
-- The FETtec logo on the Spike Absorber should face up. Think if you lift the hood on a Ferrari, it should say Ferrari somewhere.
-- Build should accommodate 250 V capacitors, the one that came with the ESC as well as a large genuine Panasonic.
-- Capacitors should be situated in TPU mounts and connected with silicone motor-wire trimmings.
-- Capacitors should use the B2FPV CappyCaps (Josef is my hero!).
-- TPU parts should glow in the dark (because race car).
-
-This all started, like most things do, with trying to figure out where stuff goes and how to make room for everything. It's not that the Evo is a tight frame, but the constraints around the chungus VTX and the required Spike Absorber + 50 V cap were pretty limiting. I knew I wanted the power leads to run under the VTX, so designing a mount for that was first on the agenda. It took me forever to come up with something I liked. Originally I'd planned to use isolated screws to secure the VTX to the TPU mount, but I thought better of it and decided to squish it into place using some downward force from the top plate. This had the advantage of allowing me to expose all sides of this megachonker aluminum cube to airflow for cooling. With the wires run under it, I thought to myself, "Self, is there anything else you can put under that VTX with the space you have?" The answer turned out to be no. I could just fit the receiver under there, but it would have caused an RF nightmare at the back end of the quad, so I decided against it based on the advice from my friend ResonantFPV.
-
-With the VTX mount done and people on FB clamoring for the STL, I could move on to the VTX antenna. This part needed to do two things: provide safe routing of the antenna coax cable and room/guidance for the power leads to keep them from being too squished between it and the top plate. Easy enough with a simple remix of the official Impulse antenna, since they were awesome and provided the STEP file. Just a few cutouts and a lot of fillets.
-
-So now we're getting somewhere. Time to install the power leads and motors. I thought a lot about this since the ESC has those through-holes. If I just soldered the wires to the top, they'd fill with solder and drip down. If I ran the leads through them from the top, they'd come out at entirely the wrong angle. Soldering them from underneath it was. Stupidly, I decided to use high-lead, low-temp solder for this in an effort to reduce thermal stress on the electronics. This was a mistake because the solder, while creating perfectly serviceable joints, solidifies as a super-ugly, decidedly non-shiny mass that looks a little like the Elephant's Foot at Chernobyl. I added flux and reflowed it, but it still solidified matte. The joint, while not aesthetically pleasing, was electrically very good though, so I moved on. Oh, I also included some motor-wire cutoffs in the same joints for the Spike Absorber / cap combo that FETtec requires for 6S.
-
-Next, I spent a few days sticking the capacitor in all the open spaces, seeing where and in which orientation it would fit. It's always nice to situate these vertically if you can, but it wasn't going to happen because it's an enormous 50 V cap that needs a PCB with Zener diodes attached to it. Horizontal it was. I kinda quickly realized that this could provide a kinda cool look though, so I started getting excited about it. The TPU part required probably ten iterations and test fits before I got it right, but in the end it resulted in a pretty cool little plaque that reads FETtec when you take the top plate off. I think it looks clean and it hides those matte gray solder terminals, which is nice.
-
-With that done, I could close Fusion and start wiring everything up. I decided to run the motor wires around and under the ESC. I have always thought this method has a nice, clean look to it, but it is a massive PITA. I also understand it's not the best for noise management and serviceability. These are things that must be sacrificed for cool looks, and I took the credit I received for moving the receiver up front and cashed it in there. I'm mostly happy with the solder joints for the motor wires, although a few could be better. Someone once said, "The perfection is in the imperfection."
-
-Obviously smoke checks and everything went alright, and I set about trimming wires and getting things into their final home. I got real mad when I realized I could not change the aspect ratio on the stupid camera that comes with the Freestyle V2. I probably should have known this, but I didn't and it made me big mad. I'm still mad! Mad enough to give HDZero another $57 for the camera that will support 16:9. That'll teach 'em! FETtec Alpha is kinda weird. Not really weird, but kinda weird. Stuff is just not quite where you expect it to be. It's also worth noting that they use a completely different motor numbering orientation than Betaflight. Just something to know, I guess, but it caused some head-scratching as I was trying to work out the ESC orientation. I got the motors spinning the right direction, applied the 5" preset, and took it for the maiden yesterday. Flew great. I didn't even do a test hover. I just went to a big, soft, grassy field and let her rip on flight #1. Really happy with how it performs right off the preset.
-
-It sucks we can't get real versions of this frame anymore. Hopefully the IP holders will open-source the design so we can keep the arms and plates flowing from companies that are not the Chinese counterfeiters who probably put Impulse out of business to begin with.
-
-I hope you like my build. You can download my STL and STEP files from my GrabCAD account.
+ImpulseRC is gone. I have a few kits and a full 3D model of the frame. Alpha firmware, not legacy KISS. Maiden flew great off the 5" preset. Full story stays on RotorBuilds.
 
 ## Parts I designed
 
-The parts I designed are linked to a deprecated and completely useless version of the SoloGood Apex Evo frame. They are meant for that frame. That version is 2mm higher than the original Impulse Apex Evo.
+Meant for a deprecated SoloGood Apex Evo that sits 2mm higher than the original Impulse. Going forward, only original ImpulseRC Apex Evo hole spacing and vertical dims. SoloGood's new O4 stretch is 4mm taller — an abomination. I asked them to reconsider. Silence. I believe they are wrong.
 
-All further comparisons will be against the original Impulse frame. Only the original. I will be removing any models that do not have the original Apex Evo hole spacing or vertical dimensions. And I will be removing anything that accommodates the stupid changes they tried to make over time. Basically none of my work going forward will match anything other than the original ImpulseRC Apex Evo dimensions.
+- **VTX couch / mount.** TPU. Freestyle V2 isolated, squished by the top plate, power leads underneath.
+- **VTX antenna mount.** Impulse remix. Coax routing plus room so the leads are not crushed.
+- **Spike Absorber / capacitor plaque.** TPU. Logo up. Reads FETtec when the top plate comes off.
 
-SoloGood is now producing an abomination that is 4mm taller than the original. They stretched the frame so the obnoxious, huge DJI O4 Pro could fit on it. Sure. Take a frame people actually liked and extrude it until a brick of a camera is comfortable. Amazing use of the design.
-
-The moral of the story: every single new frame on the planet accommodates the obnoxiously sized O4 Pro camera. Most of the people who want to fly the Apex Evo frame don't fly that camera, and SoloGood is moronic for pandering to accommodate it in their new, massively vertically increased O4 frame.
-
-I have asked them to reconsider. They have responded with silence. I believe they are wrong.
-
-- **VTX couch / mount.** TPU. The Freestyle V2 stays electrically isolated, squished in by the top plate, with the power leads run underneath.
-- **VTX antenna mount.** A remix of the official Impulse antenna mount. It routes the coax and leaves room so the power leads are not crushed against the top plate.
-- **Spike Absorber / capacitor plaque.** TPU. The FETtec Spike Absorber and the big 50 V cap sit in it, logo up, and it reads FETtec when the top plate comes off.
-
-Glow-in-the-dark TPU, because race car. The B2FPV CappyCaps are Josef's. I did not design those.
-
-STL and STEP files for these mounts are on my GrabCAD account.
+B2FPV CappyCaps are Josef's. I did not design those. STL and STEP on my GrabCAD account.
 
 ## Parts
 
-The airframe only. I left prices off this page. The RotorBuilds post lists what they cost when I wrote it up. The TPU row is filament, not the mounts above.
+Airframe only. Prices on the RotorBuilds post. The TPU row is filament, not the mounts above.
 
 | Role | Qty | Part |
 | --- | --- | --- |
@@ -115,7 +64,7 @@ The airframe only. I left prices off this page. The RotorBuilds post lists what 
 
 ## Bench gear
 
-Radio and bench gear from the same list. None of this is on the quad.
+None of this is on the quad.
 
 | Role | Part |
 | --- | --- |
@@ -128,7 +77,7 @@ Radio and bench gear from the same list. None of this is on the quad.
 
 ## Photos
 
-The rest of the photos, in the same order as the RotorBuilds page.
+Same order as the RotorBuilds page.
 
 ![Top view of a 5-inch quad on a wooden table, with a white printed antenna mount and clear props.](01.jpg)
 
@@ -166,4 +115,4 @@ The rest of the photos, in the same order as the RotorBuilds page.
 
 ## Credit
 
-I wrote this up on [RotorBuilds](https://rotorbuilds.com/build/36919/) on May 8, 2026.
+Full write-up on [RotorBuilds](https://rotorbuilds.com/build/36919/) (May 8, 2026).
