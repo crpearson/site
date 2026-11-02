@@ -2,13 +2,14 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { figureHtml, parseProse, type ProseDoc } from "@/lib/prose";
 
-/** Known build states. `flying` means it still gets in the air. Notes carry the rest. */
-export const BUILD_STATUSES = ["flying"] as const;
+/** Known build states. `flying` is a quad that still gets in the air. `dead-end` is history, not a template. */
+export const BUILD_STATUSES = ["flying", "dead-end"] as const;
 
 export type BuildStatus = (typeof BUILD_STATUSES)[number];
 
 const STATUS_LABEL: Record<BuildStatus, string> = {
   flying: "Flying",
+  "dead-end": "Dead end",
 };
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -34,9 +35,12 @@ export type BuildEntry = {
   doc: ProseDoc;
 };
 
-function assertNoProfileLink(text: string, where: string) {
+function assertPublicCopy(text: string, where: string) {
   if (/grabcad\.com/i.test(text)) {
     throw new Error(`${where} must not link a GrabCAD profile`);
+  }
+  if (/clifford pearson|cliff\.pearson/i.test(text)) {
+    throw new Error(`${where} must stay on the public name`);
   }
 }
 
@@ -98,75 +102,61 @@ function statusOf(value: string, file: string): BuildStatus {
   throw new Error(`${file} has an unknown status "${value}"`);
 }
 
-function assertApex(entry: BuildEntry) {
-  const html = `${entry.doc.introHtml}\n${entry.doc.sections.map((section) => section.html).join("\n")}`;
-  const text = html
+function plainText(html: string): string {
+  return html
     .replace(/<[^>]+>/g, " ")
     .replace(/&#39;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, "&");
+}
+
+/** History page. It must not grow back into a flying showcase. */
+function assertDeadEnd(entry: BuildEntry) {
+  if (entry.status !== "dead-end") throw new Error("Apex FETtec page must stay a dead end");
+  if (entry.line !== "History / caution") throw new Error("Apex FETtec line must stay history");
+  if (!/archival/i.test(entry.coverAlt) || !/not a recommended build/i.test(entry.coverAlt)) {
+    throw new Error("Apex FETtec cover must be labeled archival");
+  }
+  const html = `${entry.doc.introHtml}\n${entry.doc.sections.map((section) => section.html).join("\n")}`;
+  const text = plainText(html);
   const required = [
-    "First Lost Penny Apex. Iteration 1.",
-    "This is not a great build. It still needs work. It's rev 1.",
-    "This thing still does not fly right.",
-    "micro desyncs",
-    "Brian White",
-    "motor wire routing",
-    "Glow-in-the-dark TPU looks cool. It is also likely to crack on impact. Something I've learned along the way.",
-    "deprecated SoloGood Apex Evo that sits 2mm higher than the original Impulse",
-    "only original ImpulseRC Apex Evo hole spacing and vertical dims",
-    "SoloGood's new O4 stretch is 4mm taller",
-    "an abomination",
-    "I asked them to reconsider. Silence. I believe they are wrong.",
-    "GrabCAD",
-    "ImpulseRC Apex EVO 5",
-    "Fettec G4-N V1.7",
-    "FETtec 4-IN-1 (6s) 45A",
-    "ETHiX Mr Steele Silk Motor V6",
-    "Ethix P3 Peanut Butter",
-    "HDZero Nano 90 V2",
-    "HDZero Freestyle V2",
-    "HDZero VTX Antenna",
-    "RadioMaster RP1 V2",
-    "Tattu R-Line Version 5.0",
-    "High Speed TPU Filament",
-    "Radiocommande RadioMaster TX15",
-    "VTX couch / mount",
-    "VTX antenna mount",
-    "Spike Absorber / capacitor plaque",
-    "I did not design those",
+    "This is not a build to copy. It is not a viable Lost Penny Apex. It is history.",
+    "design heartache",
+    "SoloGood later stretched the thing another way for the DJI O4 Pro — about 4mm over original.",
+    "Stupid changes. Myopic decision making.",
+    "original ImpulseRC Apex Evo hole spacing and vertical dimensions",
+    "I will drop models that follow SoloGood’s stretch.",
+    "The attempt still does not fly right (likely micro desyncs from motor wires run under the ESC).",
+    "Glow-in-the-dark TPU looks cool and is likely to crack on impact",
+    "This page exists so the site does not pretend that path was a success.",
+    "Not a signature Apex to buy parts for.",
+    "Not iteration-1 of a flying line.",
+    "Not advice to run SoloGood’s revised dims.",
+    "Archival only — not a recommended build.",
   ];
   for (const phrase of required) {
-    if (!text.includes(phrase)) throw new Error(`Apex build is missing: ${phrase}`);
+    if (!text.includes(phrase)) throw new Error(`Apex dead end is missing: ${phrase}`);
   }
-  if (/Sure\. this is not a great build/i.test(text)) {
-    throw new Error("Apex status must not open with Sure.");
+  if (!html.includes(`href="${entry.source}"`)) throw new Error("Apex dead end is missing the RotorBuilds link");
+  const banned = ["Parts", "Parts I designed", "Bench gear", "Status (2026-11-01)"];
+  for (const title of banned) {
+    if (entry.doc.sections.some((section) => section.title === title)) {
+      throw new Error(`Apex dead end must not include a ${title} section`);
+    }
   }
-  if (!html.includes(`href="${entry.source}"`)) throw new Error("Apex build is missing the RotorBuilds link");
-  if (entry.doc.sections[0]?.title !== "Status (2026-11-01)") {
-    throw new Error("Apex build must open with the status notes");
+  if (html.includes("<table")) throw new Error("Apex dead end must not include a parts or bench table");
+  const photos = entry.doc.sections.find((section) => section.title === "Photos (archival)");
+  const images = photos?.html.match(/<img\b/g) ?? [];
+  if (!photos || images.length < 1 || images.length > 16) {
+    throw new Error("Apex dead end gallery should stay a short archival set");
   }
-  if (!entry.doc.sections.some((section) => section.title === "Parts I designed")) {
-    throw new Error("Apex build is missing the parts-I-designed section");
-  }
-  const parts = entry.doc.sections.find((section) => section.title === "Parts");
-  const bench = entry.doc.sections.find((section) => section.title === "Bench gear");
-  const photos = entry.doc.sections.find((section) => section.title === "Photos");
-  if (!parts || (parts.html.match(/<tr>/g) ?? []).length !== 12) {
-    throw new Error("Apex parts table should be the header plus 11 airframe rows");
-  }
-  if (!bench || (bench.html.match(/<tr>/g) ?? []).length !== 7) {
-    throw new Error("Apex bench table should be the header plus 6 bench rows");
-  }
-  if (!photos || (photos.html.match(/<img\b/g) ?? []).length !== 17) {
-    throw new Error("Apex gallery should be photos 01 through 17");
-  }
+  if (/Read the build/i.test(text)) throw new Error("Apex dead end must not use a flying build CTA");
 }
 
 function loadBuild(file: string): BuildEntry {
   const full = path.join(process.cwd(), "content/builds", file);
   const raw = readFileSync(full, "utf8");
-  assertNoProfileLink(raw, file);
+  assertPublicCopy(raw, file);
   const { data, body } = parseFrontMatter(raw, file);
   const slug = field(data, "slug", file);
   if (!SLUG.test(slug) || file !== `${slug}.md`) throw new Error(`${file} slug does not match the filename`);
@@ -192,6 +182,12 @@ function loadBuild(file: string): BuildEntry {
     throw new Error(`${file} source is not a URL`);
   }
   if (sourceUrl.protocol !== "https:") throw new Error(`${file} source must be https`);
+  if (status === "dead-end") {
+    if (!/archival/i.test(coverAlt) || !/not a recommended build/i.test(coverAlt)) {
+      throw new Error(`${file} cover must be labeled archival, not a recommended build`);
+    }
+    if (!cardNote) throw new Error(`${file} needs a card note that this is not a viable build`);
+  }
 
   const photoDir = path.join(process.cwd(), "public/images/builds", slug);
   const coverPath = path.join(photoDir, "cover.jpg");
@@ -206,6 +202,9 @@ function loadBuild(file: string): BuildEntry {
     errorLabel: "Build",
     image({ file: imageFile, alt }) {
       if (!alt.trim()) throw new Error(`${file} image is missing alt text: ${imageFile}`);
+      if (status === "dead-end" && (!/archival/i.test(alt) || !/not a recommended build/i.test(alt))) {
+        throw new Error(`${file} photo must be labeled archival, not a recommended build: ${imageFile}`);
+      }
       if (!/^\d{2}\.jpg$/.test(imageFile)) throw new Error(`${file} has an unexpected image name: ${imageFile}`);
       const abs = path.join(photoDir, imageFile);
       if (!existsSync(abs)) throw new Error(`${file} is missing ${imageFile}`);
@@ -222,12 +221,16 @@ function loadBuild(file: string): BuildEntry {
   });
 
   if (doc.title !== title) throw new Error(`${file} title does not match the H1`);
-  if (!doc.sections.some((section) => section.title.toLowerCase().startsWith("status"))) {
+  if (status === "dead-end") {
+    if (!doc.sections.some((section) => section.title.toLowerCase().startsWith("photos"))) {
+      throw new Error(`${file} is missing a Photos section`);
+    }
+  } else if (!doc.sections.some((section) => section.title.toLowerCase().startsWith("status"))) {
     throw new Error(`${file} is missing a Status section`);
   }
   const html = `${doc.introHtml}\n${doc.sections.map((section) => section.html).join("\n")}`;
   if (!html.includes(`href="${source}"`)) throw new Error(`${file} does not link its source`);
-  assertNoProfileLink(html, file);
+  assertPublicCopy(html, file);
   for (const name of onDisk) {
     if (!used.has(name)) throw new Error(`${file} never shows ${name}`);
   }
@@ -254,11 +257,11 @@ function loadBuild(file: string): BuildEntry {
     cardNote,
     doc,
   };
-  if (slug === "apex-evo-5-fettec") assertApex(entry);
+  if (slug === "apex-evo-5-fettec") assertDeadEnd(entry);
   return entry;
 }
 
-export function listBuilds(): BuildEntry[] {
+function allBuilds(): BuildEntry[] {
   const dir = path.join(process.cwd(), "content/builds");
   return readdirSync(dir)
     .filter((name) => name.endsWith(".md") && name !== "index.md")
@@ -272,6 +275,16 @@ export function listBuilds(): BuildEntry[] {
     });
 }
 
+/** Flying (and any future non-history) builds for the card grid. Dead ends stay out. */
+export function listBuilds(): BuildEntry[] {
+  return allBuilds().filter((build) => build.status !== "dead-end");
+}
+
+/** Every build page, including dead ends. */
+export function listBuildPages(): BuildEntry[] {
+  return allBuilds();
+}
+
 export function getBuild(slug: string): BuildEntry | null {
-  return listBuilds().find((build) => build.slug === slug) ?? null;
+  return allBuilds().find((build) => build.slug === slug) ?? null;
 }

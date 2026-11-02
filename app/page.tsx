@@ -31,7 +31,7 @@ export default function HomePage() {
         <h1 className="h1">My drones, my batteries, and what I&apos;ve learned the hard way.</h1>
         <p className="lead">
           I keep my FPV notes here: my LiPo packs, my builds, the gear I actually use, and how-tos for the stuff
-          I had to figure out. The first build log is up, and the battery tracker is still the big piece.
+          I had to figure out. The battery tracker is still the big piece.
         </p>
       </section>
 
@@ -45,7 +45,7 @@ export default function HomePage() {
           </Link>
           <Link className="card section-card" href="/builds/">
             <h3>Drone Builds</h3>
-            <p>Iteration 1 of the Lost Penny signature Apex is up.</p>
+            <p>Notes on what I fly, and the experiments that did not work out.</p>
             <span className="go">Open Drone Builds →</span>
           </Link>
           <Link className="card section-card is-stub" href="/gear/">
@@ -119,12 +119,12 @@ export default function HomePage() {
         <h2 className="section-title">What&apos;s new</h2>
         <ul className="updates">
           <li>
-            <time dateTime="2026-11-01">
-              <span className="nw">2026-11-01</span>
+            <time dateTime="2026-11-02">
+              <span className="nw">2026-11-02</span>
             </time>
             <span>
-              First build log: Apex Evo 5 with FETtec electronics, iteration 1 of the Lost Penny signature Apex.{" "}
-              <Link href="/builds/apex-evo-5-fettec/">Read the build</Link>
+              Apex Evo 5 + FETtec is filed as a dead end. SoloGood&apos;s frame stretch, kept as history.{" "}
+              <Link href="/builds/apex-evo-5-fettec/">The dead end</Link>
             </span>
           </li>
           <li>

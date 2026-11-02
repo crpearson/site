@@ -2584,6 +2584,36 @@ svg {
   margin: 0;
 }
 
+.build-index .page-intro h2 {
+  margin: var(--space-6) 0 var(--space-3);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-h3);
+  letter-spacing: var(--tracking-head);
+  line-height: var(--leading-head);
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.build-index .page-intro ul {
+  margin: var(--space-3) 0 0;
+  padding-left: 1.25rem;
+  max-width: var(--prose-max);
+}
+
+.build-index .page-intro li {
+  margin-top: 0.45rem;
+}
+
+.build-index .page-intro a {
+  color: var(--link);
+  text-underline-offset: 3px;
+}
+
+.build-index .page-intro a:hover {
+  color: var(--link-hover);
+}
+
 .howto-index-list {
   display: grid;
   gap: var(--space-4);
@@ -2895,6 +2925,10 @@ svg {
   font-size: var(--text-mono);
 }
 
+.build-cover-figure {
+  margin: var(--space-5) 0 0;
+}
+
 .build-cover {
   display: block;
   width: 100%;
@@ -2904,6 +2938,18 @@ svg {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--bg);
+}
+
+.build-cover-figure .build-cover {
+  margin-top: 0;
+}
+
+.build-cover-figure figcaption {
+  max-width: var(--prose-max);
+  margin-top: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: 1.45;
 }
 
 .build-gallery {
