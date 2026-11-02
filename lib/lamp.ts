@@ -88,6 +88,33 @@ export function watchRecheckText(status: string, reason = ""): string | null {
   return haystack.includes(WATCH_RECHECK) ? WATCH_RECHECK : null;
 }
 
+/**
+ * Fleet list only. The status word is already on the row. This returns at most
+ * one advisory, or nothing when the recorded note is a rules-v3 evidence blob,
+ * a repeated "no change" line, or has no advisory. Pack pages keep the full note.
+ */
+export function fleetStatusAdvisory(reason: string): string | null {
+  const text = reason.replace(/\s+/g, " ").trim();
+  if (/^Rules v3\b/i.test(text) || /^No change:/i.test(text)) return null;
+  const marked = text.match(/\bAdvisory:\s*(.+)$/i);
+  if (!marked) return null;
+  let body = marked[1].trim().replace(/\bcheck resting voltage before connecting\b/gi, "check rest V before connecting");
+  body = body.replace(/\b20\d{2}-(\d{2})-(\d{2})\b/g, "$1-$2");
+  body = body.replace(/(\d+)\s*mV from\b/gi, "$1 mV off");
+  const led = body.match(/^(.*?),?\s+so\s+check rest V before connecting(.*)$/i);
+  if (led) {
+    const cause = led[1].replace(/[.;]\s*$/, "").trim();
+    const tail = led[2].replace(/^[.;]\s*/, "").trim();
+    const rest = tail ? ` ${tail.charAt(0).toUpperCase()}${tail.slice(1)}` : "";
+    body = `Check rest V before connecting: ${cause}.${rest}`;
+  } else {
+    body = body.replace(/^check/, "Check");
+    body = body.charAt(0).toUpperCase() + body.slice(1);
+  }
+  if (!/[.!?]$/.test(body)) body += ".";
+  return body;
+}
+
 export function splitCall(status: string): { parallel: string; service: string } {
   const match = status.match(/^PARALLEL\s+([\s\S]+?)\s+\|\s+SERVICE\s+([\s\S]+)$/i);
   if (!match) return { parallel: status.trim(), service: "" };
