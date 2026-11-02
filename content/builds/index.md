@@ -1,1 +1,1 @@
-I haven't posted any build logs yet. When I do, each one will list every part, the specs, photos, and what I'd do differently next time.
+Build logs for the quads I fly. Each one has the story, the parts, the photos, and where it stands now.

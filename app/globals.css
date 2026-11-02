@@ -2850,3 +2850,74 @@ svg {
   font-size: var(--text-small);
   line-height: 1.45;
 }
+
+.build-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.build-line {
+  margin: 0;
+  color: var(--copper);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.build-card-meta {
+  margin: 0;
+  color: var(--faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+}
+
+.build-index-card img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.build-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono);
+}
+
+.build-cover {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin-top: var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.build-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.howto.build .build-gallery.md-body .howto-figure {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .build-gallery {
+    grid-template-columns: 1fr;
+  }
+}
