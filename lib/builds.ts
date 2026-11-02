@@ -102,7 +102,7 @@ function assertApex(entry: BuildEntry) {
   const html = `${entry.doc.introHtml}\n${entry.doc.sections.map((section) => section.html).join("\n")}`;
   const text = html.replace(/<[^>]+>/g, " ");
   const required = [
-    "This is the absolute first iteration of the Lost Penny signature Apex build.",
+    "First Lost Penny Apex. Iteration 1.",
     "This thing still does not fly right.",
     "micro desyncs",
     "Brian White",
@@ -144,7 +144,7 @@ function assertApex(entry: BuildEntry) {
     throw new Error("Apex model note must say models do not have the original spacing");
   }
   if (!html.includes(`href="${entry.source}"`)) throw new Error("Apex build is missing the RotorBuilds link");
-  if (entry.doc.sections[0]?.title !== "Status / final notes (2026-11-01)") {
+  if (entry.doc.sections[0]?.title !== "Status (2026-11-01)") {
     throw new Error("Apex build must open with the status notes");
   }
   if (!entry.doc.sections.some((section) => section.title === "Parts I designed")) {

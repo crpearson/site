@@ -1,1 +1,1 @@
-Build logs for the quads I fly. Each one has the story, the parts, the photos, and where it stands now.
+Quads I fly. Story, parts, photos, and where each one stands.

@@ -16,9 +16,9 @@ cardNote: "It still does not fly right."
 
 # Apex Evo 5 With Fettec Electronics
 
-This is the absolute first iteration of the Lost Penny signature Apex build.
+First Lost Penny Apex. Iteration 1.
 
-## Status / final notes (2026-11-01)
+## Status (2026-11-01)
 
 This thing still does not fly right.
 
