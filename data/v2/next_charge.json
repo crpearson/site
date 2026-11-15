@@ -1,8 +1,8 @@
 {
   "schema": "next_charge/v4.1",
   "rules": "v7",
-  "as_of_session": "2026-11-01",
-  "as_of_date_pt": "2026-11-01",
+  "as_of_session": "2026-11-14",
+  "as_of_date_pt": "2026-11-14",
   "measurement": {
     "rest_rule": "Resting voltage is read at least 90 minutes after a charge or flight.",
     "ir_rule": "IR is measured solo only (one pack on a channel); IR read on a parallel board is not used.",
@@ -1608,7 +1608,7 @@
       "last_rule_b_over": [],
       "last_rule_b_basis": "no parallel board night recorded yet for this series",
       "outlook_rule_b": {
-        "value_v": 0.011,
+        "value_v": 0.015,
         "packs": [
           "C3-P1",
           "C3-P2",
@@ -1618,14 +1618,14 @@
           "C3-P6"
         ],
         "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
-        "session": "2026-11-01",
+        "session": "2026-11-14",
         "limit_v": 0.6,
         "call": "GO",
         "check_first": [],
         "value_without_check_first_v": null,
         "packs_without_check_first": null,
         "cell_check": {
-          "session": "2026-11-01",
+          "session": "2026-11-14",
           "limit_mv": 100,
           "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
           "pairs": [],
@@ -1633,8 +1633,8 @@
         },
         "ir_match": {
           "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
-          "session": "2026-11-01",
-          "board_median_mohm": 3.058,
+          "session": "2026-11-14",
+          "board_median_mohm": 3.075,
           "note_pct": 25,
           "strong_note_pct": 35,
           "nights_needed": 2,
@@ -1642,9 +1642,9 @@
           "packs": [
             {
               "label": "C3-P1",
-              "avg_mohm": 3.167,
-              "session": "2026-11-01",
-              "pct_off": 3.6,
+              "avg_mohm": 3.117,
+              "session": "2026-11-14",
+              "pct_off": 1.4,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1652,9 +1652,9 @@
             },
             {
               "label": "C3-P2",
-              "avg_mohm": 2.883,
-              "session": "2026-11-01",
-              "pct_off": -5.7,
+              "avg_mohm": 3.117,
+              "session": "2026-11-14",
+              "pct_off": 1.4,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1662,9 +1662,9 @@
             },
             {
               "label": "C3-P3",
-              "avg_mohm": 3.083,
-              "session": "2026-11-01",
-              "pct_off": 0.8,
+              "avg_mohm": 3.033,
+              "session": "2026-11-14",
+              "pct_off": -1.4,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1672,9 +1672,9 @@
             },
             {
               "label": "C3-P4",
-              "avg_mohm": 3.033,
-              "session": "2026-11-01",
-              "pct_off": -0.8,
+              "avg_mohm": 3.233,
+              "session": "2026-11-14",
+              "pct_off": 5.1,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1682,9 +1682,9 @@
             },
             {
               "label": "C3-P5",
-              "avg_mohm": 2.867,
-              "session": "2026-11-01",
-              "pct_off": -6.2,
+              "avg_mohm": 3.017,
+              "session": "2026-11-14",
+              "pct_off": -1.9,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1692,9 +1692,9 @@
             },
             {
               "label": "C3-P6",
-              "avg_mohm": 3.183,
-              "session": "2026-11-01",
-              "pct_off": 4.1,
+              "avg_mohm": 2.983,
+              "session": "2026-11-14",
+              "pct_off": -3.0,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1728,7 +1728,7 @@
       "last_rule_b_over": [],
       "last_rule_b_basis": "no parallel board night recorded yet for this series",
       "outlook_rule_b": {
-        "value_v": 0.008,
+        "value_v": 0.007,
         "packs": [
           "C4-P1",
           "C4-P2",
@@ -1738,14 +1738,14 @@
           "C4-P6"
         ],
         "basis": "pack voltage at the end of each pack's latest storage run with an end reading (advice only)",
-        "session": "2026-11-01",
+        "session": "2026-11-14",
         "limit_v": 0.6,
         "call": "GO",
         "check_first": [],
         "value_without_check_first_v": null,
         "packs_without_check_first": null,
         "cell_check": {
-          "session": "2026-11-01",
+          "session": "2026-11-14",
           "limit_mv": 100,
           "basis": "end readings of each pack's latest storage run with an end reading (advice only)",
           "pairs": [],
@@ -1753,8 +1753,8 @@
         },
         "ir_match": {
           "basis": "performance note only: average cell IR (mΩ) from single-pack storage runs against the median of this board's packs that ran the same night, over the last 3 storage nights",
-          "session": "2026-11-01",
-          "board_median_mohm": 3.121,
+          "session": "2026-11-14",
+          "board_median_mohm": 3.008,
           "note_pct": 25,
           "strong_note_pct": 35,
           "nights_needed": 2,
@@ -1762,9 +1762,9 @@
           "packs": [
             {
               "label": "C4-P1",
-              "avg_mohm": 3.233,
-              "session": "2026-11-01",
-              "pct_off": 3.6,
+              "avg_mohm": 3.267,
+              "session": "2026-11-14",
+              "pct_off": 8.6,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1772,9 +1772,9 @@
             },
             {
               "label": "C4-P2",
-              "avg_mohm": 3.15,
-              "session": "2026-11-01",
-              "pct_off": 0.9,
+              "avg_mohm": 3.1,
+              "session": "2026-11-14",
+              "pct_off": 3.0,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1782,9 +1782,9 @@
             },
             {
               "label": "C4-P3",
-              "avg_mohm": 3.117,
-              "session": "2026-11-01",
-              "pct_off": -0.1,
+              "avg_mohm": 2.917,
+              "session": "2026-11-14",
+              "pct_off": -3.0,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1792,9 +1792,9 @@
             },
             {
               "label": "C4-P4",
-              "avg_mohm": 3.125,
-              "session": "2026-11-01",
-              "pct_off": 0.1,
+              "avg_mohm": 2.783,
+              "session": "2026-11-14",
+              "pct_off": -7.5,
               "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
@@ -1802,20 +1802,20 @@
             },
             {
               "label": "C4-P5",
-              "avg_mohm": 2.95,
-              "session": "2026-11-01",
-              "pct_off": -5.5,
-              "nights_checked": 2,
+              "avg_mohm": 3.217,
+              "session": "2026-11-14",
+              "pct_off": 6.9,
+              "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
               "flag": "ok"
             },
             {
               "label": "C4-P6",
-              "avg_mohm": 2.85,
-              "session": "2026-11-01",
-              "pct_off": -8.7,
-              "nights_checked": 2,
+              "avg_mohm": 2.383,
+              "session": "2026-11-14",
+              "pct_off": -20.8,
+              "nights_checked": 3,
               "nights_over_25_pct": 0,
               "nights_over_35_pct": 0,
               "flag": "ok"
@@ -1891,28 +1891,28 @@
     "basis": "lifetime_storage_cycles_per_pack",
     "suggestion_only": true,
     "status": "ok",
-    "as_of_date": "2026-11-01",
+    "as_of_date": "2026-11-14",
     "pick": [
       "C3",
       "C4"
     ],
-    "reason": "Fewest cycles per pack: C3 7.0, C4 7.0 vs C1 17.2, C2 17.5.",
+    "reason": "Fewest cycles per pack: C3 8.0, C4 8.0 vs C1 17.2, C2 17.5.",
     "sets": [
       {
         "series": "C3",
         "packs": 6,
-        "lifetime_storage_cycles": 42,
-        "avg_cycles_per_pack": 7.0,
-        "last_flown": "2026-11-01",
+        "lifetime_storage_cycles": 48,
+        "avg_cycles_per_pack": 8.0,
+        "last_flown": "2026-11-14",
         "eligible": true,
         "skip_reason": null
       },
       {
         "series": "C4",
         "packs": 6,
-        "lifetime_storage_cycles": 42,
-        "avg_cycles_per_pack": 7.0,
-        "last_flown": "2026-11-01",
+        "lifetime_storage_cycles": 48,
+        "avg_cycles_per_pack": 8.0,
+        "last_flown": "2026-11-14",
         "eligible": true,
         "skip_reason": null
       },
@@ -1981,7 +1981,7 @@
         "C3",
         "C1"
       ],
-      "reason": "Next-best pair: C3 7.0, C1 17.2.",
+      "reason": "Next-best pair: C3 8.0, C1 17.2.",
       "plan_if_flown": {
         "channels": [
           {

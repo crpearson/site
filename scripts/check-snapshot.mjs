@@ -82,7 +82,7 @@ function compareTime(a, b) {
 }
 
 const v4 = parseCsv(fs.readFileSync(path.join(root, "data/v2/ir_store_v4.public.csv"), "utf8"));
-if (v4.length !== 301) fail(`expected 301 ir_store_v4 rows, got ${v4.length}`);
+if (v4.length !== 313) fail(`expected 313 ir_store_v4 rows, got ${v4.length}`);
 
 const spot = v4.find((row) => row.pack_uid === "CNHL-2026-001" && row.session === "2026-10-09");
 const spotCells = spot ? [1, 2, 3, 4, 5, 6].map((index) => Number(spot[`c${index}_mOhm`]).toFixed(1)).join(",") : "";
@@ -128,8 +128,8 @@ const latestAvg = (uid) => {
   return rows[rows.length - 1];
 };
 const fleetMean = slotted.reduce((sum, pack) => sum + Number(latestAvg(pack.pack_uid).avg_mOhm), 0) / slotted.length;
-if (slotted.length !== 24 || fleetMean.toFixed(3) !== "3.060") {
-  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 3.060 mΩ over 24`);
+if (slotted.length !== 24 || fleetMean.toFixed(3) !== "3.040") {
+  fail(`fleet mean ${fleetMean} over ${slotted.length}, expected 3.040 mΩ over 24`);
 }
 const c1p4 = latestAvg("CNHL-2026-004");
 if (!c1p4 || c1p4.session !== "2026-11-01" || Number(c1p4.avg_mOhm) !== 2.833 || Number(c1p4.spread_mOhm) !== 2.1 || Number(c1p4.pack_SR_mOhm) !== 17 || Number(c1p4.floor_mV) !== 3708 || Number(c1p4.low_cell_gap_mV) !== 22) {
@@ -160,8 +160,9 @@ const expectedMeans = [
   // C1 is exactly 3.0125 mΩ; float order flips toFixed(3), so it is pinned to four places.
   ["C1", "2026-11-01", "3.0125"],
   ["C2", "2026-11-01", "3.119"],
-  ["C3", "2026-11-01", "3.036"],
-  ["C4", "2026-11-01", "3.071"],
+  // 2026-11-14: C3 and C4 charged, one pack per run. C4 is exactly 2.9445 mΩ, so it is pinned to four places too.
+  ["C3", "2026-11-14", "3.083"],
+  ["C4", "2026-11-14", "2.9445"],
 ];
 for (const [series, session, mean] of expectedMeans) {
   const got = seriesMean(series);
@@ -173,7 +174,7 @@ const latestPtDate = latestCalendarDate([
   ...calls.map((row) => row.date),
   ...calls.map((row) => (row.source.match(/session=([^;]+)/)?.[1] ?? "").trim().split(/\s+/)[0] ?? ""),
 ]);
-if (latestPtDate !== "2026-11-01") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-11-01`);
+if (latestPtDate !== "2026-11-14") fail(`latest PT session or call date is ${latestPtDate}, expected 2026-11-14`);
 
 const expectedBoards = [
   { series: "C1", labels: ["C1-P1", "C1-P2", "C1-P3", "C1-P4", "C1-P5", "C1-P6"] },
@@ -184,7 +185,7 @@ const expectedBoards = [
 const board = buildNextBoard();
 const rendered = board.series.map((item) => item.labels.join("+")).join(" | ");
 const expected = expectedBoards.map((item) => item.labels.join("+")).join(" | ");
-if (rendered !== expected || board.as_of !== "2026-11-01") fail(`next parallel ${board.as_of} ${rendered}, expected 2026-11-01 ${expected}`);
+if (rendered !== expected || board.as_of !== "2026-11-14") fail(`next parallel ${board.as_of} ${rendered}, expected 2026-11-14 ${expected}`);
 
 for (const [label, series, test] of [["C1-P4", "C1", "RT-004-1"], ["C2-P2", "C2", "RT-008-1"]]) {
   const call = calls.filter((row) => row.label_at_time === label).at(-1);
@@ -221,7 +222,7 @@ if (methodologySha !== "41c9882c1d29535c60b0f752209c96109148718486c70620f2aaf8e2
 
 const chargeFile = fs.readFileSync(path.join(root, "data/v2/next_charge.json"));
 const chargeSha = createHash("sha256").update(chargeFile).digest("hex");
-if (chargeSha !== "64c02c80a0dc7a772263b59795796004450c6491cabc2ff9344b25faa5bfd8d9") {
+if (chargeSha !== "d2cb03f43b704ae91c77c61267d35ca1260c711db114083b2a724166a2f57fa6") {
   fail(`next_charge.json sha256 is ${chargeSha}`);
 }
 const doc = loadNextChargeV4(root);
@@ -257,7 +258,7 @@ if (labels(doc.check_before_connecting) !== "") fail(`check_before_connecting is
 if (labels(doc.performance_notes) !== "C1-P5+C2-P1+C2-P2+C3-P2+C3-P5+C3-P6+C4-P2") fail(`performance_notes is ${labels(doc.performance_notes)}`);
 if (doc.self_discharge_checks.open.map((item) => item.test_id).sort().join("+") !== "") fail("open self-discharge checks changed (RT-004-1 and RT-008-1 passed 2026-10-18)");
 const boards = doc.parallel_boards.map((item) => `${item.series}:${item.packs.length}:${item.outlook_rule_b.value_v}:${item.outlook_rule_b.call}:${item.outlook_rule_b.cell_check.labels.join("+")}`).join(" ");
-if (boards !== "C1:6:0.008:GO: C2:6:0.004:GO: C3:6:0.011:GO: C4:6:0.008:GO:") fail(`boards are ${boards}`);
+if (boards !== "C1:6:0.008:GO: C2:6:0.004:GO: C3:6:0.015:GO: C4:6:0.007:GO:") fail(`boards are ${boards}`);
 if (doc.parallel_boards[2].outlook_rule_b.check_first.map((item) => item.label).join("+") !== "") fail("C3 check-first changed");
 
 const view = loadNextCharge(root);
