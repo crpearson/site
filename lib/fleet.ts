@@ -2200,8 +2200,8 @@ assertDerived();
  * sets CHECK_SNAPSHOT and loads this module. The site build does not.
  */
 function assertSnapshot() {
-  if (measurements.length !== 301 || v4Rows.length !== 301) {
-    throw new Error(`Expected 301 measurements, got ${measurements.length}`);
+  if (measurements.length !== 313 || v4Rows.length !== 313) {
+    throw new Error(`Expected 313 measurements, got ${measurements.length}`);
   }
   const sample = measurements.find((row) => row.uid === "CNHL-2026-001" && row.session === "2026-10-09");
   if (!sample || sample.cells.map((cell) => cell.toFixed(1)).join(",") !== "3.2,2.9,2.5,2.2,3.0,2.8") {
@@ -2297,6 +2297,16 @@ function assertSnapshot() {
     const c4p4 = night.find((row) => row.uid === "CNHL-2026-022");
     if (!c4p4 || c4p4.label !== "C4-P4" || c4p4.avg.toFixed(3) !== "3.125") throw new Error("CNHL-2026-022 2026-11-01 row should be C4-P4, 3.125 mΩ");
   }
+  {
+    // 2026-11-14 C3+C4 storage night: all 12 packs charged one pack per run on their home channels, every log has IR.
+    const night = measurements.filter((row) => row.session === "2026-11-14");
+    const want = "C3-P1,C3-P2,C3-P3,C3-P4,C3-P5,C3-P6,C4-P1,C4-P2,C4-P3,C4-P4,C4-P5,C4-P6";
+    if (night.length !== 12 || night.some((row) => isNonStorage(row.sessionType) || row.series !== row.label.slice(0, 2)) || night.map((row) => row.label).sort().join(",") !== want) {
+      throw new Error(`2026-11-14 storage night is ${night.map((row) => row.label).sort().join(",")}`);
+    }
+    const c4p6 = night.find((row) => row.uid === "CNHL-2026-024");
+    if (!c4p6 || c4p6.label !== "C4-P6" || c4p6.avg.toFixed(3) !== "2.383") throw new Error("CNHL-2026-024 2026-11-14 row should be C4-P6, 2.383 mΩ");
+  }
   if (operationalPoints("CNHL-2026-012").some((row) => row.session === "2026-10-11-charge")) {
     throw new Error("the charge run is still in the latest readings");
   }
@@ -2325,9 +2335,9 @@ function assertSnapshot() {
     const logged1024 = ["C3-P1", "C3-P2", "C3-P3", "C3-P4", "C4-P5", "C4-P6"].includes(label);
     // 2026-10-31: ten packs have a log; C4-P2's log holds only a first reading (not counted) and C4-P4 has no log.
     const logged1031 = label !== "C4-P2" && label !== "C4-P4";
-    // 2026-11-01: all twelve C3 and C4 packs have a full log (+1 each) and it is every pack's latest storage night.
-    const count = (label === "C3-P2" ? 4 : 5) + (logged1024 ? 1 : 0) + (logged1031 ? 1 : 0) + 1;
-    const latest = "2026-11-01";
+    // 2026-11-01 and 2026-11-14: all twelve C3 and C4 packs have a full log (+1 each night); 2026-11-14 is every pack's latest storage night.
+    const count = (label === "C3-P2" ? 4 : 5) + (logged1024 ? 1 : 0) + (logged1031 ? 1 : 0) + 2;
+    const latest = "2026-11-14";
     if (!pack || pack.chargeCount !== count || pack.chargeMode !== "parallel" || pack.purchaseDate !== "2026-10-13") {
       throw new Error(`${label} should be charge count ${count}, parallel, purchased 2026-10-13`);
     }
@@ -2384,8 +2394,8 @@ function assertSnapshot() {
   if (movedEvent("CNHL-2026-001")) throw new Error("CNHL-2026-001 should have no move on the site");
 
   const stats = headline();
-  if (stats.mean.toFixed(3) !== "3.060" || stats.counted !== 24) {
-    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 3.060 mΩ over 24 slotted packs`);
+  if (stats.mean.toFixed(3) !== "3.040" || stats.counted !== 24) {
+    throw new Error(`Fleet mean is ${stats.mean} over ${stats.counted}, expected 3.040 mΩ over 24 slotted packs`);
   }
   const rows = statusRows();
   const c1p4 = rows.find((row) => row.label === "C1-P4");
@@ -2408,8 +2418,9 @@ function assertSnapshot() {
   // C1 2026-11-01 mean is exactly 3.0125 mΩ; float order makes toFixed(3) flip between 3.012 and 3.013, so pin four places.
   if (lastOf("C1")?.toFixed(4) !== "3.0125") throw new Error(`C1 series mean last is ${lastOf("C1")}`);
   if (lastOf("C2")?.toFixed(3) !== "3.119") throw new Error(`C2 series mean last is ${lastOf("C2")}`);
-  if (lastOf("C3")?.toFixed(3) !== "3.036") throw new Error(`C3 series mean last is ${lastOf("C3")}`);
-  if (lastOf("C4")?.toFixed(3) !== "3.071") throw new Error(`C4 series mean last is ${lastOf("C4")}`);
+  // 2026-11-14: C3 3.083 mΩ; C4 is exactly 2.9445 mΩ, so it is pinned to four places like C1.
+  if (lastOf("C3")?.toFixed(3) !== "3.083") throw new Error(`C3 series mean last is ${lastOf("C3")}`);
+  if (lastOf("C4")?.toFixed(4) !== "2.9445") throw new Error(`C4 series mean last is ${lastOf("C4")}`);
   const at = (id: string) => model.categories.findIndex((category) => category.id === id);
   const c1Fleet = model.fleets.find((fleet) => fleet.id === "C1");
   const c2Fleet = model.fleets.find((fleet) => fleet.id === "C2");
@@ -2448,7 +2459,7 @@ function assertSnapshot() {
   const rendered = board.series.map((item) => `${item.series}:${item.labels.join("+")}`).join(" | ");
   if (
     rendered !== "C1:C1-P1+C1-P2+C1-P3+C1-P4+C1-P5+C1-P6 | C2:C2-P1+C2-P2+C2-P3+C2-P4+C2-P5+C2-P6 | C3:C3-P1+C3-P2+C3-P3+C3-P4+C3-P5+C3-P6 | C4:C4-P1+C4-P2+C4-P3+C4-P4+C4-P5+C4-P6" ||
-    board.as_of !== "2026-11-01"
+    board.as_of !== "2026-11-14"
   ) {
     throw new Error(`Next parallel rendered as ${board.as_of} ${rendered}`);
   }
@@ -2488,7 +2499,7 @@ function assertSnapshot() {
   }
   const c3p2 = getPack("CNHL-2026-014");
   for (const line of [...(c3p2?.cellSeries ?? []), ...(c3p2?.spreadSeries ?? []), ...(c3p2?.floorSeries ?? [])]) {
-    if (readingIndices(line).length !== 6) throw new Error(`C3-P2 ${line.label} should have six readings (2026-10-14, 2026-10-16, 2026-10-23, 2026-10-24, 2026-10-31, 2026-11-01)`);
+    if (readingIndices(line).length !== 7) throw new Error(`C3-P2 ${line.label} should have seven readings (2026-10-14, 2026-10-16, 2026-10-23, 2026-10-24, 2026-10-31, 2026-11-01, 2026-11-14)`);
   }
   const c1p1Slot = getSlot("C1-P1");
   if (!c1p1Slot || c1p1Slot.past.length !== 0) throw new Error(`C1-P1 should have no past occupant, has ${c1p1Slot?.past.length}`);
